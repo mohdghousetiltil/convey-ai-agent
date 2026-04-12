@@ -1,0 +1,861 @@
+{
+  "schema_version": "1.0",
+  "description": "TriConvey Sec. 32 question template. Covers all 6 Sec. 32 tabs. Answers remain null until mapped from final_output.json.",
+  "triconvey_window": "Property Details",
+  "matter_reference": null,
+  "client_name": null,
+  "generated_at": null,
+  "tabs": [
+    {
+      "tab_name": "Sec. 32 (1)",
+      "section": "Financial Matters, Outgoings, Insurance",
+      "questions": [
+        {
+          "question_id": "s32_1.rates_in_attached_certificates",
+          "label": "1.1 Rates contained in attached certificate(s)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Are contained in attached certificate(s)"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.rates_their_amounts_are",
+          "label": "1.1 Their amounts are (checkbox)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Their amounts are:"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.rates_total_does_not_exceed_check",
+          "label": "1.1 Their total does not exceed (checkbox)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Their total does not exceed"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.rates_total_does_not_exceed_amount",
+          "label": "1.1 Their total does not exceed (amount)",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Their total does not exceed"
+          },
+          "data_type": "currency",
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.outgoing_1_authority",
+          "label": "1.1 Outgoing 1 - Authority name",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Authority",
+            "row": 1
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.outgoing_1_amount",
+          "label": "1.1 Outgoing 1 - Amount",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Amount",
+            "row": 1
+          },
+          "data_type": "currency",
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.outgoing_1_interest",
+          "label": "1.1 Outgoing 1 - Interest",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Interest",
+            "row": 1
+          },
+          "data_type": "currency",
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.outgoing_2_authority",
+          "label": "1.1 Outgoing 2 - Authority name",
+          "control_type": "Edit",
+          "selector": {
+            "row": 2
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.outgoing_2_amount",
+          "label": "1.1 Outgoing 2 - Amount",
+          "control_type": "Edit",
+          "selector": {
+            "row": 2
+          },
+          "data_type": "currency",
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.no_amounts_beyond_listed",
+          "label": "1.2 There are NO amounts for which the purchaser may become liable other than",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "There are NO amounts for which the purchaser may become liable other than:"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.terms_contract",
+          "label": "1.3 Terms Contract",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Terms Contract"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.sale_subject_to_mortgage",
+          "label": "1.4 Sale Subject to Mortgage",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Sale Subject to Mortgage"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.other_particulars",
+          "label": "1.x Other Particulars",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Other Particulars"
+          },
+          "multiline": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.avpcc_allocated",
+          "label": "1.x (a) AVPCC allocated to the land",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "(a) AVPCC allocated to the land"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.land_tax_reform_scheme_land",
+          "label": "1.x (b) Land tax reform scheme land within the meaning of the CIPT Act",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "(b) Land tax reform scheme land within the meaning of the CIPT Act"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.entry_date_tax_reform_scheme",
+          "label": "1.x (c) Entry Date for Tax Reform Scheme Land",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "(c) Entry Date for Tax Reform Scheme Land"
+          },
+          "data_type": "date",
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.damage_destruction_policy_attached",
+          "label": "2.1 Damage and Destruction - Copy or extract of any policy attached",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Copy or extract of any policy attached",
+            "row": 1
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.damage_destruction_particulars",
+          "label": "2.1 Damage and Destruction - Particulars of any policy insurance as follows",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Particulars of any policy insurance as follows:"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.insurance_company_name",
+          "label": "2.1 Insurance Company Name",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Company Name"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.insurance_policy_type",
+          "label": "2.1 Type of Policy",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Type of Policy"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.insurance_policy_no",
+          "label": "2.1 Policy No.",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Policy No."
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.insurance_amount_insured",
+          "label": "2.1 Amount Insured",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Amount Insured"
+          },
+          "data_type": "currency",
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.owner_builder_policy_attached",
+          "label": "2.2 Owner Builder - Copy or extract of any policy attached",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Copy or extract of any policy attached",
+            "row": 2
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_1.owner_builder_required_insurance",
+          "label": "2.2 Owner Builder - Particulars of any required insurance as follows",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Particulars of any required insurance as follows:"
+          },
+          "answer": null
+        }
+      ]
+    },
+    {
+      "tab_name": "Sec. 32 (2)",
+      "section": "Land Description, Easements, Planning",
+      "questions": [
+        {
+          "question_id": "s32_2.easements_in_title_documents",
+          "label": "3.1 Description of easements: Is in the attached copies of title documents",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Is in the attached copies of title documents"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_2.easements_is_as_follows_check",
+          "label": "3.1 Description of easements: Is as follows (checkbox)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Is as follows:",
+            "row": 1
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_2.easements_description_text",
+          "label": "3.1 Easements description text",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Is as follows:"
+          },
+          "multiline": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_2.easement_failure_to_comply_check",
+          "label": "3.1 Particulars of any existing failure to comply with easement, covenant or other similar restriction",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Particulars of any existing failure to comply with easement, covenant or other similar restriction are:"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_2.easement_failure_to_comply_text",
+          "label": "3.1 Easement failure to comply text",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Particulars of any existing failure to comply with easement, covenant or other similar restriction are:"
+          },
+          "multiline": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_2.road_access_none",
+          "label": "3.2 Road Access - No road access",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "No road access"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_2.bushfire_prone_area",
+          "label": "3.3 Designated Bushfire Prone Area",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Land is in Designated Bushfire Prone Area"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_2.planning_certificate_attached",
+          "label": "3.4 Planning Scheme - Certificate with required information attached",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Certificate with required information attached"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_2.planning_required_info_as_follows",
+          "label": "3.4 Planning Scheme - Required information is as follows",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Required information is as follows"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_2.planning_scheme_name",
+          "label": "3.4 Name of planning scheme",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Name of planning scheme"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_2.planning_responsible_authority",
+          "label": "3.4 Name of responsible authority",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Name of responsible authority",
+            "control_type": "Edit"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_2.planning_zone",
+          "label": "3.4 Planning zone",
+          "control_type": "ComboBox",
+          "selector": {
+            "label_proximity": "Name of responsible authority",
+            "control_type": "ComboBox"
+          },
+          "match_strategy": "fuzzy",
+          "options": [
+            "LDRZ - Low Density Residential Zone",
+            "MUZ - Mixed Use Zone",
+            "TZ - Township Zone",
+            "RGZ - Residential Growth Zone",
+            "NRZ - Neighbourhood Residential Zone",
+            "GRZ - General Residential Zone",
+            "IN1Z - Industrial 1 Zone",
+            "IN2Z - Industrial 2 Zone",
+            "IN3Z - Industrial 3 Zone",
+            "C1Z - Commercial 1 Zone",
+            "C2Z - Commercial 2 Zone",
+            "RLZ - Rural Living Zone",
+            "GWZ - Green Wedge Zone",
+            "GWAZ - Green Wedge A Zone",
+            "RCZ - Rural Conservation Zone",
+            "FZ - Farming Zone",
+            "RAZ - Rural Activity Zone",
+            "PUZ1 - Public Use Zone-Service and Utility",
+            "PUZ2 - Public Use Zone-Education",
+            "PUZ3 - Public Use Zone-Health & Community",
+            "PUZ5 - Public Use Zone-Cemetery/Crematorium",
+            "PUZ6 - Public Use Zone-Local Government",
+            "PUZ7 - Public Use Zone-Other Public Use",
+            "PPRZ - Public Park and Recreation Zone",
+            "PCRZ - Public Conservation and Resource Zone",
+            "TRZ1 - State Transport Infrastructure",
+            "TRZ2 - Principal Road Network",
+            "TRZ3 - Significant Municipal Road",
+            "TRZ4 - Other Transport Use",
+            "SUZ - Special Use Zone",
+            "CDZ - Comprehensive Development Zone",
+            "UFZ - Urban Floodway Zone",
+            "CCZ - Capital City Zone",
+            "DZ - Dockland Zone",
+            "PDZ - Priority Development Zone",
+            "UGZ - Urban Growth Zone",
+            "ACZ - Activity Centre Zone",
+            "PZ - Port Zone",
+            "CA - Commonwealth land"
+          ],
+          "answer": null
+        },
+        {
+          "question_id": "s32_2.planning_overlay_name",
+          "label": "3.4 Name of planning overlay",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Name of planning overlay"
+          },
+          "multiline": true,
+          "answer": null
+        }
+      ]
+    },
+    {
+      "tab_name": "Sec. 32 (3)",
+      "section": "Notices, Orders, Building Permits",
+      "questions": [
+        {
+          "question_id": "s32_3.notices_in_attached_certificates",
+          "label": "4.1 Notice, Order, Declaration, Report or Recommendation - Are contained in attached certificates/statements",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Are contained in attached certificates/statements"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_3.notices_as_follows_check",
+          "label": "4.1 Notices - Are as follows (checkbox)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Are as follows:",
+            "row": 1
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_3.notices_as_follows_text",
+          "label": "4.1 Notices - Are as follows (text)",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Are as follows:",
+            "row": 1
+          },
+          "multiline": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_3.agricultural_chemicals_notices_text",
+          "label": "4.x Agricultural chemicals notices text",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "There are NO notices issued by public authority re agricultural chemicals other than:"
+          },
+          "multiline": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_3.compulsory_acquisition_notices_text",
+          "label": "4.x Particulars of any notices of intention to acquire (s6 of the Land Acquisition and Compensation Act)",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Particulars of any notices of intention to acquire (s6 of the Land Acquisiton and Compensation Act) are as follows:"
+          },
+          "multiline": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_3.building_permits_in_attached_cert",
+          "label": "5. Building Permits - Are contained in the attached certificate",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Are contained in the attached certificate"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_3.building_permits_as_follows_check",
+          "label": "5. Building Permits - Are as follows (checkbox)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Are as follows:",
+            "row": 2
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_3.building_permits_as_follows_text",
+          "label": "5. Building Permits - Are as follows (text)",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Are as follows:",
+            "row": 2
+          },
+          "multiline": true,
+          "answer": null
+        }
+      ]
+    },
+    {
+      "tab_name": "Sec. 32 (4)",
+      "section": "Owners Corporation, GAIC, Services",
+      "questions": [
+        {
+          "question_id": "s32_4.oc_certificate_attached",
+          "label": "6. Owners Corporation - Attached is a current owners corporation certificate issued according to s151",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Attached is a current owners corporation certificate issued according to s151 of the Owners Corporations Act"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.oc_information_prescribed_attached",
+          "label": "6. Owners Corporation - Attached is the information prescribed for the purposes of s151(4)(a)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Attached is the information prescribed for the purposes of s151(4)(a) of the Owners Corporations Act"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.oc_inactive",
+          "label": "6. Owners Corporation is inactive",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Owners Corporation is inactive"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.gaic_applies",
+          "label": "7. Growth Areas Infrastructure Contribution (GAIC) applies",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "GAIC applies"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.gaic_work_in_kind_land_transferred",
+          "label": "7.1 Work-in-Kind Agreement - Land IS to be transferred under the agreement",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Land IS to be transferred under the agreement"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.gaic_work_in_kind_works_carried_out",
+          "label": "7.1 Work-in-Kind - Land IS land on which works are to be carried out",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Land IS land on which works are to be carried out under the agreement"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.gaic_land_imposed",
+          "label": "7.1 Work-in-Kind - Land IS land in respect of which a GAIC is imposed",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Land IS land in respect of which a GAIC is imposed"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.gaic_cert_release_from_liability",
+          "label": "7.2 GAIC Recording - Any certificate of release from liability to pay a GAIC",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Any certificate of release from liability to pay a GAIC"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.gaic_cert_deferral",
+          "label": "7.2 GAIC Recording - Any certificate of deferral of the liability to pay the whole or part of a GAIC",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Any certificate of deferral of the liability to pay the whole or part of a GAIC"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.gaic_cert_exemption",
+          "label": "7.2 GAIC Recording - Any certificate of exemption from liability to pay a GAIC",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Any certificate of exemption from liability to pay a GAIC"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.gaic_cert_staged_payment_approval",
+          "label": "7.2 GAIC Recording - Any certificate of staged payment approval",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Any certificate of staged payment approval"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.gaic_cert_no_liability",
+          "label": "7.2 GAIC Recording - Any certificate of no GAIC liability",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Any certificate of no GAIC liability"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.gaic_notice_reduction_or_exemption",
+          "label": "7.2 GAIC Recording - Any notice providing evidence of the grant of a reduction of the liability for a GAIC or an exemption",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Any notice providing evidence of the grant of a reduction of the liability for a GAIC or an exemption from that liability"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.gaic_cert_part_9b",
+          "label": "7.2 GAIC Recording - Certificate issued under Part 9B of the Planning and Environment Act",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Certificate issued under Part 9B of the Planning and Environment Act"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.service_electricity_not_connected",
+          "label": "8. Services - Electricity supply (tick if NOT connected)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Electricity supply"
+          },
+          "note": "INVERTED: tick means service is NOT connected",
+          "inverted": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.service_gas_not_connected",
+          "label": "8. Services - Gas supply (tick if NOT connected)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Gas supply"
+          },
+          "note": "INVERTED: tick means service is NOT connected",
+          "inverted": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.service_water_not_connected",
+          "label": "8. Services - Water supply (tick if NOT connected)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Water supply"
+          },
+          "note": "INVERTED: tick means service is NOT connected",
+          "inverted": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.service_sewerage_not_connected",
+          "label": "8. Services - Sewerage (tick if NOT connected)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Sewerage"
+          },
+          "note": "INVERTED: tick means service is NOT connected",
+          "inverted": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_4.service_telephone_not_connected",
+          "label": "8. Services - Telephone services (tick if NOT connected)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Telephone services"
+          },
+          "note": "INVERTED: tick means service is NOT connected",
+          "inverted": true,
+          "answer": null
+        }
+      ]
+    },
+    {
+      "tab_name": "Sec. 32 (5)",
+      "section": "Title Evidence, Subdivision Status",
+      "questions": [
+        {
+          "question_id": "s32_5.vendor_right_to_sell",
+          "label": "9. Title - Evidence of the vendor's right or power to sell",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Evidence of the vendor's right or power to sell (where the vendor is not the registered proprietor) or the owner in fee simple"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_5.unregistered_subdivision_certified",
+          "label": "10.1 Unregistered Subdivision - Plan certified but not yet registered",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Attached is a copy of the plan of subdivision certified by relevant authority if the plan is not yet registered"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_5.unregistered_subdivision_latest_version",
+          "label": "10.1 Unregistered Subdivision - Latest version of the plan (not yet certified)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Attached is a copy of the latest version of the plan if the plan of subdivision has not yet been certified"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_5.staged_subdivision_first_stage_plan",
+          "label": "10.2 Staged Subdivision - Plan for the first stage",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Attached is a copy of the plan for the first stage if the land is in the second or subsequent stage"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_5.staged_subdivision_details",
+          "label": "10.2 Staged Subdivision - Details as follows",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "are as follows:"
+          },
+          "multiline": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_5.staged_subdivision_proposals",
+          "label": "10.2 Staged Subdivision - Proposals for subsequent stages known to vendor",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Proposals re subsequent stages that are known to the vendor are as follows:"
+          },
+          "multiline": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_5.staged_subdivision_permit_contents",
+          "label": "10.2 Staged Subdivision - Contents of permit authorising the staged subdivision",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Contents of any permit under the Planning and Environment Act authorising the staged subdivision are as follows:"
+          },
+          "multiline": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_5.further_plan_subdivision_certified",
+          "label": "10.3 Further Plan of Subdivision - Plan certified but not yet registered",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Attached is a copy of the plan which has been certified by the relevant authority (if the later plan has not been registered)"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_5.further_plan_subdivision_latest",
+          "label": "10.3 Further Plan of Subdivision - Latest version (not yet certified)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Attached is a copy of the latest version of the plan (if the later plan has not yet been certified)"
+          },
+          "answer": null
+        }
+      ]
+    },
+    {
+      "tab_name": "Sec. 32 (6)",
+      "section": "Energy Information, Attachments",
+      "questions": [
+        {
+          "question_id": "s32_6.energy_cert_attached",
+          "label": "11. Disclosure of Energy Information - Are contained in the attached building energy efficiency certificate",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Are contained in the attached building energy efficiency certificate"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_6.energy_as_follows_check",
+          "label": "11. Disclosure of Energy Information - Are as follows (checkbox)",
+          "control_type": "CheckBox",
+          "selector": {
+            "checkbox_name": "Are as follows:"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_6.energy_as_follows_text",
+          "label": "11. Disclosure of Energy Information - Are as follows (text)",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "Are as follows:"
+          },
+          "multiline": true,
+          "answer": null
+        },
+        {
+          "question_id": "s32_6.due_diligence_checklist",
+          "label": "12. Due Diligence Checklist",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "12. Due Diligence Checklist"
+          },
+          "answer": null
+        },
+        {
+          "question_id": "s32_6.attachments_list",
+          "label": "13. Attachments",
+          "control_type": "Edit",
+          "selector": {
+            "label_proximity": "13. Attachments"
+          },
+          "multiline": true,
+          "data_type": "list",
+          "answer": null
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_tabs": 6,
+    "total_questions": 78,
+    "tabs_breakdown": {
+      "Sec. 32 (1)": 24,
+      "Sec. 32 (2)": 13,
+      "Sec. 32 (3)": 8,
+      "Sec. 32 (4)": 19,
+      "Sec. 32 (5)": 9,
+      "Sec. 32 (6)": 5
+    }
+  },
+  "usage_notes": {
+    "how_to_use": [
+      "1. This is a TEMPLATE with answer=null for every question",
+      "2. Mapping layer reads final_output.json and fills each answer",
+      "3. Fields with answer=null are SKIPPED (not touched in TriConvey)",
+      "4. Fields with answer=true on CheckBox means 'ensure ticked'",
+      "5. Fields with answer=false on CheckBox means 'ensure unticked'",
+      "6. Fields with inverted=true use OPPOSITE logic (tick when source says NOT connected)"
+    ],
+    "question_id_format": "tab_shortcode.field_name \u2014 stable identifier for mapping layer",
+    "selector_strategies": {
+      "checkbox_name": "Match CheckBox by its exact Name property",
+      "label_proximity": "Find Text control with this label, then the nearest field control",
+      "row": "When multiple controls share a label, use row number to disambiguate",
+      "position": "When multiple controls share a label, use position (1-based)"
+    }
+  }
+}

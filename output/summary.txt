@@ -1,0 +1,69 @@
+TRICONVEY AGENT - ANSWER SUMMARY
+============================================================
+
+--- Sec. 32 (1) ---
+  * AUTO      1.1 Outgoing 1 - Authority name                     'Ballarat council'  
+  * AUTO      1.1 Outgoing 1 - Amount                             '$2,500.00'  
+  * AUTO      1.1 Outgoing 2 - Authority name                     'Central highlands water'  
+  * AUTO      1.1 Outgoing 2 - Amount                             '$900.00'  
+  * AUTO      1.1 Outgoing 3 - Authority name                     'State Revenue Office'  
+  * AUTO      1.1 Outgoing 3 - Amount                             '$975.00'  
+  ! REVIEW    1.1 Outgoing 4 - Authority name                     ---  [no facts found at any of the question's fact_paths]
+  ! REVIEW    1.1 Outgoing 4 - Amount                             ---  [no facts found at any of the question's fact_paths]
+  * AUTO      Their amounts are: (checkbox)                       True  
+  * AUTO      Are contained in attached certificate(s) (checkbox)  True  
+  * AUTO      Their total does not exceed (checkbox)              True  
+  * AUTO      Their total does not exceed (amount)                '$5,375.00'  
+  ! REVIEW    1.2 There are NO amounts for which the purchaser may become liable other than  ---  [policy_default question with no ClientPolicy supplied]
+  ! REVIEW    1.3 Terms Contract                                  ---  [no facts found at any of the question's fact_paths]
+  * AUTO      1.4 Sale Subject to Mortgage                        True  
+  ! REVIEW    2.1 Insurance Company Name                          ---  [grounded_ai strategy requested but no AI client was supplied]
+  ! REVIEW    2.1 Policy No.                                      ---  [no facts found at any of the question's fact_paths]
+  ! REVIEW    2.1 Type of Policy                                  ---  [no facts found at any of the question's fact_paths]
+  ! REVIEW    2.1 Amount Insured                                  ---  [no facts found at any of the question's fact_paths]
+
+--- Sec. 32 (2) ---
+  * AUTO      Is in the attached copies of title documents (checkbox)  True  
+  * AUTO      Particulars of any existing failure to comply (checkbox)  True  
+  * AUTO      Failure to comply standard text                     "To the best of the Vendor's knowledge there is no existing failure to comply with the terms of any easements, covenants or other similar restriction."  
+  * AUTO      Certificate with required information attached (planning scheme)  True  
+  ! REVIEW    3.1 Description of any easement, covenant or restriction  ---  [grounded_ai strategy requested but no AI client was supplied]
+  ! REVIEW    3.1 Easement failure to comply text                 ---  [grounded_ai strategy requested but no AI client was supplied]
+  * AUTO      3.2 Road Access - No road access                    False  
+  ! REVIEW    3.3 Designated Bushfire Prone Area                  ---  [no facts found at any of the question's fact_paths]
+  * AUTO      3.4 Name of planning scheme                         'Ballarat'  
+  * AUTO      3.4 Name of responsible authority                   'Ballarat'  
+  * AUTO      3.4 Planning zone (dropdown)                        'UGZ - Urban Growth Zone'  
+  * AUTO      3.4 Name of planning overlay                        'DCPO - Development Contributions Plan Overlay'  
+
+--- Sec. 32 (3) ---
+  ! REVIEW    4.1 Notices - Are as follows (text)                 ---  [question is registered as human_review (legally sensitive)]
+  * AUTO      5. Building Permits - Are contained in attached certificate  False  
+
+--- Sec. 32 (4) ---
+  * AUTO      8. Services - Electricity supply (tick if NOT connected)  False  
+  * AUTO      8. Services - Gas supply (tick if NOT connected)    False  
+  * AUTO      8. Services - Water supply (tick if NOT connected)  False  
+  * AUTO      8. Services - Sewerage (tick if NOT connected)      False  
+  * AUTO      8. Services - Telephone services (tick if NOT connected)  True  
+  * AUTO      7. GAIC applies                                     False  
+  * AUTO      Owners Corporation is inactive                      True  
+  * AUTO      Attached is a current owners corporation certificate (s151)  False  
+
+--- Sec. 32 (6) ---
+  * AUTO      12. Due Diligence Checklist                         'Is attached'  
+  * AUTO      13. Attachments list                                '- Due Diligence Checklist\n- Register Search Statement Volume 11910 Folio 328 dated 20/03/2026\n- Plan of Subdivision 744342V dated 20/03/2026\n- Covenant PS744342V dated 29/08/2017\n- Section 173 Agreement AM638353G dated 20/03/2026\n- Ballarat council Building Approval Certificate dated 23/03/2026\n- Ballarat council Land Information Certificate dated 24/03/2026\n- Central highlands water Encumbrance Certificate dated ##\n- State Revenue Office Land Tax Certificate dated 20/03/2026\n- Detailed Property Report dated 26/03/2026\n- Owner Builder Report ***\n- Vic Roads Certificate dated 20/03/2026\n- EPA Certificate dated 23/03/2026\n- Residential Tenancy Agreement dated 10/04/2024'  
+
+--- internal ---
+  * AUTO      Do you live at the property?                        False  
+  * AUTO      Is the property rented/leased?                      True  
+  * AUTO      Is the property held by a Trust?                    False  
+  * AUTO      Have any building permits been issued in the last 7 years?  False  
+  * AUTO      Has there been any building works in the last 7 years?  False  
+  * AUTO      Have you done any works without obtaining a permit?  False  
+  * AUTO      Does the property have a water tank?                True  
+  * AUTO      Do you pay land tax?                                True  
+  ! REVIEW    Is the land affected by any planning overlays?      ---  [no facts found at any of the question's fact_paths]
+  ! REVIEW    Is the sale by auction?                             ---  [no facts found at any of the question's fact_paths]
+  ! REVIEW    Estimated sale price                                ---  [no facts found at any of the question's fact_paths]
+  * AUTO      Is there a mortgage on the property?                True  

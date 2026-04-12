@@ -1,0 +1,2 @@
+[console_scripts]
+triconvey-agent = triconvey_agent.cli:main

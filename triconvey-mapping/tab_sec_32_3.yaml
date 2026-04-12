@@ -1,0 +1,118 @@
+tab_name: Sec. 32 (3)
+scan_date: '2026-04-03T19:37:35.684999'
+total_fields: 8
+fields:
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1872
+    top: 517
+    right: -1159
+    bottom: 586
+    width: 713
+    height: 69
+  is_enabled: true
+  current_value: ''
+  nearby_label: 'Particulars of any notices of intention to acquire (s6 of the Land
+    Acquisiton and Compensation Act) are as follows:'
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1872
+    top: 281
+    right: -1160
+    bottom: 350
+    width: 712
+    height: 69
+  is_enabled: true
+  current_value: ''
+  nearby_label: 'Are as follows:'
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1872
+    top: 399
+    right: -1159
+    bottom: 468
+    width: 713
+    height: 69
+  is_enabled: true
+  current_value: ''
+  nearby_label: 'There are NO notices issued by public authority re agricultural chemicals
+    other than:'
+- control_type: CheckBox
+  auto_id: ''
+  name: 'Are as follows:'
+  class_name: CheckBox
+  position:
+    left: -1872
+    top: 256
+    right: -1770
+    bottom: 275
+    width: 102
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Are contained in attached certificates/statements
+- control_type: CheckBox
+  auto_id: ''
+  name: Are contained in attached certificates/statements
+  class_name: CheckBox
+  position:
+    left: -1872
+    top: 231
+    right: -1587
+    bottom: 250
+    width: 285
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: 4.1 Notice, Order, Declaration, Report or Recommendation
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1872
+    top: 671
+    right: -1159
+    bottom: 740
+    width: 713
+    height: 69
+  is_enabled: true
+  current_value: ''
+  nearby_label: 'Are as follows:'
+- control_type: CheckBox
+  auto_id: ''
+  name: 'Are as follows:'
+  class_name: CheckBox
+  position:
+    left: -1872
+    top: 647
+    right: -1770
+    bottom: 666
+    width: 102
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Are contained in the attached certificate
+- control_type: CheckBox
+  auto_id: ''
+  name: Are contained in the attached certificate
+  class_name: CheckBox
+  position:
+    left: -1872
+    top: 622
+    right: -1635
+    bottom: 641
+    width: 237
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: 5. Building Permits

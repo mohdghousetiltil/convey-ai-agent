@@ -1,0 +1,13 @@
+{
+  "_comment": "Client policy overrides for TriConvey Sec. 32 form filling. These values are applied LAST, after all data-driven and AI mapping, so they always win. Edit this file to change defaults without touching code. Set a value to null to let the data decide instead.",
+
+  "s32_1.rates_their_amounts_are": true,
+  "s32_1.rates_total_does_not_exceed_check": true,
+  "s32_1.rates_in_attached_certificates": true,
+  "s32_1.no_amounts_beyond_listed": true,
+
+  "s32_2.easements_in_title_documents": true,
+  "s32_2.easement_failure_to_comply_check": true,
+  "s32_2.easement_failure_to_comply_text": "To the best of the Vendor's knowledge there is no existing failure to comply with the terms of any easements, covenants or other similar restriction.",
+  "s32_2.planning_certificate_attached": true
+}

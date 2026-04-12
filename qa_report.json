@@ -1,0 +1,709 @@
+{
+  "mode": "qa_agent",
+  "questions_sent": 78,
+  "filled": 63,
+  "null": 15,
+  "verified": 63,
+  "rejected_hallucinations": 6,
+  "answers": [
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.1 Rates contained in attached certificate(s)",
+      "value": true,
+      "source_file": "YVW Bill.pdf",
+      "quote": "Yourquarterlybill SummaryPreviousbill $287.29Paymentreceivedthankyou -$287.29Balancecarriedforward $0.00ThisbillUsagecharges $103.60ServicechargesWatersupplysystem $20.80Seweragesystem $119.92OtherauthoritychargesWaterwaysanddrainage $30.82Parks $22.14Totalthisbill(GSTdoesnotapply) $297.28Totalbalance $297.28",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.1 Their amounts are (checkbox)",
+      "value": true,
+      "source_file": "YVW Bill.pdf",
+      "quote": "Usagecharges $103.60ServicechargesWatersupplysystem $20.80Seweragesystem $119.92OtherauthoritychargesWaterwaysanddrainage $30.82Parks $22.14",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.1 Their total does not exceed (checkbox)",
+      "value": true,
+      "source_file": "YVW Bill.pdf",
+      "quote": "Totalthisbill(GSTdoesnotapply) $297.28Totalbalance $297.28",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.1 Their total does not exceed (amount)",
+      "value": "$297.28",
+      "source_file": "YVW Bill.pdf",
+      "quote": "Totalthisbill(GSTdoesnotapply) $297.28Totalbalance $297.28",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.1 Outgoing 1 - Authority name",
+      "value": "Yarra Valley Water",
+      "source_file": "YVW Bill.pdf",
+      "quote": "YarraValleyWaterABN93066902501",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.1 Outgoing 1 - Amount",
+      "value": "$297.28",
+      "source_file": "YVW Bill.pdf",
+      "quote": "Totalthisbill(GSTdoesnotapply) $297.28Totalbalance $297.28",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.1 Outgoing 1 - Interest",
+      "value": null,
+      "source_file": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.1 Outgoing 2 - Authority name",
+      "value": "City of Monash",
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Council City of Monash Council rates $1,198.25",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.1 Outgoing 2 - Amount",
+      "value": "$1,198.25",
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Council City of Monash Council rates $1,198.25",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.2 There are NO amounts for which the purchaser may become liable other than",
+      "value": true,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Do you pay land tax? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.3 Terms Contract",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Are you the registered proprietor of the property? Yes",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.4 Sale Subject to Mortgage",
+      "value": false,
+      "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+      "quote": "MORTGAGE BA088550M 04/02/2026 AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.x Other Particulars",
+      "value": null,
+      "source_file": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.x (a) AVPCC allocated to the land",
+      "value": null,
+      "source_file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+      "quote": "AVPCC Date of entry Entry Date land becomes Comment 110 N/A N/A N/A The AVPCC allocated to the land is not a qualifying use.",
+      "confidence": 0.0,
+      "quote_verified": false,
+      "rejection_reason": "quote not found in source document"
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.x (b) Land tax reform scheme land within the meaning of the CIPT Act",
+      "value": false,
+      "source_file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+      "quote": "The AVPCC allocated to the land is not a qualifying use.",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "1.x (c) Entry Date for Tax Reform Scheme Land",
+      "value": null,
+      "source_file": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "2.1 Damage and Destruction - Copy or extract of any policy attached",
+      "value": true,
+      "source_file": "RACV_HOM798171110_2026022216180718_1441.pdf",
+      "quote": "Your 2026-2027 Certificate of Insurance Home Buildings and Contents Renewal",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "2.1 Damage and Destruction - Particulars of any policy insurance as follows",
+      "value": true,
+      "source_file": "RACV_HOM798171110_2026022216180718_1441.pdf",
+      "quote": "Your 2026-2027 Certificate of Insurance Home Buildings and Contents Renewal",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "2.1 Insurance Company Name",
+      "value": "RACV Insurance Services PTY LTD",
+      "source_file": "RACV_HOM798171110_2026022216180718_1441.pdf",
+      "quote": "RACV Insurance Services PTY LTD ABN 74 004 131 800 AFS Licence No 230039",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "2.1 Type of Policy",
+      "value": "Home Buildings and Contents",
+      "source_file": "RACV_HOM798171110_2026022216180718_1441.pdf",
+      "quote": "Your 2026-2027 Certificate of Insurance Home Buildings and Contents Renewal",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "2.1 Policy No.",
+      "value": "HOM 798 171 110",
+      "source_file": "RACV_HOM798171110_2026022216180718_1441.pdf",
+      "quote": "Policy number HOM 798 171 110",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "2.1 Amount Insured",
+      "value": "$535,300",
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Issued for: Building - $535,300, Contents - $80,000, Portable items - $7000",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "2.2 Owner Builder - Copy or extract of any policy attached",
+      "value": true,
+      "source_file": "1620_Bldg Warranty Insurance.pdf",
+      "quote": "Domestic Building Insurance Certificate of Insurance",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (1)",
+      "label": "2.2 Owner Builder - Particulars of any required insurance as follows",
+      "value": true,
+      "source_file": "1620_Bldg Warranty Insurance.pdf",
+      "quote": "Domestic Building Insurance Certificate of Insurance",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.1 Description of easements: Is in the attached copies of title documents",
+      "value": true,
+      "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+      "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE BA088550M 04/02/2026 AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD COVENANT PS826454D 23/02/2021",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.1 Description of easements: Is as follows (checkbox)",
+      "value": false,
+      "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+      "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE BA088550M 04/02/2026 AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD COVENANT PS826454D 23/02/2021",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.1 Easements description text",
+      "value": "COVENANT PS826454D 23/02/2021",
+      "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+      "quote": "COVENANT PS826454D 23/02/2021",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.1 Particulars of any existing failure to comply with easement, covenant or other similar restriction",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Are you aware of any failure to comply with any restrictions imposed by any easement, covenant or right? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.1 Easement failure to comply text",
+      "value": null,
+      "source_file": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.2 Road Access - No road access",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Is there access to the property by road? Yes",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.3 Designated Bushfire Prone Area",
+      "value": null,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Is the land in a bushfire prone area? No",
+      "confidence": 0.0,
+      "quote_verified": false,
+      "rejection_reason": "quote not found in source document"
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.4 Planning Scheme - Certificate with required information attached",
+      "value": true,
+      "source_file": "VIC_ Certificate - Copy of Plan - PS826454D.pdf",
+      "quote": "Plan PS826454D",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.4 Planning Scheme - Required information is as follows",
+      "value": false,
+      "source_file": "VIC_ Certificate - Copy of Plan - PS826454D.pdf",
+      "quote": "Plan PS826454D",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.4 Name of planning scheme",
+      "value": "Monash Planning Scheme",
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Council City of Monash",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.4 Name of responsible authority",
+      "value": "City of Monash",
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Council City of Monash",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.4 Planning zone",
+      "value": "GRZ - General Residential Zone",
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Nature of property Residential",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (2)",
+      "label": "3.4 Name of planning overlay",
+      "value": null,
+      "source_file": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "tab": "Sec. 32 (3)",
+      "label": "4.1 Notice, Order, Declaration, Report or Recommendation - Are contained in attached certificates/statements",
+      "value": true,
+      "source_file": "VIC_ Enquiry - Environment Protection Authority_ Extract of Priority Sites Register.pdf",
+      "quote": "A search of the Priority Sites Register for the above map reference(Melways), corresponding to the street address provided above, has indicated there is no Priority Site within the same map reference",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (3)",
+      "label": "4.1 Notices - Are as follows (checkbox)",
+      "value": false,
+      "source_file": "VIC_ Enquiry - Environment Protection Authority_ Extract of Priority Sites Register.pdf",
+      "quote": "A search of the Priority Sites Register for the above map reference(Melways), corresponding to the street address provided above, has indicated there is no Priority Site within the same map reference",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (3)",
+      "label": "4.1 Notices - Are as follows (text)",
+      "value": null,
+      "source_file": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "tab": "Sec. 32 (3)",
+      "label": "4.x Agricultural chemicals notices text",
+      "value": null,
+      "source_file": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "tab": "Sec. 32 (3)",
+      "label": "4.x Particulars of any notices of intention to acquire (s6 of the Land Acquisition and Compensation Act)",
+      "value": false,
+      "source_file": "VIC_ Enquiry - Vicroads_ Vicroads Certificate.pdf",
+      "quote": "NO PROPOSALS. As at the 2th April 2026, VicRoads has no approved proposals requiring any part of the property described in your application.",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (3)",
+      "label": "5. Building Permits - Are contained in the attached certificate",
+      "value": true,
+      "source_file": "1620_BuildingPermit.pdf",
+      "quote": "BUILDING PERMIT Form 2 Building Act 1993 Building Regulations 2018 - Regulation 37(1)",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (3)",
+      "label": "5. Building Permits - Are as follows (checkbox)",
+      "value": false,
+      "source_file": "1620_BuildingPermit.pdf",
+      "quote": "BUILDING PERMIT Form 2 Building Act 1993 Building Regulations 2018 - Regulation 37(1)",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (3)",
+      "label": "5. Building Permits - Are as follows (text)",
+      "value": null,
+      "source_file": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "6. Owners Corporation - Attached is a current owners corporation certificate issued according to s151",
+      "value": null,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "If your property affected by an Owners Corporation otherwise known as Strata Insurance for common property. No",
+      "confidence": 0.0,
+      "quote_verified": false,
+      "rejection_reason": "quote not found in source document"
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "6. Owners Corporation - Attached is the information prescribed for the purposes of s151(4)(a)",
+      "value": null,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "If your property affected by an Owners Corporation otherwise known as Strata Insurance for common property. No",
+      "confidence": 0.0,
+      "quote_verified": false,
+      "rejection_reason": "quote not found in source document"
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "6. Owners Corporation is inactive",
+      "value": null,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "If your property affected by an Owners Corporation otherwise known as Strata Insurance for common property. No",
+      "confidence": 0.0,
+      "quote_verified": false,
+      "rejection_reason": "quote not found in source document"
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "7. Growth Areas Infrastructure Contribution (GAIC) applies",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "7.1 Work-in-Kind Agreement - Land IS to be transferred under the agreement",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "7.1 Work-in-Kind - Land IS land on which works are to be carried out",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "7.1 Work-in-Kind - Land IS land in respect of which a GAIC is imposed",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "7.2 GAIC Recording - Any certificate of release from liability to pay a GAIC",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "7.2 GAIC Recording - Any certificate of deferral of the liability to pay the whole or part of a GAIC",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "7.2 GAIC Recording - Any certificate of exemption from liability to pay a GAIC",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "7.2 GAIC Recording - Any certificate of staged payment approval",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "7.2 GAIC Recording - Any certificate of no GAIC liability",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "7.2 GAIC Recording - Any notice providing evidence of the grant of a reduction of the liability for a GAIC or an exemption",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "7.2 GAIC Recording - Certificate issued under Part 9B of the Planning and Environment Act",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "8. Services - Electricity supply (tick if NOT connected)",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Mains Electricity",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "8. Services - Gas supply (tick if NOT connected)",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Mains Gas",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "8. Services - Water supply (tick if NOT connected)",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Mains Water",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "8. Services - Sewerage (tick if NOT connected)",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Mains Sewerage",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (4)",
+      "label": "8. Services - Telephone services (tick if NOT connected)",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "VOIP phone via NBN",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (5)",
+      "label": "9. Title - Evidence of the vendor's right or power to sell",
+      "value": true,
+      "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+      "quote": "REGISTERED PROPRIETOR Estate Fee Simple Sole Proprietor ERIN KRISTINE SELLECK of 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (5)",
+      "label": "10.1 Unregistered Subdivision - Plan certified but not yet registered",
+      "value": false,
+      "source_file": "VIC_ Certificate - Copy of Plan - PS826454D.pdf",
+      "quote": "Plan PS826454D",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (5)",
+      "label": "10.1 Unregistered Subdivision - Latest version of the plan (not yet certified)",
+      "value": false,
+      "source_file": "VIC_ Certificate - Copy of Plan - PS826454D.pdf",
+      "quote": "Plan PS826454D",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (5)",
+      "label": "10.2 Staged Subdivision - Plan for the first stage",
+      "value": false,
+      "source_file": "VIC_ Certificate - Copy of Plan - PS826454D.pdf",
+      "quote": "Plan PS826454D",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (5)",
+      "label": "10.2 Staged Subdivision - Details as follows",
+      "value": false,
+      "source_file": "VIC_ Certificate - Copy of Plan - PS826454D.pdf",
+      "quote": "Plan PS826454D",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (5)",
+      "label": "10.2 Staged Subdivision - Proposals for subsequent stages known to vendor",
+      "value": false,
+      "source_file": "VIC_ Certificate - Copy of Plan - PS826454D.pdf",
+      "quote": "Plan PS826454D",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (5)",
+      "label": "10.2 Staged Subdivision - Contents of permit authorising the staged subdivision",
+      "value": false,
+      "source_file": "VIC_ Certificate - Copy of Plan - PS826454D.pdf",
+      "quote": "Plan PS826454D",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (5)",
+      "label": "10.3 Further Plan of Subdivision - Plan certified but not yet registered",
+      "value": false,
+      "source_file": "VIC_ Certificate - Copy of Plan - PS826454D.pdf",
+      "quote": "Plan PS826454D",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (5)",
+      "label": "10.3 Further Plan of Subdivision - Latest version (not yet certified)",
+      "value": false,
+      "source_file": "VIC_ Certificate - Copy of Plan - PS826454D.pdf",
+      "quote": "Plan PS826454D",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (6)",
+      "label": "11. Disclosure of Energy Information - Are contained in the attached building energy efficiency certificate",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Have solar panels been installed? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (6)",
+      "label": "11. Disclosure of Energy Information - Are as follows (checkbox)",
+      "value": false,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Have solar panels been installed? No",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (6)",
+      "label": "11. Disclosure of Energy Information - Are as follows (text)",
+      "value": null,
+      "source_file": null,
+      "quote": null,
+      "confidence": 0.0
+    },
+    {
+      "tab": "Sec. 32 (6)",
+      "label": "12. Due Diligence Checklist",
+      "value": true,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Have we acted for you before? Yes",
+      "confidence": 1.0,
+      "quote_verified": true
+    },
+    {
+      "tab": "Sec. 32 (6)",
+      "label": "13. Attachments",
+      "value": null,
+      "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "quote": "Please upload Certificate of Currency RACV_HOM798171110_2026022216180718_1441.pdf",
+      "confidence": 0.0,
+      "quote_verified": false,
+      "rejection_reason": "quote not found in source document"
+    }
+  ]
+}

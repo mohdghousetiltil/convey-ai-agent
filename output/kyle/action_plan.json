@@ -1,0 +1,365 @@
+{
+  "actions": [
+    {
+      "question_id": "sec32_1.1_outgoing_1_authority",
+      "field_id": "Sec. 32 (1)::Edit::Authority::t282l-1871",
+      "action": "set_text",
+      "payload": "City of Monash",
+      "expected_after": "City of Monash",
+      "needs_review_first": false,
+      "source_answer_confidence": 0.97
+    },
+    {
+      "question_id": "sec32_1.1_outgoing_1_amount",
+      "field_id": "Sec. 32 (1)::Edit::Amount::t282l-1449",
+      "action": "set_text",
+      "payload": "1,198.25",
+      "expected_after": "1,198.25",
+      "needs_review_first": false,
+      "source_answer_confidence": 0.97
+    },
+    {
+      "question_id": "sec32_1.1_outgoing_2_authority",
+      "field_id": "Sec. 32 (1)::Edit::unnamed::t308l-1871",
+      "action": "set_text",
+      "payload": "Yarra Valley Water",
+      "expected_after": "Yarra Valley Water",
+      "needs_review_first": false,
+      "source_answer_confidence": 0.99
+    },
+    {
+      "question_id": "sec32_1.1_outgoing_2_amount",
+      "field_id": "Sec. 32 (1)::Edit::unnamed::t308l-1449",
+      "action": "set_text",
+      "payload": "783.40",
+      "expected_after": "783.40",
+      "needs_review_first": false,
+      "source_answer_confidence": 0.75
+    },
+    {
+      "question_id": "sec32_1.1_outgoing_3_authority",
+      "field_id": "Sec. 32 (1)::Edit::unnamed::t333l-1871",
+      "action": "set_text",
+      "payload": "State Revenue Office",
+      "expected_after": "State Revenue Office",
+      "needs_review_first": false,
+      "source_answer_confidence": 0.99
+    },
+    {
+      "question_id": "sec32_1.1_outgoing_3_amount",
+      "field_id": "Sec. 32 (1)::Edit::unnamed::t333l-1449",
+      "action": "set_text",
+      "payload": "0.00",
+      "expected_after": "0.00",
+      "needs_review_first": false,
+      "source_answer_confidence": 0.97
+    },
+    {
+      "question_id": "sec32_1.1_outgoing_4_authority",
+      "field_id": "Sec. 32 (1)::Edit::unnamed::t360l-1871",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "sec32_1.1_outgoing_4_amount",
+      "field_id": "Sec. 32 (1)::Edit::unnamed::t360l-1449",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "policy_1_amounts_are_checked",
+      "field_id": "Sec. 32 (1)::CheckBox::Their amounts are:::t247l-1871",
+      "action": "set_checkbox",
+      "payload": true,
+      "expected_after": true,
+      "needs_review_first": false,
+      "source_answer_confidence": 1.0
+    },
+    {
+      "question_id": "policy_1_certs_attached",
+      "field_id": "Sec. 32 (1)::CheckBox::Are contained in attached certificate(s)::t226l-1871",
+      "action": "set_checkbox",
+      "payload": true,
+      "expected_after": true,
+      "needs_review_first": false,
+      "source_answer_confidence": 1.0
+    },
+    {
+      "question_id": "policy_1_total_does_not_exceed",
+      "field_id": "Sec. 32 (1)::CheckBox::Their total does not exceed::t228l-1481",
+      "action": "set_checkbox",
+      "payload": true,
+      "expected_after": true,
+      "needs_review_first": false,
+      "source_answer_confidence": 1.0
+    },
+    {
+      "question_id": "sec32_1.3_terms_contract",
+      "field_id": "Sec. 32 (1)::CheckBox::Terms Contract::t494l-1847",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "sec32_1.4_sale_subject_to_mortgage",
+      "field_id": "Sec. 32 (1)::CheckBox::Sale Subject to Mortgage::t494l-1597",
+      "action": "set_checkbox",
+      "payload": true,
+      "expected_after": true,
+      "needs_review_first": false,
+      "source_answer_confidence": 0.97
+    },
+    {
+      "question_id": "sec32_2.1_insurance_company",
+      "field_id": "Sec. 32 (1)::Edit::Company Name::t675l-1774",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "sec32_2.1_insurance_policy_no",
+      "field_id": "Sec. 32 (1)::Edit::Policy No.::t727l-1571",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "sec32_2.1_insurance_type",
+      "field_id": "Sec. 32 (1)::Edit::Type of Policy::t701l-1774",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "sec32_2.1_insurance_amount_insured",
+      "field_id": "Sec. 32 (1)::Edit::Amount Insured::t727l-1301",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "policy_2_title_in_attached",
+      "field_id": "Sec. 32 (2)::CheckBox::Is in the attached copies of title documents::t249l-1873",
+      "action": "set_checkbox",
+      "payload": true,
+      "expected_after": true,
+      "needs_review_first": false,
+      "source_answer_confidence": 1.0
+    },
+    {
+      "question_id": "policy_2_failure_checked",
+      "field_id": "Sec. 32 (2)::CheckBox::Particulars of any existing failure to comply with easement, covenant or other similar restriction are:::t374l-1873",
+      "action": "set_checkbox",
+      "payload": true,
+      "expected_after": true,
+      "needs_review_first": false,
+      "source_answer_confidence": 1.0
+    },
+    {
+      "question_id": "policy_2_failure_text",
+      "field_id": "Sec. 32 (2)::Edit::Particulars of any existing failure to comply with easement, covenant or other similar restriction are:::t399l-1875",
+      "action": "set_text",
+      "payload": "To the best of the Vendor's knowledge there is no existing failure to comply with the terms of any easements, covenants or other similar restriction.",
+      "expected_after": "To the best of the Vendor's knowledge there is no existing failure to comply with the terms of any easements, covenants or other similar restriction.",
+      "needs_review_first": false,
+      "source_answer_confidence": 1.0
+    },
+    {
+      "question_id": "policy_2_planning_cert_attached",
+      "field_id": "Sec. 32 (2)::CheckBox::Certificate with required information attached::t588l-1873",
+      "action": "set_checkbox",
+      "payload": true,
+      "expected_after": true,
+      "needs_review_first": false,
+      "source_answer_confidence": 1.0
+    },
+    {
+      "question_id": "sec32_3.1_easement_failure_text",
+      "field_id": "Sec. 32 (2)::Edit::Particulars of any existing failure to comply with easement, covenant or other similar restriction are:::t399l-1875",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "sec32_3.2_no_road_access",
+      "field_id": "Sec. 32 (2)::CheckBox::No road access::t496l-1873",
+      "action": "set_checkbox",
+      "payload": false,
+      "expected_after": false,
+      "needs_review_first": false,
+      "source_answer_confidence": 0.97
+    },
+    {
+      "question_id": "sec32_3.3_bushfire_prone",
+      "field_id": "Sec. 32 (2)::CheckBox::Land is in Designated Bushfire Prone Area::t540l-1873",
+      "action": "set_checkbox",
+      "payload": false,
+      "expected_after": false,
+      "needs_review_first": false,
+      "source_answer_confidence": 0.97
+    },
+    {
+      "question_id": "sec32_3.4_planning_scheme",
+      "field_id": "Sec. 32 (2)::Edit::Name of planning scheme::t635l-1698",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "sec32_3.4_responsible_authority",
+      "field_id": "Sec. 32 (2)::Edit::Name of responsible authority::t662l-1698",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "sec32_3.4_planning_zone",
+      "field_id": "Sec. 32 (2)::ComboBox::Name of responsible authority::t689l-1698",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "sec32_3.4_planning_overlay_name",
+      "field_id": "Sec. 32 (2)::Edit::Name of planning overlay::t716l-1698",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "sec32_4.1_notices_text",
+      "field_id": "Sec. 32 (3)::Edit::Are as follows:::t281l-1872",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "sec32_5.1_building_permits_text",
+      "field_id": "Sec. 32 (3)::CheckBox::Are contained in the attached certificate::t622l-1872",
+      "action": "set_checkbox",
+      "payload": false,
+      "expected_after": false,
+      "needs_review_first": false,
+      "source_answer_confidence": 0.97
+    },
+    {
+      "question_id": "sec32_8_electricity_not_connected",
+      "field_id": "Sec. 32 (4)::CheckBox::Electricity supply::t720l-1875",
+      "action": "set_checkbox",
+      "payload": false,
+      "expected_after": false,
+      "needs_review_first": false,
+      "source_answer_confidence": 0.92
+    },
+    {
+      "question_id": "sec32_8_gas_not_connected",
+      "field_id": "Sec. 32 (4)::CheckBox::Gas supply::t720l-1726",
+      "action": "set_checkbox",
+      "payload": false,
+      "expected_after": false,
+      "needs_review_first": false,
+      "source_answer_confidence": 0.92
+    },
+    {
+      "question_id": "sec32_8_water_not_connected",
+      "field_id": "Sec. 32 (4)::CheckBox::Water supply::t720l-1608",
+      "action": "set_checkbox",
+      "payload": false,
+      "expected_after": false,
+      "needs_review_first": false,
+      "source_answer_confidence": 0.95
+    },
+    {
+      "question_id": "sec32_8_sewerage_not_connected",
+      "field_id": "Sec. 32 (4)::CheckBox::Sewerage::t720l-1470",
+      "action": "set_checkbox",
+      "payload": false,
+      "expected_after": false,
+      "needs_review_first": false,
+      "source_answer_confidence": 0.95
+    },
+    {
+      "question_id": "sec32_8_telephone_not_connected",
+      "field_id": "Sec. 32 (4)::CheckBox::Telephone services::t720l-1356",
+      "action": "set_checkbox",
+      "payload": true,
+      "expected_after": true,
+      "needs_review_first": false,
+      "source_answer_confidence": 0.85
+    },
+    {
+      "question_id": "sec32_7_gaic_applies",
+      "field_id": "Sec. 32 (4)::CheckBox::GAIC applies::t323l-1875",
+      "action": "skip",
+      "payload": null,
+      "expected_after": null,
+      "needs_review_first": true,
+      "source_answer_confidence": 0.0
+    },
+    {
+      "question_id": "sec32_oc_inactive",
+      "field_id": "Sec. 32 (4)::CheckBox::Owners Corporation is inactive::t267l-1875",
+      "action": "set_checkbox",
+      "payload": true,
+      "expected_after": true,
+      "needs_review_first": false,
+      "source_answer_confidence": 0.97
+    },
+    {
+      "question_id": "policy_4_oc_cert_attached",
+      "field_id": "Sec. 32 (4)::CheckBox::Attached is a current owners corporation certificate issued according to s151 of the Owners Corporations Act::t213l-1875",
+      "action": "set_checkbox",
+      "payload": false,
+      "expected_after": false,
+      "needs_review_first": false,
+      "source_answer_confidence": 0.97
+    },
+    {
+      "question_id": "policy_6_due_diligence",
+      "field_id": "Sec. 32 (6)::Edit::Are as follows:::t256l-1870",
+      "action": "set_text",
+      "payload": "Is attached",
+      "expected_after": "Is attached",
+      "needs_review_first": false,
+      "source_answer_confidence": 1.0
+    },
+    {
+      "question_id": "policy_6_attachments",
+      "field_id": "Sec. 32 (6)::Edit::13. Attachments::t424l-1870",
+      "action": "set_text",
+      "payload": "- Due Diligence Checklist\n- Register Search Statement Volume 12287 Folio 279 dated 02/04/2026\n- Plan of Subdivision PS826454D dated 02/04/2026\n- Covenant PS826454D dated 02/04/2026\n- City of Monash Building Approval Certificate dated ##\n- City of Monash Land Information Certificate dated ##\n- Yarra Valley Water Encumbrance Certificate dated 30/06/2026\n- State Revenue Office Land Tax Certificate dated 07/04/2026\n- Detailed Property Report dated ##\n- Domestic Building Insurance dated 22/06/2020\n- Vic Roads Certificate dated 02/04/2026\n- EPA Certificate dated 02/04/2026\n(- Any right to sell property docs)\n- s27 Notice of Deposit Release (by way of service)",
+      "expected_after": "- Due Diligence Checklist\n- Register Search Statement Volume 12287 Folio 279 dated 02/04/2026\n- Plan of Subdivision PS826454D dated 02/04/2026\n- Covenant PS826454D dated 02/04/2026\n- City of Monash Building Approval Certificate dated ##\n- City of Monash Land Information Certificate dated ##\n- Yarra Valley Water Encumbrance Certificate dated 30/06/2026\n- State Revenue Office Land Tax Certificate dated 07/04/2026\n- Detailed Property Report dated ##\n- Domestic Building Insurance dated 22/06/2020\n- Vic Roads Certificate dated 02/04/2026\n- EPA Certificate dated 02/04/2026\n(- Any right to sell property docs)\n- s27 Notice of Deposit Release (by way of service)",
+      "needs_review_first": false,
+      "source_answer_confidence": 0.9
+    }
+  ],
+  "review_gate_required": true
+}

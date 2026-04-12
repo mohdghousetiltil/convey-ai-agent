@@ -1,0 +1,3559 @@
+{
+  "facts": {
+    "docs.property_report.date": [
+      {
+        "path": "docs.property_report.date",
+        "value": "26/03/2026",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Detailed-Property-Report.pdf",
+            "page": null,
+            "quote": "date=26/03/2026 from 6-Goyin-Street-Bonshaw-(ID424137496)-Detailed-Property-Report.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-12T11:24:25.484887",
+        "notes": "auto-extracted from property_report document"
+      }
+    ],
+    "planning.responsible_authority": [
+      {
+        "path": "planning.responsible_authority",
+        "value": "Ballarat",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Detailed-Property-Report.pdf",
+            "page": null,
+            "quote": "BALLARAT 2062096",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.484887",
+        "notes": null
+      },
+      {
+        "path": "planning.responsible_authority",
+        "value": "Ballarat",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+            "page": null,
+            "quote": "BALLARAT 2062096",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.836976",
+        "notes": null
+      }
+    ],
+    "planning.overlays_exist": [
+      {
+        "path": "planning.overlays_exist",
+        "value": false,
+        "confidence": 0.7,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Detailed-Property-Report.pdf",
+            "page": null,
+            "quote": "no overlay heading found",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.491520",
+        "notes": null
+      },
+      {
+        "path": "planning.overlays_exist",
+        "value": true,
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+            "page": null,
+            "quote": "DCPO",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.841976",
+        "notes": null
+      }
+    ],
+    "planning.bushfire_prone": [
+      {
+        "path": "planning.bushfire_prone",
+        "value": false,
+        "confidence": 0.98,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Detailed-Property-Report.pdf",
+            "page": null,
+            "quote": "No Bushfire Management Overlay (BMO) detected in planning property report",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.491520",
+        "notes": "Absence of BMO in VicPlan report"
+      },
+      {
+        "path": "planning.bushfire_prone",
+        "value": true,
+        "confidence": 0.98,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+            "page": null,
+            "quote": "Bushfire Management Overlay (BMO) present \u2014 land is in bushfire prone area",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.841976",
+        "notes": "Legally authoritative per s32C(b) Sale of Land Act 1962 (Vic)"
+      },
+      {
+        "path": "planning.bushfire_prone",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Is the land in a bushfire prone area?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "planning.gaic_trigger": [
+      {
+        "path": "planning.gaic_trigger",
+        "value": false,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Detailed-Property-Report.pdf",
+            "page": null,
+            "quote": "GAIC not mentioned in planning property report",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.491520",
+        "notes": null
+      },
+      {
+        "path": "planning.gaic_trigger",
+        "value": false,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+            "page": null,
+            "quote": "GAIC not mentioned in planning property report",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.841976",
+        "notes": null
+      }
+    ],
+    "docs.planning_cert.date": [
+      {
+        "path": "docs.planning_cert.date",
+        "value": "26/03/2026",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+            "page": null,
+            "quote": "date=26/03/2026 from 6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-12T11:24:25.835976",
+        "notes": "auto-extracted from planning_cert document"
+      }
+    ],
+    "property.address": [
+      {
+        "path": "property.address",
+        "value": "6 GOYIN STREET BONSHAW 3352",
+        "confidence": 0.88,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+            "page": null,
+            "quote": "PLANNING PROPERTY REPORT: 6 GOYIN STREET BONSHAW 3352",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.835976",
+        "notes": "from planning property report heading"
+      },
+      {
+        "path": "property.address",
+        "value": "6 Goyin St, Bonshaw VIC 3352, Australia",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Property Address\n6 Goyin St, Bonshaw VIC 3352, Australia",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      },
+      {
+        "path": "property.address",
+        "value": "6 GOYIN STREET BONSHAW VIC 3352",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "Street Address: 6 GOYIN STREET BONSHAW VIC 3352",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": "title's 'Street Address' (additional info)"
+      },
+      {
+        "path": "property.address",
+        "value": "6 GOYIN STREET BONSHAW VIC 3352",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "Street Address: 6 GOYIN STREET BONSHAW VIC 3352",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": "title's 'Street Address' (additional info)"
+      },
+      {
+        "path": "property.address",
+        "value": "6 GOYIN STREET BONSHAW VIC 3352",
+        "confidence": 0.93,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Land Address: 6 GOYIN STREET BONSHAW VIC 3352",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": "from SRO land tax certificate"
+      }
+    ],
+    "planning.scheme": [
+      {
+        "path": "planning.scheme",
+        "value": "Ballarat",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+            "page": null,
+            "quote": "Planning Scheme - Ballarat",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.835976",
+        "notes": null
+      }
+    ],
+    "planning.zone": [
+      {
+        "path": "planning.zone",
+        "value": "UGZ - Urban Growth Zone",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+            "page": null,
+            "quote": "UTILITIES Southern Rural Water Central Highlands Water Outside drainage boundary POWERCOR View location in VicPlan Planning Zones URBAN GROWTH ZONE (UGZ)",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.841976",
+        "notes": null
+      }
+    ],
+    "planning.overlay_names": [
+      {
+        "path": "planning.overlay_names",
+        "value": "DCPO - Development Contributions Plan Overlay",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+            "page": null,
+            "quote": "DCPO",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.841976",
+        "notes": null
+      }
+    ],
+    "planning.overlays_list": [
+      {
+        "path": "planning.overlays_list",
+        "value": [
+          "DCPO"
+        ],
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+            "page": null,
+            "quote": "DCPO",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:planning_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:25.841976",
+        "notes": null
+      }
+    ],
+    "docs.residential_tenancy_agreement.date": [
+      {
+        "path": "docs.residential_tenancy_agreement.date",
+        "value": "10/04/2024",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "Disclosure Statement and Residential Rental Agreement [2024-05-07] 6 Goyin Street  Bonshaw 3352.pdf",
+            "page": null,
+            "quote": "date=10/04/2024 from Disclosure Statement and Residential Rental Agreement [2024-05-07] 6 Goyin Street  Bonshaw 3352.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-12T11:24:37.573875",
+        "notes": "auto-extracted from residential_tenancy_agreement document"
+      }
+    ],
+    "vendor.0.title": [
+      {
+        "path": "vendor.0.title",
+        "value": "Mr",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "What is your title?\nMr",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "vendor.0.first_name": [
+      {
+        "path": "vendor.0.first_name",
+        "value": "Scott",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Your first name\nScott",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "vendor.0.middle_name": [
+      {
+        "path": "vendor.0.middle_name",
+        "value": "Daniel",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Your middle name\nDaniel",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "vendor.0.last_name": [
+      {
+        "path": "vendor.0.last_name",
+        "value": "Azarnikow",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Your last name\nAzarnikow",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "vendor.0.preferred_name": [
+      {
+        "path": "vendor.0.preferred_name",
+        "value": "Scott",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Preferred Name\nScott",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "vendor.0.occupation": [
+      {
+        "path": "vendor.0.occupation",
+        "value": "Ambulance dispatcher/call taker",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Occupation\nAmbulance dispatcher/call taker",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "vendor.0.residential_address": [
+      {
+        "path": "vendor.0.residential_address",
+        "value": "1912 Glenelg Hwy, Scarsdale VIC 3351, Australia",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Residential address\n1912 Glenelg Hwy, Scarsdale VIC 3351, Australia",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "vendor.0.phone": [
+      {
+        "path": "vendor.0.phone",
+        "value": "0429 143 235",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Contact Number\n0429 143 235",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "vendor.0.email": [
+      {
+        "path": "vendor.0.email",
+        "value": "azarnikow12@gmail.com",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Email Address\nazarnikow12@gmail.com",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "vendor.0.country_of_citizenship": [
+      {
+        "path": "vendor.0.country_of_citizenship",
+        "value": "Australia",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Country of citizenship\nAustralia",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "vendor.0.nationality": [
+      {
+        "path": "vendor.0.nationality",
+        "value": "Australian",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Nationality\nAustralian",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "vendor.count": [
+      {
+        "path": "vendor.count",
+        "value": 1,
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "1 vendor block(s) detected",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": "counted by occurrences of 'What is your title?' label"
+      }
+    ],
+    "property.nature": [
+      {
+        "path": "property.nature",
+        "value": "Residential",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Nature of property\nResidential",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "property.dwelling_age": [
+      {
+        "path": "property.dwelling_age",
+        "value": "5 years 10 months",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Approximate age of Dwelling / Building\n5 years 10 months",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "property.volume_or_book": [
+      {
+        "path": "property.volume_or_book",
+        "value": "\u2013",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Volume or book:\n\u2013",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      },
+      {
+        "path": "property.volume_or_book",
+        "value": "11910",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "VOLUME 11910 FOLIO 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "property.volume_or_book",
+        "value": "11910",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "VOLUME 11910 FOLIO 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      },
+      {
+        "path": "property.volume_or_book",
+        "value": "11910",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Lot Plan Volume Folio 98 744342 11910 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": null
+      }
+    ],
+    "property.folio_or_number": [
+      {
+        "path": "property.folio_or_number",
+        "value": "\u2013",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Folio or number:\n\u2013",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      },
+      {
+        "path": "property.folio_or_number",
+        "value": "328",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "VOLUME 11910 FOLIO 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "property.folio_or_number",
+        "value": "328",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "VOLUME 11910 FOLIO 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      },
+      {
+        "path": "property.folio_or_number",
+        "value": "328",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Lot Plan Volume Folio 98 744342 11910 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": null
+      }
+    ],
+    "property.lot_number": [
+      {
+        "path": "property.lot_number",
+        "value": "\u2013",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Lot number\n\u2013",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      },
+      {
+        "path": "property.lot_number",
+        "value": "98",
+        "confidence": 0.98,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION Lot 98 on Plan of Subdivision 744342V. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "property.lot_number",
+        "value": "98",
+        "confidence": 0.98,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION ---------------- Lot 98 on Plan of Subdivision 744342V. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      },
+      {
+        "path": "property.lot_number",
+        "value": "98",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Lot Plan Volume Folio 98 744342 11910 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": null
+      }
+    ],
+    "property.plan_number": [
+      {
+        "path": "property.plan_number",
+        "value": "\u2013",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Plan number\n\u2013",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      },
+      {
+        "path": "property.plan_number",
+        "value": "744342V",
+        "confidence": 0.98,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION Lot 98 on Plan of Subdivision 744342V. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "property.plan_number",
+        "value": "744342V",
+        "confidence": 0.98,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION ---------------- Lot 98 on Plan of Subdivision 744342V. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      },
+      {
+        "path": "property.plan_number",
+        "value": "744342",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Lot Plan Volume Folio 98 744342 11910 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": null
+      }
+    ],
+    "property.owner_occupied": [
+      {
+        "path": "property.owner_occupied",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Do you live at the property?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "property.leased": [
+      {
+        "path": "property.leased",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Is the Property rented/leased?\nYes",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "property.insured": [
+      {
+        "path": "property.insured",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Is the property insured?\nYes",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "property.road_access": [
+      {
+        "path": "property.road_access",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Is there access to the property by road?\nYes",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.payable": [
+      {
+        "path": "rates.land_tax.payable",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Do you pay land tax?\nYes",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      },
+      {
+        "path": "rates.land_tax.payable",
+        "value": true,
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Tax Payable $975.00",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": "derived from Tax Payable = $975.00"
+      }
+    ],
+    "rates.land_tax.vacant_residential_payable": [
+      {
+        "path": "rates.land_tax.vacant_residential_payable",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Is any vacant land residential land tax payable?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.467375",
+        "notes": null
+      },
+      {
+        "path": "rates.land_tax.vacant_residential_payable",
+        "value": true,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Tax Payable $975.00",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": "follows the main land tax payable status on this certificate"
+      }
+    ],
+    "building.permits_last_7_years": [
+      {
+        "path": "building.permits_last_7_years",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Have any building permits been issued in the last 7 years?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "building.works_last_7_years": [
+      {
+        "path": "building.works_last_7_years",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Has there been any building works/structures undertaken in the last 7 years?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "building.works_without_permit": [
+      {
+        "path": "building.works_without_permit",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Have you done any works without obtaining a permit?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "building.works_without_approval": [
+      {
+        "path": "building.works_without_approval",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Has any building work been done on the land that DID NOT have the required building nor planning approvals?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "building.improved_past_6_5_years": [
+      {
+        "path": "building.improved_past_6_5_years",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Have you improved the property within the past 6.5 years?\nYes",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "building.new_appliances_gas_elec_plumbing": [
+      {
+        "path": "building.new_appliances_gas_elec_plumbing",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Have you installed new appliances where works relating to gas, electrical and plumbing have been undertaken?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "building.has_water_tank": [
+      {
+        "path": "building.has_water_tank",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Does the property have a water tank?\nYes",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "building.permit_required_for_water_tank": [
+      {
+        "path": "building.permit_required_for_water_tank",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Was a permit required for the water tank\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "vendor.is_trust": [
+      {
+        "path": "vendor.is_trust",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Is the Property held by a Trust?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "rates.council.authority_name": [
+      {
+        "path": "rates.council.authority_name",
+        "value": "Ballarat council",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Council\nBallarat council",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "rates.council.annual_amount": [
+      {
+        "path": "rates.council.annual_amount",
+        "value": "$2,500.00",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Council rates\n$2,500.00",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "rates.water.authority_name": [
+      {
+        "path": "rates.water.authority_name",
+        "value": "Central highlands water",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Water Authority\nCentral highlands water",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "rates.water.annual_amount": [
+      {
+        "path": "rates.water.annual_amount",
+        "value": "$900.00",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Water rates\n$900.00",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "services.electricity.connected": [
+      {
+        "path": "services.electricity.connected",
+        "value": true,
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\nMains Electricity",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": "matched 'Mains Electricity' against 'Mains Electricity'"
+      }
+    ],
+    "services.gas.connected": [
+      {
+        "path": "services.gas.connected",
+        "value": true,
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\nMains Gas",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": "matched 'Mains Gas' against 'Mains Gas'"
+      }
+    ],
+    "services.water.connected": [
+      {
+        "path": "services.water.connected",
+        "value": true,
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\nMains Water",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": "matched 'Mains Water' against 'Mains Water'"
+      }
+    ],
+    "services.sewerage.connected": [
+      {
+        "path": "services.sewerage.connected",
+        "value": true,
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\nMains Sewerage",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": "matched 'Mains Sewerage' against 'Mains Sewerage'"
+      }
+    ],
+    "services.septic_tank.connected": [
+      {
+        "path": "services.septic_tank.connected",
+        "value": false,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\ni.e. Can the services be used at the date the purchaser signs the Contract? ('Connected' is not defined in the Sale\nof Land Act 1962 (Vic).\nA service is connected where, at the date the purchaser signs the contract of sale, the service can be used.)\nMains Electricity\nMains Gas\nMains Water\nMains Sewerage\nDemands, Disputes, Notices, Orders, Letters and/or Flyers\nServices Connected\nPrimary Production Use\nNo\nIf no, when was the property last used for farming or agricultural purposes.\n\u2013",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": "'Septic Tank' not listed under services-connected header"
+      }
+    ],
+    "services.bottled_gas.connected": [
+      {
+        "path": "services.bottled_gas.connected",
+        "value": false,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\ni.e. Can the services be used at the date the purchaser signs the Contract? ('Connected' is not defined in the Sale\nof Land Act 1962 (Vic).\nA service is connected where, at the date the purchaser signs the contract of sale, the service can be used.)\nMains Electricity\nMains Gas\nMains Water\nMains Sewerage\nDemands, Disputes, Notices, Orders, Letters and/or Flyers\nServices Connected\nPrimary Production Use\nNo\nIf no, when was the property last used for farming or agricultural purposes.\n\u2013",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": "'Bottled Gas' not listed under services-connected header"
+      }
+    ],
+    "services.tank_water.connected": [
+      {
+        "path": "services.tank_water.connected",
+        "value": false,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\ni.e. Can the services be used at the date the purchaser signs the Contract? ('Connected' is not defined in the Sale\nof Land Act 1962 (Vic).\nA service is connected where, at the date the purchaser signs the contract of sale, the service can be used.)\nMains Electricity\nMains Gas\nMains Water\nMains Sewerage\nDemands, Disputes, Notices, Orders, Letters and/or Flyers\nServices Connected\nPrimary Production Use\nNo\nIf no, when was the property last used for farming or agricultural purposes.\n\u2013",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": "'Tank Water' not listed under services-connected header"
+      }
+    ],
+    "services.telephone.connected": [
+      {
+        "path": "services.telephone.connected",
+        "value": false,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\ni.e. Can the services be used at the date the purchaser signs the Contract? ('Connected' is not defined in the Sale\nof Land Act 1962 (Vic).\nA service is connected where, at the date the purchaser signs the contract of sale, the service can be used.)\nMains Electricity\nMains Gas\nMains Water\nMains Sewerage\nDemands, Disputes, Notices, Orders, Letters and/or Flyers\nServices Connected\nPrimary Production Use\nNo\nIf no, when was the property last used for farming or agricultural purposes.\n\u2013",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": "'Telephone' not listed under services-connected header"
+      }
+    ],
+    "services.nbn.connected": [
+      {
+        "path": "services.nbn.connected",
+        "value": false,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\ni.e. Can the services be used at the date the purchaser signs the Contract? ('Connected' is not defined in the Sale\nof Land Act 1962 (Vic).\nA service is connected where, at the date the purchaser signs the contract of sale, the service can be used.)\nMains Electricity\nMains Gas\nMains Water\nMains Sewerage\nDemands, Disputes, Notices, Orders, Letters and/or Flyers\nServices Connected\nPrimary Production Use\nNo\nIf no, when was the property last used for farming or agricultural purposes.\n\u2013",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": "'NBN' not listed under services-connected header"
+      }
+    ],
+    "insurance.home.vendor_disclosed_text": [
+      {
+        "path": "insurance.home.vendor_disclosed_text",
+        "value": "Racv - policy number HOM707678946\nInsured for building - $516856\nPolicy renewal date 03/06/2026",
+        "confidence": 0.8,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Please provide full particulars of your insurance cover:\nRacv - policy number HOM707678946\nInsured for building - $516856\nPolicy renewal date 03/06/2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": "vendor-disclosed insurance particulars (Certificate of Currency is authoritative)"
+      }
+    ],
+    "rates.owners_corporation.exists": [
+      {
+        "path": "rates.owners_corporation.exists",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "If your property a\ufb00ected by an Owners Corporation otherwise known as Strata Insurance for common property.\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": null
+      }
+    ],
+    "sale.s27_early_release": [
+      {
+        "path": "sale.s27_early_release",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+            "page": null,
+            "quote": "Section 27 - Do you want/need an early release of deposit?\nNo, I am happy to wait for the deposit to be released to me at settlement by the agent. PLEASE NOTE THAT IF YOU",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-12T11:24:38.468380",
+        "notes": "True = vendor wants s27 early deposit release"
+      }
+    ],
+    "docs.plan_of_subdivision": [
+      {
+        "path": "docs.plan_of_subdivision",
+        "value": "{\"number\": \"PS744342V\", \"date\": \"20/03/2026\"}",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Copy of Plan - PS744342V.pdf",
+            "page": null,
+            "quote": "plan number PS744342V date 20/03/2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-12T11:24:38.478375",
+        "notes": "Plan reference (PS) from VIC_ Certificate - Copy of Plan - PS744342V.pdf"
+      },
+      {
+        "path": "docs.plan_of_subdivision",
+        "value": "{\"number\": \"PS744342V\", \"date\": \"20/03/2026\"}",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "plan number PS744342V date 20/03/2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": "Plan reference (PS) from VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf"
+      },
+      {
+        "path": "docs.plan_of_subdivision",
+        "value": "{\"number\": \"PS744342V\", \"date\": \"20/03/2026\"}",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "plan number PS744342V date 20/03/2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": "Plan reference (PS) from VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf"
+      }
+    ],
+    "docs.vic_title.search_date": [
+      {
+        "path": "docs.vic_title.search_date",
+        "value": "20/03/2026",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "date=20/03/2026 from VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": "auto-extracted from vic_title document"
+      },
+      {
+        "path": "docs.vic_title.search_date",
+        "value": "20/03/2026",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "date=20/03/2026 from VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": "auto-extracted from vic_title document"
+      }
+    ],
+    "title.volume_folio": [
+      {
+        "path": "title.volume_folio",
+        "value": "VOLUME 11910 FOLIO 328",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "VOLUME 11910 FOLIO 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.volume_folio",
+        "value": "VOLUME 11910 FOLIO 328",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "VOLUME 11910 FOLIO 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.volume": [
+      {
+        "path": "title.volume",
+        "value": "11910",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "VOLUME 11910 FOLIO 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.volume",
+        "value": "11910",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "VOLUME 11910 FOLIO 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.folio": [
+      {
+        "path": "title.folio",
+        "value": "328",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "VOLUME 11910 FOLIO 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.folio",
+        "value": "328",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "VOLUME 11910 FOLIO 328",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.security_number": [
+      {
+        "path": "title.security_number",
+        "value": "124133139270F",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "Security no :  124133139270F",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.security_number",
+        "value": "124133138994F",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "Security no :  124133138994F",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.produced_at": [
+      {
+        "path": "title.produced_at",
+        "value": "20/03/2026 01:44 PM",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "Produced 20/03/2026 01:44 PM",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.produced_at",
+        "value": "20/03/2026 01:39 PM",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "Produced 20/03/2026 01:39 PM",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.land_description": [
+      {
+        "path": "title.land_description",
+        "value": "Lot 98 on Plan of Subdivision 744342V.",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION Lot 98 on Plan of Subdivision 744342V. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.land_description",
+        "value": "---------------- Lot 98 on Plan of Subdivision 744342V.",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION ---------------- Lot 98 on Plan of Subdivision 744342V. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.plan_type": [
+      {
+        "path": "title.plan_type",
+        "value": "Plan of Subdivision",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION Lot 98 on Plan of Subdivision 744342V. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.plan_type",
+        "value": "Plan of Subdivision",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION ---------------- Lot 98 on Plan of Subdivision 744342V. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.plan_number": [
+      {
+        "path": "title.plan_number",
+        "value": "744342V",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION Lot 98 on Plan of Subdivision 744342V. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.plan_number",
+        "value": "744342V",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION ---------------- Lot 98 on Plan of Subdivision 744342V. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.lot_number": [
+      {
+        "path": "title.lot_number",
+        "value": "98",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION Lot 98 on Plan of Subdivision 744342V. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.lot_number",
+        "value": "98",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION ---------------- Lot 98 on Plan of Subdivision 744342V. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.created_by_instrument": [
+      {
+        "path": "title.created_by_instrument",
+        "value": "PS744342V",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "Created by instrument PS744342V 29/08/2017",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.created_by_instrument",
+        "value": "PS744342V",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "Created by instrument PS744342V 29/08/2017",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.created_at": [
+      {
+        "path": "title.created_at",
+        "value": "29/08/2017",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "Created by instrument PS744342V 29/08/2017",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.created_at",
+        "value": "29/08/2017",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "Created by instrument PS744342V 29/08/2017",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.estate": [
+      {
+        "path": "title.estate",
+        "value": "Fee Simple",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "REGISTERED PROPRIETOR Estate Fee Simple Sole Proprietor SCOTT DANIEL AZARNIKOW of 359 SOBEYS ROAD NAPOLEONS VIC 3352 AR116151N 12/06/2018 ENCUMBRANCES",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      }
+    ],
+    "title.tenancy": [
+      {
+        "path": "title.tenancy",
+        "value": "Sole Proprietor",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "REGISTERED PROPRIETOR Estate Fee Simple Sole Proprietor SCOTT DANIEL AZARNIKOW of 359 SOBEYS ROAD NAPOLEONS VIC 3352 AR116151N 12/06/2018 ENCUMBRANCES",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      }
+    ],
+    "title.proprietor.0.name": [
+      {
+        "path": "title.proprietor.0.name",
+        "value": "SCOTT DANIEL AZARNIKOW",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "SCOTT DANIEL AZARNIKOW of 359 SOBEYS ROAD NAPOLEONS VIC 3352 AR116151N 12/06/2018",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      }
+    ],
+    "title.proprietor.0.address": [
+      {
+        "path": "title.proprietor.0.address",
+        "value": "359 SOBEYS ROAD NAPOLEONS VIC 3352",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "SCOTT DANIEL AZARNIKOW of 359 SOBEYS ROAD NAPOLEONS VIC 3352 AR116151N 12/06/2018",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      }
+    ],
+    "title.proprietor.0.dealing": [
+      {
+        "path": "title.proprietor.0.dealing",
+        "value": "AR116151N",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "SCOTT DANIEL AZARNIKOW of 359 SOBEYS ROAD NAPOLEONS VIC 3352 AR116151N 12/06/2018",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      }
+    ],
+    "title.proprietor.0.dealing_date": [
+      {
+        "path": "title.proprietor.0.dealing_date",
+        "value": "12/06/2018",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "SCOTT DANIEL AZARNIKOW of 359 SOBEYS ROAD NAPOLEONS VIC 3352 AR116151N 12/06/2018",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      }
+    ],
+    "title.proprietor.count": [
+      {
+        "path": "title.proprietor.count",
+        "value": 1,
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "REGISTERED PROPRIETOR Estate Fee Simple Sole Proprietor SCOTT DANIEL AZARNIKOW of 359 SOBEYS ROAD NAPOLEONS VIC 3352 AR116151N 12/06/2018 ENCUMBRANCES",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": "counted 1 entries inside REGISTERED PROPRIETOR block"
+      }
+    ],
+    "title.encumbrance.0.type": [
+      {
+        "path": "title.encumbrance.0.type",
+        "value": "MORTGAGE",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "MORTGAGE  AU278713M 27/04/2021\nWESTPAC BANKING CORPORATION",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.0.type",
+        "value": "MORTGAGE",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "MORTGAGE  AU278713M 27/04/2021\nWESTPAC BANKING CORPORATION",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.0.number": [
+      {
+        "path": "title.encumbrance.0.number",
+        "value": "AU278713M",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "MORTGAGE  AU278713M 27/04/2021\nWESTPAC BANKING CORPORATION",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.0.number",
+        "value": "AU278713M",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "MORTGAGE  AU278713M 27/04/2021\nWESTPAC BANKING CORPORATION",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.0.date": [
+      {
+        "path": "title.encumbrance.0.date",
+        "value": "27/04/2021",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "MORTGAGE  AU278713M 27/04/2021\nWESTPAC BANKING CORPORATION",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.0.date",
+        "value": "27/04/2021",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "MORTGAGE  AU278713M 27/04/2021\nWESTPAC BANKING CORPORATION",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.0.party": [
+      {
+        "path": "title.encumbrance.0.party",
+        "value": "WESTPAC BANKING CORPORATION",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "MORTGAGE  AU278713M 27/04/2021\nWESTPAC BANKING CORPORATION",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.0.party",
+        "value": "WESTPAC BANKING CORPORATION",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "MORTGAGE  AU278713M 27/04/2021\nWESTPAC BANKING CORPORATION",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.0.text": [
+      {
+        "path": "title.encumbrance.0.text",
+        "value": "MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "MORTGAGE  AU278713M 27/04/2021\nWESTPAC BANKING CORPORATION",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.0.text",
+        "value": "MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "MORTGAGE  AU278713M 27/04/2021\nWESTPAC BANKING CORPORATION",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.1.type": [
+      {
+        "path": "title.encumbrance.1.type",
+        "value": "COVENANT",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "COVENANT PS744342V 29/08/2017\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.1.type",
+        "value": "COVENANT",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "COVENANT PS744342V 29/08/2017\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.1.number": [
+      {
+        "path": "title.encumbrance.1.number",
+        "value": "PS744342V",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "COVENANT PS744342V 29/08/2017\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.1.number",
+        "value": "PS744342V",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "COVENANT PS744342V 29/08/2017\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.1.date": [
+      {
+        "path": "title.encumbrance.1.date",
+        "value": "29/08/2017",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "COVENANT PS744342V 29/08/2017\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.533995",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.1.date",
+        "value": "29/08/2017",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "COVENANT PS744342V 29/08/2017\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.1.party": [
+      {
+        "path": "title.encumbrance.1.party",
+        "value": "Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below.",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "COVENANT PS744342V 29/08/2017\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.1.party",
+        "value": "Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below.",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "COVENANT PS744342V 29/08/2017\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.1.text": [
+      {
+        "path": "title.encumbrance.1.text",
+        "value": "COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below.",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "COVENANT PS744342V 29/08/2017\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.1.text",
+        "value": "COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below.",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "COVENANT PS744342V 29/08/2017\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.2.type": [
+      {
+        "path": "title.encumbrance.2.type",
+        "value": "AGREEMENT",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "AGREEMENT  Section 173 Planning and Environment Act 1987\nAM638353G 17/03/2016",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.2.type",
+        "value": "AGREEMENT",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "AGREEMENT  Section 173 Planning and Environment Act 1987\nAM638353G 17/03/2016",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.2.number": [
+      {
+        "path": "title.encumbrance.2.number",
+        "value": "AM638353G",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "AGREEMENT  Section 173 Planning and Environment Act 1987\nAM638353G 17/03/2016",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.2.number",
+        "value": "AM638353G",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "AGREEMENT  Section 173 Planning and Environment Act 1987\nAM638353G 17/03/2016",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.2.date": [
+      {
+        "path": "title.encumbrance.2.date",
+        "value": "17/03/2016",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "AGREEMENT  Section 173 Planning and Environment Act 1987\nAM638353G 17/03/2016",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.2.date",
+        "value": "17/03/2016",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "AGREEMENT  Section 173 Planning and Environment Act 1987\nAM638353G 17/03/2016",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.2.party": [
+      {
+        "path": "title.encumbrance.2.party",
+        "value": "AM638353G 17/03/2016",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "AGREEMENT  Section 173 Planning and Environment Act 1987\nAM638353G 17/03/2016",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.2.party",
+        "value": "AM638353G 17/03/2016",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "AGREEMENT  Section 173 Planning and Environment Act 1987\nAM638353G 17/03/2016",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.2.text": [
+      {
+        "path": "title.encumbrance.2.text",
+        "value": "AGREEMENT Section 173 Planning and Environment Act 1987 AM638353G 17/03/2016",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "AGREEMENT  Section 173 Planning and Environment Act 1987\nAM638353G 17/03/2016",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.2.text",
+        "value": "AGREEMENT Section 173 Planning and Environment Act 1987 AM638353G 17/03/2016",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "AGREEMENT  Section 173 Planning and Environment Act 1987\nAM638353G 17/03/2016",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.count": [
+      {
+        "path": "title.encumbrance.count",
+        "value": 3,
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act 1987 AM638353G 17/03/2016 DIAGRAM",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.encumbrance.count",
+        "value": 3,
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES --------------------------------- MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.has_mortgage": [
+      {
+        "path": "title.has_mortgage",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act 1987 AM638353G 17/03/2016 DIAGRAM",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.has_mortgage",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES --------------------------------- MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.has_covenant": [
+      {
+        "path": "title.has_covenant",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act 1987 AM638353G 17/03/2016 DIAGRAM",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.has_covenant",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES --------------------------------- MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.has_caveat": [
+      {
+        "path": "title.has_caveat",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act 1987 AM638353G 17/03/2016 DIAGRAM",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.has_caveat",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES --------------------------------- MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.has_notice": [
+      {
+        "path": "title.has_notice",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act 1987 AM638353G 17/03/2016 DIAGRAM",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.has_notice",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES --------------------------------- MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.has_section_173_agreement": [
+      {
+        "path": "title.has_section_173_agreement",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act 1987 AM638353G 17/03/2016 DIAGRAM",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.has_section_173_agreement",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES --------------------------------- MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.diagram_location": [
+      {
+        "path": "title.diagram_location",
+        "value": "SEE PS744342V FOR FURTHER DETAILS AND BOUNDARIES",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "DIAGRAM LOCATION SEE PS744342V FOR FURTHER DETAILS AND BOUNDARIES ACTIVITY IN THE LAST",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.diagram_location",
+        "value": "---------------- SEE PS744342V FOR FURTHER DETAILS AND BOUNDARIES",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "DIAGRAM LOCATION ---------------- SEE PS744342V FOR FURTHER DETAILS AND BOUNDARIES ACTIVITY IN THE LAST",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.street_address": [
+      {
+        "path": "title.street_address",
+        "value": "6 GOYIN STREET BONSHAW VIC 3352",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "Street Address: 6 GOYIN STREET BONSHAW VIC 3352",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.street_address",
+        "value": "6 GOYIN STREET BONSHAW VIC 3352",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "Street Address: 6 GOYIN STREET BONSHAW VIC 3352",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.ect_controller": [
+      {
+        "path": "title.ect_controller",
+        "value": "16977H ST GEORGE BANK",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "eCT Control 16977H ST GEORGE BANK Effective from 27/04/2021",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.ect_controller",
+        "value": "16977H ST GEORGE BANK",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "eCT Control 16977H ST GEORGE BANK Effective from 27/04/2021",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "title.ect_effective_from": [
+      {
+        "path": "title.ect_effective_from",
+        "value": "27/04/2021",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "eCT Control 16977H ST GEORGE BANK Effective from 27/04/2021",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.534925",
+        "notes": null
+      },
+      {
+        "path": "title.ect_effective_from",
+        "value": "27/04/2021",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+            "page": null,
+            "quote": "eCT Control 16977H ST GEORGE BANK Effective from 27/04/2021",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-12T11:24:38.553953",
+        "notes": null
+      }
+    ],
+    "docs.council_building_approval_cert.date": [
+      {
+        "path": "docs.council_building_approval_cert.date",
+        "value": "23/03/2026",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Ballarat_ Building Approval 326 (1) - 11910_328.pdf",
+            "page": null,
+            "quote": "date=23/03/2026 from VIC_ Enquiry - Ballarat_ Building Approval 326 (1) - 11910_328.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-12T11:24:38.573870",
+        "notes": "auto-extracted from council_building_approval_cert document"
+      }
+    ],
+    "docs.council_land_info_cert.date": [
+      {
+        "path": "docs.council_land_info_cert.date",
+        "value": "24/03/2026",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Ballarat_ Land Information Certificate - 11910_328.pdf",
+            "page": null,
+            "quote": "date=24/03/2026 from VIC_ Enquiry - Ballarat_ Land Information Certificate - 11910_328.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-12T11:24:38.617335",
+        "notes": "auto-extracted from council_land_info_cert document"
+      }
+    ],
+    "docs.epa_cert.date": [
+      {
+        "path": "docs.epa_cert.date",
+        "value": "23/03/2026",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Environment Protection Authority_ Extract of Priority Sites Register - 11910_328.pdf",
+            "page": null,
+            "quote": "date=23/03/2026 from VIC_ Enquiry - Environment Protection Authority_ Extract of Priority Sites Register - 11910_328.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-12T11:24:38.684439",
+        "notes": "auto-extracted from epa_cert document"
+      }
+    ],
+    "rates.land_tax.certificate_number": [
+      {
+        "path": "rates.land_tax.certificate_number",
+        "value": "98318041",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Certificate No: 98318041",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.877336",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.issue_date": [
+      {
+        "path": "rates.land_tax.issue_date",
+        "value": "20 MAR 2026",
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "20 MAR 2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.877336",
+        "notes": "first date pattern in document"
+      }
+    ],
+    "docs.land_tax_cert.date": [
+      {
+        "path": "docs.land_tax_cert.date",
+        "value": "20/03/2026",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "20 MAR 2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": "SRO certificate issue date"
+      }
+    ],
+    "rates.land_tax.land_id": [
+      {
+        "path": "rates.land_tax.land_id",
+        "value": "44284363",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Land Id 44284363",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.amount": [
+      {
+        "path": "rates.land_tax.amount",
+        "value": "$975.00",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Tax Payable $975.00",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.taxable_value": [
+      {
+        "path": "rates.land_tax.taxable_value",
+        "value": "$268,000",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Taxable Value (SV) $268,000",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.site_value": [
+      {
+        "path": "rates.land_tax.site_value",
+        "value": "$268,000",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Taxable Value (SV) $268,000",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.capital_improved_value": [
+      {
+        "path": "rates.land_tax.capital_improved_value",
+        "value": "$508,000",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "$508,000CAPITAL IMPROVED VALUE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.vendor_name": [
+      {
+        "path": "rates.land_tax.vendor_name",
+        "value": "SCOTT AZARNIKOW",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Vendor: SCOTT AZARNIKOW",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.commissioner": [
+      {
+        "path": "rates.land_tax.commissioner",
+        "value": "Paul Broderick",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Paul Broderick Property Clearance Certificate",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.authority_name": [
+      {
+        "path": "rates.land_tax.authority_name",
+        "value": "State Revenue Office",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+            "page": null,
+            "quote": "Property Clearance Certificate - Land Tax",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-12T11:24:38.879345",
+        "notes": "SRO is always the land tax authority in Victoria"
+      }
+    ],
+    "docs.vicroads_cert.date": [
+      {
+        "path": "docs.vicroads_cert.date",
+        "value": "20/03/2026",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Vicroads_ Vicroads Certificate - 11910_328.pdf",
+            "page": null,
+            "quote": "date=20/03/2026 from VIC_ Enquiry - Vicroads_ Vicroads Certificate - 11910_328.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-12T11:24:38.893898",
+        "notes": "auto-extracted from vicroads_cert document"
+      }
+    ],
+    "policy.tab1.amounts_are_checked": [
+      {
+        "path": "policy.tab1.amounts_are_checked",
+        "value": true,
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: 'Their amounts are:' is always checked in Tab 1",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: 'Their amounts are:' is always checked in Tab 1"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-12T11:24:38.893898",
+        "notes": "Firm policy: 'Their amounts are:' is always checked in Tab 1"
+      }
+    ],
+    "policy.tab1.certificates_attached": [
+      {
+        "path": "policy.tab1.certificates_attached",
+        "value": true,
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: 'Are contained in attached certificate(s)' is always checked",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: 'Are contained in attached certificate(s)' is always checked"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-12T11:24:38.893898",
+        "notes": "Firm policy: 'Are contained in attached certificate(s)' is always checked"
+      }
+    ],
+    "policy.tab1.total_does_not_exceed": [
+      {
+        "path": "policy.tab1.total_does_not_exceed",
+        "value": true,
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: 'Their total does not exceed' is always checked",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: 'Their total does not exceed' is always checked"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-12T11:24:38.893898",
+        "notes": "Firm policy: 'Their total does not exceed' is always checked"
+      }
+    ],
+    "policy.tab2.title_in_attached": [
+      {
+        "path": "policy.tab2.title_in_attached",
+        "value": true,
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: 'Is in the attached copies of title documents' is always checked",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: 'Is in the attached copies of title documents' is always checked"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-12T11:24:38.893898",
+        "notes": "Firm policy: 'Is in the attached copies of title documents' is always checked"
+      }
+    ],
+    "policy.tab2.failure_to_comply_checked": [
+      {
+        "path": "policy.tab2.failure_to_comply_checked",
+        "value": true,
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: 'Particulars of any existing failure to comply...' is always checked",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: 'Particulars of any existing failure to comply...' is always checked"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-12T11:24:38.893898",
+        "notes": "Firm policy: 'Particulars of any existing failure to comply...' is always checked"
+      }
+    ],
+    "policy.tab2.failure_to_comply_text": [
+      {
+        "path": "policy.tab2.failure_to_comply_text",
+        "value": "To the best of the Vendor's knowledge there is no existing failure to comply with the terms of any easements, covenants or other similar restriction.",
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm standard text for failure-to-comply disclosure",
+            "quote_verified": true,
+            "extractor_note": "Firm standard text for failure-to-comply disclosure"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-12T11:24:38.893898",
+        "notes": "Firm standard text for failure-to-comply disclosure"
+      }
+    ],
+    "policy.tab2.planning_cert_attached": [
+      {
+        "path": "policy.tab2.planning_cert_attached",
+        "value": true,
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: 'Certificate with required information attached' is always checked",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: 'Certificate with required information attached' is always checked"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-12T11:24:38.893898",
+        "notes": "Firm policy: 'Certificate with required information attached' is always checked"
+      }
+    ],
+    "policy.tab6.due_diligence_text": [
+      {
+        "path": "policy.tab6.due_diligence_text",
+        "value": "Is attached",
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: Due Diligence Checklist field always says 'Is attached'",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: Due Diligence Checklist field always says 'Is attached'"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-12T11:24:38.893898",
+        "notes": "Firm policy: Due Diligence Checklist field always says 'Is attached'"
+      }
+    ],
+    "policy.tab1.total_does_not_exceed_amount": [
+      {
+        "path": "policy.tab1.total_does_not_exceed_amount",
+        "value": "$5,375.00",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "policy_computed",
+            "page": null,
+            "quote": "Computed as council $2,500.00 + water $900.00 + land tax $975.00 + owners corporation $0.00 + $1,000.00 buffer = $5,375.00",
+            "quote_verified": true,
+            "extractor_note": "Computed as council $2,500.00 + water $900.00 + land tax $975.00 + owners corporation $0.00 + $1,000.00 buffer = $5,375.00"
+          }
+        ],
+        "extractor": "rule:policy_computed_v1",
+        "extracted_at": "2026-04-12T11:24:38.893898",
+        "notes": "Computed as council $2,500.00 + water $900.00 + land tax $975.00 + owners corporation $0.00 + $1,000.00 buffer = $5,375.00"
+      }
+    ],
+    "policy.attachments.text": [
+      {
+        "path": "policy.attachments.text",
+        "value": "- Due Diligence Checklist\n- Register Search Statement Volume 11910 Folio 328 dated 20/03/2026\n- Plan of Subdivision 744342V dated 20/03/2026\n- Covenant PS744342V dated 29/08/2017\n- Section 173 Agreement AM638353G dated 20/03/2026\n- Ballarat council Building Approval Certificate dated 23/03/2026\n- Ballarat council Land Information Certificate dated 24/03/2026\n- Central highlands water Encumbrance Certificate dated ##\n- State Revenue Office Land Tax Certificate dated 20/03/2026\n- Detailed Property Report dated 26/03/2026\n- Owner Builder Report ***\n- Vic Roads Certificate dated 20/03/2026\n- EPA Certificate dated 23/03/2026\n- Residential Tenancy Agreement dated 10/04/2024",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "policy_computed",
+            "page": null,
+            "quote": "Auto-built from extracted document dates, names, and identifiers",
+            "quote_verified": true,
+            "extractor_note": "Auto-built from extracted document dates, names, and identifiers"
+          }
+        ],
+        "extractor": "rule:policy_computed_v1",
+        "extracted_at": "2026-04-12T11:24:38.898206",
+        "notes": "Auto-built from extracted document dates, names, and identifiers"
+      }
+    ]
+  },
+  "documents": [],
+  "extractors_run": [
+    "rule:generic_doc_meta_v1",
+    "rule:planning_certificate_v1",
+    "rule:vendor_form_v2",
+    "rule:vic_title_v1",
+    "rule:land_tax_certificate_v1",
+    "rule:policy_defaults_v1",
+    "rule:policy_computed_v1"
+  ]
+}

@@ -1,0 +1,4050 @@
+{
+  "artifact_version": "2.0",
+  "documents": [
+    {
+      "document_id": "doc_1",
+      "filename": "1620_Bldg Warranty Insurance.pdf",
+      "file_type": "pdf",
+      "document_type": "unknown",
+      "classification_confidence": 0.0,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_2",
+      "filename": "1620_BuildingPermit.pdf",
+      "file_type": "pdf",
+      "document_type": "planning_report",
+      "classification_confidence": 0.525,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_3",
+      "filename": "1620_OP.pdf",
+      "file_type": "pdf",
+      "document_type": "unknown",
+      "classification_confidence": 0.0,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_4",
+      "filename": "Cert of Compliance (plumbing work).pdf",
+      "file_type": "pdf",
+      "document_type": "unknown",
+      "classification_confidence": 0.0,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_5",
+      "filename": "cert of electrical safety for various work s.pdf",
+      "file_type": "pdf",
+      "document_type": "unknown",
+      "classification_confidence": 0.0,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_6",
+      "filename": "RACV_HOM798171110_2026022216180718_1441.pdf",
+      "file_type": "pdf",
+      "document_type": "unknown",
+      "classification_confidence": 0.0,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_7",
+      "filename": "tab_sec_32_1.yaml",
+      "file_type": "yaml",
+      "document_type": "sec32_tab",
+      "classification_confidence": 0.99,
+      "yaml_tab_name": "Sec. 32 (1)",
+      "yaml_total_fields": 36
+    },
+    {
+      "document_id": "doc_8",
+      "filename": "tab_sec_32_2.yaml",
+      "file_type": "yaml",
+      "document_type": "sec32_tab",
+      "classification_confidence": 0.746,
+      "yaml_tab_name": "Sec. 32 (2)",
+      "yaml_total_fields": 14
+    },
+    {
+      "document_id": "doc_9",
+      "filename": "tab_sec_32_3.yaml",
+      "file_type": "yaml",
+      "document_type": "sec32_tab",
+      "classification_confidence": 0.99,
+      "yaml_tab_name": "Sec. 32 (3)",
+      "yaml_total_fields": 8
+    },
+    {
+      "document_id": "doc_10",
+      "filename": "tab_sec_32_4.yaml",
+      "file_type": "yaml",
+      "document_type": "sec32_tab",
+      "classification_confidence": 0.885,
+      "yaml_tab_name": "Sec. 32 (4)",
+      "yaml_total_fields": 19
+    },
+    {
+      "document_id": "doc_11",
+      "filename": "tab_sec_32_5.yaml",
+      "file_type": "yaml",
+      "document_type": "sec32_tab",
+      "classification_confidence": 0.909,
+      "yaml_tab_name": "Sec. 32 (5)",
+      "yaml_total_fields": 9
+    },
+    {
+      "document_id": "doc_12",
+      "filename": "tab_sec_32_6.yaml",
+      "file_type": "yaml",
+      "document_type": "sec32_tab",
+      "classification_confidence": 0.772,
+      "yaml_tab_name": "Sec. 32 (6)",
+      "yaml_total_fields": 4
+    },
+    {
+      "document_id": "doc_13",
+      "filename": "Vendor Instruction Form-Kyle Sultana.pdf",
+      "file_type": "pdf",
+      "document_type": "vendor_form",
+      "classification_confidence": 0.74,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_14",
+      "filename": "VIC_ Certificate - Copy of Plan - PS826454D.pdf",
+      "file_type": "pdf",
+      "document_type": "unknown",
+      "classification_confidence": 0.0,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_15",
+      "filename": "VIC_ Certificate - Electronic Instrument - AU146757D (TRANSFER).pdf",
+      "file_type": "pdf",
+      "document_type": "unknown",
+      "classification_confidence": 0.0,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_16",
+      "filename": "VIC_ Certificate - Instrument Search - X265348J (NOTICE).pdf",
+      "file_type": "pdf",
+      "document_type": "unknown",
+      "classification_confidence": 0.0,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_17",
+      "filename": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+      "file_type": "pdf",
+      "document_type": "vic_title",
+      "classification_confidence": 0.99,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_18",
+      "filename": "VIC_ Enquiry - Environment Protection Authority_ Extract of Priority Sites Register.pdf",
+      "file_type": "pdf",
+      "document_type": "unknown",
+      "classification_confidence": 0.0,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_19",
+      "filename": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+      "file_type": "pdf",
+      "document_type": "sec32_tab",
+      "classification_confidence": 0.525,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_20",
+      "filename": "VIC_ Enquiry - Vicroads_ Vicroads Certificate.pdf",
+      "file_type": "pdf",
+      "document_type": "unknown",
+      "classification_confidence": 0.0,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_21",
+      "filename": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+      "file_type": "pdf",
+      "document_type": "property_report",
+      "classification_confidence": 0.802,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    },
+    {
+      "document_id": "doc_22",
+      "filename": "YVW Bill.pdf",
+      "file_type": "pdf",
+      "document_type": "unknown",
+      "classification_confidence": 0.0,
+      "yaml_tab_name": null,
+      "yaml_total_fields": null
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "vendor_core.email",
+      "canonical_key": "email",
+      "category": "vendor_core",
+      "value": "sultakyle13@gmail.com",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "email",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 2,
+          "section": "Your details",
+          "line_start": 20,
+          "line_end": 20,
+          "label": "Email Address",
+          "snippet": "Email Address\nsultakyle13@gmail.com"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vendor_core.occupation",
+      "canonical_key": "occupation",
+      "category": "vendor_core",
+      "value": "Carpenter / Production manager",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "occupation",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 2,
+          "section": "Your details",
+          "line_start": 12,
+          "line_end": 12,
+          "label": "Occupation",
+          "snippet": "Occupation\nCarpenter / Production manager"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vendor_core.nationality",
+      "canonical_key": "nationality",
+      "category": "vendor_core",
+      "value": "Australian",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "nationality",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 2,
+          "section": "Your details",
+          "line_start": 28,
+          "line_end": 28,
+          "label": "Nationality",
+          "snippet": "Nationality\nAustralian"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vendor_core.preferred_name",
+      "canonical_key": "preferred_name",
+      "category": "vendor_core",
+      "value": "Kyle",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "preferred_name",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 2,
+          "section": "Your details",
+          "line_start": 10,
+          "line_end": 10,
+          "label": "Preferred Name",
+          "snippet": "Preferred Name\nKyle"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vendor_core.mobile",
+      "canonical_key": "mobile",
+      "category": "vendor_core",
+      "value": "0414 186 695",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "mobile",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 2,
+          "section": "Your details",
+          "line_start": 18,
+          "line_end": 18,
+          "label": "Contact Number",
+          "snippet": "Contact Number\n0414 186 695"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vendor_core.country_of_citizenship",
+      "canonical_key": "country_of_citizenship",
+      "category": "vendor_core",
+      "value": "Australia",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "country_of_citizenship",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 2,
+          "section": "Your details",
+          "line_start": 26,
+          "line_end": 26,
+          "label": "Country of citizenship",
+          "snippet": "Country of citizenship\nAustralia"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vendor_core.last_name",
+      "canonical_key": "last_name",
+      "category": "vendor_core",
+      "value": "Sultana",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "last_name",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 2,
+          "section": "Your details",
+          "line_start": 8,
+          "line_end": 8,
+          "label": "Your last name",
+          "snippet": "Your last name\nSultana"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vendor_core.residential_address",
+      "canonical_key": "residential_address",
+      "category": "vendor_core",
+      "value": "43 Southampton Dr, Mulgrave VIC 3170, Australia",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "residential_address",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 2,
+          "section": "Your details",
+          "line_start": 14,
+          "line_end": 14,
+          "label": "Residential address",
+          "snippet": "Residential address\n43 Southampton Dr, Mulgrave VIC 3170, Australia"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vendor_core.title",
+      "canonical_key": "title",
+      "category": "vendor_core",
+      "value": "Mr",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "title",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 2,
+          "section": "Your details",
+          "line_start": 2,
+          "line_end": 2,
+          "label": "What is your title?",
+          "snippet": "What is your title?\nMr"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vendor_core.first_name",
+      "canonical_key": "first_name",
+      "category": "vendor_core",
+      "value": "Kyle",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "first_name",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 2,
+          "section": "Your details",
+          "line_start": 4,
+          "line_end": 4,
+          "label": "Your first name",
+          "snippet": "Your first name\nKyle"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vendor_core.middle_name",
+      "canonical_key": "middle_name",
+      "category": "vendor_core",
+      "value": "Laurence",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "middle_name",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 2,
+          "section": "Your details",
+          "line_start": 6,
+          "line_end": 6,
+          "label": "Your middle name",
+          "snippet": "Your middle name\nLaurence"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "trustee.is_trust",
+      "canonical_key": "is_trust",
+      "category": "trustee",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "is_trust",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 3,
+          "section": "Trustee Questions",
+          "line_start": 32,
+          "line_end": 32,
+          "label": "Is the Property held by a Trust?",
+          "snippet": "Is the Property held by a Trust?\nNo"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "property_details.folio_or_number",
+      "canonical_key": "folio_or_number",
+      "category": "property_details",
+      "value": "unknown",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "folio_or_number",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 5,
+          "section": "Property Details",
+          "line_start": 10,
+          "line_end": 10,
+          "label": "Folio or number:",
+          "snippet": "Folio or number:\nunknown"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "property_details.plan_number",
+      "canonical_key": "plan_number",
+      "category": "property_details",
+      "value": "PS 826454",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "plan_number",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 5,
+          "section": "Property Details",
+          "line_start": 14,
+          "line_end": 14,
+          "label": "Plan number",
+          "snippet": "Plan number\nPS 826454"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "property_details.approx_building_age",
+      "canonical_key": "approx_building_age",
+      "category": "property_details",
+      "value": "5 years old",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "approx_building_age",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 5,
+          "section": "Property Details",
+          "line_start": 6,
+          "line_end": 6,
+          "label": "Approximate age of Dwelling / Building",
+          "snippet": "Approximate age of Dwelling / Building\n5 years old"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "property_details.volume_or_book",
+      "canonical_key": "volume_or_book",
+      "category": "property_details",
+      "value": "unknown",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "volume_or_book",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 5,
+          "section": "Property Details",
+          "line_start": 8,
+          "line_end": 8,
+          "label": "Volume or book:",
+          "snippet": "Volume or book:\nunknown"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "property_details.insured",
+      "canonical_key": "insured",
+      "category": "property_details",
+      "value": true,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "insured",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 6,
+          "section": "Property Details",
+          "line_start": 17,
+          "line_end": 17,
+          "label": "Is the property insured?",
+          "snippet": "Is the property insured?\nYes"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "property_details.lot_number",
+      "canonical_key": "lot_number",
+      "category": "property_details",
+      "value": "1620",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "lot_number",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 5,
+          "section": "Property Details",
+          "line_start": 12,
+          "line_end": 12,
+          "label": "Lot number",
+          "snippet": "Lot number\n1620"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "property_details.property_address",
+      "canonical_key": "property_address",
+      "category": "property_details",
+      "value": "43 Southampton Dr, Mulgrave VIC 3170, Australia",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "property_address",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 5,
+          "section": "Property Details",
+          "line_start": 2,
+          "line_end": 2,
+          "label": "Property Address",
+          "snippet": "Property Address\n43 Southampton Dr, Mulgrave VIC 3170, Australia"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "property_details.owner_occupied",
+      "canonical_key": "owner_occupied",
+      "category": "property_details",
+      "value": true,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "owner_occupied",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 5,
+          "section": "Property Details",
+          "line_start": 18,
+          "line_end": 18,
+          "label": "Do you live at the property?",
+          "snippet": "Do you live at the property?\nYes"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "property_details.leased",
+      "canonical_key": "leased",
+      "category": "property_details",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "leased",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 5,
+          "section": "Property Details",
+          "line_start": 20,
+          "line_end": 20,
+          "label": "Is the Property rented/leased?",
+          "snippet": "Is the Property rented/leased?\nNo"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "property_details.local_government_area",
+      "canonical_key": "local_government_area",
+      "category": "property_details",
+      "value": "CITY",
+      "value_type": "string",
+      "confidence": 0.92,
+      "status": "supported",
+      "normalized_from": "local_government_area",
+      "source_extractors": [
+        "planning_report_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "1620_BuildingPermit.pdf",
+          "source_type": "planning_report",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "local_government_area",
+          "snippet": "CITY"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "services_connected.mains_water",
+      "canonical_key": "mains_water",
+      "category": "services_connected",
+      "value": true,
+      "value_type": "boolean",
+      "confidence": 0.92,
+      "status": "supported",
+      "normalized_from": "mains_water",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": 30,
+          "line_end": 30,
+          "label": "Mains Water",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "services_connected.mains_gas",
+      "canonical_key": "mains_gas",
+      "category": "services_connected",
+      "value": true,
+      "value_type": "boolean",
+      "confidence": 0.92,
+      "status": "supported",
+      "normalized_from": "mains_gas",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": 29,
+          "line_end": 29,
+          "label": "Mains Gas",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "services_connected.septic_tank",
+      "canonical_key": "septic_tank",
+      "category": "services_connected",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.85,
+      "status": "supported",
+      "normalized_from": "septic_tank",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": null,
+          "line_end": null,
+          "label": "Septic Tank",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "services_connected.telephone",
+      "canonical_key": "telephone",
+      "category": "services_connected",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.85,
+      "status": "supported",
+      "normalized_from": "telephone",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": null,
+          "line_end": null,
+          "label": "Telephone",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "services_connected.mains_electricity",
+      "canonical_key": "mains_electricity",
+      "category": "services_connected",
+      "value": true,
+      "value_type": "boolean",
+      "confidence": 0.92,
+      "status": "supported",
+      "normalized_from": "mains_electricity",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": 28,
+          "line_end": 28,
+          "label": "Mains Electricity",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "services_connected.tank_water",
+      "canonical_key": "tank_water",
+      "category": "services_connected",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.85,
+      "status": "supported",
+      "normalized_from": "tank_water",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": null,
+          "line_end": null,
+          "label": "Tank Water",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "services_connected.nbn",
+      "canonical_key": "nbn",
+      "category": "services_connected",
+      "value": true,
+      "value_type": "boolean",
+      "confidence": 0.92,
+      "status": "supported",
+      "normalized_from": "nbn",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": 32,
+          "line_end": 32,
+          "label": "NBN",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "services_connected.sewerage",
+      "canonical_key": "sewerage",
+      "category": "services_connected",
+      "value": true,
+      "value_type": "boolean",
+      "confidence": 0.92,
+      "status": "supported",
+      "normalized_from": "sewerage",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": 31,
+          "line_end": 31,
+          "label": "Sewerage",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "services_connected.bottled_gas",
+      "canonical_key": "bottled_gas",
+      "category": "services_connected",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.85,
+      "status": "supported",
+      "normalized_from": "bottled_gas",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": null,
+          "line_end": null,
+          "label": "Bottled Gas",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "rates_taxes_charges.council",
+      "canonical_key": "council",
+      "category": "rates_taxes_charges",
+      "value": "City of Monash",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "council",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 2,
+          "line_end": 2,
+          "label": "Council",
+          "snippet": "Council\nCity of Monash"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "rates_taxes_charges.vacant_land_residential_land_tax_payable",
+      "canonical_key": "vacant_land_residential_land_tax_payable",
+      "category": "rates_taxes_charges",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "vacant_land_residential_land_tax_payable",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 12,
+          "line_end": 12,
+          "label": "Is any vacant land residential land tax payable?",
+          "snippet": "Is any vacant land residential land tax payable?\nNo"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "rates_taxes_charges.owners_corporation",
+      "canonical_key": "owners_corporation",
+      "category": "rates_taxes_charges",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "owners_corporation",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 16,
+          "line_end": 16,
+          "label": "If your property affected by an Owners Corporation otherwise known as Strata Insurance for common property.",
+          "snippet": "If your property affected by an Owners Corporation otherwise known as Strata Insurance for common property.\nNo"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "rates_taxes_charges.land_tax_payable",
+      "canonical_key": "land_tax_payable",
+      "category": "rates_taxes_charges",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "land_tax_payable",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 10,
+          "line_end": 10,
+          "label": "Do you pay land tax?",
+          "snippet": "Do you pay land tax?\nNo"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "rates_taxes_charges.water_authority",
+      "canonical_key": "water_authority",
+      "category": "rates_taxes_charges",
+      "value": "Yarra Valley",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "water_authority",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 6,
+          "line_end": 6,
+          "label": "Water Authority",
+          "snippet": "Water Authority\nYarra Valley"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "rates_taxes_charges.council_rates",
+      "canonical_key": "council_rates",
+      "category": "rates_taxes_charges",
+      "value": "$1,198.25",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "council_rates",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 4,
+          "line_end": 4,
+          "label": "Council rates",
+          "snippet": "Council rates\n$1,198.25"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "rates_taxes_charges.water_rates",
+      "canonical_key": "water_rates",
+      "category": "rates_taxes_charges",
+      "value": "$774.00",
+      "value_type": "string",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "water_rates",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 8,
+          "line_end": 8,
+          "label": "Water rates",
+          "snippet": "Water rates\n$774.00"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.property_has_water_tank",
+      "canonical_key": "property_has_water_tank",
+      "category": "planning_building_permits",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "property_has_water_tank",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 11,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 17,
+          "line_end": 18,
+          "label": "Does the property have a water tank?",
+          "snippet": "Does the property have a water tank?\nNo\nWater Tanks"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.gaic_trigger",
+      "canonical_key": "gaic_trigger",
+      "category": "planning_building_permits",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "gaic_trigger",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 8,
+          "line_end": 8,
+          "label": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?",
+          "snippet": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?\nNo"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.building_permits_last_7_years",
+      "canonical_key": "building_permits_last_7_years",
+      "category": "planning_building_permits",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "building_permits_last_7_years",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 24,
+          "line_end": 24,
+          "label": "Have any building permits been issued in the last 7 years?",
+          "snippet": "Have any building permits been issued in the last 7 years?\nNo"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.works_without_permit",
+      "canonical_key": "works_without_permit",
+      "category": "planning_building_permits",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "works_without_permit",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 26,
+          "line_end": 26,
+          "label": "Have you done any works without obtaining a permit?",
+          "snippet": "Have you done any works without obtaining a permit?\nNo"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.improved_past_6_5_years",
+      "canonical_key": "improved_past_6_5_years",
+      "category": "planning_building_permits",
+      "value": true,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "improved_past_6_5_years",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 34,
+          "line_end": 34,
+          "label": "Have you improved the property within the past 6.5 years?",
+          "snippet": "Have you improved the property within the past 6.5 years?\nYes"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.building_work_without_required_approvals",
+      "canonical_key": "building_work_without_required_approvals",
+      "category": "planning_building_permits",
+      "value": true,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "building_work_without_required_approvals",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 30,
+          "line_end": 31,
+          "label": "Has any building work been done on the land that DID NOT have the required building nor planning approvals?",
+          "snippet": "Has any building work been done on the land that DID NOT have the required building nor planning approvals?\nYes\nIf yes, please provide details"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.improvement_details",
+      "canonical_key": "improvement_details",
+      "category": "planning_building_permits",
+      "value": {
+        "raw_text": "Installation of new floating floor boards. Approximate cost $1,500. Completed 2025\nInstallation of Laundry Cabinetry. Approximate cost $2,000. Completed 2022\nInstallation of floating TV unit Cabinetry. Approximate cost $3,000. Completed 2021\nInstallation of master bedroom Cabinetry. Approximate cost $1,000. Completed 2022\nInstallation of a small pergola. Approximate cost $1,000. Completed 2021.\nNo other improvements undertaken.",
+        "described_work": "Installation of new floating floor boards. Approximate cost $1,500. Completed 2025\nInstallation of Laundry Cabinetry. Approximate cost $2,000. Completed 2022\nInstallation of floating TV unit Cabinetry. Approximate cost $3,000. Completed 2021\nInstallation of master bedroom Cabinetry. Approximate cost $1,000. Completed 2022\nInstallation of a small pergola. Approximate cost $1,000. Completed 2021.\nNo other improvements undertaken.",
+        "cost": "$1,500",
+        "completion_date": "2025",
+        "keywords": [],
+        "likely_category": null
+      },
+      "value_type": "object",
+      "confidence": 0.88,
+      "status": "supported",
+      "normalized_from": "improvement_details",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 11,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 5,
+          "line_end": 10,
+          "label": "If yes, provide a detailed explanation of the works completed (what works have been done to the property), itemise the cost of each of the works and the date of completion of each of the works (PLEASE NOTE THAT FAILURE TO PROVIDE DETAIL OF THE WORKS COMPLETED, COST OF EACH OF THE WORKS & DATE OF COMPLETION OF EACH OF THE WORKS MAY BE THE CAUSE OF DELAY FOR OUR OFFICE TO PREPARE THE SECTION 32 FOR YOU)",
+          "snippet": "If yes, provide a detailed explanation of the works completed (what works have been done to the property), itemise the cost of each of the works and the date of completion of each of the works (PLEASE NOTE THAT FAILUR..."
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.building_works_last_7_years",
+      "canonical_key": "building_works_last_7_years",
+      "category": "planning_building_permits",
+      "value": true,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "building_works_last_7_years",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 20,
+          "line_end": 21,
+          "label": "Has there been any building works/structures undertaken in the last 7 years?",
+          "snippet": "Has there been any building works/structures undertaken in the last 7 years?\nYes\nIf yes, please provide details and cost of the works."
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.planning_overlays",
+      "canonical_key": "planning_overlays",
+      "category": "planning_building_permits",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "planning_overlays",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 4,
+          "line_end": 4,
+          "label": "Is the land affected by any planning overlays?",
+          "snippet": "Is the land affected by any planning overlays?\nNo"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.bushfire_prone_area",
+      "canonical_key": "bushfire_prone_area",
+      "category": "planning_building_permits",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "bushfire_prone_area",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 2,
+          "line_end": 2,
+          "label": "Is the land in a bushfire prone area?",
+          "snippet": "Is the land in a bushfire prone area?\nNo"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.road_access",
+      "canonical_key": "road_access",
+      "category": "planning_building_permits",
+      "value": true,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "road_access",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 6,
+          "line_end": 6,
+          "label": "Is there access to the property by road?",
+          "snippet": "Is there access to the property by road?\nYes"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.new_appliances_with_gas_electrical_plumbing_work",
+      "canonical_key": "new_appliances_with_gas_electrical_plumbing_work",
+      "category": "planning_building_permits",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "new_appliances_with_gas_electrical_plumbing_work",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 11,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 12,
+          "line_end": 12,
+          "label": "Have you installed new appliances where works relating to gas, electrical and plumbing have been undertaken?",
+          "snippet": "Have you installed new appliances where works relating to gas, electrical and plumbing have been undertaken?\nNo"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "planning_building_permits.planning_permits_issued_or_refused",
+      "canonical_key": "planning_permits_issued_or_refused",
+      "category": "planning_building_permits",
+      "value": false,
+      "value_type": "boolean",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "planning_permits_issued_or_refused",
+      "source_extractors": [
+        "vendor_form_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 18,
+          "line_end": 18,
+          "label": "Have any planning and/or town planning permit(s) been issued or refused?",
+          "snippet": "Have any planning and/or town planning permit(s) been issued or refused?\nNo"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vic_title_extract.primary_volume_folio",
+      "canonical_key": "primary_volume_folio",
+      "category": "vic_title_extract",
+      "value": "VOLUME 12287 FOLIO 279",
+      "value_type": "string",
+      "confidence": 0.99,
+      "status": "supported",
+      "normalized_from": "primary_volume_folio",
+      "source_extractors": [
+        "vic_title_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "primary_volume_folio",
+          "snippet": "VOLUME 12287 FOLIO 279"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vic_title_extract.security_no",
+      "canonical_key": "security_no",
+      "category": "vic_title_extract",
+      "value": "124133522109C",
+      "value_type": "string",
+      "confidence": 0.99,
+      "status": "supported",
+      "normalized_from": "security_no",
+      "source_extractors": [
+        "vic_title_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "security_no",
+          "snippet": "124133522109C"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vic_title_extract.produced_date",
+      "canonical_key": "produced_date",
+      "category": "vic_title_extract",
+      "value": "02/04/2026 06:20 PM",
+      "value_type": "string",
+      "confidence": 0.99,
+      "status": "supported",
+      "normalized_from": "produced_date",
+      "source_extractors": [
+        "vic_title_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "produced_date",
+          "snippet": "02/04/2026 06:20 PM"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vic_title_extract.land_description",
+      "canonical_key": "land_description",
+      "category": "vic_title_extract",
+      "value": "Lot 1620 on Plan of Subdivision 826454D",
+      "value_type": "string",
+      "confidence": 0.99,
+      "status": "supported",
+      "normalized_from": "land_description",
+      "source_extractors": [
+        "vic_title_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "land_description",
+          "snippet": "Lot 1620 on Plan of Subdivision 826454D"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vic_title_extract.parent_title",
+      "canonical_key": "parent_title",
+      "category": "vic_title_extract",
+      "value": "Volume 12202 Folio 017",
+      "value_type": "string",
+      "confidence": 0.99,
+      "status": "supported",
+      "normalized_from": "parent_title",
+      "source_extractors": [
+        "vic_title_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "parent_title",
+          "snippet": "Volume 12202 Folio 017"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vic_title_extract.created_by_instrument",
+      "canonical_key": "created_by_instrument",
+      "category": "vic_title_extract",
+      "value": "PS826454D 23/02/2021",
+      "value_type": "string",
+      "confidence": 0.99,
+      "status": "supported",
+      "normalized_from": "created_by_instrument",
+      "source_extractors": [
+        "vic_title_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "created_by_instrument",
+          "snippet": "PS826454D 23/02/2021"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vic_title_extract.diagram_location",
+      "canonical_key": "diagram_location",
+      "category": "vic_title_extract",
+      "value": "below. NOTICE Section 47(2) Heritage Act 1995 REGISTER NO. 1883 X265348J 17/01/2001 DIAGRAM LOCATION SEE PS826454D FOR FURTHER DETAILS AND BOUNDARIES",
+      "value_type": "string",
+      "confidence": 0.99,
+      "status": "supported",
+      "normalized_from": "diagram_location",
+      "source_extractors": [
+        "vic_title_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "diagram_location",
+          "snippet": "below. NOTICE Section 47(2) Heritage Act 1995 REGISTER NO. 1883 X265348J 17/01/2001 DIAGRAM LOCATION SEE PS826454D FOR FURTHER DETAILS AND BOUNDARIES"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vic_title_extract.ect_control",
+      "canonical_key": "ect_control",
+      "category": "vic_title_extract",
+      "value": "16165A AUSTRALIA AND NEW ZEALAND BANKING GROUP LIMITED",
+      "value_type": "string",
+      "confidence": 0.99,
+      "status": "supported",
+      "normalized_from": "ect_control",
+      "source_extractors": [
+        "vic_title_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "ect_control",
+          "snippet": "16165A AUSTRALIA AND NEW ZEALAND BANKING GROUP LIMITED"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vic_title_extract.ect_effective_from",
+      "canonical_key": "ect_effective_from",
+      "category": "vic_title_extract",
+      "value": "04/02/2026",
+      "value_type": "string",
+      "confidence": 0.99,
+      "status": "supported",
+      "normalized_from": "ect_effective_from",
+      "source_extractors": [
+        "vic_title_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "ect_effective_from",
+          "snippet": "04/02/2026"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vic_title_extract.registered_proprietor",
+      "canonical_key": "registered_proprietor",
+      "category": "vic_title_extract",
+      "value": "ERIN KRISTINE SELLECK of 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170",
+      "value_type": "string",
+      "confidence": 0.98,
+      "status": "supported",
+      "normalized_from": "registered_proprietor",
+      "source_extractors": [
+        "vic_title_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "registered proprietor",
+          "snippet": "ERIN KRISTINE SELLECK of 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    },
+    {
+      "fact_id": "vic_title_extract.encumbrances_caveats_notices",
+      "canonical_key": "encumbrances_caveats_notices",
+      "category": "vic_title_extract",
+      "value": [
+        {
+          "type": "MORTGAGE",
+          "number": "BA088550M",
+          "date": "04/02/2026"
+        },
+        {
+          "type": "COVENANT",
+          "number": "PS826454D",
+          "date": "23/02/2021"
+        }
+      ],
+      "value_type": "list",
+      "confidence": 0.97,
+      "status": "supported",
+      "normalized_from": "encumbrances_caveats_notices",
+      "source_extractors": [
+        "vic_title_extractor"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "encumbrances, caveats and notices",
+          "snippet": "ENCUMBRANCES, CAVEATS AND NOTICES"
+        }
+      ],
+      "conflicts": [],
+      "review_notes": []
+    }
+  ],
+  "question_targets": [
+    {
+      "target_id": "sec_32_(1)_1",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 1,
+      "control_type": "Edit",
+      "yaml_auto_id": "PART_TextBox",
+      "yaml_name": null,
+      "nearby_label": "(c) Entry Date for Tax Reform Scheme Land",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "land_tax_payable"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "needs_review",
+      "supporting_fact_ids": [
+        "rates_taxes_charges.land_tax_payable"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 10,
+          "line_end": 10,
+          "label": "Do you pay land tax?",
+          "snippet": "Do you pay land tax?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(1)_2",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 2,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "(b) Land tax reform scheme land within the meaning of the CIPT Act",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "land_tax_payable"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "needs_review",
+      "supporting_fact_ids": [
+        "rates_taxes_charges.land_tax_payable"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 10,
+          "line_end": 10,
+          "label": "Do you pay land tax?",
+          "snippet": "Do you pay land tax?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(1)_3",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 3,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "(a) AVPCC allocated to the land",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "land_tax_payable"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "needs_review",
+      "supporting_fact_ids": [
+        "rates_taxes_charges.land_tax_payable"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 10,
+          "line_end": 10,
+          "label": "Do you pay land tax?",
+          "snippet": "Do you pay land tax?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(1)_4",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 4,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Other Particulars",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_5",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 5,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "To",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_6",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 6,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Sale Subject to Mortgage",
+      "nearby_label": "1.4",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_7",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 7,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Terms Contract",
+      "nearby_label": "1.3",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_8",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 8,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Other Particulars",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_9",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 9,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Amount",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_10",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 10,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "There are NO amounts for which the purchaser may become liable other than:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_11",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 11,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "There are NO amounts for which the purchaser may become liable other than:",
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_12",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 12,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_13",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 13,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "There are NO amounts for which the purchaser may become liable other than:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_14",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 14,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_15",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 15,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_16",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 16,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_17",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 17,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_18",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 18,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_19",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 19,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_20",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 20,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_21",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 21,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Authority",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_22",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 22,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Interest",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_23",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 23,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Their amounts are:",
+      "nearby_label": "Are contained in attached certificate(s)",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_24",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 24,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Are contained in attached certificate(s)",
+      "nearby_label": "1.1 Particulars of any Rates, Taxes, Charges or Other Similar Outgoings",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "council_rates",
+        "land_tax_payable",
+        "vacant_land_residential_land_tax_payable"
+      ],
+      "candidate_answer": "$1,198.25",
+      "candidate_confidence": 0.97,
+      "answer_status": "candidate_only",
+      "supporting_fact_ids": [
+        "rates_taxes_charges.council_rates"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 4,
+          "line_end": 4,
+          "label": "Council rates",
+          "snippet": "Council rates\n$1,198.25"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(1)_25",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 25,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Their total does not exceed",
+      "nearby_label": "1.1 Particulars of any Rates, Taxes, Charges or Other Similar Outgoings",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "council_rates",
+        "land_tax_payable",
+        "vacant_land_residential_land_tax_payable"
+      ],
+      "candidate_answer": "$1,198.25",
+      "candidate_confidence": 0.97,
+      "answer_status": "candidate_only",
+      "supporting_fact_ids": [
+        "rates_taxes_charges.council_rates"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 4,
+          "line_end": 4,
+          "label": "Council rates",
+          "snippet": "Council rates\n$1,198.25"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(1)_26",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 26,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Their total does not exceed",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_27",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 27,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Particulars of any required insurance as follows:",
+      "nearby_label": "Copy or extract of any policy attached",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_28",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 28,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Company Name",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_29",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 29,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Amount Insured",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_30",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 30,
+      "control_type": "Edit",
+      "yaml_auto_id": "PART_TextBox",
+      "yaml_name": null,
+      "nearby_label": "2.2 Owner Builder",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "insured"
+      ],
+      "candidate_answer": true,
+      "candidate_confidence": 0.97,
+      "answer_status": "candidate_only",
+      "supporting_fact_ids": [
+        "property_details.insured"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 6,
+          "section": "Property Details",
+          "line_start": 17,
+          "line_end": 17,
+          "label": "Is the property insured?",
+          "snippet": "Is the property insured?\nYes"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(1)_31",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 31,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Copy or extract of any policy attached",
+      "nearby_label": "2.2 Owner Builder",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "insured"
+      ],
+      "candidate_answer": true,
+      "candidate_confidence": 0.97,
+      "answer_status": "candidate_only",
+      "supporting_fact_ids": [
+        "property_details.insured"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 6,
+          "section": "Property Details",
+          "line_start": 17,
+          "line_end": 17,
+          "label": "Is the property insured?",
+          "snippet": "Is the property insured?\nYes"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(1)_32",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 32,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Policy No.",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_33",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 33,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Type of Policy",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_34",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 34,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Company Name",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_35",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 35,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Particulars of any policy insurance as follows:",
+      "nearby_label": "Copy or extract of any policy attached",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(1)_36",
+      "tab_name": "Sec. 32 (1)",
+      "field_index": 36,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Copy or extract of any policy attached",
+      "nearby_label": "2.1 Damage and Destruction",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "insured"
+      ],
+      "candidate_answer": true,
+      "candidate_confidence": 0.97,
+      "answer_status": "candidate_only",
+      "supporting_fact_ids": [
+        "property_details.insured"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 6,
+          "section": "Property Details",
+          "line_start": 17,
+          "line_end": 17,
+          "label": "Is the property insured?",
+          "snippet": "Is the property insured?\nYes"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(2)_1",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 1,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Name of planning overlay",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "planning_overlays_affecting_land",
+        "planning_overlays"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "planning_building_permits.planning_overlays"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 4,
+          "line_end": 4,
+          "label": "Is the land affected by any planning overlays?",
+          "snippet": "Is the land affected by any planning overlays?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(2)_2",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 2,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Name of responsible authority",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(2)_3",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 3,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Name of planning scheme",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "planning_scheme"
+      ],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No candidate facts found for mapped canonical keys."
+      ]
+    },
+    {
+      "target_id": "sec_32_(2)_4",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 4,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Required information is as follows",
+      "nearby_label": "Certificate with required information attached",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(2)_5",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 5,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Certificate with required information attached",
+      "nearby_label": "3.4 Planning Scheme",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "planning_scheme"
+      ],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No candidate facts found for mapped canonical keys."
+      ]
+    },
+    {
+      "target_id": "sec_32_(2)_6",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 6,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Land is in Designated Bushfire Prone Area",
+      "nearby_label": "3.3 Designated Bushfire Prone Area",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "bushfire_prone_area"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "planning_building_permits.bushfire_prone_area"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 2,
+          "line_end": 2,
+          "label": "Is the land in a bushfire prone area?",
+          "snippet": "Is the land in a bushfire prone area?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(2)_7",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 7,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "No road access",
+      "nearby_label": "3.2 Road Access",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "road_access"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "planning_building_permits.road_access"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 6,
+          "line_end": 6,
+          "label": "Is there access to the property by road?",
+          "snippet": "Is there access to the property by road?\nYes"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(2)_8",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 8,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Particulars of any existing failure to comply with easement, covenant or other similar restriction are:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "encumbrances_caveats_notices"
+      ],
+      "candidate_answer": [
+        {
+          "type": "MORTGAGE",
+          "number": "BA088550M",
+          "date": "04/02/2026"
+        },
+        {
+          "type": "COVENANT",
+          "number": "PS826454D",
+          "date": "23/02/2021"
+        }
+      ],
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "vic_title_extract.encumbrances_caveats_notices"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "encumbrances, caveats and notices",
+          "snippet": "ENCUMBRANCES, CAVEATS AND NOTICES"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(2)_9",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 9,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Particulars of any existing failure to comply with easement, covenant or other similar restriction are:",
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(2)_10",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 10,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Is as follows:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(2)_11",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 11,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Is as follows:",
+      "nearby_label": "Is in the attached copies of title documents",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(2)_12",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 12,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Is in the attached copies of title documents",
+      "nearby_label": "Description of any easement, covenant or other similar restriction:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "encumbrances_caveats_notices"
+      ],
+      "candidate_answer": [
+        {
+          "type": "MORTGAGE",
+          "number": "BA088550M",
+          "date": "04/02/2026"
+        },
+        {
+          "type": "COVENANT",
+          "number": "PS826454D",
+          "date": "23/02/2021"
+        }
+      ],
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "vic_title_extract.encumbrances_caveats_notices"
+      ],
+      "evidence": [
+        {
+          "source_file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+          "source_type": "vic_title",
+          "page": 1,
+          "section": null,
+          "line_start": null,
+          "line_end": null,
+          "label": "encumbrances, caveats and notices",
+          "snippet": "ENCUMBRANCES, CAVEATS AND NOTICES"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(2)_13",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 13,
+      "control_type": "ComboBox",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Name of responsible authority",
+      "dropdown_options": [
+        "---RESIDENTIAL ZONE---",
+        "LDRZ - Low Density Residential Zone",
+        "MUZ - Mixed Use Zone",
+        "TZ - Township Zone",
+        "RGZ - Residential Growth Zone",
+        "NRZ - Neighbourhood Residential Zone",
+        "GRZ - General Residential Zone",
+        "---INDUSTRIAL ZONES---",
+        "IN1Z - Industrial 1 Zone",
+        "IN2Z - Industrial 2 Zone",
+        "IN3Z - Industrial 3 Zone",
+        "---COMMERCIAL ZONES---",
+        "C1Z - Commercial 1 Zone",
+        "C2Z - Commercial 2 Zone",
+        "---RURAL ZONES---",
+        "RLZ - Rural Living Zone",
+        "GWZ - Green Wedge Zone",
+        "GWAZ - Green Wedge A Zone",
+        "RCZ - Rural Conservation Zone",
+        "FZ - Farming Zone",
+        "RAZ - Rural Activity Zone",
+        "---PUBLIC LAND ZONES---",
+        "PUZ1 - Public Use Zone-Service and Utility",
+        "PUZ2 - Public Use Zone-Education",
+        "PUZ3 - Public Use Zone-Health & Community",
+        "PUZ5 - Public Use Zone-Cemetery/Crematorium",
+        "PUZ6 - Public Use Zone-Local Government",
+        "PUZ7 - Public Use Zone-Other Public Use",
+        "PPRZ - Public Park and Recreation Zone",
+        "PCRZ - Public Conservation and Resource Zone",
+        "TRZ1 - State Transport Infrastructure",
+        "TRZ2 - Principal Road Network",
+        "TRZ3 - Significant Municipal Road",
+        "TRZ4 - Other Transport Use",
+        "---SPECIAL PURPOSE ZONES---",
+        "SUZ - Special Use Zone",
+        "CDZ - Comprehensive Development Zone",
+        "UFZ - Urban Floodway Zone",
+        "CCZ - Capital City Zone",
+        "DZ - Dockland Zone",
+        "PDZ - Priority Development Zone",
+        "UGZ - Urban Growth Zone",
+        "ACZ - Activity Centre Zone",
+        "PZ - Port Zone",
+        "CA - Commonwealth land"
+      ],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(2)_14",
+      "tab_name": "Sec. 32 (2)",
+      "field_index": 14,
+      "control_type": "Edit",
+      "yaml_auto_id": "PART_EditableTextBox",
+      "yaml_name": null,
+      "nearby_label": "Name of responsible authority",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(3)_1",
+      "tab_name": "Sec. 32 (3)",
+      "field_index": 1,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Particulars of any notices of intention to acquire (s6 of the Land Acquisiton and Compensation Act) are as follows:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(3)_2",
+      "tab_name": "Sec. 32 (3)",
+      "field_index": 2,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Are as follows:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(3)_3",
+      "tab_name": "Sec. 32 (3)",
+      "field_index": 3,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "There are NO notices issued by public authority re agricultural chemicals other than:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(3)_4",
+      "tab_name": "Sec. 32 (3)",
+      "field_index": 4,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Are as follows:",
+      "nearby_label": "Are contained in attached certificates/statements",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(3)_5",
+      "tab_name": "Sec. 32 (3)",
+      "field_index": 5,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Are contained in attached certificates/statements",
+      "nearby_label": "4.1 Notice, Order, Declaration, Report or Recommendation",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(3)_6",
+      "tab_name": "Sec. 32 (3)",
+      "field_index": 6,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Are as follows:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(3)_7",
+      "tab_name": "Sec. 32 (3)",
+      "field_index": 7,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Are as follows:",
+      "nearby_label": "Are contained in the attached certificate",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(3)_8",
+      "tab_name": "Sec. 32 (3)",
+      "field_index": 8,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Are contained in the attached certificate",
+      "nearby_label": "5. Building Permits",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "building_permits_last_7_years"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "planning_building_permits.building_permits_last_7_years"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 24,
+          "line_end": 24,
+          "label": "Have any building permits been issued in the last 7 years?",
+          "snippet": "Have any building permits been issued in the last 7 years?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_1",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 1,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Owners Corporation is inactive",
+      "nearby_label": "Attached is the information prescribed for the purposes of s151(4)(a) of the Owners Corporations Act",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "owners_corporation"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "candidate_only",
+      "supporting_fact_ids": [
+        "rates_taxes_charges.owners_corporation"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 16,
+          "line_end": 16,
+          "label": "If your property affected by an Owners Corporation otherwise known as Strata Insurance for common property.",
+          "snippet": "If your property affected by an Owners Corporation otherwise known as Strata Insurance for common property.\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_2",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 2,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Attached is the information prescribed for the purposes of s151(4)(a) of the Owners Corporations Act",
+      "nearby_label": "Attached is a current owners corporation certificate issued according to s151 of the Owners Corporations Act",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "owners_corporation"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "candidate_only",
+      "supporting_fact_ids": [
+        "rates_taxes_charges.owners_corporation"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 9,
+          "section": "Rates, Taxes and Charges",
+          "line_start": 16,
+          "line_end": 16,
+          "label": "If your property affected by an Owners Corporation otherwise known as Strata Insurance for common property.",
+          "snippet": "If your property affected by an Owners Corporation otherwise known as Strata Insurance for common property.\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_3",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 3,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Attached is a current owners corporation certificate issued according to s151 of the Owners Corporations Act",
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(4)_4",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 4,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Certificate issued under Part 9B of the Planning and Environment Act",
+      "nearby_label": "Any notice providing evidence of the grant of a reduction of the liability for a GAIC or an exemption from that liability",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "gaic_trigger"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "planning_building_permits.gaic_trigger"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 8,
+          "line_end": 8,
+          "label": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?",
+          "snippet": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_5",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 5,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Any notice providing evidence of the grant of a reduction of the liability for a GAIC or an exemption from that liability",
+      "nearby_label": "Any certificate of no GAIC liability",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "gaic_trigger"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "planning_building_permits.gaic_trigger"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 8,
+          "line_end": 8,
+          "label": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?",
+          "snippet": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_6",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 6,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Any certificate of no GAIC liability",
+      "nearby_label": "Any certificate of staged payment approval",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(4)_7",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 7,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Any certificate of staged payment approval",
+      "nearby_label": "Any certificate of exemption from liability to pay a GAIC",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "gaic_trigger"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "planning_building_permits.gaic_trigger"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 8,
+          "line_end": 8,
+          "label": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?",
+          "snippet": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_8",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 8,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Any certificate of exemption from liability to pay a GAIC",
+      "nearby_label": "Any certificate of deferral of the liability to pay the whole or part of a GAIC",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "gaic_trigger"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "planning_building_permits.gaic_trigger"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 8,
+          "line_end": 8,
+          "label": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?",
+          "snippet": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_9",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 9,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Any certificate of deferral of the liability to pay the whole or part of a GAIC",
+      "nearby_label": "Any certificate of release from liability to pay a GAIC",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "gaic_trigger"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "planning_building_permits.gaic_trigger"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 8,
+          "line_end": 8,
+          "label": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?",
+          "snippet": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_10",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 10,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Any certificate of release from liability to pay a GAIC",
+      "nearby_label": "7.2 GAIC Recording",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "gaic_trigger"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "planning_building_permits.gaic_trigger"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 8,
+          "line_end": 8,
+          "label": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?",
+          "snippet": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_11",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 11,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Land IS land in respect of which a GAIC is imposed",
+      "nearby_label": "Land IS land on which works are to be carried out under the agreement",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(4)_12",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 12,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Land IS land on which works are to be carried out under the agreement",
+      "nearby_label": "Land IS to be transferred under the agreement",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(4)_13",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 13,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Land IS to be transferred under the agreement",
+      "nearby_label": "7.1 Work-in-Kind Agreement",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(4)_14",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 14,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "GAIC applies",
+      "nearby_label": "7. Growth Areas Infrastructure Contribution (GAIC)",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "gaic_trigger"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.97,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "planning_building_permits.gaic_trigger"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 10,
+          "section": "Town Planning, Building Approvals and Permits",
+          "line_start": 8,
+          "line_end": 8,
+          "label": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?",
+          "snippet": "Will the sale of the land trigger payment of the \"Growth Area Infrastructure Contribution?\nNo"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_15",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 15,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Telephone services",
+      "nearby_label": "Sewerage",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "septic_tank",
+        "utilities"
+      ],
+      "candidate_answer": true,
+      "candidate_confidence": 0.85,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "services_connected.septic_tank"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": null,
+          "line_end": null,
+          "label": "Septic Tank",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_16",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 16,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Sewerage",
+      "nearby_label": "Water supply",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "tank_water",
+        "utilities"
+      ],
+      "candidate_answer": true,
+      "candidate_confidence": 0.85,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "services_connected.tank_water"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": null,
+          "line_end": null,
+          "label": "Tank Water",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_17",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 17,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Water supply",
+      "nearby_label": "Gas supply",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "bottled_gas"
+      ],
+      "candidate_answer": true,
+      "candidate_confidence": 0.85,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "services_connected.bottled_gas"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": null,
+          "line_end": null,
+          "label": "Bottled Gas",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_18",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 18,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Gas supply",
+      "nearby_label": "Electricity supply",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [
+        "mains_electricity"
+      ],
+      "candidate_answer": false,
+      "candidate_confidence": 0.92,
+      "answer_status": "answered",
+      "supporting_fact_ids": [
+        "services_connected.mains_electricity"
+      ],
+      "evidence": [
+        {
+          "source_file": "Vendor Instruction Form-Kyle Sultana.pdf",
+          "source_type": "vendor_form",
+          "page": 7,
+          "section": "Services Connected",
+          "line_start": 28,
+          "line_end": 28,
+          "label": "Mains Electricity",
+          "snippet": "Have you received any demand Notice, Order, Letters, Flyers, Information Pamphlets or any requirement,\nproposal, declaration or recommendation of a public authority or government department affecting the land?\nNo\nHave..."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "target_id": "sec_32_(4)_19",
+      "tab_name": "Sec. 32 (4)",
+      "field_index": 19,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Electricity supply",
+      "nearby_label": "Check the box if service is NOT connected",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(5)_1",
+      "tab_name": "Sec. 32 (5)",
+      "field_index": 1,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Attached is a copy of the latest version of the plan (if the later plan has not yet been certified)",
+      "nearby_label": "Attached is a copy of the plan which has been certified by the relevant authority (if the later plan has not been registered)",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(5)_2",
+      "tab_name": "Sec. 32 (5)",
+      "field_index": 2,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Attached is a copy of the plan which has been certified by the relevant authority (if the later plan has not been registered)",
+      "nearby_label": "10.3 Further Plan of Subdivision",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(5)_3",
+      "tab_name": "Sec. 32 (5)",
+      "field_index": 3,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Contents of any permit under the Planning and Environment Act authorising the staged subdivision are as follows:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(5)_4",
+      "tab_name": "Sec. 32 (5)",
+      "field_index": 4,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Proposals re subsequent stages that are known to the vendor are as follows:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(5)_5",
+      "tab_name": "Sec. 32 (5)",
+      "field_index": 5,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "are as follows:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(5)_6",
+      "tab_name": "Sec. 32 (5)",
+      "field_index": 6,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Attached is a copy of the plan for the first stage if the land is in the second or subsequent stage",
+      "nearby_label": "10.2 Staged Subdivision",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(5)_7",
+      "tab_name": "Sec. 32 (5)",
+      "field_index": 7,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Attached is a copy of the latest version of the plan if the plan of subdivision has not yet been certified",
+      "nearby_label": "Attached is a copy of the plan of subdivision certified by relevant authority if the plan is not yet registered",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(5)_8",
+      "tab_name": "Sec. 32 (5)",
+      "field_index": 8,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Attached is a copy of the plan of subdivision certified by relevant authority if the plan is not yet registered",
+      "nearby_label": "10.1 Unregistered Subdivision",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(5)_9",
+      "tab_name": "Sec. 32 (5)",
+      "field_index": 9,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Evidence of the vendor's right or power to sell (where the vendor is not the registered proprietor) or the owner in fee simple",
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(6)_1",
+      "tab_name": "Sec. 32 (6)",
+      "field_index": 1,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Are as follows:",
+      "nearby_label": "Are contained in the attached building energy efficiency certificate",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(6)_2",
+      "tab_name": "Sec. 32 (6)",
+      "field_index": 2,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "Are as follows:",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(6)_3",
+      "tab_name": "Sec. 32 (6)",
+      "field_index": 3,
+      "control_type": "CheckBox",
+      "yaml_auto_id": null,
+      "yaml_name": "Are contained in the attached building energy efficiency certificate",
+      "nearby_label": null,
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    },
+    {
+      "target_id": "sec_32_(6)_4",
+      "tab_name": "Sec. 32 (6)",
+      "field_index": 4,
+      "control_type": "Edit",
+      "yaml_auto_id": null,
+      "yaml_name": null,
+      "nearby_label": "13. Attachments",
+      "dropdown_options": [],
+      "mapped_canonical_keys": [],
+      "candidate_answer": null,
+      "candidate_confidence": 0.0,
+      "answer_status": "not_found",
+      "supporting_fact_ids": [],
+      "evidence": [],
+      "notes": [
+        "No mapping rule matched this field label."
+      ]
+    }
+  ],
+  "review_queue": [],
+  "coverage_summary": {
+    "documents_processed": 22,
+    "fact_count": 62,
+    "question_target_count": 90,
+    "answered_count": 17,
+    "candidate_only_count": 7,
+    "needs_review_count": 3,
+    "not_found_count": 63,
+    "conflicted_count": 0
+  }
+}

@@ -1,0 +1,68 @@
+tab_name: Sec. 32 (6)
+scan_date: '2026-04-03T19:37:35.724334'
+total_fields: 4
+fields:
+- control_type: CheckBox
+  auto_id: ''
+  name: 'Are as follows:'
+  class_name: CheckBox
+  position:
+    left: -1870
+    top: 233
+    right: -1768
+    bottom: 252
+    width: 102
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Are contained in the attached building energy efficiency certificate
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1870
+    top: 256
+    right: -1159
+    bottom: 318
+    width: 711
+    height: 62
+  is_enabled: true
+  current_value: ''
+  nearby_label: 'Are as follows:'
+- control_type: CheckBox
+  auto_id: ''
+  name: Are contained in the attached building energy efficiency certificate
+  class_name: CheckBox
+  position:
+    left: -1870
+    top: 210
+    right: -1493
+    bottom: 229
+    width: 377
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: null
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1870
+    top: 424
+    right: -1159
+    bottom: 727
+    width: 711
+    height: 303
+  is_enabled: true
+  current_value: '- Due Diligence Checklist- Register Search Statement Volume 11586
+    Folio 024 dated 31/03/2026- Plan of Subdivision AL543380Q dated 31/03/2026- Section
+    173 Agreement AL543380Q dated 31/03/2026- Sectopm 173 Agreement AL969078N dated
+    31/03/2026- Owners Corporation Basic Report - Owners Corporation Certificate -
+    ### Council Building Approval Certificate- ### Council Land Information Certificate-
+    ### Water Encumbrance Certificate- State Revenue Office Land Tax Certificate-
+    Detailed Property Report - Vic Roads Certificate- EPA Certificate(- Any right
+    to sell property docs)- Residential Tenancy Agreement- s27 Notice of Deposit Release
+    (by way of service)'
+  nearby_label: 13. Attachments

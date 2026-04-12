@@ -1,0 +1,248 @@
+tab_name: Sec. 32 (2)
+scan_date: '2026-04-03T19:37:35.671752'
+total_fields: 14
+fields:
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1698
+    top: 716
+    right: -1159
+    bottom: 739
+    width: 539
+    height: 23
+  is_enabled: true
+  current_value: ''
+  nearby_label: Name of planning overlay
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1698
+    top: 662
+    right: -1159
+    bottom: 685
+    width: 539
+    height: 23
+  is_enabled: true
+  current_value: ''
+  nearby_label: Name of responsible authority
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1698
+    top: 635
+    right: -1159
+    bottom: 658
+    width: 539
+    height: 23
+  is_enabled: true
+  current_value: ''
+  nearby_label: Name of planning scheme
+- control_type: CheckBox
+  auto_id: ''
+  name: Required information is as follows
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 612
+    right: -1668
+    bottom: 631
+    width: 205
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Certificate with required information attached
+- control_type: CheckBox
+  auto_id: ''
+  name: Certificate with required information attached
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 588
+    right: -1605
+    bottom: 607
+    width: 268
+    height: 19
+  is_enabled: true
+  is_checked: true
+  nearby_label: 3.4 Planning Scheme
+- control_type: CheckBox
+  auto_id: ''
+  name: Land is in Designated Bushfire Prone Area
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 540
+    right: -1628
+    bottom: 559
+    width: 245
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: 3.3 Designated Bushfire Prone Area
+- control_type: CheckBox
+  auto_id: ''
+  name: No road access
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 496
+    right: -1767
+    bottom: 515
+    width: 106
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: 3.2 Road Access
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1875
+    top: 399
+    right: -1161
+    bottom: 470
+    width: 714
+    height: 71
+  is_enabled: true
+  current_value: To the best of the Vendor's knowledge there is no existing failure
+    to comply with the terms of any easements, covenants or other similar restriction.
+  nearby_label: 'Particulars of any existing failure to comply with easement, covenant
+    or other similar restriction are:'
+- control_type: CheckBox
+  auto_id: ''
+  name: 'Particulars of any existing failure to comply with easement, covenant or
+    other similar restriction are:'
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 374
+    right: -1324
+    bottom: 393
+    width: 549
+    height: 19
+  is_enabled: true
+  is_checked: true
+  nearby_label: null
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1875
+    top: 297
+    right: -1161
+    bottom: 368
+    width: 714
+    height: 71
+  is_enabled: true
+  current_value: ''
+  nearby_label: 'Is as follows:'
+- control_type: CheckBox
+  auto_id: ''
+  name: 'Is as follows:'
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 272
+    right: -1781
+    bottom: 291
+    width: 92
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Is in the attached copies of title documents
+- control_type: CheckBox
+  auto_id: ''
+  name: Is in the attached copies of title documents
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 249
+    right: -1620
+    bottom: 268
+    width: 253
+    height: 19
+  is_enabled: true
+  is_checked: true
+  nearby_label: 'Description of any easement, covenant or other similar restriction:'
+- control_type: ComboBox
+  auto_id: ''
+  name: ''
+  class_name: ComboBox
+  position:
+    left: -1698
+    top: 689
+    right: -1159
+    bottom: 712
+    width: 539
+    height: 23
+  is_enabled: true
+  dropdown_options:
+  - '---RESIDENTIAL ZONE---'
+  - LDRZ - Low Density Residential Zone
+  - MUZ - Mixed Use Zone
+  - TZ - Township Zone
+  - RGZ - Residential Growth Zone
+  - NRZ - Neighbourhood Residential Zone
+  - GRZ - General Residential Zone
+  - '---INDUSTRIAL ZONES---'
+  - IN1Z - Industrial 1 Zone
+  - IN2Z - Industrial 2 Zone
+  - IN3Z - Industrial 3 Zone
+  - '---COMMERCIAL ZONES---'
+  - C1Z - Commercial 1 Zone
+  - C2Z - Commercial 2 Zone
+  - '---RURAL ZONES---'
+  - RLZ - Rural Living Zone
+  - GWZ - Green Wedge Zone
+  - GWAZ - Green Wedge A Zone
+  - RCZ - Rural Conservation Zone
+  - FZ - Farming Zone
+  - RAZ - Rural Activity Zone
+  - '---PUBLIC LAND ZONES---'
+  - PUZ1 - Public Use Zone-Service and Utility
+  - PUZ2 - Public Use Zone-Education
+  - PUZ3 - Public Use Zone-Health & Community
+  - PUZ5 - Public Use Zone-Cemetery/Crematorium
+  - PUZ6 - Public Use Zone-Local Government
+  - PUZ7 - Public Use Zone-Other Public Use
+  - PPRZ - Public Park and Recreation Zone
+  - PCRZ - Public Conservation and Resource Zone
+  - TRZ1 - State Transport Infrastructure
+  - TRZ2 - Principal Road Network
+  - TRZ3 - Significant Municipal Road
+  - TRZ4 - Other Transport Use
+  - '---SPECIAL PURPOSE ZONES---'
+  - SUZ - Special Use Zone
+  - CDZ - Comprehensive Development Zone
+  - UFZ - Urban Floodway Zone
+  - CCZ - Capital City Zone
+  - DZ - Dockland Zone
+  - PDZ - Priority Development Zone
+  - UGZ - Urban Growth Zone
+  - ACZ - Activity Centre Zone
+  - PZ - Port Zone
+  - CA - Commonwealth land
+  nearby_label: Name of responsible authority
+- control_type: Edit
+  auto_id: PART_EditableTextBox
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1695
+    top: 689
+    right: -1179
+    bottom: 712
+    width: 516
+    height: 23
+  is_enabled: true
+  current_value: ''
+  nearby_label: Name of responsible authority

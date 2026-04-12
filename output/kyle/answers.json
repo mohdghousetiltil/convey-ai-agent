@@ -1,0 +1,1451 @@
+{
+  "sec32_1.1_outgoing_1_authority": {
+    "question_id": "sec32_1.1_outgoing_1_authority",
+    "question_label": "1.1 Outgoing 1 - Authority name",
+    "value": "City of Monash",
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "rates.council.authority_name"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Council\nCity of Monash",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_1.1_outgoing_1_amount": {
+    "question_id": "sec32_1.1_outgoing_1_amount",
+    "question_label": "1.1 Outgoing 1 - Amount",
+    "value": "$1,198.25",
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "rates.council.annual_amount"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Council rates\n$1,198.25",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_1.1_outgoing_2_authority": {
+    "question_id": "sec32_1.1_outgoing_2_authority",
+    "question_label": "1.1 Outgoing 2 - Authority name",
+    "value": "Yarra Valley Water",
+    "confidence": 0.99,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "rates.water.authority_name"
+    ],
+    "evidence": [
+      {
+        "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+        "page": null,
+        "quote": "Yarra Valley Water",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [
+      {
+        "path": "rates.water.authority_name",
+        "facts": [
+          {
+            "path": "rates.water.authority_name",
+            "value": "Yarra Valley",
+            "confidence": 0.97,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+                "page": null,
+                "quote": "Water Authority\nYarra Valley",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:vendor_form_v2",
+            "extracted_at": "2026-04-11T03:38:31.727260",
+            "notes": null
+          },
+          {
+            "path": "rates.water.authority_name",
+            "value": "Yarra Valley Water",
+            "confidence": 0.99,
+            "sources": [
+              {
+                "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+                "page": null,
+                "quote": "Yarra Valley Water",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:water_authority_certificate_v1",
+            "extracted_at": "2026-04-11T03:38:32.248105",
+            "notes": null
+          }
+        ],
+        "resolution": "authority_wins",
+        "winning_fact": {
+          "path": "rates.water.authority_name",
+          "value": "Yarra Valley Water",
+          "confidence": 0.99,
+          "sources": [
+            {
+              "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+              "page": null,
+              "quote": "Yarra Valley Water",
+              "quote_verified": true,
+              "extractor_note": null
+            }
+          ],
+          "extractor": "rule:water_authority_certificate_v1",
+          "extracted_at": "2026-04-11T03:38:32.248105",
+          "notes": null
+        },
+        "reason": "extractor 'rule:water_authority_certificate_v1' matched authoritative pattern 'rule:water_authority_certificate*' for path 'rates.water.authority_name'"
+      }
+    ],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_1.1_outgoing_2_amount": {
+    "question_id": "sec32_1.1_outgoing_2_amount",
+    "question_label": "1.1 Outgoing 2 - Amount",
+    "value": "$783.40",
+    "confidence": 0.75,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "rates.water.annual_amount"
+    ],
+    "evidence": [
+      {
+        "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+        "page": null,
+        "quote": "Total for This Property $195.85",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [
+      {
+        "path": "rates.water.annual_amount",
+        "facts": [
+          {
+            "path": "rates.water.annual_amount",
+            "value": "$774.00",
+            "confidence": 0.97,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+                "page": null,
+                "quote": "Water rates\n$774.00",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:vendor_form_v2",
+            "extracted_at": "2026-04-11T03:38:31.727260",
+            "notes": null
+          },
+          {
+            "path": "rates.water.annual_amount",
+            "value": "$783.40",
+            "confidence": 0.75,
+            "sources": [
+              {
+                "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+                "page": null,
+                "quote": "Total for This Property $195.85",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:water_authority_certificate_v1",
+            "extracted_at": "2026-04-11T03:38:32.249117",
+            "notes": "estimated annual = quarterly $195.85 \u00d7 4 = $783.40. Vendor-form annual figure is preferred; verify discrepancy."
+          }
+        ],
+        "resolution": "authority_wins",
+        "winning_fact": {
+          "path": "rates.water.annual_amount",
+          "value": "$783.40",
+          "confidence": 0.75,
+          "sources": [
+            {
+              "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+              "page": null,
+              "quote": "Total for This Property $195.85",
+              "quote_verified": true,
+              "extractor_note": null
+            }
+          ],
+          "extractor": "rule:water_authority_certificate_v1",
+          "extracted_at": "2026-04-11T03:38:32.249117",
+          "notes": "estimated annual = quarterly $195.85 \u00d7 4 = $783.40. Vendor-form annual figure is preferred; verify discrepancy."
+        },
+        "reason": "extractor 'rule:water_authority_certificate_v1' matched authoritative pattern 'rule:water_authority_certificate*' for path 'rates.water.annual_amount'"
+      }
+    ],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_1.1_outgoing_3_authority": {
+    "question_id": "sec32_1.1_outgoing_3_authority",
+    "question_label": "1.1 Outgoing 3 - Authority name",
+    "value": "State Revenue Office",
+    "confidence": 0.99,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "rates.land_tax.authority_name"
+    ],
+    "evidence": [
+      {
+        "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+        "page": null,
+        "quote": "Property Clearance Certificate - Land Tax",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_1.1_outgoing_3_amount": {
+    "question_id": "sec32_1.1_outgoing_3_amount",
+    "question_label": "1.1 Outgoing 3 - Amount",
+    "value": "$0.00",
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "rates.land_tax.amount"
+    ],
+    "evidence": [
+      {
+        "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+        "page": null,
+        "quote": "Tax Payable $0.00",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_1.1_outgoing_4_authority": {
+    "question_id": "sec32_1.1_outgoing_4_authority",
+    "question_label": "1.1 Outgoing 4 - Authority name",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_1.1_outgoing_4_amount": {
+    "question_id": "sec32_1.1_outgoing_4_amount",
+    "question_label": "1.1 Outgoing 4 - Amount",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "policy_1_amounts_are_checked": {
+    "question_id": "policy_1_amounts_are_checked",
+    "question_label": "Their amounts are: (checkbox)",
+    "value": true,
+    "confidence": 1.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "policy.tab1.amounts_are_checked"
+    ],
+    "evidence": [
+      {
+        "file": "policy_defaults",
+        "page": null,
+        "quote": "Firm policy: 'Their amounts are:' is always checked in Tab 1",
+        "quote_verified": true,
+        "extractor_note": "Firm policy: 'Their amounts are:' is always checked in Tab 1"
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "policy_1_certs_attached": {
+    "question_id": "policy_1_certs_attached",
+    "question_label": "Are contained in attached certificate(s) (checkbox)",
+    "value": true,
+    "confidence": 1.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "policy.tab1.certificates_attached"
+    ],
+    "evidence": [
+      {
+        "file": "policy_defaults",
+        "page": null,
+        "quote": "Firm policy: 'Are contained in attached certificate(s)' is always checked",
+        "quote_verified": true,
+        "extractor_note": "Firm policy: 'Are contained in attached certificate(s)' is always checked"
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "policy_1_total_does_not_exceed": {
+    "question_id": "policy_1_total_does_not_exceed",
+    "question_label": "Their total does not exceed (checkbox)",
+    "value": true,
+    "confidence": 1.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "policy.tab1.total_does_not_exceed"
+    ],
+    "evidence": [
+      {
+        "file": "policy_defaults",
+        "page": null,
+        "quote": "Firm policy: 'Their total does not exceed' is always checked (amount field blank)",
+        "quote_verified": true,
+        "extractor_note": "Firm policy: 'Their total does not exceed' is always checked (amount field blank)"
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_1.2_no_other_amounts": {
+    "question_id": "sec32_1.2_no_other_amounts",
+    "question_label": "1.2 There are NO amounts for which the purchaser may become liable other than",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "policy_default",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "policy_default question with no ClientPolicy supplied"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_1.3_terms_contract": {
+    "question_id": "sec32_1.3_terms_contract",
+    "question_label": "1.3 Terms Contract",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_1.4_sale_subject_to_mortgage": {
+    "question_id": "sec32_1.4_sale_subject_to_mortgage",
+    "question_label": "1.4 Sale Subject to Mortgage",
+    "value": true,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "title.has_mortgage"
+    ],
+    "evidence": [
+      {
+        "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+        "page": null,
+        "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE BA088550M 04/02/2026 AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD COVENANT PS826454D 23/02/2021 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. NOTICE Section 47(2) Heritage Act 1995 REGISTER NO. 1883 X265348J 17",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_2.1_insurance_company": {
+    "question_id": "sec32_2.1_insurance_company",
+    "question_label": "2.1 Insurance Company Name",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "grounded_ai",
+    "facts_used": [
+      "insurance.home.vendor_disclosed_text"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Please provide full particulars of your insurance cover:\nRACV\nPolicy number: HOM798171110\nExpiry date: 29/3/2027\nIssued for: Building - $535,300, Contents - $80,000, Portable items - $7000",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": true,
+    "review_reasons": [
+      "grounded_ai strategy is not yet implemented \u2014 escalating"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_2.1_insurance_policy_no": {
+    "question_id": "sec32_2.1_insurance_policy_no",
+    "question_label": "2.1 Policy No.",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_2.1_insurance_type": {
+    "question_id": "sec32_2.1_insurance_type",
+    "question_label": "2.1 Type of Policy",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_2.1_insurance_amount_insured": {
+    "question_id": "sec32_2.1_insurance_amount_insured",
+    "question_label": "2.1 Amount Insured",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "policy_2_title_in_attached": {
+    "question_id": "policy_2_title_in_attached",
+    "question_label": "Is in the attached copies of title documents (checkbox)",
+    "value": true,
+    "confidence": 1.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "policy.tab2.title_in_attached"
+    ],
+    "evidence": [
+      {
+        "file": "policy_defaults",
+        "page": null,
+        "quote": "Firm policy: 'Is in the attached copies of title documents' is always checked",
+        "quote_verified": true,
+        "extractor_note": "Firm policy: 'Is in the attached copies of title documents' is always checked"
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "policy_2_failure_checked": {
+    "question_id": "policy_2_failure_checked",
+    "question_label": "Particulars of any existing failure to comply (checkbox)",
+    "value": true,
+    "confidence": 1.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "policy.tab2.failure_to_comply_checked"
+    ],
+    "evidence": [
+      {
+        "file": "policy_defaults",
+        "page": null,
+        "quote": "Firm policy: 'Particulars of any existing failure to comply...' is always checked",
+        "quote_verified": true,
+        "extractor_note": "Firm policy: 'Particulars of any existing failure to comply...' is always checked"
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "policy_2_failure_text": {
+    "question_id": "policy_2_failure_text",
+    "question_label": "Failure to comply standard text",
+    "value": "To the best of the Vendor's knowledge there is no existing failure to comply with the terms of any easements, covenants or other similar restriction.",
+    "confidence": 1.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "policy.tab2.failure_to_comply_text"
+    ],
+    "evidence": [
+      {
+        "file": "policy_defaults",
+        "page": null,
+        "quote": "Firm standard text for failure-to-comply disclosure",
+        "quote_verified": true,
+        "extractor_note": "Firm standard text for failure-to-comply disclosure"
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "policy_2_planning_cert_attached": {
+    "question_id": "policy_2_planning_cert_attached",
+    "question_label": "Certificate with required information attached (planning scheme)",
+    "value": true,
+    "confidence": 1.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "policy.tab2.planning_cert_attached"
+    ],
+    "evidence": [
+      {
+        "file": "policy_defaults",
+        "page": null,
+        "quote": "Firm policy: 'Certificate with required information attached' is always checked",
+        "quote_verified": true,
+        "extractor_note": "Firm policy: 'Certificate with required information attached' is always checked"
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_3.1_easement_description": {
+    "question_id": "sec32_3.1_easement_description",
+    "question_label": "3.1 Description of any easement, covenant or restriction",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "grounded_ai",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "grounded_ai strategy is not yet implemented \u2014 escalating"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_3.1_easement_failure_text": {
+    "question_id": "sec32_3.1_easement_failure_text",
+    "question_label": "3.1 Easement failure to comply text",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "grounded_ai",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "grounded_ai strategy is not yet implemented \u2014 escalating"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_3.2_no_road_access": {
+    "question_id": "sec32_3.2_no_road_access",
+    "question_label": "3.2 Road Access - No road access",
+    "value": false,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "property.road_access"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Is there access to the property by road?\nYes",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_3.3_bushfire_prone": {
+    "question_id": "sec32_3.3_bushfire_prone",
+    "question_label": "3.3 Designated Bushfire Prone Area",
+    "value": false,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "planning.bushfire_prone"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Is the land in a bushfire prone area?\nNo",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_3.4_planning_scheme": {
+    "question_id": "sec32_3.4_planning_scheme",
+    "question_label": "3.4 Name of planning scheme",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_3.4_responsible_authority": {
+    "question_id": "sec32_3.4_responsible_authority",
+    "question_label": "3.4 Name of responsible authority",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_3.4_planning_zone": {
+    "question_id": "sec32_3.4_planning_zone",
+    "question_label": "3.4 Planning zone (dropdown)",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_3.4_planning_overlay_name": {
+    "question_id": "sec32_3.4_planning_overlay_name",
+    "question_label": "3.4 Name of planning overlay",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_4.1_notices_text": {
+    "question_id": "sec32_4.1_notices_text",
+    "question_label": "4.1 Notices - Are as follows (text)",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "human_review",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "question is registered as human_review (legally sensitive)"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_5.1_building_permits_text": {
+    "question_id": "sec32_5.1_building_permits_text",
+    "question_label": "5. Building Permits - Are contained in attached certificate",
+    "value": false,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "building.permits_last_7_years"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Have any building permits been issued in the last 7 years?\nNo",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_8_electricity_not_connected": {
+    "question_id": "sec32_8_electricity_not_connected",
+    "question_label": "8. Services - Electricity supply (tick if NOT connected)",
+    "value": false,
+    "confidence": 0.92,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "services.electricity.connected"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Are the services listed connected to the land?\nMains Electricity",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_8_gas_not_connected": {
+    "question_id": "sec32_8_gas_not_connected",
+    "question_label": "8. Services - Gas supply (tick if NOT connected)",
+    "value": false,
+    "confidence": 0.92,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "services.gas.connected"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Are the services listed connected to the land?\nMains Gas",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_8_water_not_connected": {
+    "question_id": "sec32_8_water_not_connected",
+    "question_label": "8. Services - Water supply (tick if NOT connected)",
+    "value": false,
+    "confidence": 0.95,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "services.water.connected"
+    ],
+    "evidence": [
+      {
+        "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+        "page": null,
+        "quote": "Residential Water Service Charge",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [
+      {
+        "path": "services.water.connected",
+        "facts": [
+          {
+            "path": "services.water.connected",
+            "value": true,
+            "confidence": 0.92,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+                "page": null,
+                "quote": "Are the services listed connected to the land?\nMains Water",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:vendor_form_v2",
+            "extracted_at": "2026-04-11T03:38:31.728260",
+            "notes": "matched 'Mains Water' against 'Mains Water'"
+          },
+          {
+            "path": "services.water.connected",
+            "value": true,
+            "confidence": 0.95,
+            "sources": [
+              {
+                "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+                "page": null,
+                "quote": "Residential Water Service Charge",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:water_authority_certificate_v1",
+            "extracted_at": "2026-04-11T03:38:32.250102",
+            "notes": "implied by water authority charging a service fee"
+          }
+        ],
+        "resolution": "authority_wins",
+        "winning_fact": {
+          "path": "services.water.connected",
+          "value": true,
+          "confidence": 0.95,
+          "sources": [
+            {
+              "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+              "page": null,
+              "quote": "Residential Water Service Charge",
+              "quote_verified": true,
+              "extractor_note": null
+            }
+          ],
+          "extractor": "rule:water_authority_certificate_v1",
+          "extracted_at": "2026-04-11T03:38:32.250102",
+          "notes": "implied by water authority charging a service fee"
+        },
+        "reason": "extractor 'rule:water_authority_certificate_v1' matched authoritative pattern 'rule:water_authority_certificate*' for path 'services.water.connected'"
+      }
+    ],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_8_sewerage_not_connected": {
+    "question_id": "sec32_8_sewerage_not_connected",
+    "question_label": "8. Services - Sewerage (tick if NOT connected)",
+    "value": false,
+    "confidence": 0.95,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "services.sewerage.connected"
+    ],
+    "evidence": [
+      {
+        "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+        "page": null,
+        "quote": "Residential Sewer Service Charge",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [
+      {
+        "path": "services.sewerage.connected",
+        "facts": [
+          {
+            "path": "services.sewerage.connected",
+            "value": true,
+            "confidence": 0.92,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+                "page": null,
+                "quote": "Are the services listed connected to the land?\nMains Sewerage",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:vendor_form_v2",
+            "extracted_at": "2026-04-11T03:38:31.728260",
+            "notes": "matched 'Mains Sewerage' against 'Mains Sewerage'"
+          },
+          {
+            "path": "services.sewerage.connected",
+            "value": true,
+            "confidence": 0.95,
+            "sources": [
+              {
+                "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+                "page": null,
+                "quote": "Residential Sewer Service Charge",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:water_authority_certificate_v1",
+            "extracted_at": "2026-04-11T03:38:32.250102",
+            "notes": "implied by water authority charging a sewer service fee"
+          }
+        ],
+        "resolution": "authority_wins",
+        "winning_fact": {
+          "path": "services.sewerage.connected",
+          "value": true,
+          "confidence": 0.95,
+          "sources": [
+            {
+              "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+              "page": null,
+              "quote": "Residential Sewer Service Charge",
+              "quote_verified": true,
+              "extractor_note": null
+            }
+          ],
+          "extractor": "rule:water_authority_certificate_v1",
+          "extracted_at": "2026-04-11T03:38:32.250102",
+          "notes": "implied by water authority charging a sewer service fee"
+        },
+        "reason": "extractor 'rule:water_authority_certificate_v1' matched authoritative pattern 'rule:water_authority_certificate*' for path 'services.sewerage.connected'"
+      }
+    ],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_8_telephone_not_connected": {
+    "question_id": "sec32_8_telephone_not_connected",
+    "question_label": "8. Services - Telephone services (tick if NOT connected)",
+    "value": true,
+    "confidence": 0.85,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "services.telephone.connected"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Are the services listed connected to the land?\ni.e. Can the services be used at the date the purchaser signs the Contract? ('Connected' is not defined in the Sale\nof Land Act 1962 (Vic).\nA service is connected where, at the date the purchaser signs the contract of sale, the service can be used.)\nMains Electricity\nMains Gas\nMains Water\nMains Sewerage\nVOIP phone via NBN\nDemands, Disputes, Notices, Orders, Letters and/or Flyers\nServices Connected\nPrimary Production Use\nNo\nIf no, when was the property last used for farming or agricultural purposes.\nNA",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_7_gaic_applies": {
+    "question_id": "sec32_7_gaic_applies",
+    "question_label": "7. GAIC applies",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_oc_inactive": {
+    "question_id": "sec32_oc_inactive",
+    "question_label": "Owners Corporation is inactive",
+    "value": true,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "rates.owners_corporation.exists"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "If your property a\ufb00ected by an Owners Corporation otherwise known as Strata Insurance for common property.\nNo",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "policy_4_oc_cert_attached": {
+    "question_id": "policy_4_oc_cert_attached",
+    "question_label": "Attached is a current owners corporation certificate (s151)",
+    "value": false,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "rates.owners_corporation.exists"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "If your property a\ufb00ected by an Owners Corporation otherwise known as Strata Insurance for common property.\nNo",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "vendor_property_owner_occupied": {
+    "question_id": "vendor_property_owner_occupied",
+    "question_label": "Do you live at the property?",
+    "value": true,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "property.owner_occupied"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Do you live at the property?\nYes",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "vendor_property_leased": {
+    "question_id": "vendor_property_leased",
+    "question_label": "Is the property rented/leased?",
+    "value": false,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "property.leased"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Is the Property rented/leased?\nNo",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "vendor_is_trust": {
+    "question_id": "vendor_is_trust",
+    "question_label": "Is the property held by a Trust?",
+    "value": false,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "vendor.is_trust"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Is the Property held by a Trust?\nNo",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "vendor_building_permits_last_7_years": {
+    "question_id": "vendor_building_permits_last_7_years",
+    "question_label": "Have any building permits been issued in the last 7 years?",
+    "value": false,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "building.permits_last_7_years"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Have any building permits been issued in the last 7 years?\nNo",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "vendor_building_works_last_7_years": {
+    "question_id": "vendor_building_works_last_7_years",
+    "question_label": "Has there been any building works in the last 7 years?",
+    "value": true,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "building.works_last_7_years"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Has there been any building works/structures undertaken in the last 7 years?\nYes",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "vendor_building_works_without_permit": {
+    "question_id": "vendor_building_works_without_permit",
+    "question_label": "Have you done any works without obtaining a permit?",
+    "value": false,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "building.works_without_permit"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Have you done any works without obtaining a permit?\nNo",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "vendor_has_water_tank": {
+    "question_id": "vendor_has_water_tank",
+    "question_label": "Does the property have a water tank?",
+    "value": false,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "building.has_water_tank"
+    ],
+    "evidence": [
+      {
+        "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+        "page": null,
+        "quote": "Does the property have a water tank?\nNo",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "vendor_land_tax_payable": {
+    "question_id": "vendor_land_tax_payable",
+    "question_label": "Do you pay land tax?",
+    "value": false,
+    "confidence": 0.99,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "rates.land_tax.payable"
+    ],
+    "evidence": [
+      {
+        "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+        "page": null,
+        "quote": "Tax Payable $0.00",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [
+      {
+        "path": "rates.land_tax.payable",
+        "facts": [
+          {
+            "path": "rates.land_tax.payable",
+            "value": false,
+            "confidence": 0.97,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+                "page": null,
+                "quote": "Do you pay land tax?\nNo",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:vendor_form_v2",
+            "extracted_at": "2026-04-11T03:38:31.727260",
+            "notes": null
+          },
+          {
+            "path": "rates.land_tax.payable",
+            "value": false,
+            "confidence": 0.99,
+            "sources": [
+              {
+                "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+                "page": null,
+                "quote": "Tax Payable $0.00",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:land_tax_certificate_v1",
+            "extracted_at": "2026-04-11T03:38:32.444569",
+            "notes": "derived from Tax Payable = $0.00"
+          }
+        ],
+        "resolution": "authority_wins",
+        "winning_fact": {
+          "path": "rates.land_tax.payable",
+          "value": false,
+          "confidence": 0.99,
+          "sources": [
+            {
+              "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+              "page": null,
+              "quote": "Tax Payable $0.00",
+              "quote_verified": true,
+              "extractor_note": null
+            }
+          ],
+          "extractor": "rule:land_tax_certificate_v1",
+          "extracted_at": "2026-04-11T03:38:32.444569",
+          "notes": "derived from Tax Payable = $0.00"
+        },
+        "reason": "extractor 'rule:land_tax_certificate_v1' matched authoritative pattern 'rule:land_tax_certificate*' for path 'rates.land_tax.payable'"
+      }
+    ],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "vendor_planning_overlays_exist": {
+    "question_id": "vendor_planning_overlays_exist",
+    "question_label": "Is the land affected by any planning overlays?",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "vendor_sale_is_auction": {
+    "question_id": "vendor_sale_is_auction",
+    "question_label": "Is the sale by auction?",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "vendor_sale_price": {
+    "question_id": "vendor_sale_price",
+    "question_label": "Estimated sale price",
+    "value": null,
+    "confidence": 0.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [],
+    "evidence": [],
+    "needs_review": true,
+    "review_reasons": [
+      "no facts found at any of the question's fact_paths"
+    ],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "vendor_has_mortgage": {
+    "question_id": "vendor_has_mortgage",
+    "question_label": "Is there a mortgage on the property?",
+    "value": true,
+    "confidence": 0.97,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "title.has_mortgage"
+    ],
+    "evidence": [
+      {
+        "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+        "page": null,
+        "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE BA088550M 04/02/2026 AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD COVENANT PS826454D 23/02/2021 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. NOTICE Section 47(2) Heritage Act 1995 REGISTER NO. 1883 X265348J 17",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "policy_6_due_diligence": {
+    "question_id": "policy_6_due_diligence",
+    "question_label": "12. Due Diligence Checklist",
+    "value": "Is attached",
+    "confidence": 1.0,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "policy.tab6.due_diligence_text"
+    ],
+    "evidence": [
+      {
+        "file": "policy_defaults",
+        "page": null,
+        "quote": "Firm policy: Due Diligence Checklist field always says 'Is attached'",
+        "quote_verified": true,
+        "extractor_note": "Firm policy: Due Diligence Checklist field always says 'Is attached'"
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "policy_6_attachments": {
+    "question_id": "policy_6_attachments",
+    "question_label": "13. Attachments list",
+    "value": "- Due Diligence Checklist\n- Register Search Statement Volume 12287 Folio 279 dated 02/04/2026\n- Plan of Subdivision PS826454D dated 02/04/2026\n- Covenant PS826454D dated 02/04/2026\n- City of Monash Building Approval Certificate dated ##\n- City of Monash Land Information Certificate dated ##\n- Yarra Valley Water Encumbrance Certificate dated 30/06/2026\n- State Revenue Office Land Tax Certificate dated 07/04/2026\n- Detailed Property Report dated ##\n- Domestic Building Insurance dated 22/06/2020\n- Vic Roads Certificate dated 02/04/2026\n- EPA Certificate dated 02/04/2026\n(- Any right to sell property docs)\n- s27 Notice of Deposit Release (by way of service)",
+    "confidence": 0.9,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "policy.attachments.text"
+    ],
+    "evidence": [
+      {
+        "file": "policy_computed",
+        "page": null,
+        "quote": "Auto-built from extracted document dates, names, and identifiers",
+        "quote_verified": true,
+        "extractor_note": "Auto-built from extracted document dates, names, and identifiers"
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  }
+}

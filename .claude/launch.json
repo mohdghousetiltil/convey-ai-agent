@@ -1,0 +1,53 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "extract",
+      "description": "Step A — extract data from uploaded docs into final_output.json",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "triconvey_agent.cli", "extract", "samples/", "--output", "final_output.json"],
+      "port": 0,
+      "autoPort": true
+    },
+    {
+      "name": "ai-map-triconvey",
+      "description": "Step B — AI agent: deterministic + GPT-4o gap-fill + policy overrides → answered_triconvey_tab.json",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "triconvey_agent.cli", "ai-map-triconvey", "final_output.json", "triconvey_tab.json"],
+      "port": 0,
+      "autoPort": true
+    },
+    {
+      "name": "map-triconvey (deterministic only)",
+      "description": "Step B without AI — fast, no API cost",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "triconvey_agent.cli", "map-triconvey", "final_output.json", "triconvey_tab.json"],
+      "port": 0,
+      "autoPort": true
+    },
+    {
+      "name": "ai-normalize-output",
+      "description": "Run AI normalization on final_output.json → normalized_output.json (services + attachments)",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "triconvey_agent.cli", "ai-normalize-output", "final_output.json", "--model", "gpt-4o"],
+      "port": 0,
+      "autoPort": true
+    },
+    {
+      "name": "normalize-output (deterministic)",
+      "description": "Run deterministic normalization only — no API cost",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "triconvey_agent.cli", "normalize-output", "final_output.json"],
+      "port": 0,
+      "autoPort": true
+    },
+    {
+      "name": "ingest",
+      "description": "Classify and preview documents without extracting — useful for debugging doc type detection",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "triconvey_agent.cli", "ingest", "samples/"],
+      "port": 0,
+      "autoPort": true
+    }
+  ]
+}

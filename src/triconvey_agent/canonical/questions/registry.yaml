@@ -1,0 +1,673 @@
+# Question registry — full Section 32 coverage.
+#
+# answer_strategy values:
+#   deterministic   — pull a single fact directly from the FactStore
+#   grounded_ai     — send question + doc snippets to AI, require a quote
+#   human_review    — always escalate; too legally sensitive to auto-answer
+#   policy_default  — client-policy boilerplate; no facts required
+#
+# value_transform values (deterministic only):
+#   direct          — single path, return value as-is
+#   negate          — single bool path, return NOT(value)
+#   first_present   — walk paths in order, return first non-None value
+#   any_true        — bool paths, True if any is True
+#   all_false       — bool paths, True only when every fact is False
+
+questions:
+
+  # ===========================================================================
+  # Sec. 32 (1) — Rates, Taxes, Charges & Insurance
+  # ===========================================================================
+
+  # ---- 1.1 Outgoings (rates rows 1–4) ------------------------------------
+
+  - id: sec32_1.1_outgoing_1_authority
+    tab: "Sec. 32 (1)"
+    label: "1.1 Outgoing 1 - Authority name"
+    fact_paths:
+      - rates.council.authority_name
+    answer_strategy: deterministic
+    value_transform: first_present
+    expected_type: string
+    description: Council authority name — first outgoing row.
+
+  - id: sec32_1.1_outgoing_1_amount
+    tab: "Sec. 32 (1)"
+    label: "1.1 Outgoing 1 - Amount"
+    fact_paths:
+      - rates.council.annual_amount
+    answer_strategy: deterministic
+    value_transform: first_present
+    expected_type: string
+
+  - id: sec32_1.1_outgoing_2_authority
+    tab: "Sec. 32 (1)"
+    label: "1.1 Outgoing 2 - Authority name"
+    fact_paths:
+      - rates.water.authority_name
+    answer_strategy: deterministic
+    value_transform: first_present
+    expected_type: string
+    description: Water authority — second outgoing row.
+
+  - id: sec32_1.1_outgoing_2_amount
+    tab: "Sec. 32 (1)"
+    label: "1.1 Outgoing 2 - Amount"
+    fact_paths:
+      - rates.water.annual_amount
+    answer_strategy: deterministic
+    value_transform: first_present
+    expected_type: string
+
+  - id: sec32_1.1_outgoing_3_authority
+    tab: "Sec. 32 (1)"
+    label: "1.1 Outgoing 3 - Authority name"
+    fact_paths:
+      - rates.land_tax.authority_name
+    answer_strategy: deterministic
+    value_transform: first_present
+    expected_type: string
+    description: |
+      Land tax outgoing — only applicable when land tax is payable.
+      Authority name is always "State Revenue Office".
+
+  - id: sec32_1.1_outgoing_3_amount
+    tab: "Sec. 32 (1)"
+    label: "1.1 Outgoing 3 - Amount"
+    fact_paths:
+      - rates.land_tax.amount
+    answer_strategy: deterministic
+    value_transform: first_present
+    expected_type: string
+
+  # ---- 1.1 Outgoing row 4: Owners Corporation fees ------------------------
+
+  - id: sec32_1.1_outgoing_4_authority
+    tab: "Sec. 32 (1)"
+    label: "1.1 Outgoing 4 - Authority name"
+    fact_paths:
+      - rates.owners_corporation.authority_name
+    answer_strategy: deterministic
+    value_transform: first_present
+    expected_type: string
+    description: |
+      OC body name for row 4. Only populated when OC fees apply.
+      Source: OC certificate or vendor form.
+
+  - id: sec32_1.1_outgoing_4_amount
+    tab: "Sec. 32 (1)"
+    label: "1.1 Outgoing 4 - Amount"
+    fact_paths:
+      - rates.owners_corporation.annual_amount
+    answer_strategy: deterministic
+    value_transform: first_present
+    expected_type: string
+    description: |
+      Annual OC levy. If OC certificate gives quarterly amount, annualise × 4.
+
+  # ---- 1.1 Policy checkboxes -----------------------------------------------
+
+  - id: policy_1_amounts_are_checked
+    tab: "Sec. 32 (1)"
+    label: "Their amounts are: (checkbox)"
+    fact_paths:
+      - policy.tab1.amounts_are_checked
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: "Firm policy: always checked. Lists individual outgoing amounts."
+
+  - id: policy_1_certs_attached
+    tab: "Sec. 32 (1)"
+    label: "Are contained in attached certificate(s) (checkbox)"
+    fact_paths:
+      - policy.tab1.certificates_attached
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: "Firm policy: always checked. Indicates amounts are in attached certs."
+
+  - id: policy_1_total_does_not_exceed
+    tab: "Sec. 32 (1)"
+    label: "Their total does not exceed (checkbox)"
+    fact_paths:
+      - policy.tab1.total_does_not_exceed
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: "Firm policy: always checked."
+
+  - id: policy_1_total_does_not_exceed_amount
+    tab: "Sec. 32 (1)"
+    label: "Their total does not exceed (amount)"
+    fact_paths:
+      - policy.tab1.total_does_not_exceed_amount
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+    description: |
+      Computed amount for the edit field beside "Their total does not exceed":
+      council + water + land tax (if any) + owners corporation (if any) + 1000.
+
+  # ---- 1.2 No other amounts -----------------------------------------------
+
+  - id: sec32_1.2_no_other_amounts
+    tab: "Sec. 32 (1)"
+    label: "1.2 There are NO amounts for which the purchaser may become liable other than"
+    fact_paths: []
+    answer_strategy: policy_default
+    expected_type: bool
+    description: |
+      Standard "no other amounts" disclosure. Client policy supplies the
+      default answer (typically True) — no facts required.
+
+  # ---- 1.3 / 1.4 Contract type -------------------------------------------
+
+  - id: sec32_1.3_terms_contract
+    tab: "Sec. 32 (1)"
+    label: "1.3 Terms Contract"
+    fact_paths:
+      - sale.is_terms_contract
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: |
+      Tick if the contract is a Terms Contract (instalment sale).
+      Source: vendor instruction form sale details.
+
+  - id: sec32_1.4_sale_subject_to_mortgage
+    tab: "Sec. 32 (1)"
+    label: "1.4 Sale Subject to Mortgage"
+    fact_paths:
+      - title.has_mortgage
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: |
+      Tick if the property is subject to a mortgage that will remain
+      on title after settlement. Source: title register.
+
+  # ---- 2.1 Insurance (damage and destruction) ----------------------------
+
+  - id: sec32_2.1_insurance_company
+    tab: "Sec. 32 (1)"
+    label: "2.1 Insurance Company Name"
+    fact_paths:
+      - insurance.home.company
+      - insurance.home.vendor_disclosed_text
+    answer_strategy: grounded_ai
+    expected_type: string
+    description: |
+      Insurance company name from the home/building policy.
+      Authoritative source: Certificate of Currency. Vendor form is fallback.
+      AI must extract the company name from the vendor_disclosed_text if needed.
+
+  - id: sec32_2.1_insurance_policy_no
+    tab: "Sec. 32 (1)"
+    label: "2.1 Policy No."
+    fact_paths:
+      - insurance.home.policy_number
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+
+  - id: sec32_2.1_insurance_type
+    tab: "Sec. 32 (1)"
+    label: "2.1 Type of Policy"
+    fact_paths:
+      - insurance.home.policy_type
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+
+  - id: sec32_2.1_insurance_amount_insured
+    tab: "Sec. 32 (1)"
+    label: "2.1 Amount Insured"
+    fact_paths:
+      - insurance.home.amount_insured
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+
+  # ===========================================================================
+  # Sec. 32 (2) — Title, Easements, Road Access, Planning
+  # ===========================================================================
+
+  # ---- Policy Tab 2 always-checked items -----------------------------------
+
+  - id: policy_2_title_in_attached
+    tab: "Sec. 32 (2)"
+    label: "Is in the attached copies of title documents (checkbox)"
+    fact_paths:
+      - policy.tab2.title_in_attached
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: "Firm policy: description of easements/covenants is always in attached title docs."
+
+  - id: policy_2_failure_checked
+    tab: "Sec. 32 (2)"
+    label: "Particulars of any existing failure to comply (checkbox)"
+    fact_paths:
+      - policy.tab2.failure_to_comply_checked
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: "Firm policy: always checked. Standard text goes in the edit field below."
+
+  - id: policy_2_failure_text
+    tab: "Sec. 32 (2)"
+    label: "Failure to comply standard text"
+    fact_paths:
+      - policy.tab2.failure_to_comply_text
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+    description: "Standard vendor-knowledge disclaimer for failure to comply."
+
+  - id: policy_2_planning_cert_attached
+    tab: "Sec. 32 (2)"
+    label: "Certificate with required information attached (planning scheme)"
+    fact_paths:
+      - policy.tab2.planning_cert_attached
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: "Firm policy: planning section always marked as certificate attached."
+
+  # ---- 3.1 Easements -------------------------------------------------------
+
+  - id: sec32_3.1_easement_description
+    tab: "Sec. 32 (2)"
+    label: "3.1 Description of any easement, covenant or restriction"
+    fact_paths:
+      - title.encumbrances
+    answer_strategy: grounded_ai
+    expected_type: string
+    description: |
+      Describe easements, covenants, or restrictions on title.
+      Source: title register — encumbrances section.
+      AI must quote the specific encumbrance text.
+
+  - id: sec32_3.1_easement_failure_text
+    tab: "Sec. 32 (2)"
+    label: "3.1 Easement failure to comply text"
+    fact_paths:
+      - title.easement_failures
+      - vendor.easement_failure_disclosure
+    answer_strategy: grounded_ai
+    expected_type: string
+    description: |
+      Describe any existing failure to comply with an easement, covenant
+      or similar restriction. AI must cite a verbatim quote.
+
+  # ---- 3.2 Road access -----------------------------------------------------
+
+  - id: sec32_3.2_no_road_access
+    tab: "Sec. 32 (2)"
+    label: "3.2 Road Access - No road access"
+    fact_paths:
+      - property.road_access
+    answer_strategy: deterministic
+    value_transform: negate
+    expected_type: bool
+    description: |
+      Tick if there is NO road access. Source: vendor form (vendor's disclosure).
+
+  # ---- 3.3 Bushfire prone area ---------------------------------------------
+
+  - id: sec32_3.3_bushfire_prone
+    tab: "Sec. 32 (2)"
+    label: "3.3 Designated Bushfire Prone Area"
+    fact_paths:
+      - planning.bushfire_prone
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: |
+      Authoritative source: VicPlan Planning Property Report (BMO overlay)
+      or planning certificate. Vendor form is fallback.
+
+  # ---- 3.4 Planning scheme & zone -----------------------------------------
+
+  - id: sec32_3.4_planning_scheme
+    tab: "Sec. 32 (2)"
+    label: "3.4 Name of planning scheme"
+    fact_paths:
+      - planning.scheme
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+
+  - id: sec32_3.4_responsible_authority
+    tab: "Sec. 32 (2)"
+    label: "3.4 Name of responsible authority"
+    fact_paths:
+      - planning.responsible_authority
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+
+  - id: sec32_3.4_planning_zone
+    tab: "Sec. 32 (2)"
+    label: "3.4 Planning zone (dropdown)"
+    fact_paths:
+      - planning.zone
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+    description: |
+      Authoritative source: planning certificate / VicPlan report.
+      Value must match one of the dropdown options exactly.
+    options:
+      - "LDRZ - Low Density Residential Zone"
+      - "MUZ - Mixed Use Zone"
+      - "TZ - Township Zone"
+      - "RGZ - Residential Growth Zone"
+      - "NRZ - Neighbourhood Residential Zone"
+      - "GRZ - General Residential Zone"
+      - "IN1Z - Industrial 1 Zone"
+      - "IN2Z - Industrial 2 Zone"
+      - "IN3Z - Industrial 3 Zone"
+      - "C1Z - Commercial 1 Zone"
+      - "C2Z - Commercial 2 Zone"
+      - "RLZ - Rural Living Zone"
+      - "GWZ - Green Wedge Zone"
+      - "GWAZ - Green Wedge A Zone"
+      - "RCZ - Rural Conservation Zone"
+      - "FZ - Farming Zone"
+      - "RAZ - Rural Activity Zone"
+      - "PUZ1 - Public Use Zone-Service and Utility"
+      - "PUZ2 - Public Use Zone-Education"
+      - "PUZ3 - Public Use Zone-Health & Community"
+      - "PUZ5 - Public Use Zone-Cemetery/Crematorium"
+      - "PUZ6 - Public Use Zone-Local Government"
+      - "PUZ7 - Public Use Zone-Other Public Use"
+      - "PPRZ - Public Park and Recreation Zone"
+      - "PCRZ - Public Conservation and Resource Zone"
+      - "SUZ - Special Use Zone"
+      - "CDZ - Comprehensive Development Zone"
+      - "UFZ - Urban Floodway Zone"
+      - "UGZ - Urban Growth Zone"
+      - "CA - Commonwealth land"
+
+  - id: sec32_3.4_planning_overlay_name
+    tab: "Sec. 32 (2)"
+    label: "3.4 Name of planning overlay"
+    fact_paths:
+      - planning.overlay_names
+      - planning.overlays
+    answer_strategy: deterministic
+    value_transform: first_present
+    expected_type: string
+    description: |
+      First overlay name. When multiple overlays exist they are comma-separated.
+
+  # ===========================================================================
+  # Sec. 32 (3) — Notices, Orders, Declarations
+  # ===========================================================================
+
+  - id: sec32_4.1_notices_text
+    tab: "Sec. 32 (3)"
+    label: "4.1 Notices - Are as follows (text)"
+    fact_paths:
+      - notices.orders
+      - notices.declarations
+      - notices.recommendations
+    answer_strategy: human_review
+    expected_type: string
+    description: |
+      Free-text disclosure of any notices, orders, declarations, reports
+      or recommendations affecting the land. ALWAYS escalate to human review.
+
+  - id: sec32_5.1_building_permits_text
+    tab: "Sec. 32 (3)"
+    label: "5. Building Permits - Are contained in attached certificate"
+    fact_paths:
+      - building.permits_last_7_years
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  # ===========================================================================
+  # Sec. 32 (4) — Services, GAIC, Owners Corporation
+  # ===========================================================================
+
+  # ---- 8. Services (tick if NOT connected) --------------------------------
+
+  - id: sec32_8_electricity_not_connected
+    tab: "Sec. 32 (4)"
+    label: "8. Services - Electricity supply (tick if NOT connected)"
+    fact_paths:
+      - services.electricity.connected
+    answer_strategy: deterministic
+    value_transform: negate
+    expected_type: bool
+
+  - id: sec32_8_gas_not_connected
+    tab: "Sec. 32 (4)"
+    label: "8. Services - Gas supply (tick if NOT connected)"
+    fact_paths:
+      - services.gas.connected
+    answer_strategy: deterministic
+    value_transform: negate
+    expected_type: bool
+
+  - id: sec32_8_water_not_connected
+    tab: "Sec. 32 (4)"
+    label: "8. Services - Water supply (tick if NOT connected)"
+    fact_paths:
+      - services.water.connected
+    answer_strategy: deterministic
+    value_transform: negate
+    expected_type: bool
+
+  - id: sec32_8_sewerage_not_connected
+    tab: "Sec. 32 (4)"
+    label: "8. Services - Sewerage (tick if NOT connected)"
+    fact_paths:
+      - services.sewerage.connected
+    answer_strategy: deterministic
+    value_transform: negate
+    expected_type: bool
+
+  - id: sec32_8_telephone_not_connected
+    tab: "Sec. 32 (4)"
+    label: "8. Services - Telephone services (tick if NOT connected)"
+    fact_paths:
+      - services.telephone.connected
+    answer_strategy: deterministic
+    value_transform: negate
+    expected_type: bool
+    description: |
+      Tick when traditional telephone (PSTN) is NOT connected.
+      NBN/VOIP internet is a separate service — do NOT combine here.
+      The TriConvey form has no separate NBN checkbox in Sec. 32 (4).
+
+  # ---- 7. GAIC ------------------------------------------------------------
+
+  - id: sec32_7_gaic_applies
+    tab: "Sec. 32 (4)"
+    label: "7. GAIC applies"
+    fact_paths:
+      - planning.gaic_trigger
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: Growth Areas Infrastructure Contribution — check planning report.
+
+  # ---- Owners Corporation -------------------------------------------------
+
+  - id: sec32_oc_inactive
+    tab: "Sec. 32 (4)"
+    label: "Owners Corporation is inactive"
+    fact_paths:
+      - rates.owners_corporation.exists
+    answer_strategy: deterministic
+    value_transform: negate
+    expected_type: bool
+    description: "Tick if NO owners corporation. Source: vendor form."
+
+  - id: policy_4_oc_cert_attached
+    tab: "Sec. 32 (4)"
+    label: "Attached is a current owners corporation certificate (s151)"
+    fact_paths:
+      - rates.owners_corporation.exists
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: |
+      Check when an active OC certificate has been obtained and attached.
+      Source: rates.owners_corporation.exists (True = active OC → tick this).
+      Mutually exclusive with 'Owners Corporation is inactive'.
+
+  # ===========================================================================
+  # Vendor form booleans (used for internal routing and Sec. 32 checks)
+  # ===========================================================================
+
+  - id: vendor_property_owner_occupied
+    tab: "internal"
+    label: "Do you live at the property?"
+    fact_paths:
+      - property.owner_occupied
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  - id: vendor_property_leased
+    tab: "internal"
+    label: "Is the property rented/leased?"
+    fact_paths:
+      - property.leased
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  - id: vendor_is_trust
+    tab: "internal"
+    label: "Is the property held by a Trust?"
+    fact_paths:
+      - vendor.is_trust
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  - id: vendor_building_permits_last_7_years
+    tab: "internal"
+    label: "Have any building permits been issued in the last 7 years?"
+    fact_paths:
+      - building.permits_last_7_years
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  - id: vendor_building_works_last_7_years
+    tab: "internal"
+    label: "Has there been any building works in the last 7 years?"
+    fact_paths:
+      - building.works_last_7_years
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  - id: vendor_building_works_without_permit
+    tab: "internal"
+    label: "Have you done any works without obtaining a permit?"
+    fact_paths:
+      - building.works_without_permit
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  - id: vendor_has_water_tank
+    tab: "internal"
+    label: "Does the property have a water tank?"
+    fact_paths:
+      - building.has_water_tank
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  - id: vendor_land_tax_payable
+    tab: "internal"
+    label: "Do you pay land tax?"
+    fact_paths:
+      - rates.land_tax.payable
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: |
+      Authoritative source: SRO land tax certificate.
+      Vendor form is fallback.
+
+  - id: vendor_planning_overlays_exist
+    tab: "internal"
+    label: "Is the land affected by any planning overlays?"
+    fact_paths:
+      - planning.overlays_exist
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  # ===========================================================================
+  # Sale details (from vendor form — needed for contract + auction section)
+  # ===========================================================================
+
+  - id: vendor_sale_is_auction
+    tab: "internal"
+    label: "Is the sale by auction?"
+    fact_paths:
+      - sale.is_auction
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: |
+      Whether the property is being sold by auction.
+      Source: vendor instruction form sale details section.
+
+  - id: vendor_sale_price
+    tab: "internal"
+    label: "Estimated sale price"
+    fact_paths:
+      - sale.estimated_price
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+
+  - id: vendor_has_mortgage
+    tab: "internal"
+    label: "Is there a mortgage on the property?"
+    fact_paths:
+      - title.has_mortgage
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+    description: |
+      Authoritative source: title register (has_mortgage).
+      Vendor form is corroborating source.
+
+  # ===========================================================================
+  # Sec. 32 (6) — Energy Efficiency + Due Diligence + Attachments
+  # ===========================================================================
+
+  - id: policy_6_due_diligence
+    tab: "Sec. 32 (6)"
+    label: "12. Due Diligence Checklist"
+    fact_paths:
+      - policy.tab6.due_diligence_text
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+    description: "Firm policy: always 'Is attached'."
+
+  - id: policy_6_attachments
+    tab: "Sec. 32 (6)"
+    label: "13. Attachments list"
+    fact_paths:
+      - policy.attachments.text
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+    description: |
+      Full formatted attachment list. Built automatically from extracted doc
+      dates, names, and identifiers. Items with ## require human review.

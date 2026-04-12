@@ -1,0 +1,140 @@
+tab_name: Sec. 32 (5)
+scan_date: '2026-04-03T19:37:35.713788'
+total_fields: 9
+fields:
+- control_type: CheckBox
+  auto_id: ''
+  name: Attached is a copy of the latest version of the plan (if the later plan has
+    not yet been certified)
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 718
+    right: -1349
+    bottom: 737
+    width: 524
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Attached is a copy of the plan which has been certified by the relevant
+    authority (if the later plan has not been registered)
+- control_type: CheckBox
+  auto_id: ''
+  name: Attached is a copy of the plan which has been certified by the relevant authority
+    (if the later plan has not been registered)
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 694
+    right: -1202
+    bottom: 713
+    width: 671
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: 10.3 Further Plan of Subdivision
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1873
+    top: 606
+    right: -1159
+    bottom: 662
+    width: 714
+    height: 56
+  is_enabled: true
+  current_value: ''
+  nearby_label: 'Contents of any permit under the Planning and Environment Act authorising
+    the staged subdivision are as follows:'
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1873
+    top: 521
+    right: -1159
+    bottom: 577
+    width: 714
+    height: 56
+  is_enabled: true
+  current_value: ''
+  nearby_label: 'Proposals re subsequent stages that are known to the vendor are as
+    follows:'
+- control_type: Edit
+  auto_id: ''
+  name: ''
+  class_name: TextBox
+  position:
+    left: -1873
+    top: 437
+    right: -1159
+    bottom: 493
+    width: 714
+    height: 56
+  is_enabled: true
+  current_value: ''
+  nearby_label: 'are as follows:'
+- control_type: CheckBox
+  auto_id: ''
+  name: Attached is a copy of the plan for the first stage if the land is in the second
+    or subsequent stage
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 377
+    right: -1339
+    bottom: 396
+    width: 534
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: 10.2 Staged Subdivision
+- control_type: CheckBox
+  auto_id: ''
+  name: Attached is a copy of the latest version of the plan if the plan of subdivision
+    has not yet been certified
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 324
+    right: -1306
+    bottom: 343
+    width: 567
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Attached is a copy of the plan of subdivision certified by relevant
+    authority if the plan is not yet registered
+- control_type: CheckBox
+  auto_id: ''
+  name: Attached is a copy of the plan of subdivision certified by relevant authority
+    if the plan is not yet registered
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 299
+    right: -1284
+    bottom: 318
+    width: 589
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: 10.1 Unregistered Subdivision
+- control_type: CheckBox
+  auto_id: ''
+  name: Evidence of the vendor's right or power to sell (where the vendor is not the
+    registered proprietor) or the owner in fee simple
+  class_name: CheckBox
+  position:
+    left: -1873
+    top: 216
+    right: -1200
+    bottom: 235
+    width: 673
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: null

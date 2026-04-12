@@ -1,0 +1,61 @@
+{
+  "matter_summary": {
+    "property_address": null,
+    "vendor_name": null,
+    "confidence": 0.0
+  },
+  "services_normalized": {
+    "electricity_supply_connected": null,
+    "gas_supply_connected": null,
+    "water_supply_connected": null,
+    "sewerage_connected": null,
+    "telephone_connected": null,
+    "alternative_services": {
+      "bottled_gas": null,
+      "tank_water": null,
+      "septic_tank": null
+    },
+    "reasoning_notes": []
+  },
+  "attachments_normalized": {
+    "confirmed_uploaded_documents": [
+      {
+        "doc_type": null,
+        "display_text": null,
+        "date": null,
+        "source_file": null,
+        "confidence": 0.0
+      }
+    ],
+    "referenced_documents": [
+      {
+        "doc_type": null,
+        "reference_id": null,
+        "source_file": null,
+        "reason": null
+      }
+    ],
+    "optional_placeholders": [
+      {
+        "doc_type": null,
+        "display_text": null,
+        "reason": null
+      }
+    ]
+  },
+  "sec32_normalized": {
+    "sec32_1": {},
+    "sec32_2": {},
+    "sec32_3": {},
+    "sec32_4": {},
+    "sec32_5": {},
+    "sec32_6": {}
+  },
+  "review_flags": [
+    {
+      "field": null,
+      "reason": null,
+      "severity": "low"
+    }
+  ]
+}

@@ -1,0 +1,278 @@
+tab_name: Sec. 32 (4)
+scan_date: '2026-04-03T19:37:35.692554'
+total_fields: 19
+fields:
+- control_type: CheckBox
+  auto_id: ''
+  name: Owners Corporation is inactive
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 267
+    right: -1687
+    bottom: 286
+    width: 188
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Attached is the information prescribed for the purposes of s151(4)(a)
+    of the Owners Corporations Act
+- control_type: CheckBox
+  auto_id: ''
+  name: Attached is the information prescribed for the purposes of s151(4)(a) of the
+    Owners Corporations Act
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 240
+    right: -1319
+    bottom: 259
+    width: 556
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Attached is a current owners corporation certificate issued according
+    to s151 of the Owners Corporations Act
+- control_type: CheckBox
+  auto_id: ''
+  name: Attached is a current owners corporation certificate issued according to s151
+    of the Owners Corporations Act
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 213
+    right: -1277
+    bottom: 232
+    width: 598
+    height: 19
+  is_enabled: true
+  is_checked: true
+  nearby_label: null
+- control_type: CheckBox
+  auto_id: ''
+  name: Certificate issued under Part 9B of the Planning and Environment Act
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 644
+    right: -1486
+    bottom: 663
+    width: 389
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Any notice providing evidence of the grant of a reduction of the liability
+    for a GAIC or an exemption from that liability
+- control_type: CheckBox
+  auto_id: ''
+  name: Any notice providing evidence of the grant of a reduction of the liability
+    for a GAIC or an exemption from that liability
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 617
+    right: -1231
+    bottom: 636
+    width: 644
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Any certificate of no GAIC liability
+- control_type: CheckBox
+  auto_id: ''
+  name: Any certificate of no GAIC liability
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 588
+    right: -1671
+    bottom: 607
+    width: 204
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Any certificate of staged payment approval
+- control_type: CheckBox
+  auto_id: ''
+  name: Any certificate of staged payment approval
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 561
+    right: -1622
+    bottom: 580
+    width: 253
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Any certificate of exemption from liability to pay a GAIC
+- control_type: CheckBox
+  auto_id: ''
+  name: Any certificate of exemption from liability to pay a GAIC
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 536
+    right: -1555
+    bottom: 555
+    width: 320
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Any certificate of deferral of the liability to pay the whole or part
+    of a GAIC
+- control_type: CheckBox
+  auto_id: ''
+  name: Any certificate of deferral of the liability to pay the whole or part of a
+    GAIC
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 509
+    right: -1459
+    bottom: 528
+    width: 416
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Any certificate of release from liability to pay a GAIC
+- control_type: CheckBox
+  auto_id: ''
+  name: Any certificate of release from liability to pay a GAIC
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 482
+    right: -1575
+    bottom: 501
+    width: 300
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: 7.2 GAIC Recording
+- control_type: CheckBox
+  auto_id: ''
+  name: Land IS land in respect of which a GAIC is imposed
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 427
+    right: -1583
+    bottom: 446
+    width: 292
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Land IS land on which works are to be carried out under the agreement
+- control_type: CheckBox
+  auto_id: ''
+  name: Land IS land on which works are to be carried out under the agreement
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 402
+    right: -1476
+    bottom: 421
+    width: 399
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Land IS to be transferred under the agreement
+- control_type: CheckBox
+  auto_id: ''
+  name: Land IS to be transferred under the agreement
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 376
+    right: -1598
+    bottom: 395
+    width: 277
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: 7.1 Work-in-Kind Agreement
+- control_type: CheckBox
+  auto_id: ''
+  name: GAIC applies
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 323
+    right: -1782
+    bottom: 342
+    width: 93
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: 7. Growth Areas Infrastructure Contribution (GAIC)
+- control_type: CheckBox
+  auto_id: ''
+  name: Telephone services
+  class_name: CheckBox
+  position:
+    left: -1356
+    top: 720
+    right: -1231
+    bottom: 739
+    width: 125
+    height: 19
+  is_enabled: true
+  is_checked: true
+  nearby_label: Sewerage
+- control_type: CheckBox
+  auto_id: ''
+  name: Sewerage
+  class_name: CheckBox
+  position:
+    left: -1470
+    top: 720
+    right: -1394
+    bottom: 739
+    width: 76
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Water supply
+- control_type: CheckBox
+  auto_id: ''
+  name: Water supply
+  class_name: CheckBox
+  position:
+    left: -1608
+    top: 720
+    right: -1513
+    bottom: 739
+    width: 95
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Gas supply
+- control_type: CheckBox
+  auto_id: ''
+  name: Gas supply
+  class_name: CheckBox
+  position:
+    left: -1726
+    top: 720
+    right: -1643
+    bottom: 739
+    width: 83
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Electricity supply
+- control_type: CheckBox
+  auto_id: ''
+  name: Electricity supply
+  class_name: CheckBox
+  position:
+    left: -1875
+    top: 720
+    right: -1760
+    bottom: 739
+    width: 115
+    height: 19
+  is_enabled: true
+  is_checked: false
+  nearby_label: Check the box if service is NOT connected

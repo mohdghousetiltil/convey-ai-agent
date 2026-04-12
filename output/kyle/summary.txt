@@ -1,0 +1,68 @@
+TRICONVEY AGENT - ANSWER SUMMARY
+============================================================
+
+--- Sec. 32 (1) ---
+  * AUTO      1.1 Outgoing 1 - Authority name                     'City of Monash'  
+  * AUTO      1.1 Outgoing 1 - Amount                             '$1,198.25'  
+  * AUTO      1.1 Outgoing 2 - Authority name                     'Yarra Valley Water'  
+  * AUTO      1.1 Outgoing 2 - Amount                             '$783.40'  
+  * AUTO      1.1 Outgoing 3 - Authority name                     'State Revenue Office'  
+  * AUTO      1.1 Outgoing 3 - Amount                             '$0.00'  
+  ! REVIEW    1.1 Outgoing 4 - Authority name                     —  [no facts found at any of the question's fact_paths]
+  ! REVIEW    1.1 Outgoing 4 - Amount                             —  [no facts found at any of the question's fact_paths]
+  * AUTO      Their amounts are: (checkbox)                       True  
+  * AUTO      Are contained in attached certificate(s) (checkbox)  True  
+  * AUTO      Their total does not exceed (checkbox)              True  
+  ! REVIEW    1.2 There are NO amounts for which the purchaser may become liable other than  —  [policy_default question with no ClientPolicy supplied]
+  ! REVIEW    1.3 Terms Contract                                  —  [no facts found at any of the question's fact_paths]
+  * AUTO      1.4 Sale Subject to Mortgage                        True  
+  ! REVIEW    2.1 Insurance Company Name                          —  [grounded_ai strategy is not yet implemented — escalating]
+  ! REVIEW    2.1 Policy No.                                      —  [no facts found at any of the question's fact_paths]
+  ! REVIEW    2.1 Type of Policy                                  —  [no facts found at any of the question's fact_paths]
+  ! REVIEW    2.1 Amount Insured                                  —  [no facts found at any of the question's fact_paths]
+
+--- Sec. 32 (2) ---
+  * AUTO      Is in the attached copies of title documents (checkbox)  True  
+  * AUTO      Particulars of any existing failure to comply (checkbox)  True  
+  * AUTO      Failure to comply standard text                     "To the best of the Vendor's knowledge there is no existing failure to comply with the terms of any easements, covenants or other similar restriction."  
+  * AUTO      Certificate with required information attached (planning scheme)  True  
+  ! REVIEW    3.1 Description of any easement, covenant or restriction  —  [grounded_ai strategy is not yet implemented — escalating]
+  ! REVIEW    3.1 Easement failure to comply text                 —  [grounded_ai strategy is not yet implemented — escalating]
+  * AUTO      3.2 Road Access - No road access                    False  
+  * AUTO      3.3 Designated Bushfire Prone Area                  False  
+  ! REVIEW    3.4 Name of planning scheme                         —  [no facts found at any of the question's fact_paths]
+  ! REVIEW    3.4 Name of responsible authority                   —  [no facts found at any of the question's fact_paths]
+  ! REVIEW    3.4 Planning zone (dropdown)                        —  [no facts found at any of the question's fact_paths]
+  ! REVIEW    3.4 Name of planning overlay                        —  [no facts found at any of the question's fact_paths]
+
+--- Sec. 32 (3) ---
+  ! REVIEW    4.1 Notices - Are as follows (text)                 —  [question is registered as human_review (legally sensitive)]
+  * AUTO      5. Building Permits - Are contained in attached certificate  False  
+
+--- Sec. 32 (4) ---
+  * AUTO      8. Services - Electricity supply (tick if NOT connected)  False  
+  * AUTO      8. Services - Gas supply (tick if NOT connected)    False  
+  * AUTO      8. Services - Water supply (tick if NOT connected)  False  
+  * AUTO      8. Services - Sewerage (tick if NOT connected)      False  
+  * AUTO      8. Services - Telephone services (tick if NOT connected)  True  
+  ! REVIEW    7. GAIC applies                                     —  [no facts found at any of the question's fact_paths]
+  * AUTO      Owners Corporation is inactive                      True  
+  * AUTO      Attached is a current owners corporation certificate (s151)  False  
+
+--- Sec. 32 (6) ---
+  * AUTO      12. Due Diligence Checklist                         'Is attached'  
+  * AUTO      13. Attachments list                                '- Due Diligence Checklist\n- Register Search Statement Volume 12287 Folio 279 dated 02/04/2026\n- Plan of Subdivision PS826454D dated 02/04/2026\n- Covenant PS826454D dated 02/04/2026\n- City of Monash Building Approval Certificate dated ##\n- City of Monash Land Information Certificate dated ##\n- Yarra Valley Water Encumbrance Certificate dated 30/06/2026\n- State Revenue Office Land Tax Certificate dated 07/04/2026\n- Detailed Property Report dated ##\n- Domestic Building Insurance dated 22/06/2020\n- Vic Roads Certificate dated 02/04/2026\n- EPA Certificate dated 02/04/2026\n(- Any right to sell property docs)\n- s27 Notice of Deposit Release (by way of service)'  
+
+--- internal ---
+  * AUTO      Do you live at the property?                        True  
+  * AUTO      Is the property rented/leased?                      False  
+  * AUTO      Is the property held by a Trust?                    False  
+  * AUTO      Have any building permits been issued in the last 7 years?  False  
+  * AUTO      Has there been any building works in the last 7 years?  True  
+  * AUTO      Have you done any works without obtaining a permit?  False  
+  * AUTO      Does the property have a water tank?                False  
+  * AUTO      Do you pay land tax?                                False  
+  ! REVIEW    Is the land affected by any planning overlays?      —  [no facts found at any of the question's fact_paths]
+  ! REVIEW    Is the sale by auction?                             —  [no facts found at any of the question's fact_paths]
+  ! REVIEW    Estimated sale price                                —  [no facts found at any of the question's fact_paths]
+  * AUTO      Is there a mortgage on the property?                True  

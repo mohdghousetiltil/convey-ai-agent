@@ -1,0 +1,3341 @@
+{
+  "facts": {
+    "vendor.0.title": [
+      {
+        "path": "vendor.0.title",
+        "value": "Mr",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "What is your title?\nMr",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.0.first_name": [
+      {
+        "path": "vendor.0.first_name",
+        "value": "Kyle",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Your first name\nKyle",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.0.middle_name": [
+      {
+        "path": "vendor.0.middle_name",
+        "value": "Laurence",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Your middle name\nLaurence",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.0.last_name": [
+      {
+        "path": "vendor.0.last_name",
+        "value": "Sultana",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Your last name\nSultana",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.0.preferred_name": [
+      {
+        "path": "vendor.0.preferred_name",
+        "value": "Kyle",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Preferred Name\nKyle",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.0.occupation": [
+      {
+        "path": "vendor.0.occupation",
+        "value": "Carpenter / Production manager",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Occupation\nCarpenter / Production manager",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.0.residential_address": [
+      {
+        "path": "vendor.0.residential_address",
+        "value": "43 Southampton Dr, Mulgrave VIC 3170, Australia",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Residential address\n43 Southampton Dr, Mulgrave VIC 3170, Australia",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.0.phone": [
+      {
+        "path": "vendor.0.phone",
+        "value": "0414 186 695",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Contact Number\n0414 186 695",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.0.email": [
+      {
+        "path": "vendor.0.email",
+        "value": "sultakyle13@gmail.com",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Email Address\nsultakyle13@gmail.com",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.0.country_of_citizenship": [
+      {
+        "path": "vendor.0.country_of_citizenship",
+        "value": "Australia",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Country of citizenship\nAustralia",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.0.nationality": [
+      {
+        "path": "vendor.0.nationality",
+        "value": "Australian",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Nationality\nAustralian",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.1.title": [
+      {
+        "path": "vendor.1.title",
+        "value": "Mrs",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "What is your title?\nMrs",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.1.first_name": [
+      {
+        "path": "vendor.1.first_name",
+        "value": "Erin",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Your first name\nErin",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.1.middle_name": [
+      {
+        "path": "vendor.1.middle_name",
+        "value": "Kristine",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Your middle name\nKristine",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.1.last_name": [
+      {
+        "path": "vendor.1.last_name",
+        "value": "Sultana",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Your last name\nSultana",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.1.preferred_name": [
+      {
+        "path": "vendor.1.preferred_name",
+        "value": "Erin",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Preferred Name\nErin",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.1.occupation": [
+      {
+        "path": "vendor.1.occupation",
+        "value": "Veterinary Nurse",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Occupation\nVeterinary Nurse",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.1.residential_address": [
+      {
+        "path": "vendor.1.residential_address",
+        "value": "43 Southampton Dr, Mulgrave VIC 3170, Australia",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Residential address\n43 Southampton Dr, Mulgrave VIC 3170, Australia",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.1.phone": [
+      {
+        "path": "vendor.1.phone",
+        "value": "0458 937 618",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Contact Number\n0458 937 618",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.1.email": [
+      {
+        "path": "vendor.1.email",
+        "value": "Erinkselleck@gmail.com",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Email Address\nErinkselleck@gmail.com",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.1.country_of_citizenship": [
+      {
+        "path": "vendor.1.country_of_citizenship",
+        "value": "Australia",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Country of citizenship\nAustralia",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.1.nationality": [
+      {
+        "path": "vendor.1.nationality",
+        "value": "Australian",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Nationality\nAustralian",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.count": [
+      {
+        "path": "vendor.count",
+        "value": 2,
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "2 vendor block(s) detected",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": "counted by occurrences of 'What is your title?' label"
+      }
+    ],
+    "property.address": [
+      {
+        "path": "property.address",
+        "value": "43 Southampton Dr, Mulgrave VIC 3170, Australia",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Property Address\n43 Southampton Dr, Mulgrave VIC 3170, Australia",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      },
+      {
+        "path": "property.address",
+        "value": "43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "Street Address: 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": "title's 'Street Address' (additional info)"
+      },
+      {
+        "path": "property.address",
+        "value": "43 SOUTHAMPTON DR, MULGRAVE VIC 3170",
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Property Address Lot & Plan Property Number Property Type 43 SOUTHAMPTON DR, MULGRAVE VIC 3170 1620\\PS826454 5239288 Residential",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.248105",
+        "notes": "from water authority rates table"
+      },
+      {
+        "path": "property.address",
+        "value": "43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170",
+        "confidence": 0.93,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Land Address: 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": "from SRO land tax certificate"
+      }
+    ],
+    "property.nature": [
+      {
+        "path": "property.nature",
+        "value": "Residential",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Nature of property\nResidential",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "property.dwelling_age": [
+      {
+        "path": "property.dwelling_age",
+        "value": "5 years old",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Approximate age of Dwelling / Building\n5 years old",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "property.lot_number": [
+      {
+        "path": "property.lot_number",
+        "value": "1620",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Lot number\n1620",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      },
+      {
+        "path": "property.lot_number",
+        "value": "1620",
+        "confidence": 0.98,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION Lot 1620 on Plan of Subdivision 826454D. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      },
+      {
+        "path": "property.lot_number",
+        "value": "1620",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Property Address Lot & Plan Property Number Property Type 43 SOUTHAMPTON DR, MULGRAVE VIC 3170 1620\\PS826454 5239288 Residential",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.248105",
+        "notes": null
+      },
+      {
+        "path": "property.lot_number",
+        "value": "1620",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Lot Plan Volume Folio 1620 826454 12287 279",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "property.plan_number": [
+      {
+        "path": "property.plan_number",
+        "value": "PS 826454",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Plan number\nPS 826454",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      },
+      {
+        "path": "property.plan_number",
+        "value": "826454D",
+        "confidence": 0.98,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION Lot 1620 on Plan of Subdivision 826454D. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      },
+      {
+        "path": "property.plan_number",
+        "value": "PS826454",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Property Address Lot & Plan Property Number Property Type 43 SOUTHAMPTON DR, MULGRAVE VIC 3170 1620\\PS826454 5239288 Residential",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.248105",
+        "notes": null
+      },
+      {
+        "path": "property.plan_number",
+        "value": "826454",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Lot Plan Volume Folio 1620 826454 12287 279",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "property.owner_occupied": [
+      {
+        "path": "property.owner_occupied",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Do you live at the property?\nYes",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "property.leased": [
+      {
+        "path": "property.leased",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Is the Property rented/leased?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "property.insured": [
+      {
+        "path": "property.insured",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Is the property insured?\nYes",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "planning.bushfire_prone": [
+      {
+        "path": "planning.bushfire_prone",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Is the land in a bushfire prone area?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "property.road_access": [
+      {
+        "path": "property.road_access",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Is there access to the property by road?\nYes",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.payable": [
+      {
+        "path": "rates.land_tax.payable",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Do you pay land tax?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      },
+      {
+        "path": "rates.land_tax.payable",
+        "value": false,
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Tax Payable $0.00",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": "derived from Tax Payable = $0.00"
+      }
+    ],
+    "rates.land_tax.vacant_residential_payable": [
+      {
+        "path": "rates.land_tax.vacant_residential_payable",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Is any vacant land residential land tax payable?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      },
+      {
+        "path": "rates.land_tax.vacant_residential_payable",
+        "value": false,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Tax Payable $0.00",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": "follows the main land tax payable status on this certificate"
+      }
+    ],
+    "building.permits_last_7_years": [
+      {
+        "path": "building.permits_last_7_years",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Have any building permits been issued in the last 7 years?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "building.works_last_7_years": [
+      {
+        "path": "building.works_last_7_years",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Has there been any building works/structures undertaken in the last 7 years?\nYes",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "building.works_without_permit": [
+      {
+        "path": "building.works_without_permit",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Have you done any works without obtaining a permit?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "building.works_without_approval": [
+      {
+        "path": "building.works_without_approval",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Has any building work been done on the land that DID NOT have the required building nor planning approvals?\nYes",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "building.improved_past_6_5_years": [
+      {
+        "path": "building.improved_past_6_5_years",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Have you improved the property within the past 6.5 years?\nYes",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "building.new_appliances_gas_elec_plumbing": [
+      {
+        "path": "building.new_appliances_gas_elec_plumbing",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Have you installed new appliances where works relating to gas, electrical and plumbing have been undertaken?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "building.has_water_tank": [
+      {
+        "path": "building.has_water_tank",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Does the property have a water tank?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "vendor.is_trust": [
+      {
+        "path": "vendor.is_trust",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Is the Property held by a Trust?\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "rates.council.authority_name": [
+      {
+        "path": "rates.council.authority_name",
+        "value": "City of Monash",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Council\nCity of Monash",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "rates.council.annual_amount": [
+      {
+        "path": "rates.council.annual_amount",
+        "value": "$1,198.25",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Council rates\n$1,198.25",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      }
+    ],
+    "rates.water.authority_name": [
+      {
+        "path": "rates.water.authority_name",
+        "value": "Yarra Valley",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Water Authority\nYarra Valley",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      },
+      {
+        "path": "rates.water.authority_name",
+        "value": "Yarra Valley Water",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Yarra Valley Water",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.248105",
+        "notes": null
+      }
+    ],
+    "rates.water.annual_amount": [
+      {
+        "path": "rates.water.annual_amount",
+        "value": "$774.00",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Water rates\n$774.00",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": null
+      },
+      {
+        "path": "rates.water.annual_amount",
+        "value": "$783.40",
+        "confidence": 0.75,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Total for This Property $195.85",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": "estimated annual = quarterly $195.85 \u00d7 4 = $783.40. Vendor-form annual figure is preferred; verify discrepancy."
+      }
+    ],
+    "services.electricity.connected": [
+      {
+        "path": "services.electricity.connected",
+        "value": true,
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\nMains Electricity",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.727260",
+        "notes": "matched 'Mains Electricity' against 'Mains Electricity'"
+      }
+    ],
+    "services.gas.connected": [
+      {
+        "path": "services.gas.connected",
+        "value": true,
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\nMains Gas",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.728260",
+        "notes": "matched 'Mains Gas' against 'Mains Gas'"
+      }
+    ],
+    "services.water.connected": [
+      {
+        "path": "services.water.connected",
+        "value": true,
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\nMains Water",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.728260",
+        "notes": "matched 'Mains Water' against 'Mains Water'"
+      },
+      {
+        "path": "services.water.connected",
+        "value": true,
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Residential Water Service Charge",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.250102",
+        "notes": "implied by water authority charging a service fee"
+      }
+    ],
+    "services.sewerage.connected": [
+      {
+        "path": "services.sewerage.connected",
+        "value": true,
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\nMains Sewerage",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.728260",
+        "notes": "matched 'Mains Sewerage' against 'Mains Sewerage'"
+      },
+      {
+        "path": "services.sewerage.connected",
+        "value": true,
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Residential Sewer Service Charge",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.250102",
+        "notes": "implied by water authority charging a sewer service fee"
+      }
+    ],
+    "services.septic_tank.connected": [
+      {
+        "path": "services.septic_tank.connected",
+        "value": false,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\ni.e. Can the services be used at the date the purchaser signs the Contract? ('Connected' is not defined in the Sale\nof Land Act 1962 (Vic).\nA service is connected where, at the date the purchaser signs the contract of sale, the service can be used.)\nMains Electricity\nMains Gas\nMains Water\nMains Sewerage\nVOIP phone via NBN\nDemands, Disputes, Notices, Orders, Letters and/or Flyers\nServices Connected\nPrimary Production Use\nNo\nIf no, when was the property last used for farming or agricultural purposes.\nNA",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.728260",
+        "notes": "'Septic Tank' not listed under services-connected header"
+      }
+    ],
+    "services.bottled_gas.connected": [
+      {
+        "path": "services.bottled_gas.connected",
+        "value": false,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\ni.e. Can the services be used at the date the purchaser signs the Contract? ('Connected' is not defined in the Sale\nof Land Act 1962 (Vic).\nA service is connected where, at the date the purchaser signs the contract of sale, the service can be used.)\nMains Electricity\nMains Gas\nMains Water\nMains Sewerage\nVOIP phone via NBN\nDemands, Disputes, Notices, Orders, Letters and/or Flyers\nServices Connected\nPrimary Production Use\nNo\nIf no, when was the property last used for farming or agricultural purposes.\nNA",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.728260",
+        "notes": "'Bottled Gas' not listed under services-connected header"
+      }
+    ],
+    "services.tank_water.connected": [
+      {
+        "path": "services.tank_water.connected",
+        "value": false,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\ni.e. Can the services be used at the date the purchaser signs the Contract? ('Connected' is not defined in the Sale\nof Land Act 1962 (Vic).\nA service is connected where, at the date the purchaser signs the contract of sale, the service can be used.)\nMains Electricity\nMains Gas\nMains Water\nMains Sewerage\nVOIP phone via NBN\nDemands, Disputes, Notices, Orders, Letters and/or Flyers\nServices Connected\nPrimary Production Use\nNo\nIf no, when was the property last used for farming or agricultural purposes.\nNA",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.728260",
+        "notes": "'Tank Water' not listed under services-connected header"
+      }
+    ],
+    "services.telephone.connected": [
+      {
+        "path": "services.telephone.connected",
+        "value": false,
+        "confidence": 0.85,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\ni.e. Can the services be used at the date the purchaser signs the Contract? ('Connected' is not defined in the Sale\nof Land Act 1962 (Vic).\nA service is connected where, at the date the purchaser signs the contract of sale, the service can be used.)\nMains Electricity\nMains Gas\nMains Water\nMains Sewerage\nVOIP phone via NBN\nDemands, Disputes, Notices, Orders, Letters and/or Flyers\nServices Connected\nPrimary Production Use\nNo\nIf no, when was the property last used for farming or agricultural purposes.\nNA",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.728260",
+        "notes": "'Telephone' not listed under services-connected header"
+      }
+    ],
+    "services.nbn.connected": [
+      {
+        "path": "services.nbn.connected",
+        "value": true,
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Are the services listed connected to the land?\nVOIP phone via NBN",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.728260",
+        "notes": "matched 'VOIP phone via NBN' against 'NBN'"
+      }
+    ],
+    "insurance.home.vendor_disclosed_text": [
+      {
+        "path": "insurance.home.vendor_disclosed_text",
+        "value": "RACV\nPolicy number: HOM798171110\nExpiry date: 29/3/2027\nIssued for: Building - $535,300, Contents - $80,000, Portable items - $7000",
+        "confidence": 0.8,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "Please provide full particulars of your insurance cover:\nRACV\nPolicy number: HOM798171110\nExpiry date: 29/3/2027\nIssued for: Building - $535,300, Contents - $80,000, Portable items - $7000",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.728260",
+        "notes": "vendor-disclosed insurance particulars (Certificate of Currency is authoritative)"
+      }
+    ],
+    "rates.owners_corporation.exists": [
+      {
+        "path": "rates.owners_corporation.exists",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "Vendor Instruction Form-Kyle Sultana.pdf",
+            "page": null,
+            "quote": "If your property a\ufb00ected by an Owners Corporation otherwise known as Strata Insurance for common property.\nNo",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vendor_form_v2",
+        "extracted_at": "2026-04-11T03:38:31.728260",
+        "notes": null
+      }
+    ],
+    "docs.vic_title.search_date": [
+      {
+        "path": "docs.vic_title.search_date",
+        "value": "02/04/2026",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "date=02/04/2026 from VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-11T03:38:31.757787",
+        "notes": "auto-extracted from vic_title document"
+      }
+    ],
+    "docs.plan_of_subdivision": [
+      {
+        "path": "docs.plan_of_subdivision",
+        "value": "{\"number\": \"PS826454D\", \"date\": \"02/04/2026\"}",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "plan number PS826454D date 02/04/2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": "Plan of Subdivision from VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf"
+      },
+      {
+        "path": "docs.plan_of_subdivision",
+        "value": "{\"number\": \"PS826454D\", \"date\": \"02/04/2026\"}",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Copy of Plan - PS826454D.pdf",
+            "page": null,
+            "quote": "plan number PS826454D date 02/04/2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-11T03:38:31.775795",
+        "notes": "Plan of Subdivision from VIC_ Certificate - Copy of Plan - PS826454D.pdf"
+      }
+    ],
+    "title.volume_folio": [
+      {
+        "path": "title.volume_folio",
+        "value": "VOLUME 12287 FOLIO 279",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "VOLUME 12287 FOLIO 279",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.volume": [
+      {
+        "path": "title.volume",
+        "value": "12287",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "VOLUME 12287 FOLIO 279",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.folio": [
+      {
+        "path": "title.folio",
+        "value": "279",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "VOLUME 12287 FOLIO 279",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "property.volume_or_book": [
+      {
+        "path": "property.volume_or_book",
+        "value": "12287",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "VOLUME 12287 FOLIO 279",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      },
+      {
+        "path": "property.volume_or_book",
+        "value": "12287",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Lot Plan Volume Folio 1620 826454 12287 279",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "property.folio_or_number": [
+      {
+        "path": "property.folio_or_number",
+        "value": "279",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "VOLUME 12287 FOLIO 279",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      },
+      {
+        "path": "property.folio_or_number",
+        "value": "279",
+        "confidence": 0.95,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Lot Plan Volume Folio 1620 826454 12287 279",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "title.security_number": [
+      {
+        "path": "title.security_number",
+        "value": "124133522109C",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "Security no :  124133522109C",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.produced_at": [
+      {
+        "path": "title.produced_at",
+        "value": "02/04/2026 06:20 PM",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "Produced 02/04/2026 06:20 PM",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.land_description": [
+      {
+        "path": "title.land_description",
+        "value": "Lot 1620 on Plan of Subdivision 826454D.",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION Lot 1620 on Plan of Subdivision 826454D. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.plan_type": [
+      {
+        "path": "title.plan_type",
+        "value": "Plan of Subdivision",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION Lot 1620 on Plan of Subdivision 826454D. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.plan_number": [
+      {
+        "path": "title.plan_number",
+        "value": "826454D",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION Lot 1620 on Plan of Subdivision 826454D. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.lot_number": [
+      {
+        "path": "title.lot_number",
+        "value": "1620",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "LAND DESCRIPTION Lot 1620 on Plan of Subdivision 826454D. PARENT TITLE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.parent_title": [
+      {
+        "path": "title.parent_title",
+        "value": "Volume 12202 Folio 017",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "PARENT TITLE Volume 12202 Folio 017",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.parent_volume": [
+      {
+        "path": "title.parent_volume",
+        "value": "12202",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "PARENT TITLE Volume 12202 Folio 017",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.parent_folio": [
+      {
+        "path": "title.parent_folio",
+        "value": "017",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "PARENT TITLE Volume 12202 Folio 017",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.created_by_instrument": [
+      {
+        "path": "title.created_by_instrument",
+        "value": "PS826454D",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "Created by instrument PS826454D 23/02/2021",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.created_at": [
+      {
+        "path": "title.created_at",
+        "value": "23/02/2021",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "Created by instrument PS826454D 23/02/2021",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.estate": [
+      {
+        "path": "title.estate",
+        "value": "Fee Simple",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "REGISTERED PROPRIETOR Estate Fee Simple Sole Proprietor ERIN KRISTINE SELLECK of 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170 AU146757D 17/03/2021 ENCUMBRANCES",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.tenancy": [
+      {
+        "path": "title.tenancy",
+        "value": "Sole Proprietor",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "REGISTERED PROPRIETOR Estate Fee Simple Sole Proprietor ERIN KRISTINE SELLECK of 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170 AU146757D 17/03/2021 ENCUMBRANCES",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.proprietor.0.name": [
+      {
+        "path": "title.proprietor.0.name",
+        "value": "ERIN KRISTINE SELLECK",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "ERIN KRISTINE SELLECK of 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170 AU146757D 17/03/2021",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.proprietor.0.address": [
+      {
+        "path": "title.proprietor.0.address",
+        "value": "43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "ERIN KRISTINE SELLECK of 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170 AU146757D 17/03/2021",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.proprietor.0.dealing": [
+      {
+        "path": "title.proprietor.0.dealing",
+        "value": "AU146757D",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "ERIN KRISTINE SELLECK of 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170 AU146757D 17/03/2021",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.proprietor.0.dealing_date": [
+      {
+        "path": "title.proprietor.0.dealing_date",
+        "value": "17/03/2021",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "ERIN KRISTINE SELLECK of 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170 AU146757D 17/03/2021",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.proprietor.count": [
+      {
+        "path": "title.proprietor.count",
+        "value": 1,
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "REGISTERED PROPRIETOR Estate Fee Simple Sole Proprietor ERIN KRISTINE SELLECK of 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170 AU146757D 17/03/2021 ENCUMBRANCES",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": "counted 1 entries inside REGISTERED PROPRIETOR block"
+      }
+    ],
+    "title.encumbrance.0.type": [
+      {
+        "path": "title.encumbrance.0.type",
+        "value": "MORTGAGE",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "MORTGAGE  BA088550M 04/02/2026\nAUSTRALIA AND NEW ZEALAND BANKING GROUP LTD",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.0.number": [
+      {
+        "path": "title.encumbrance.0.number",
+        "value": "BA088550M",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "MORTGAGE  BA088550M 04/02/2026\nAUSTRALIA AND NEW ZEALAND BANKING GROUP LTD",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.0.date": [
+      {
+        "path": "title.encumbrance.0.date",
+        "value": "04/02/2026",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "MORTGAGE  BA088550M 04/02/2026\nAUSTRALIA AND NEW ZEALAND BANKING GROUP LTD",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.0.party": [
+      {
+        "path": "title.encumbrance.0.party",
+        "value": "AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "MORTGAGE  BA088550M 04/02/2026\nAUSTRALIA AND NEW ZEALAND BANKING GROUP LTD",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.0.text": [
+      {
+        "path": "title.encumbrance.0.text",
+        "value": "MORTGAGE BA088550M 04/02/2026 AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "MORTGAGE  BA088550M 04/02/2026\nAUSTRALIA AND NEW ZEALAND BANKING GROUP LTD",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.1.type": [
+      {
+        "path": "title.encumbrance.1.type",
+        "value": "COVENANT",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "COVENANT PS826454D 23/02/2021\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.1.number": [
+      {
+        "path": "title.encumbrance.1.number",
+        "value": "PS826454D",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "COVENANT PS826454D 23/02/2021\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.1.date": [
+      {
+        "path": "title.encumbrance.1.date",
+        "value": "23/02/2021",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "COVENANT PS826454D 23/02/2021\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.1.party": [
+      {
+        "path": "title.encumbrance.1.party",
+        "value": "Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below.",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "COVENANT PS826454D 23/02/2021\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.1.text": [
+      {
+        "path": "title.encumbrance.1.text",
+        "value": "COVENANT PS826454D 23/02/2021 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below.",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "COVENANT PS826454D 23/02/2021\nAny encumbrances created by Section 98 Transfer of Land Act 1958 or Section\n24 Subdivision Act 1988 and any other encumbrances shown or entered on the\nplan set out under DIAGRAM LOCATION below.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.2.type": [
+      {
+        "path": "title.encumbrance.2.type",
+        "value": "NOTICE",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "NOTICE  Section 47(2) Heritage Act 1995\nREGISTER NO. 1883\nX265348J 17/01/2001",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.2.party": [
+      {
+        "path": "title.encumbrance.2.party",
+        "value": "REGISTER NO. 1883 X265348J 17/01/2001",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "NOTICE  Section 47(2) Heritage Act 1995\nREGISTER NO. 1883\nX265348J 17/01/2001",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.2.text": [
+      {
+        "path": "title.encumbrance.2.text",
+        "value": "NOTICE Section 47(2) Heritage Act 1995 REGISTER NO. 1883 X265348J 17/01/2001",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "NOTICE  Section 47(2) Heritage Act 1995\nREGISTER NO. 1883\nX265348J 17/01/2001",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.encumbrance.count": [
+      {
+        "path": "title.encumbrance.count",
+        "value": 3,
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE BA088550M 04/02/2026 AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD COVENANT PS826454D 23/02/2021 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. NOTICE Section 47(2) Heritage Act 1995 REGISTER NO. 1883 X265348J 17",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.has_mortgage": [
+      {
+        "path": "title.has_mortgage",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE BA088550M 04/02/2026 AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD COVENANT PS826454D 23/02/2021 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. NOTICE Section 47(2) Heritage Act 1995 REGISTER NO. 1883 X265348J 17",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.has_covenant": [
+      {
+        "path": "title.has_covenant",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE BA088550M 04/02/2026 AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD COVENANT PS826454D 23/02/2021 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. NOTICE Section 47(2) Heritage Act 1995 REGISTER NO. 1883 X265348J 17",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.has_caveat": [
+      {
+        "path": "title.has_caveat",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE BA088550M 04/02/2026 AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD COVENANT PS826454D 23/02/2021 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. NOTICE Section 47(2) Heritage Act 1995 REGISTER NO. 1883 X265348J 17",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.has_notice": [
+      {
+        "path": "title.has_notice",
+        "value": true,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE BA088550M 04/02/2026 AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD COVENANT PS826454D 23/02/2021 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. NOTICE Section 47(2) Heritage Act 1995 REGISTER NO. 1883 X265348J 17",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.has_section_173_agreement": [
+      {
+        "path": "title.has_section_173_agreement",
+        "value": false,
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE BA088550M 04/02/2026 AUSTRALIA AND NEW ZEALAND BANKING GROUP LTD COVENANT PS826454D 23/02/2021 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. NOTICE Section 47(2) Heritage Act 1995 REGISTER NO. 1883 X265348J 17",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.diagram_location": [
+      {
+        "path": "title.diagram_location",
+        "value": "SEE PS826454D FOR FURTHER DETAILS AND BOUNDARIES",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "DIAGRAM LOCATION SEE PS826454D FOR FURTHER DETAILS AND BOUNDARIES ACTIVITY IN THE LAST",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.street_address": [
+      {
+        "path": "title.street_address",
+        "value": "43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "Street Address: 43 SOUTHAMPTON DRIVE MULGRAVE VIC 3170",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.ect_controller": [
+      {
+        "path": "title.ect_controller",
+        "value": "16165A AUSTRALIA AND NEW ZEALAND BANKING GROUP LIMITED",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "eCT Control 16165A AUSTRALIA AND NEW ZEALAND BANKING GROUP LIMITED Effective from 04/02/2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "title.ect_effective_from": [
+      {
+        "path": "title.ect_effective_from",
+        "value": "04/02/2026",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 12287 Folio 279.pdf",
+            "page": null,
+            "quote": "eCT Control 16165A AUSTRALIA AND NEW ZEALAND BANKING GROUP LIMITED Effective from 04/02/2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:vic_title_v1",
+        "extracted_at": "2026-04-11T03:38:31.758784",
+        "notes": null
+      }
+    ],
+    "rates.water.certificate_number": [
+      {
+        "path": "rates.water.certificate_number",
+        "value": "31024470",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Information Statement 31024470",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.248105",
+        "notes": null
+      }
+    ],
+    "rates.water.property_number": [
+      {
+        "path": "rates.water.property_number",
+        "value": "5239288",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Property Address Lot & Plan Property Number Property Type 43 SOUTHAMPTON DR, MULGRAVE VIC 3170 1620\\PS826454 5239288 Residential",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.248105",
+        "notes": null
+      }
+    ],
+    "rates.water.account_number": [
+      {
+        "path": "rates.water.account_number",
+        "value": "5239288",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Property Address Lot & Plan Property Number Property Type 43 SOUTHAMPTON DR, MULGRAVE VIC 3170 1620\\PS826454 5239288 Residential",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.248105",
+        "notes": null
+      }
+    ],
+    "rates.water.property_type": [
+      {
+        "path": "rates.water.property_type",
+        "value": "Residential",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Property Address Lot & Plan Property Number Property Type 43 SOUTHAMPTON DR, MULGRAVE VIC 3170 1620\\PS826454 5239288 Residential",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.248105",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.0.label": [
+      {
+        "path": "rates.water.charges.0.label",
+        "value": "Residential Water Service Charge",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Residential Water Service Charge 01-04-2026 to 30-06-2026 $21.04 $21.04",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.0.period": [
+      {
+        "path": "rates.water.charges.0.period",
+        "value": "01-04-2026 to 30-06-2026",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Residential Water Service Charge 01-04-2026 to 30-06-2026 $21.04 $21.04",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.0.amount": [
+      {
+        "path": "rates.water.charges.0.amount",
+        "value": "$21.04",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Residential Water Service Charge 01-04-2026 to 30-06-2026 $21.04 $21.04",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.0.outstanding": [
+      {
+        "path": "rates.water.charges.0.outstanding",
+        "value": "$21.04",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Residential Water Service Charge 01-04-2026 to 30-06-2026 $21.04 $21.04",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.period_from": [
+      {
+        "path": "rates.water.period_from",
+        "value": "01-04-2026",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Residential Water Service Charge 01-04-2026 to 30-06-2026 $21.04 $21.04",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.period_to": [
+      {
+        "path": "rates.water.period_to",
+        "value": "30-06-2026",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Residential Water Service Charge 01-04-2026 to 30-06-2026 $21.04 $21.04",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.1.label": [
+      {
+        "path": "rates.water.charges.1.label",
+        "value": "Residential Sewer Service Charge",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Residential Sewer Service Charge 01-04-2026 to 30-06-2026 $121.26 $121.26",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.1.period": [
+      {
+        "path": "rates.water.charges.1.period",
+        "value": "01-04-2026 to 30-06-2026",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Residential Sewer Service Charge 01-04-2026 to 30-06-2026 $121.26 $121.26",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.1.amount": [
+      {
+        "path": "rates.water.charges.1.amount",
+        "value": "$121.26",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Residential Sewer Service Charge 01-04-2026 to 30-06-2026 $121.26 $121.26",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.1.outstanding": [
+      {
+        "path": "rates.water.charges.1.outstanding",
+        "value": "$121.26",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Residential Sewer Service Charge 01-04-2026 to 30-06-2026 $121.26 $121.26",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.2.label": [
+      {
+        "path": "rates.water.charges.2.label",
+        "value": "Parks Fee",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Parks Fee 01-04-2026 to 30-06-2026 $22.39 $22.39",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.2.period": [
+      {
+        "path": "rates.water.charges.2.period",
+        "value": "01-04-2026 to 30-06-2026",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Parks Fee 01-04-2026 to 30-06-2026 $22.39 $22.39",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.2.amount": [
+      {
+        "path": "rates.water.charges.2.amount",
+        "value": "$22.39",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Parks Fee 01-04-2026 to 30-06-2026 $22.39 $22.39",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.2.outstanding": [
+      {
+        "path": "rates.water.charges.2.outstanding",
+        "value": "$22.39",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Parks Fee 01-04-2026 to 30-06-2026 $22.39 $22.39",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.3.label": [
+      {
+        "path": "rates.water.charges.3.label",
+        "value": "Drainage Fee",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Drainage Fee 01-04-2026 to 30-06-2026 $31.16 $31.16",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.3.period": [
+      {
+        "path": "rates.water.charges.3.period",
+        "value": "01-04-2026 to 30-06-2026",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Drainage Fee 01-04-2026 to 30-06-2026 $31.16 $31.16",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.3.amount": [
+      {
+        "path": "rates.water.charges.3.amount",
+        "value": "$31.16",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Drainage Fee 01-04-2026 to 30-06-2026 $31.16 $31.16",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.3.outstanding": [
+      {
+        "path": "rates.water.charges.3.outstanding",
+        "value": "$31.16",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Drainage Fee 01-04-2026 to 30-06-2026 $31.16 $31.16",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.charges.count": [
+      {
+        "path": "rates.water.charges.count",
+        "value": 4,
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "4 charge lines parsed",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.total_outstanding": [
+      {
+        "path": "rates.water.total_outstanding",
+        "value": "$195.85",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Total for This Property $195.85",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": null
+      }
+    ],
+    "rates.water.cert_period_type": [
+      {
+        "path": "rates.water.cert_period_type",
+        "value": "quarterly",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Total for This Property $195.85",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": "Water authority certs bill quarterly"
+      }
+    ],
+    "rates.water.cert_amount_annual": [
+      {
+        "path": "rates.water.cert_amount_annual",
+        "value": "$783.40",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "Total for This Property $195.85",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.249117",
+        "notes": "quarterly $195.85 \u00d7 4 = $783.40"
+      }
+    ],
+    "docs.water_cert.date": [
+      {
+        "path": "docs.water_cert.date",
+        "value": "30/06/2026",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Yarra Valley Water_ Water Information Statement.pdf",
+            "page": null,
+            "quote": "30-06-2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:water_authority_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.250102",
+        "notes": "certificate billing period end date used as doc date"
+      }
+    ],
+    "rates.land_tax.certificate_number": [
+      {
+        "path": "rates.land_tax.certificate_number",
+        "value": "98550677",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Certificate No: 98550677",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.440568",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.issue_date": [
+      {
+        "path": "rates.land_tax.issue_date",
+        "value": "07 APR 2026",
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "07 APR 2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.440568",
+        "notes": "first date pattern in document"
+      }
+    ],
+    "docs.land_tax_cert.date": [
+      {
+        "path": "docs.land_tax_cert.date",
+        "value": "07/04/2026",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "07 APR 2026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": "SRO certificate issue date"
+      }
+    ],
+    "rates.land_tax.land_id": [
+      {
+        "path": "rates.land_tax.land_id",
+        "value": "48191601",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Land Id 48191601",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.amount": [
+      {
+        "path": "rates.land_tax.amount",
+        "value": "$0.00",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Tax Payable $0.00",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.taxable_value": [
+      {
+        "path": "rates.land_tax.taxable_value",
+        "value": "$220,000",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Taxable Value (SV) $220,000",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.site_value": [
+      {
+        "path": "rates.land_tax.site_value",
+        "value": "$220,000",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Taxable Value (SV) $220,000",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.capital_improved_value": [
+      {
+        "path": "rates.land_tax.capital_improved_value",
+        "value": "$615,000",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "$615,000CAPITAL IMPROVED VALUE",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.exemption_reason": [
+      {
+        "path": "rates.land_tax.exemption_reason",
+        "value": "LTX Principal Place of Residence.",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Property is exempt: LTX Principal Place of Residence.",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.assessed_year": [
+      {
+        "path": "rates.land_tax.assessed_year",
+        "value": "2026",
+        "confidence": 0.92,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "$0.002026",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.vendor_name": [
+      {
+        "path": "rates.land_tax.vendor_name",
+        "value": "ERIN SULTANA (FORMERLY SELLECK)",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Vendor: ERIN SULTANA (FORMERLY SELLECK)",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.commissioner": [
+      {
+        "path": "rates.land_tax.commissioner",
+        "value": "Paul Broderick",
+        "confidence": 0.97,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Paul Broderick Property Clearance Certificate",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": null
+      }
+    ],
+    "rates.land_tax.authority_name": [
+      {
+        "path": "rates.land_tax.authority_name",
+        "value": "State Revenue Office",
+        "confidence": 0.99,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 43 SOUTHAMPTON DRIVE, MULGRAVE VIC 3170.pdf",
+            "page": null,
+            "quote": "Property Clearance Certificate - Land Tax",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:land_tax_certificate_v1",
+        "extracted_at": "2026-04-11T03:38:32.444569",
+        "notes": "SRO is always the land tax authority in Victoria"
+      }
+    ],
+    "docs.vicroads_cert.date": [
+      {
+        "path": "docs.vicroads_cert.date",
+        "value": "02/04/2026",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Vicroads_ Vicroads Certificate.pdf",
+            "page": null,
+            "quote": "date=02/04/2026 from VIC_ Enquiry - Vicroads_ Vicroads Certificate.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-11T03:38:32.458092",
+        "notes": "auto-extracted from vicroads_cert document"
+      }
+    ],
+    "docs.epa_cert.date": [
+      {
+        "path": "docs.epa_cert.date",
+        "value": "02/04/2026",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "VIC_ Enquiry - Environment Protection Authority_ Extract of Priority Sites Register.pdf",
+            "page": null,
+            "quote": "date=02/04/2026 from VIC_ Enquiry - Environment Protection Authority_ Extract of Priority Sites Register.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-11T03:38:32.479612",
+        "notes": "auto-extracted from epa_cert document"
+      }
+    ],
+    "docs.bldg_warranty.date": [
+      {
+        "path": "docs.bldg_warranty.date",
+        "value": "22/06/2020",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "1620_Bldg Warranty Insurance.pdf",
+            "page": null,
+            "quote": "date=22/06/2020 from 1620_Bldg Warranty Insurance.pdf",
+            "quote_verified": true,
+            "extractor_note": null
+          }
+        ],
+        "extractor": "rule:generic_doc_meta_v1",
+        "extracted_at": "2026-04-11T03:38:32.653192",
+        "notes": "auto-extracted from bldg_warranty document"
+      }
+    ],
+    "policy.tab1.amounts_are_checked": [
+      {
+        "path": "policy.tab1.amounts_are_checked",
+        "value": true,
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: 'Their amounts are:' is always checked in Tab 1",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: 'Their amounts are:' is always checked in Tab 1"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-11T03:38:32.653192",
+        "notes": "Firm policy: 'Their amounts are:' is always checked in Tab 1"
+      }
+    ],
+    "policy.tab1.certificates_attached": [
+      {
+        "path": "policy.tab1.certificates_attached",
+        "value": true,
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: 'Are contained in attached certificate(s)' is always checked",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: 'Are contained in attached certificate(s)' is always checked"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-11T03:38:32.653192",
+        "notes": "Firm policy: 'Are contained in attached certificate(s)' is always checked"
+      }
+    ],
+    "policy.tab1.total_does_not_exceed": [
+      {
+        "path": "policy.tab1.total_does_not_exceed",
+        "value": true,
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: 'Their total does not exceed' is always checked (amount field blank)",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: 'Their total does not exceed' is always checked (amount field blank)"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-11T03:38:32.653192",
+        "notes": "Firm policy: 'Their total does not exceed' is always checked (amount field blank)"
+      }
+    ],
+    "policy.tab2.title_in_attached": [
+      {
+        "path": "policy.tab2.title_in_attached",
+        "value": true,
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: 'Is in the attached copies of title documents' is always checked",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: 'Is in the attached copies of title documents' is always checked"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-11T03:38:32.653192",
+        "notes": "Firm policy: 'Is in the attached copies of title documents' is always checked"
+      }
+    ],
+    "policy.tab2.failure_to_comply_checked": [
+      {
+        "path": "policy.tab2.failure_to_comply_checked",
+        "value": true,
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: 'Particulars of any existing failure to comply...' is always checked",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: 'Particulars of any existing failure to comply...' is always checked"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-11T03:38:32.653192",
+        "notes": "Firm policy: 'Particulars of any existing failure to comply...' is always checked"
+      }
+    ],
+    "policy.tab2.failure_to_comply_text": [
+      {
+        "path": "policy.tab2.failure_to_comply_text",
+        "value": "To the best of the Vendor's knowledge there is no existing failure to comply with the terms of any easements, covenants or other similar restriction.",
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm standard text for failure-to-comply disclosure",
+            "quote_verified": true,
+            "extractor_note": "Firm standard text for failure-to-comply disclosure"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-11T03:38:32.653192",
+        "notes": "Firm standard text for failure-to-comply disclosure"
+      }
+    ],
+    "policy.tab2.planning_cert_attached": [
+      {
+        "path": "policy.tab2.planning_cert_attached",
+        "value": true,
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: 'Certificate with required information attached' is always checked",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: 'Certificate with required information attached' is always checked"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-11T03:38:32.653192",
+        "notes": "Firm policy: 'Certificate with required information attached' is always checked"
+      }
+    ],
+    "policy.tab6.due_diligence_text": [
+      {
+        "path": "policy.tab6.due_diligence_text",
+        "value": "Is attached",
+        "confidence": 1.0,
+        "sources": [
+          {
+            "file": "policy_defaults",
+            "page": null,
+            "quote": "Firm policy: Due Diligence Checklist field always says 'Is attached'",
+            "quote_verified": true,
+            "extractor_note": "Firm policy: Due Diligence Checklist field always says 'Is attached'"
+          }
+        ],
+        "extractor": "rule:policy_defaults_v1",
+        "extracted_at": "2026-04-11T03:38:32.653192",
+        "notes": "Firm policy: Due Diligence Checklist field always says 'Is attached'"
+      }
+    ],
+    "policy.verification.water_amount_match": [
+      {
+        "path": "policy.verification.water_amount_match",
+        "value": null,
+        "confidence": 0.5,
+        "sources": [
+          {
+            "file": "policy_computed",
+            "page": null,
+            "quote": "Vendor-form water rate not found; using cert estimate \u2014 verify annually",
+            "quote_verified": true,
+            "extractor_note": "Vendor-form water rate not found; using cert estimate \u2014 verify annually"
+          }
+        ],
+        "extractor": "rule:policy_computed_v1",
+        "extracted_at": "2026-04-11T03:38:32.654192",
+        "notes": "Vendor-form water rate not found; using cert estimate \u2014 verify annually"
+      }
+    ],
+    "policy.attachments.text": [
+      {
+        "path": "policy.attachments.text",
+        "value": "- Due Diligence Checklist\n- Register Search Statement Volume 12287 Folio 279 dated 02/04/2026\n- Plan of Subdivision PS826454D dated 02/04/2026\n- Covenant PS826454D dated 02/04/2026\n- City of Monash Building Approval Certificate dated ##\n- City of Monash Land Information Certificate dated ##\n- Yarra Valley Water Encumbrance Certificate dated 30/06/2026\n- State Revenue Office Land Tax Certificate dated 07/04/2026\n- Detailed Property Report dated ##\n- Domestic Building Insurance dated 22/06/2020\n- Vic Roads Certificate dated 02/04/2026\n- EPA Certificate dated 02/04/2026\n(- Any right to sell property docs)\n- s27 Notice of Deposit Release (by way of service)",
+        "confidence": 0.9,
+        "sources": [
+          {
+            "file": "policy_computed",
+            "page": null,
+            "quote": "Auto-built from extracted document dates, names, and identifiers",
+            "quote_verified": true,
+            "extractor_note": "Auto-built from extracted document dates, names, and identifiers"
+          }
+        ],
+        "extractor": "rule:policy_computed_v1",
+        "extracted_at": "2026-04-11T03:38:32.655191",
+        "notes": "Auto-built from extracted document dates, names, and identifiers"
+      }
+    ]
+  },
+  "documents": [],
+  "extractors_run": [
+    "rule:vendor_form_v2",
+    "rule:generic_doc_meta_v1",
+    "rule:vic_title_v1",
+    "rule:water_authority_certificate_v1",
+    "rule:land_tax_certificate_v1",
+    "rule:policy_defaults_v1",
+    "rule:policy_computed_v1"
+  ]
+}

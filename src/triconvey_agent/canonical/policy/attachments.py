@@ -1,0 +1,521 @@
+"""Attachment list builder for Tab 6 field 13.
+
+Reads the FactStore and constructs the formatted attachment list.
+Items whose documents are not in the bundle are flagged with ## for human review.
+Items that clearly do not apply (e.g., Plan of Consolidation when there is none)
+are omitted rather than flagged.
+
+Output format (one item per line, dash-prefixed):
+    - Due Diligence Checklist
+    - Register Search Statement Volume 12287 Folio 279 dated 02/04/2026
+    - Plan of Subdivision PS826454D dated 02/04/2026
+    ...
+"""
+from __future__ import annotations
+
+import json
+import re
+
+from triconvey_agent.canonical.extractors import paths as P
+from triconvey_agent.canonical.schemas import Fact, Source
+
+EXTRACTOR_NAME = "rule:policy_attachments_v1"
+
+_REVIEW_PLACEHOLDER = "##"
+_OWNER_BUILDER_PLACEHOLDER = "***"
+
+# Strip time component: "02/04/2026 06:20 PM" → "02/04/2026"
+_DATE_STRIP_RE = re.compile(r"(\d{2}/\d{2}/\d{4})")
+
+# Volume/Folio patterns
+_VOL_FOLIO_RE = re.compile(
+    r"(?:VOLUME|Volume|VOL\.?)[\s:]*(\d+)[\s,]*(?:FOLIO|Folio)[\s:]*(\d+)",
+    re.IGNORECASE,
+)
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _clean_date(s: str | None) -> str:
+    """Strip time from date string; return ## if not a valid date."""
+    if not s or s == _REVIEW_PLACEHOLDER:
+        return _REVIEW_PLACEHOLDER
+    m = _DATE_STRIP_RE.search(str(s))
+    return m.group(1) if m else str(s)
+
+
+def _parse_vol_folio(vf: str) -> tuple[str, str]:
+    """Parse vol and folio from various formats."""
+    vf = str(vf).strip()
+    # "12287/279"
+    if "/" in vf:
+        parts = vf.split("/", 1)
+        return parts[0].strip(), parts[1].strip()
+    # "VOLUME 12287 FOLIO 279"
+    m = _VOL_FOLIO_RE.search(vf)
+    if m:
+        return m.group(1), m.group(2)
+    # Last resort: take all digit groups
+    nums = re.findall(r"\d+", vf)
+    if len(nums) >= 2:
+        return nums[0], nums[-1]
+    return vf, ""
+
+
+def _get_value(store, path: str) -> object | None:
+    fact, _ = store.get(path)
+    return fact.value if fact else None
+
+
+def _get_all_facts(store, path: str) -> list[Fact]:
+    return store.get_all(path)
+
+
+def _pick_fact_value(
+    store,
+    path: str,
+    *,
+    preferred_extractors: tuple[str, ...] = (),
+) -> object | None:
+    facts = _get_all_facts(store, path)
+    if not facts:
+        return None
+    for extractor in preferred_extractors:
+        for fact in facts:
+            if fact.extractor == extractor:
+                return fact.value
+    winner, _ = store.get(path)
+    if winner is not None:
+        return winner.value
+    return facts[0].value
+
+
+def _has_fact(store, path: str) -> bool:
+    return bool(_get_all_facts(store, path))
+
+
+def _date_from_path(store, path: str) -> str:
+    val = _pick_fact_value(store, path)
+    return _clean_date(str(val)) if val is not None else _REVIEW_PLACEHOLDER
+
+
+def _line_with_optional_date(label: str, date: str) -> str:
+    if not date or date == _REVIEW_PLACEHOLDER:
+        return f"- {label}"
+    return f"- {label} dated {date}"
+
+
+def _strip_plan_prefix(plan_number: str, prefix: str) -> str:
+    plan_number = str(plan_number).strip().upper()
+    if plan_number.startswith(prefix):
+        return plan_number[len(prefix):]
+    return plan_number
+
+
+def _source_file(fact: Fact) -> str:
+    return fact.sources[0].file if fact.sources else ""
+
+
+def _title_dates_by_file(store) -> dict[str, str]:
+    file_to_date: dict[str, str] = {}
+    for fact in _get_all_facts(store, P.TITLE_PRODUCED_AT) + _get_all_facts(store, P.DOCS_VIC_TITLE_SEARCH_DATE):
+        src_file = _source_file(fact)
+        if src_file:
+            file_to_date[src_file] = _clean_date(str(fact.value))
+    return file_to_date
+
+
+def _normalise_council_name(name: object | None) -> str | None:
+    """Return a display-ready council name.
+
+    Applies known corrections and ensures the word "Council" appears somewhere
+    in the name (solicitor convention: never just "Merri-bek", always
+    "Merri-bek Council").
+    """
+    if name is None:
+        return None
+    s = {
+        "Ballarat City Council": "City of Ballarat",
+    }.get(str(name).strip(), str(name).strip())
+    if "council" not in s.lower():
+        s = s + " Council"
+    return s
+
+
+def _norm_vol(vol: str) -> str:
+    """Normalise a volume number for deduplication: strip leading zeros.
+
+    "07133" and "7133" both normalise to "7133" so they deduplicate.
+    The display string keeps the raw value as extracted.
+    """
+    try:
+        return str(int(vol.strip()))
+    except (ValueError, AttributeError):
+        return str(vol).strip()
+
+
+def _title_entries(store) -> list[str]:
+    """Build one 'Register Search Statement' line per title document.
+
+    Deduplication uses normalised (integer) volume+folio so that
+    zero-padded variants ('07133' vs '7133') are treated as the same title.
+    """
+    vf_facts = _get_all_facts(store, "title.volume_folio")
+    date_facts = _get_all_facts(store, "title.produced_at")
+    search_date_facts = _get_all_facts(store, P.DOCS_VIC_TITLE_SEARCH_DATE)
+
+    # Build file → date mapping (produced_at or generic search date)
+    file_to_date: dict[str, str] = {}
+    for f in date_facts + search_date_facts:
+        if f.sources:
+            file_to_date[f.sources[0].file] = str(f.value)
+
+    # Individual volume/folio facts (more precise than combined)
+    vol_facts = _get_all_facts(store, "title.volume")
+    folio_facts = _get_all_facts(store, "title.folio")
+    file_to_vol: dict[str, str] = {
+        f.sources[0].file: str(f.value) for f in vol_facts if f.sources
+    }
+    file_to_folio: dict[str, str] = {
+        f.sources[0].file: str(f.value) for f in folio_facts if f.sources
+    }
+
+    lines: list[str] = []
+    # seen key = normalised "vol_int/folio_int" — prevents zero-padding duplicates
+    seen: set[str] = set()
+
+    def _dedup_key(vol: str, folio: str) -> str:
+        return f"{_norm_vol(vol)}/{_norm_vol(folio)}"
+
+    # Prefer individual vol/folio facts (most precise)
+    for src_file, vol in sorted(file_to_vol.items()):
+        folio = file_to_folio.get(src_file, "")
+        if not folio:
+            continue
+        key = _dedup_key(vol, folio)
+        if key in seen:
+            continue
+        seen.add(key)
+        date_str = _clean_date(file_to_date.get(src_file, _REVIEW_PLACEHOLDER))
+        lines.append(f"- Register Search Statement Volume {vol} Folio {folio} dated {date_str}")
+
+    # Fall back to volume_folio combined fact
+    for f in vf_facts:
+        vf = str(f.value)
+        vol, folio = _parse_vol_folio(vf)
+        if not folio:
+            continue
+        key = _dedup_key(vol, folio)
+        if key in seen:
+            continue
+        seen.add(key)
+        src_file = f.sources[0].file if f.sources else ""
+        date_str = _clean_date(file_to_date.get(src_file, _REVIEW_PLACEHOLDER))
+        lines.append(f"- Register Search Statement Volume {vol} Folio {folio} dated {date_str}")
+
+    return lines
+
+
+def _plan_entries(store) -> list[str]:
+    """Build Plan of Subdivision and Plan of Consolidation lines."""
+    lines: list[str] = []
+    seen: set[str] = set()
+
+    def _is_attachment_plan_source(fact: Fact) -> bool:
+        src_file = _source_file(fact).lower()
+        if not src_file:
+            return True
+        if "lease" in src_file or "notice" in src_file:
+            return False
+        return True
+
+    # Plan of Subdivision
+    ps_facts = _get_all_facts(store, P.DOCS_PLAN_OF_SUBDIVISION)
+    for f in ps_facts:
+        if not _is_attachment_plan_source(f):
+            continue
+        try:
+            info = json.loads(str(f.value))
+            num = info.get("number", _REVIEW_PLACEHOLDER)
+            date = info.get("date", _REVIEW_PLACEHOLDER)
+            key = num
+            if key not in seen:
+                seen.add(key)
+                lines.append(
+                    f"- Plan of Subdivision {_strip_plan_prefix(str(num), 'PS')} dated {date}"
+                )
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    # Also check title.plan_type + title.plan_number for PS entries not from copy-of-plan
+    plan_type_facts = _get_all_facts(store, "title.plan_type")
+    plan_num_facts = _get_all_facts(store, "title.plan_number")
+    # Match by source file
+    file_to_plan_type: dict[str, str] = {
+        f.sources[0].file: str(f.value) for f in plan_type_facts if f.sources
+    }
+    file_to_plan_num: dict[str, str] = {
+        f.sources[0].file: str(f.value) for f in plan_num_facts if f.sources
+    }
+    file_to_date = _title_dates_by_file(store)
+
+    for src_file, plan_type in file_to_plan_type.items():
+        plan_num = file_to_plan_num.get(src_file, "")
+        if not plan_num:
+            continue
+        # Normalise plan type to 2-3 letter prefix
+        plan_type_u = plan_type.strip().upper()
+        if "SUBDIVISION" in plan_type_u:
+            plan_type_u = "PS"
+        elif "CONSOLIDATION" in plan_type_u:
+            plan_type_u = "PC"
+        elif "LICENSED" in plan_type_u or plan_type_u == "LP":
+            # LP (Licensed Plan) = old-style equivalent of Plan of Subdivision
+            plan_type_u = "LP"
+        elif "TITLE PLAN" in plan_type_u or plan_type_u == "TP":
+            plan_type_u = "TP"
+
+        # Build full plan number (preserve any existing letter prefix)
+        if re.match(r"^(PS|PC|LP|TP|RP|SP|AL)\d", plan_num, re.IGNORECASE):
+            full = plan_num.upper()
+        elif plan_type_u in ("PS", "PC", "LP", "TP", "RP", "SP", "AL"):
+            full = f"{plan_type_u}{plan_num}"
+        else:
+            continue  # Unknown plan type — skip
+
+        date = _clean_date(file_to_date.get(src_file, _REVIEW_PLACEHOLDER))
+
+        if plan_type_u == "PS" and full not in seen:
+            seen.add(full)
+            lines.append(
+                f"- Plan of Subdivision {_strip_plan_prefix(full, 'PS')} dated {date}"
+            )
+        elif plan_type_u in ("LP", "TP") and full not in seen:
+            # LP / TP: display as "Plan of Subdivision LP009777 dated ..." (keep prefix)
+            seen.add(full)
+            lines.append(f"- Plan of Subdivision {full} dated {date}")
+        elif plan_type_u == "PC" and full not in seen:
+            seen.add(full)
+            lines.append(
+                f"- Plan of Consolidation {_strip_plan_prefix(full, 'PC')} dated {date}"
+            )
+
+    # Plan of Consolidation
+    pc_facts = _get_all_facts(store, P.DOCS_PLAN_OF_CONSOLIDATION)
+    for f in pc_facts:
+        if not _is_attachment_plan_source(f):
+            continue
+        try:
+            info = json.loads(str(f.value))
+            num = info.get("number", _REVIEW_PLACEHOLDER)
+            date = info.get("date", _REVIEW_PLACEHOLDER)
+            key = num
+            if key not in seen:
+                seen.add(key)
+                lines.append(
+                    f"- Plan of Consolidation {_strip_plan_prefix(str(num), 'PC')} dated {date}"
+                )
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    return lines
+
+
+def _covenant_entries(store) -> list[str]:
+    """Build covenant lines, preferring covenant instrument docs when present."""
+    has_covenant_fact, _ = store.get(P.TITLE_HAS_COVENANT)
+    if not has_covenant_fact or not has_covenant_fact.value:
+        return []
+
+    lines: list[str] = []
+    seen: set[str] = set()
+
+    for fact in _get_all_facts(store, P.DOCS_COVENANT):
+        try:
+            info = json.loads(str(fact.value))
+        except (json.JSONDecodeError, TypeError):
+            continue
+        number = str(info.get("number", _REVIEW_PLACEHOLDER))
+        date = _clean_date(str(info.get("date", _REVIEW_PLACEHOLDER)))
+        key = f"{number}/{date}"
+        if key in seen:
+            continue
+        seen.add(key)
+        lines.append(f"- Covenant {number} dated {date}")
+
+    if lines:
+        return lines
+
+    count = _get_value(store, P.TITLE_ENCUMBRANCE_COUNT) or 0
+    try:
+        count = int(count)
+    except (TypeError, ValueError):
+        count = 0
+
+    for idx in range(count):
+        enc_type = _pick_fact_value(store, P.title_encumbrance(idx, "type"))
+        if str(enc_type).upper() != "COVENANT":
+            continue
+        enc_number = _pick_fact_value(store, P.title_encumbrance(idx, "number")) or _REVIEW_PLACEHOLDER
+        enc_date = _pick_fact_value(store, P.title_encumbrance(idx, "date")) or _REVIEW_PLACEHOLDER
+        key = f"{enc_number}/{enc_date}"
+        if key in seen:
+            continue
+        seen.add(key)
+        lines.append(f"- Covenant {enc_number} dated {_clean_date(str(enc_date))}")
+
+    if not lines:
+        lines.append(f"- Covenant {_REVIEW_PLACEHOLDER} dated {_REVIEW_PLACEHOLDER}")
+    return lines
+
+
+def _section_173_entries(store) -> list[str]:
+    """Build Section 173 agreement lines from title encumbrances."""
+    count = _get_value(store, P.TITLE_ENCUMBRANCE_COUNT) or 0
+    try:
+        count = int(count)
+    except (TypeError, ValueError):
+        count = 0
+
+    title_dates = _title_dates_by_file(store)
+    lines: list[str] = []
+    seen: set[str] = set()
+
+    for idx in range(count):
+        type_facts = _get_all_facts(store, P.title_encumbrance(idx, "type"))
+        text_facts = _get_all_facts(store, P.title_encumbrance(idx, "text"))
+        number = _pick_fact_value(store, P.title_encumbrance(idx, "number"))
+        reg_date = _pick_fact_value(store, P.title_encumbrance(idx, "date"))
+
+        enc_type = str(type_facts[0].value).upper() if type_facts else ""
+        enc_text = str(text_facts[0].value).upper() if text_facts else ""
+        if "AGREEMENT" not in enc_type and "SECTION 173" not in enc_text:
+            continue
+        if "SECTION 173" not in enc_text:
+            continue
+        if not number:
+            continue
+
+        src_file = ""
+        for fact in type_facts + text_facts:
+            src_file = _source_file(fact)
+            if src_file:
+                break
+
+        search_date = title_dates.get(src_file, _clean_date(str(reg_date)))
+        key = f"{number}/{search_date}"
+        if key in seen:
+            continue
+        seen.add(key)
+        lines.append(f"- Section 173 Agreement {number} dated {search_date}")
+
+    return lines
+
+
+def build_attachments_text(store) -> str:  # type: ignore[type-arg]
+    """Build the complete formatted attachment list text for Tab 6 field 13.
+
+    Returns a multi-line string starting with '- Due Diligence Checklist'.
+    Items not present in the bundle use ## placeholders.
+    """
+    lines: list[str] = []
+
+    # 1. Always first
+    lines.append("- Due Diligence Checklist")
+
+    # 2. Register Search Statements (one per title/folio)
+    lines.extend(_title_entries(store))
+
+    # 3. Plan of Subdivision + Plan of Consolidation
+    lines.extend(_plan_entries(store))
+
+    # 4. Covenant (if applicable)
+    lines.extend(_covenant_entries(store))
+
+    # 4b. Section 173 agreements on title
+    lines.extend(_section_173_entries(store))
+
+    # 5. Owners Corporation documents
+    oc_exists_fact, _ = store.get(P.RATES_OWNERS_CORPORATION)
+    oc_exists = bool(oc_exists_fact.value) if oc_exists_fact else False
+    has_oc_basic = _has_fact(store, P.DOCS_OC_BASIC_REPORT_DATE)
+    has_oc_cert = _has_fact(store, P.DOCS_OC_CERT_DATE)
+
+    if oc_exists or has_oc_basic or has_oc_cert:
+        oc_basic_date = _date_from_path(store, P.DOCS_OC_BASIC_REPORT_DATE)
+        if has_oc_basic or oc_basic_date != _REVIEW_PLACEHOLDER:
+            lines.append(_line_with_optional_date("Owners Corporation Basic Report", oc_basic_date))
+
+        oc_cert_date = _date_from_path(store, P.DOCS_OC_CERT_DATE)
+        if has_oc_cert or has_oc_basic or oc_exists:
+            lines.append(_line_with_optional_date("Owners Corporation Certificate", oc_cert_date))
+
+    # 6. Council certificates (named with council authority)
+    council_name = _normalise_council_name(_get_value(store, P.RATES_COUNCIL_AUTHORITY))
+    council_building_date = _date_from_path(store, P.DOCS_COUNCIL_BUILDING_APPROVAL_CERT_DATE)
+    council_land_info_date = _date_from_path(store, P.DOCS_COUNCIL_LAND_INFO_CERT_DATE)
+    if council_name:
+        lines.append(
+            f"- {council_name} Building Approval Certificate dated {council_building_date}"
+        )
+        lines.append(
+            f"- {council_name} Land Information Certificate dated {council_land_info_date}"
+        )
+    else:
+        lines.append(f"- ## Council Building Approval Certificate dated {council_building_date}")
+        lines.append(f"- ## Council Land Information Certificate dated {council_land_info_date}")
+
+    # 7. Water encumbrance certificate (named with water authority)
+    water_name = _pick_fact_value(
+        store,
+        P.RATES_WATER_AUTHORITY,
+        preferred_extractors=("rule:water_authority_certificate_v1",),
+    )
+    water_cert_date = _date_from_path(store, P.DOCS_WATER_CERT_DATE)
+    if water_name:
+        lines.append(
+            f"- {water_name} Encumbrance Certificate dated {water_cert_date}"
+        )
+    else:
+        lines.append(f"- ## Water Encumbrance Certificate dated {water_cert_date}")
+
+    # 8. SRO Land Tax Certificate
+    land_tax_date = _date_from_path(store, P.DOCS_LAND_TAX_CERT_DATE)
+    lines.append(f"- State Revenue Office Land Tax Certificate dated {land_tax_date}")
+
+    # 9. Detailed Property Report
+    prop_report_date = _date_from_path(store, P.DOCS_PROPERTY_REPORT_DATE)
+    lines.append(_line_with_optional_date("Detailed Property Report", prop_report_date))
+
+    # 10. Owner Builder Report — always mention it; add the extracted date when present.
+    owner_builder_date = _date_from_path(store, P.DOCS_OWNER_BUILDER_REPORT_DATE)
+    if owner_builder_date == _REVIEW_PLACEHOLDER:
+        lines.append(f"- Owner Builder Report {_OWNER_BUILDER_PLACEHOLDER}")
+    else:
+        lines.append(f"- Owner Builder Report dated {owner_builder_date}")
+
+    # 11. Domestic Building Insurance (if building warranty doc present)
+    bldg_warranty_date = _date_from_path(store, P.DOCS_BLDG_WARRANTY_DATE)
+    if bldg_warranty_date != _REVIEW_PLACEHOLDER:
+        lines.append(f"- Domestic Building Insurance dated {bldg_warranty_date}")
+
+    # 12. VicRoads Certificate
+    vicroads_date = _date_from_path(store, P.DOCS_VICROADS_CERT_DATE)
+    lines.append(f"- Vic Roads Certificate dated {vicroads_date}")
+
+    # 13. EPA Certificate
+    epa_date = _date_from_path(store, P.DOCS_EPA_CERT_DATE)
+    lines.append(f"- EPA Certificate dated {epa_date}")
+
+    # 13b. Residential Tenancy Agreement
+    tenancy_date = _date_from_path(store, P.DOCS_RESIDENTIAL_TENANCY_AGREEMENT_DATE)
+    if tenancy_date != _REVIEW_PLACEHOLDER:
+        lines.append(f"- Residential Tenancy Agreement dated {tenancy_date}")
+
+    # 14. s27 Notice of Deposit Release — only if vendor said YES on vendor form.
+    s27_fact, _ = store.get("sale.s27_early_release")
+    if s27_fact is not None and s27_fact.value is True:
+        lines.append("- s27 Notice of Deposit Release (by way of service)")
+
+    return "\n".join(lines)
