@@ -36,6 +36,7 @@ Field ID format (from Brain D mapper)
 from __future__ import annotations
 
 import ctypes
+import json
 import logging
 import os
 import re
@@ -43,14 +44,18 @@ import subprocess
 import time
 from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
+from triconvey_agent import __version__ as AGENT_VERSION
 from triconvey_agent.canonical.schemas import (
     ActionResult,
     ExecutionReport,
     FormAction,
     FormActionPlan,
 )
+from triconvey_agent.config import settings
+from triconvey_agent.backend.runtime import prune_old_directories
 
 log = logging.getLogger(__name__)
 
@@ -115,12 +120,29 @@ WINDOW_OPEN_DELAY  = 3.0    # seconds after opening matter / property window
 FIELD_SETTLE_DELAY = 0.15   # seconds after each field write
 LAUNCH_POLL        = 2.0    # poll interval while TriConvey loads
 LAUNCH_TIMEOUT     = 60     # give up after this many seconds
+LOW_CONFIDENCE_REVIEW_THRESHOLD = 0.70
+CRITICAL_CONFIDENCE_REVIEW_THRESHOLD = 0.85
 
 # How far right/below a label we scan for the matching input control
 LABEL_SEARCH_RIGHT = 400    # px right of label right edge
 LABEL_SEARCH_BELOW = 55     # px below label top
 PROPERTY_DETAILS_TITLE = "Property Details"
 MATTER_WINDOW_AUTO_ID = "Matter_Details_Window"
+EXECUTION_ARTIFACTS_DIRNAME = "execution_artifacts"
+SM_REMOTESESSION = 0x1000
+MIN_SCREEN_WIDTH = 1280
+MIN_SCREEN_HEIGHT = 720
+CRITICAL_ACTION_HINTS = (
+    "outgoing_",
+    "attachments",
+    "total_does_not_exceed",
+    "responsible_authority",
+    "planning_scheme",
+    "planning_overlay",
+    "mortgage",
+    "insurance",
+    "owner_builder",
+)
 
 
 class _Point(ctypes.Structure):
@@ -133,6 +155,161 @@ class _SimpleRect:
         self.top = int(top)
         self.right = int(right)
         self.bottom = int(bottom)
+
+
+class _ExecutionDiagnostics:
+    """Persist rich execution artifacts for support and root-cause analysis."""
+
+    def __init__(self, output_dir: str | Path | None):
+        self.enabled = output_dir is not None
+        self.base_dir: Path | None = None
+        self.events_path: Path | None = None
+        self._screenshots_dir: Path | None = None
+        if not self.enabled:
+            return
+        stamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+        artifacts_root = Path(output_dir) / EXECUTION_ARTIFACTS_DIRNAME
+        try:
+            prune_old_directories(
+                artifacts_root,
+                max_age_hours=settings.execution_artifact_retention_hours,
+                keep_latest=settings.execution_artifact_keep_latest,
+            )
+        except Exception:
+            pass
+        self.base_dir = artifacts_root / stamp
+        self._screenshots_dir = self.base_dir / "screenshots"
+        self._screenshots_dir.mkdir(parents=True, exist_ok=True)
+        self.events_path = self.base_dir / "events.jsonl"
+
+    def log_event(self, kind: str, **payload: Any) -> None:
+        if not self.enabled or self.events_path is None:
+            return
+        event = {
+            "ts": datetime.utcnow().isoformat(timespec="milliseconds") + "Z",
+            "kind": kind,
+            **payload,
+        }
+        with self.events_path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(event, default=str) + "\n")
+
+    def capture_screenshot(self, name: str, *, window=None) -> str | None:
+        if not (self.enabled and _pil_available and self._screenshots_dir is not None):
+            return None
+        safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", name).strip("._") or "capture"
+        target = self._screenshots_dir / f"{safe_name}.png"
+        try:
+            if window is not None:
+                rect = window.rectangle()
+                bbox = (rect.left, rect.top, rect.right, rect.bottom)
+                img = ImageGrab.grab(bbox=bbox)
+            else:
+                img = ImageGrab.grab()
+            img.save(target)
+            return str(target)
+        except Exception as exc:
+            self.log_event("screenshot_error", name=name, error=str(exc))
+            return None
+
+
+def _safe_window_handle(window) -> int | None:
+    try:
+        return int(window.handle)
+    except Exception:
+        return None
+
+
+def _window_fingerprint(window) -> dict[str, Any]:
+    if window is None:
+        return {}
+    try:
+        rect = window.rectangle()
+        bounds = {
+            "left": rect.left,
+            "top": rect.top,
+            "right": rect.right,
+            "bottom": rect.bottom,
+        }
+    except Exception:
+        bounds = None
+    try:
+        info = window.element_info
+        auto_id = getattr(info, "automation_id", "") or None
+        class_name = getattr(info, "class_name", "") or None
+        control_type = getattr(info, "control_type", "") or None
+    except Exception:
+        auto_id = class_name = control_type = None
+    return {
+        "title": _safe_window_text(window),
+        "handle": _safe_window_handle(window),
+        "auto_id": auto_id,
+        "class_name": class_name,
+        "control_type": control_type,
+        "bounds": bounds,
+    }
+
+
+def _current_foreground_title() -> str:
+    try:
+        hwnd = ctypes.windll.user32.GetForegroundWindow()
+        if not hwnd:
+            return ""
+        length = ctypes.windll.user32.GetWindowTextLengthW(hwnd)
+        buffer = ctypes.create_unicode_buffer(length + 1)
+        ctypes.windll.user32.GetWindowTextW(hwnd, buffer, length + 1)
+        return buffer.value.strip()
+    except Exception:
+        return ""
+
+
+def _system_dpi() -> int:
+    try:
+        return int(ctypes.windll.user32.GetDpiForSystem())
+    except Exception:
+        return 96
+
+
+def _screen_metrics() -> dict[str, Any]:
+    try:
+        user32 = ctypes.windll.user32
+        width = int(user32.GetSystemMetrics(0))
+        height = int(user32.GetSystemMetrics(1))
+        remote = bool(user32.GetSystemMetrics(SM_REMOTESESSION))
+    except Exception:
+        width, height, remote = 0, 0, False
+    dpi = _system_dpi()
+    return {
+        "width": width,
+        "height": height,
+        "dpi": dpi,
+        "scale_percent": round((dpi / 96.0) * 100, 1) if dpi else None,
+        "remote_session": remote or "RDP" in os.environ.get("SESSIONNAME", "").upper(),
+        "session_name": os.environ.get("SESSIONNAME") or None,
+    }
+
+
+def _critical_field_name(fid: dict) -> str:
+    return " ".join(
+        str(part or "") for part in (fid.get("tab"), fid.get("name"), fid.get("control_type"))
+    ).lower()
+
+
+def _is_critical_action(action: FormAction, fid: dict) -> bool:
+    haystack = f"{action.question_id} {_critical_field_name(fid)}".lower()
+    return any(marker in haystack for marker in CRITICAL_ACTION_HINTS)
+
+
+def _write_confidence_threshold(action: FormAction, fid: dict) -> float:
+    return (
+        CRITICAL_CONFIDENCE_REVIEW_THRESHOLD
+        if _is_critical_action(action, fid)
+        else LOW_CONFIDENCE_REVIEW_THRESHOLD
+    )
+
+
+def _payload_preview(payload: Any, max_len: int = 120) -> str:
+    text = str(payload)
+    return text if len(text) <= max_len else text[: max_len - 3] + "..."
 
 
 # ---------------------------------------------------------------------------
@@ -185,12 +362,45 @@ def _safe_window_text(window) -> str:
         return ""
 
 
+_CONTROL_CACHE: dict[tuple[int, str, int], list[Any]] = {}
+_CONTROL_CACHE_EPOCH = 0
+
+
+def _cache_handle(window) -> int:
+    handle = _safe_window_handle(window)
+    return handle if handle is not None else id(window)
+
+
+def _invalidate_control_cache() -> None:
+    global _CONTROL_CACHE_EPOCH
+    _CONTROL_CACHE_EPOCH += 1
+    _CONTROL_CACHE.clear()
+
+
+def _descendants_cached(window, control_type: str) -> list[Any]:
+    key = (_cache_handle(window), control_type, _CONTROL_CACHE_EPOCH)
+    cached = _CONTROL_CACHE.get(key)
+    if cached is not None:
+        return cached
+    try:
+        items = list(window.descendants(control_type=control_type))
+    except Exception:
+        items = []
+    _CONTROL_CACHE[key] = items
+    return items
+
+
+def _warm_control_cache(window) -> None:
+    for control_type in ("Text", "Edit", "CheckBox", "Button", "ComboBox"):
+        _descendants_cached(window, control_type)
+
+
 def _find_sec32_tab_strip(window):
     """Return the Tab control that owns the Sec. 32 tab items, if present."""
     try:
-        for tab in window.descendants(control_type="Tab"):
+        for tab in _descendants_cached(window, "Tab"):
             try:
-                items = list(tab.descendants(control_type="TabItem"))
+                items = _descendants_cached(tab, "TabItem")
             except Exception:
                 items = []
             names = {
@@ -430,7 +640,7 @@ def _fuzzy_find_checkbox(window, name: str):
     best, best_score = None, 0
     for ct in ("CheckBox", "Button"):
         try:
-            for ctrl in window.descendants(control_type=ct):
+            for ctrl in _descendants_cached(window, ct):
                 try:
                     n = _sanitize(ctrl.element_info.name or ctrl.window_text() or "")
                     if not n:
@@ -468,7 +678,7 @@ def _label_find_edit(window, label: str, row_index: int = None):
     # ── Step 1: Collect ALL matching Text labels with a score ──
     all_matches = []
     try:
-        for t in window.descendants(control_type="Text"):
+        for t in _descendants_cached(window, "Text"):
             try:
                 n = _sanitize(t.element_info.name or "")
                 if not n:
@@ -514,7 +724,7 @@ def _label_find_edit(window, label: str, row_index: int = None):
     # ── Step 3: Find nearest Edit to this label ──
     edits = []
     try:
-        for e in window.descendants(control_type="Edit"):
+        for e in _descendants_cached(window, "Edit"):
             try:
                 r = e.rectangle()
                 if r.width() <= 0:
@@ -549,7 +759,7 @@ def _label_find_combobox(window, label: str):
     best_label = None
     best_score = 0
     try:
-        for t in window.descendants(control_type="Text"):
+        for t in _descendants_cached(window, "Text"):
             try:
                 n = _sanitize(t.element_info.name or "")
                 if not n:
@@ -580,7 +790,7 @@ def _label_find_combobox(window, label: str):
     _, lr = best_label
     combos = []
     try:
-        for c in window.descendants(control_type="ComboBox"):
+        for c in _descendants_cached(window, "ComboBox"):
             try:
                 r = c.rectangle()
                 if r.width() <= 0:
@@ -655,7 +865,7 @@ def _scan_outgoings_rows(window) -> list[dict]:
     header_y = None
     header_x_anchor = None
     try:
-        for t in window.descendants(control_type="Text"):
+        for t in _descendants_cached(window, "Text"):
             try:
                 n = _sanitize(t.element_info.name or "").lower()
                 if n in ("authority name", "authority"):
@@ -676,7 +886,7 @@ def _scan_outgoings_rows(window) -> list[dict]:
 
     cells = []
     try:
-        for e in window.descendants(control_type="Edit"):
+        for e in _descendants_cached(window, "Edit"):
             try:
                 r = e.rectangle()
                 if r.width() <= 0:
@@ -774,7 +984,7 @@ def _find_edit_by_position(window, top: int, left: int, tol: int = 25,
     adj_left = left + delta[1]
     best_ctrl, best_dist = None, float("inf")
     try:
-        for ctrl in window.descendants(control_type="Edit"):
+        for ctrl in _descendants_cached(window, "Edit"):
             try:
                 r = ctrl.rectangle()
                 if r.width() <= 0:
@@ -802,7 +1012,7 @@ def _find_checkbox_by_position(window, top: int, left: int, tol: int = 25,
     best_ctrl, best_dist = None, float("inf")
     for ct in ("CheckBox", "Button"):
         try:
-            for ctrl in window.descendants(control_type=ct):
+            for ctrl in _descendants_cached(window, ct):
                 try:
                     r = ctrl.rectangle()
                     if r.width() <= 0:
@@ -829,7 +1039,7 @@ def _find_combobox_by_position(window, top: int, left: int, tol: int = 25,
     adj_left = left + delta[1]
     best_ctrl, best_dist = None, float("inf")
     try:
-        for ctrl in window.descendants(control_type="ComboBox"):
+        for ctrl in _descendants_cached(window, "ComboBox"):
             try:
                 r = ctrl.rectangle()
                 if r.width() <= 0:
@@ -847,9 +1057,9 @@ def _find_combobox_by_position(window, top: int, left: int, tol: int = 25,
     return best_ctrl
 
 
-def _find_ctrl(window, fid: dict, delta: tuple[int, int] = (0, 0),
-               row_index: int = None) -> Any:
-    """Control-finding: vision-filler label approach (primary) + position fallback.
+def _find_ctrl_with_strategy(window, fid: dict, delta: tuple[int, int] = (0, 0),
+                             row_index: int = None) -> tuple[Any, str | None]:
+    """Return both the control and the locator strategy that resolved it.
 
     delta          = (delta_top, delta_left) from coordinate calibration.
     row_index      = 1-based occurrence index for repeated labels (e.g. Authority row 2).
@@ -866,37 +1076,42 @@ def _find_ctrl(window, fid: dict, delta: tuple[int, int] = (0, 0),
     name      = fid["name"]
 
     if ctrl_type == "CheckBox":
-        # Primary: fuzzy label match
         if name and name not in ("unnamed", ""):
             ctrl = _fuzzy_find_checkbox(window, name)
             if ctrl is not None:
-                return ctrl
-        # Fallback: calibrated position
-        return _find_checkbox_by_position(window, fid["top"], fid["left"], delta=delta)
+                return ctrl, "checkbox:fuzzy_label"
+        ctrl = _find_checkbox_by_position(window, fid["top"], fid["left"], delta=delta)
+        if ctrl is not None:
+            return ctrl, "checkbox:position_fallback"
+        return None, None
 
     if ctrl_type == "Edit":
-        # Primary: label-based with row_index (vision_filler approach)
         if name and name not in ("unnamed", ""):
             ctrl = _label_find_edit(window, name, row_index=row_index)
             if ctrl is not None:
-                return ctrl
-        # Fallback: calibrated position (works even if no Text label is visible)
+                return ctrl, "edit:label_proximity"
         if fid["top"] is not None:
             ctrl = _find_edit_by_position(window, fid["top"], fid["left"], delta=delta)
             if ctrl is not None:
-                return ctrl
+                return ctrl, "edit:position_fallback"
 
     if ctrl_type == "ComboBox":
         if name and name not in ("unnamed", ""):
             ctrl = _label_find_combobox(window, name)
             if ctrl is not None:
-                return ctrl
+                return ctrl, "combobox:label_proximity"
         if fid["top"] is not None:
             ctrl = _find_combobox_by_position(window, fid["top"], fid["left"], delta=delta)
             if ctrl is not None:
-                return ctrl
+                return ctrl, "combobox:position_fallback"
 
-    return None
+    return None, None
+
+
+def _find_ctrl(window, fid: dict, delta: tuple[int, int] = (0, 0),
+               row_index: int = None) -> Any:
+    ctrl, _strategy = _find_ctrl_with_strategy(window, fid, delta=delta, row_index=row_index)
+    return ctrl
 
 
 # ---------------------------------------------------------------------------
@@ -1044,6 +1259,16 @@ def _read_back(ctrl, action: str) -> Any:
         return None
 
 
+def _verification_mode_for_action(action: FormAction, locator_strategy: str | None) -> str:
+    if action.action == "set_checkbox":
+        return "toggle_state"
+    if action.action == "select_dropdown":
+        return "selected_text"
+    if locator_strategy and locator_strategy.endswith("position_fallback"):
+        return "readback_only"
+    return "readback_semantic"
+
+
 # ---------------------------------------------------------------------------
 # Tab navigation  (vision_filler approach: direct title lookup, no keyboard)
 # ---------------------------------------------------------------------------
@@ -1078,7 +1303,7 @@ def _click_tab(window, tab_name: str) -> bool:
 
     # Strategy 2: walk all TabItem descendants, compare sanitized name
     try:
-        for t in window.descendants(control_type="TabItem"):
+        for t in _descendants_cached(window, "TabItem"):
             try:
                 n = _sanitize(t.element_info.name or t.window_text() or "")
                 if n == tab_name:
@@ -1120,7 +1345,7 @@ def _get_active_sec32_tab(window) -> str | None:
     if tab_strip is None:
         return None
     try:
-        for item in tab_strip.descendants(control_type="TabItem"):
+        for item in _descendants_cached(tab_strip, "TabItem"):
             try:
                 if _tab_is_selected(item):
                     return _sanitize(item.element_info.name or item.window_text() or "")
@@ -1137,6 +1362,7 @@ def _activate_sec32_tab(window, tab_name: str, retries: int = 3) -> bool:
         _ensure_focus(window)
         if not _click_tab(window, tab_name):
             continue
+        _invalidate_control_cache()
         active = _get_active_sec32_tab(window)
         if active is None or active == tab_name:
             return True
@@ -1151,12 +1377,13 @@ def _activate_sec32_tab(window, tab_name: str, retries: int = 3) -> bool:
 class TriConveyAgent:
     """Connects to TriConvey, opens the matter, fills Sec. 32 tabs."""
 
-    def __init__(self, triconvey_exe: str | None = None):
+    def __init__(self, triconvey_exe: str | None = None, diagnostics: _ExecutionDiagnostics | None = None):
         self.exe = triconvey_exe or self._find_exe()
         self.app             = None
         self.main_window     = None
         self.matter_window   = None
         self.property_window = None
+        self.diagnostics     = diagnostics
         # Offset between YAML scan-time absolute coords and current screen coords.
         # Computed by _calibrate_position_delta() after Property Details opens.
         self._coord_delta: tuple[int, int] = (0, 0)
@@ -1164,6 +1391,93 @@ class TriConveyAgent:
     def _log(self, msg: str) -> None:
         print(f"  {msg}")
         log.info(msg)
+        if self.diagnostics:
+            self.diagnostics.log_event("log", message=msg)
+
+    def _log_window_event(self, kind: str, window=None, **extra: Any) -> None:
+        if self.diagnostics:
+            self.diagnostics.log_event(kind, window=_window_fingerprint(window), **extra)
+
+    def collect_session_fingerprint(self) -> dict[str, Any]:
+        exe_meta = None
+        if self.exe and os.path.exists(self.exe):
+            try:
+                stat = os.stat(self.exe)
+                exe_meta = {
+                    "path": self.exe,
+                    "size": stat.st_size,
+                    "mtime_utc": datetime.utcfromtimestamp(stat.st_mtime).isoformat() + "Z",
+                }
+            except Exception:
+                exe_meta = {"path": self.exe}
+        return {
+            "agent_version": AGENT_VERSION,
+            "screen": _screen_metrics(),
+            "foreground_title": _current_foreground_title(),
+            "triconvey_exe": exe_meta,
+            "main_window": _window_fingerprint(self.main_window),
+            "matter_window": _window_fingerprint(self.matter_window),
+            "property_window": _window_fingerprint(self.property_window),
+        }
+
+    def run_preflight_checks(self) -> list[dict[str, Any]]:
+        checks: list[dict[str, Any]] = []
+        screen = _screen_metrics()
+        checks.append(
+            {
+                "name": "screen_resolution",
+                "status": "ok"
+                if screen["width"] >= MIN_SCREEN_WIDTH and screen["height"] >= MIN_SCREEN_HEIGHT
+                else "warn",
+                "detail": f"{screen['width']}x{screen['height']}",
+            }
+        )
+        checks.append(
+            {
+                "name": "display_scaling",
+                "status": "ok" if (screen.get("scale_percent") or 100) <= 125 else "warn",
+                "detail": f"{screen.get('scale_percent')}%",
+            }
+        )
+        checks.append(
+            {
+                "name": "remote_session",
+                "status": "warn" if screen["remote_session"] else "ok",
+                "detail": screen.get("session_name") or "local",
+            }
+        )
+        foreground = _current_foreground_title()
+        checks.append(
+            {
+                "name": "foreground_window",
+                "status": "ok" if foreground else "warn",
+                "detail": foreground or "none",
+            }
+        )
+        if self.property_window is not None:
+            try:
+                rect = self.property_window.rectangle()
+                visible = rect.width() > 0 and rect.height() > 0
+            except Exception:
+                visible = False
+            checks.append(
+                {
+                    "name": "property_window_visible",
+                    "status": "ok" if visible else "error",
+                    "detail": _safe_window_text(self.property_window) or PROPERTY_DETAILS_TITLE,
+                }
+            )
+            checks.append(
+                {
+                    "name": "sec32_tab_strip",
+                    "status": "ok" if _find_sec32_tab_strip(self.property_window) else "error",
+                    "detail": "Sec. 32 tab strip detected" if _find_sec32_tab_strip(self.property_window) else "Sec. 32 tab strip missing",
+                }
+            )
+        if self.diagnostics:
+            for item in checks:
+                self.diagnostics.log_event("preflight_check", **item)
+        return checks
 
     def _find_exe(self) -> str | None:
         for p in TRICONVEY_EXE_CANDIDATES:
@@ -1856,6 +2170,7 @@ class TriConveyAgent:
                     if "property details" in w.window_text().lower():
                         self.app = Application(backend="uia").connect(handle=w.handle)
                         self.property_window = self.app.window(handle=w.handle)
+                        _invalidate_control_cache()
                         return True
                 except Exception:
                     continue
@@ -1876,10 +2191,12 @@ class TriConveyAgent:
             for _ in range(3):
                 _pw_mouse.scroll(wheel_dist=18)
                 time.sleep(0.15)
+            _invalidate_control_cache()
         except Exception:
             try:
                 window.type_keys("{PGUP}")
                 time.sleep(0.3)
+                _invalidate_control_cache()
             except Exception:
                 pass
 
@@ -1888,6 +2205,7 @@ class TriConveyAgent:
         try:
             _pw_mouse.scroll(wheel_dist=-notches)
             time.sleep(0.3)
+            _invalidate_control_cache()
         except Exception:
             pass
 
@@ -1992,6 +2310,7 @@ class TriConveyAgent:
             if _activate_sec32_tab(window, SEC32_TAB_ORDER[0]):
                 self._log("  Tab 'Sec. 32 (1)' active — calibrating positions ...")
                 self._scroll_to_top(window)
+                _warm_control_cache(window)
                 self._calibrate_position_delta(window)
             else:
                 self._log(
@@ -2028,6 +2347,7 @@ class TriConveyAgent:
                         failed_tabs.add(tab_name)
                     else:
                         self._scroll_to_top(window)
+                        _warm_control_cache(window)
 
             if tab_name in failed_tabs:
                 results.append(ActionResult(
@@ -2045,23 +2365,92 @@ class TriConveyAgent:
 
     def _execute_one(self, window, action: FormAction, *, fid: dict, dry_run: bool,
                      row_index: int = None) -> ActionResult:
+        started = time.perf_counter()
+        artifacts: list[str] = []
+        locator_strategy: str | None = None
+        verification_mode: str | None = None
+
+        def _capture(tag: str) -> None:
+            if not self.diagnostics:
+                return
+            shot = self.diagnostics.capture_screenshot(
+                f"{fid['tab']}_{action.question_id}_{tag}",
+                window=window,
+            )
+            if shot:
+                artifacts.append(shot)
+
+        def _finish(status: str, *, error: str | None = None,
+                    actual_value: Any | None = None) -> ActionResult:
+            duration_ms = int((time.perf_counter() - started) * 1000)
+            if self.diagnostics:
+                self.diagnostics.log_event(
+                    "action_result",
+                    question_id=action.question_id,
+                    field_id=action.field_id,
+                    status=status,
+                    error=error,
+                    actual_value=actual_value,
+                    locator_strategy=locator_strategy,
+                    verification_mode=verification_mode,
+                    duration_ms=duration_ms,
+                )
+            return ActionResult(
+                action=action,
+                status=status,
+                actual_value=actual_value,
+                error=error,
+                locator_strategy=locator_strategy,
+                verification_mode=verification_mode,
+                duration_ms=duration_ms,
+                artifacts=artifacts,
+            )
+
         if action.action == "skip":
-            return ActionResult(action=action, status="skipped")
+            return _finish("skipped")
         if action.needs_review_first:
-            return ActionResult(action=action, status="pending_review")
+            return _finish("pending_review")
 
         name = fid["name"]
         if name in ("unnamed", ""):
             name = (f"t{fid['top']}l{fid['left']}" if fid["top"] is not None else "?")
         short = (name[:55] + "...") if len(name) > 55 else name
+        critical = _is_critical_action(action, fid)
+        capture_write_artifacts = critical or action.action == "select_dropdown"
+        confidence_threshold = _write_confidence_threshold(action, fid)
+
+        if self.diagnostics:
+            self.diagnostics.log_event(
+                "action_start",
+                question_id=action.question_id,
+                field_id=action.field_id,
+                tab=fid.get("tab"),
+                control_type=fid.get("control_type"),
+                action=action.action,
+                payload_preview=_payload_preview(action.payload),
+                source_answer_confidence=action.source_answer_confidence,
+                confidence_threshold=confidence_threshold,
+                critical=critical,
+                row_index=row_index,
+            )
+
+        if action.source_answer_confidence < confidence_threshold:
+            msg = (
+                f"Blocked auto-write: source confidence {action.source_answer_confidence:.2f} "
+                f"below threshold {confidence_threshold:.2f}"
+            )
+            self._log(f"    REVIEW: {short} — {msg}")
+            _capture("blocked_confidence")
+            return _finish("pending_review", error=msg)
 
         if dry_run:
             self._log(f"    [DRY-RUN] {action.action:<14} {short}")
-            return ActionResult(action=action, status="skipped", error="(dry-run)")
+            return _finish("skipped", error="(dry-run)")
 
         # ── Outgoings grid: special path via X-order column scanner ──────────
         col, row = _outgoings_target_from_action(action, fid, row_index=row_index)
         if col and row and fid["control_type"] == "Edit":
+            locator_strategy = "edit:outgoings_grid"
             ctrl = _find_or_create_outgoings_cell(window, col, row)
             if ctrl is None:
                 # Scroll and try once more
@@ -2069,28 +2458,54 @@ class TriConveyAgent:
                 ctrl = _find_or_create_outgoings_cell(window, col, row)
             if ctrl is None:
                 self._log(f"    NOT FOUND (outgoings row {row} col {col}): {short}")
-                return ActionResult(
-                    action=action, status="failed",
-                    error=f"Outgoings cell not found: row={row} col={col}",
-                )
+                _capture("not_found")
+                return _finish("failed", error=f"Outgoings cell not found: row={row} col={col}")
             try:
+                if capture_write_artifacts:
+                    _capture("before")
                 _do_set_text(ctrl, action.payload or "", window)
                 vshort = str(action.payload or "")[:40]
                 self._log(f"    set_text  {short!r:50} = {vshort!r}  [outgoing r{row} {col}]")
             except Exception as exc:
                 self._log(f"    ERROR on {short}: {exc}")
-                return ActionResult(action=action, status="failed", error=str(exc))
+                _capture("write_error")
+                return _finish("failed", error=str(exc))
             time.sleep(FIELD_SETTLE_DELAY)
-            return ActionResult(action=action, status="filled")
+            actual = _read_back(ctrl, "set_text")
+            verification_mode = _verification_mode_for_action(action, locator_strategy)
+            if capture_write_artifacts:
+                _capture("after")
+            if action.expected_after is not None and actual != action.expected_after:
+                self._log(
+                    f"    MISMATCH {short}: "
+                    f"expected {action.expected_after!r} got {actual!r}"
+                )
+                _capture("mismatch")
+                return _finish(
+                    "failed",
+                    error=f"Verify: expected {action.expected_after!r} got {actual!r}",
+                    actual_value=actual,
+                )
+            return _finish("filled", actual_value=actual)
 
         # ── Standard path: label-based find + position fallback ─────────────
         MAX_SCROLL_ATTEMPTS = 8
-        ctrl = _find_ctrl(window, fid, delta=self._coord_delta, row_index=row_index)
+        ctrl, locator_strategy = _find_ctrl_with_strategy(
+            window,
+            fid,
+            delta=self._coord_delta,
+            row_index=row_index,
+        )
 
         if ctrl is None:
             for scroll_n in range(1, MAX_SCROLL_ATTEMPTS + 1):
                 self._scroll_down(window, notches=5)
-                ctrl = _find_ctrl(window, fid, delta=self._coord_delta, row_index=row_index)
+                ctrl, locator_strategy = _find_ctrl_with_strategy(
+                    window,
+                    fid,
+                    delta=self._coord_delta,
+                    row_index=row_index,
+                )
                 if ctrl is not None:
                     self._log(f"    (found after {scroll_n} scroll(s))")
                     break
@@ -2109,6 +2524,14 @@ class TriConveyAgent:
             except Exception:
                 pass
 
+        if locator_strategy and self.diagnostics:
+            self.diagnostics.log_event(
+                "locator_resolved",
+                question_id=action.question_id,
+                field_id=action.field_id,
+                locator_strategy=locator_strategy,
+            )
+
         if ctrl is None:
             pos_str = ""
             if fid["top"] is not None:
@@ -2121,12 +2544,21 @@ class TriConveyAgent:
                 )
             ri_str = f" row_index={row_index}" if row_index else ""
             self._log(f"    NOT FOUND: {short}{pos_str}{ri_str}")
-            return ActionResult(
-                action=action, status="failed",
-                error=f"Control not found: {action.field_id}",
+            _capture("not_found")
+            return _finish("failed", error=f"Control not found: {action.field_id}")
+
+        if critical and locator_strategy and locator_strategy.endswith("position_fallback"):
+            msg = (
+                "Blocked auto-write: critical field resolved only by position fallback; "
+                "human review required"
             )
+            self._log(f"    REVIEW: {short} — {msg}")
+            _capture("blocked_locator")
+            return _finish("pending_review", error=msg)
 
         try:
+            if capture_write_artifacts:
+                _capture("before")
             if action.action == "set_text":
                 _do_set_text(ctrl, action.payload or "", window)
                 self._log(f"    set_text  {short!r:50} = {str(action.payload)[:50]!r}")
@@ -2137,26 +2569,31 @@ class TriConveyAgent:
                 _do_select_dropdown(ctrl, str(action.payload or ""), window)
                 self._log(f"    dropdown  {short!r:50} = {str(action.payload)[:50]!r}")
             else:
-                return ActionResult(action=action, status="skipped",
-                                    error=f"Unknown: {action.action}")
+                return _finish("skipped", error=f"Unknown: {action.action}")
         except Exception as exc:
             self._log(f"    ERROR on {short}: {exc}")
-            return ActionResult(action=action, status="failed", error=str(exc))
+            _capture("write_error")
+            return _finish("failed", error=str(exc))
 
         time.sleep(FIELD_SETTLE_DELAY)
 
+        verification_mode = _verification_mode_for_action(action, locator_strategy)
         actual = _read_back(ctrl, action.action)
+        if capture_write_artifacts:
+            _capture("after")
         if action.expected_after is not None and actual != action.expected_after:
             self._log(
                 f"    MISMATCH {short}: "
                 f"expected {action.expected_after!r} got {actual!r}"
             )
-            return ActionResult(
-                action=action, status="failed", actual_value=actual,
+            _capture("mismatch")
+            return _finish(
+                "failed",
+                actual_value=actual,
                 error=f"Verify: expected {action.expected_after!r} got {actual!r}",
             )
 
-        return ActionResult(action=action, status="filled", actual_value=actual)
+        return _finish("filled", actual_value=actual)
 
 
 # ---------------------------------------------------------------------------
@@ -2186,6 +2623,7 @@ def execute_action_plan(
     dry_run: bool = False,
     triconvey_exe: str | None = None,
     review_gate_callback=None,
+    output_dir: str | Path | None = None,
 ) -> ExecutionReport:
     """Execute a FormActionPlan against the live TriConvey window.
 
@@ -2196,6 +2634,7 @@ def execute_action_plan(
     dry_run               : Log actions but make zero UI changes.
     triconvey_exe         : Override TriConvey executable path.
     review_gate_callback  : callable(list[FormAction]) -> bool.
+    output_dir            : Base output directory for execution artifacts.
     """
     if not dry_run and not _pywinauto_available:
         raise RuntimeError(
@@ -2204,7 +2643,12 @@ def execute_action_plan(
             "Preview with:  --dry-run"
         )
 
+    diagnostics = _ExecutionDiagnostics(output_dir)
     report = ExecutionReport(started_at=datetime.utcnow())
+    if diagnostics.base_dir is not None:
+        report.diagnostics_dir = str(diagnostics.base_dir)
+    if diagnostics.events_path is not None:
+        report.event_log_path = str(diagnostics.events_path)
 
     auto_actions   = [a for a in plan.actions if a.action != "skip" and not a.needs_review_first]
     review_actions = [a for a in plan.actions if a.needs_review_first]
@@ -2239,11 +2683,23 @@ def execute_action_plan(
     print(f"  Actions: {len(auto_actions)} auto | {len(review_actions)} review | {len(skip_actions)} skip")
     print("=" * 60)
 
-    agent = TriConveyAgent(triconvey_exe=triconvey_exe)
+    agent = TriConveyAgent(triconvey_exe=triconvey_exe, diagnostics=diagnostics)
+    report.session_fingerprint = agent.collect_session_fingerprint()
+    report.preflight_checks = agent.run_preflight_checks()
+    diagnostics.log_event(
+        "execution_start",
+        client_name=client_name,
+        dry_run=dry_run,
+        action_count=len(auto_actions),
+        review_count=len(review_actions),
+        skip_count=len(skip_actions),
+        session_fingerprint=report.session_fingerprint,
+    )
 
     if not dry_run:
         if not agent.launch_or_connect():
             err = "Could not connect to TriConvey."
+            diagnostics.capture_screenshot("connect_failure")
             for a in auto_actions:
                 report.results.append(ActionResult(action=a, status="failed", error=err))
             _finalise(report)
@@ -2252,6 +2708,7 @@ def execute_action_plan(
         if client_name:
             if not agent.find_and_open_matter(client_name):
                 err = f"Could not open matter for '{client_name}'."
+                diagnostics.capture_screenshot("matter_open_failure")
                 for a in auto_actions:
                     report.results.append(ActionResult(action=a, status="failed", error=err))
                 _finalise(report)
@@ -2260,15 +2717,33 @@ def execute_action_plan(
 
         if not agent.open_property_details():
             err = "Could not open Property Details."
+            diagnostics.capture_screenshot("property_details_open_failure")
             for a in auto_actions:
                 report.results.append(ActionResult(action=a, status="failed", error=err))
             _finalise(report)
             raise RuntimeError(err)
 
         time.sleep(1)
+        report.session_fingerprint = agent.collect_session_fingerprint()
+        report.preflight_checks = agent.run_preflight_checks()
+        if any(item.get("status") == "error" for item in report.preflight_checks):
+            err = "Execution preflight failed. Review execution artifacts before retrying."
+            diagnostics.capture_screenshot("preflight_failure", window=agent.property_window)
+            for a in auto_actions:
+                report.results.append(ActionResult(action=a, status="failed", error=err))
+            _finalise(report)
+            raise RuntimeError(err)
 
+    fill_started = time.perf_counter()
     fill_results = agent.fill_sec32_tabs(auto_actions, dry_run=dry_run)
     report.results.extend(fill_results)
+    report.metrics["fill_duration_ms"] = int((time.perf_counter() - fill_started) * 1000)
+    diagnostics.log_event(
+        "execution_complete",
+        total_results=len(report.results),
+        total_actions=len(auto_actions),
+        fill_duration_ms=report.metrics["fill_duration_ms"],
+    )
     _finalise(report)
     return report
 
@@ -2280,3 +2755,7 @@ def _finalise(report: ExecutionReport) -> None:
     report.total_failed         = sum(1 for r in report.results if r.status == "failed")
     report.total_skipped        = sum(1 for r in report.results if r.status == "skipped")
     report.total_pending_review = sum(1 for r in report.results if r.status == "pending_review")
+    report.metrics.setdefault(
+        "total_duration_ms",
+        int((report.completed_at - report.started_at).total_seconds() * 1000),
+    )

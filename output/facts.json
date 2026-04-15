@@ -15,7 +15,7 @@
           }
         ],
         "extractor": "rule:generic_doc_meta_v1",
-        "extracted_at": "2026-04-12T11:24:25.484887",
+        "extracted_at": "2026-04-15T10:32:04.522326",
         "notes": "auto-extracted from property_report document"
       }
     ],
@@ -34,7 +34,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.484887",
+        "extracted_at": "2026-04-15T10:32:04.522326",
         "notes": null
       },
       {
@@ -51,7 +51,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.836976",
+        "extracted_at": "2026-04-15T10:32:04.756593",
         "notes": null
       }
     ],
@@ -70,7 +70,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.491520",
+        "extracted_at": "2026-04-15T10:32:04.522326",
         "notes": null
       },
       {
@@ -87,7 +87,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.841976",
+        "extracted_at": "2026-04-15T10:32:04.756593",
         "notes": null
       }
     ],
@@ -106,7 +106,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.491520",
+        "extracted_at": "2026-04-15T10:32:04.522326",
         "notes": "Absence of BMO in VicPlan report"
       },
       {
@@ -123,7 +123,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.841976",
+        "extracted_at": "2026-04-15T10:32:04.756593",
         "notes": "Legally authoritative per s32C(b) Sale of Land Act 1962 (Vic)"
       },
       {
@@ -140,7 +140,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -159,7 +159,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.491520",
+        "extracted_at": "2026-04-15T10:32:04.522326",
         "notes": null
       },
       {
@@ -176,7 +176,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.841976",
+        "extracted_at": "2026-04-15T10:32:04.756593",
         "notes": null
       }
     ],
@@ -195,7 +195,7 @@
           }
         ],
         "extractor": "rule:generic_doc_meta_v1",
-        "extracted_at": "2026-04-12T11:24:25.835976",
+        "extracted_at": "2026-04-15T10:32:04.756593",
         "notes": "auto-extracted from planning_cert document"
       }
     ],
@@ -214,7 +214,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.835976",
+        "extracted_at": "2026-04-15T10:32:04.756593",
         "notes": "from planning property report heading"
       },
       {
@@ -231,7 +231,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       },
       {
@@ -248,7 +248,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": "title's 'Street Address' (additional info)"
       },
       {
@@ -265,7 +265,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": "title's 'Street Address' (additional info)"
       },
       {
@@ -282,7 +282,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": "from SRO land tax certificate"
       }
     ],
@@ -301,7 +301,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.835976",
+        "extracted_at": "2026-04-15T10:32:04.756593",
         "notes": null
       }
     ],
@@ -320,7 +320,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.841976",
+        "extracted_at": "2026-04-15T10:32:04.756593",
         "notes": null
       }
     ],
@@ -339,7 +339,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.841976",
+        "extracted_at": "2026-04-15T10:32:04.756593",
         "notes": null
       }
     ],
@@ -360,7 +360,7 @@
           }
         ],
         "extractor": "rule:planning_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:25.841976",
+        "extracted_at": "2026-04-15T10:32:04.756593",
         "notes": null
       }
     ],
@@ -379,7 +379,7 @@
           }
         ],
         "extractor": "rule:generic_doc_meta_v1",
-        "extracted_at": "2026-04-12T11:24:37.573875",
+        "extracted_at": "2026-04-15T10:32:16.993799",
         "notes": "auto-extracted from residential_tenancy_agreement document"
       }
     ],
@@ -398,7 +398,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -417,7 +417,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -436,7 +436,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -455,7 +455,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -474,7 +474,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -493,7 +493,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -512,7 +512,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -531,7 +531,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -550,7 +550,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -569,7 +569,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -588,7 +588,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -607,7 +607,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": "counted by occurrences of 'What is your title?' label"
       }
     ],
@@ -626,7 +626,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -645,7 +645,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -664,7 +664,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       },
       {
@@ -681,7 +681,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -698,7 +698,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.976173",
         "notes": null
       },
       {
@@ -715,7 +715,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": null
       }
     ],
@@ -734,7 +734,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       },
       {
@@ -751,7 +751,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -768,7 +768,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.976173",
         "notes": null
       },
       {
@@ -785,7 +785,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": null
       }
     ],
@@ -804,7 +804,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       },
       {
@@ -821,7 +821,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -838,7 +838,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       },
       {
@@ -855,7 +855,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": null
       }
     ],
@@ -874,7 +874,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       },
       {
@@ -891,7 +891,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -908,7 +908,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       },
       {
@@ -925,7 +925,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": null
       }
     ],
@@ -944,7 +944,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -963,7 +963,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -982,7 +982,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1001,7 +1001,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1020,7 +1020,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       },
       {
@@ -1037,7 +1037,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": "derived from Tax Payable = $975.00"
       }
     ],
@@ -1056,7 +1056,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.467375",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       },
       {
@@ -1073,7 +1073,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": "follows the main land tax payable status on this certificate"
       }
     ],
@@ -1092,7 +1092,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1111,7 +1111,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1130,7 +1130,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1149,7 +1149,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1168,7 +1168,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1187,7 +1187,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1206,7 +1206,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1225,7 +1225,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1244,7 +1244,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1263,7 +1263,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1282,7 +1282,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1301,7 +1301,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1320,7 +1320,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1339,7 +1339,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": "matched 'Mains Electricity' against 'Mains Electricity'"
       }
     ],
@@ -1358,7 +1358,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": "matched 'Mains Gas' against 'Mains Gas'"
       }
     ],
@@ -1377,7 +1377,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": "matched 'Mains Water' against 'Mains Water'"
       }
     ],
@@ -1396,7 +1396,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": "matched 'Mains Sewerage' against 'Mains Sewerage'"
       }
     ],
@@ -1415,7 +1415,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": "'Septic Tank' not listed under services-connected header"
       }
     ],
@@ -1434,7 +1434,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": "'Bottled Gas' not listed under services-connected header"
       }
     ],
@@ -1453,7 +1453,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": "'Tank Water' not listed under services-connected header"
       }
     ],
@@ -1472,7 +1472,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": "'Telephone' not listed under services-connected header"
       }
     ],
@@ -1491,7 +1491,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": "'NBN' not listed under services-connected header"
       }
     ],
@@ -1510,7 +1510,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": "vendor-disclosed insurance particulars (Certificate of Currency is authoritative)"
       }
     ],
@@ -1529,7 +1529,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": null
       }
     ],
@@ -1548,7 +1548,7 @@
           }
         ],
         "extractor": "rule:vendor_form_v2",
-        "extracted_at": "2026-04-12T11:24:38.468380",
+        "extracted_at": "2026-04-15T10:32:17.862951",
         "notes": "True = vendor wants s27 early deposit release"
       }
     ],
@@ -1567,7 +1567,7 @@
           }
         ],
         "extractor": "rule:generic_doc_meta_v1",
-        "extracted_at": "2026-04-12T11:24:38.478375",
+        "extracted_at": "2026-04-15T10:32:17.889748",
         "notes": "Plan reference (PS) from VIC_ Certificate - Copy of Plan - PS744342V.pdf"
       },
       {
@@ -1584,7 +1584,7 @@
           }
         ],
         "extractor": "rule:generic_doc_meta_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": "Plan reference (PS) from VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf"
       },
       {
@@ -1601,7 +1601,7 @@
           }
         ],
         "extractor": "rule:generic_doc_meta_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.976173",
         "notes": "Plan reference (PS) from VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf"
       }
     ],
@@ -1620,7 +1620,7 @@
           }
         ],
         "extractor": "rule:generic_doc_meta_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": "auto-extracted from vic_title document"
       },
       {
@@ -1637,7 +1637,7 @@
           }
         ],
         "extractor": "rule:generic_doc_meta_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.976173",
         "notes": "auto-extracted from vic_title document"
       }
     ],
@@ -1656,7 +1656,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -1673,7 +1673,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.976173",
         "notes": null
       }
     ],
@@ -1692,7 +1692,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -1709,7 +1709,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.976173",
         "notes": null
       }
     ],
@@ -1728,7 +1728,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -1745,7 +1745,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.976173",
         "notes": null
       }
     ],
@@ -1764,7 +1764,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -1781,7 +1781,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.976173",
         "notes": null
       }
     ],
@@ -1800,7 +1800,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -1817,7 +1817,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -1836,7 +1836,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -1853,7 +1853,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -1872,7 +1872,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -1889,7 +1889,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -1908,7 +1908,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -1925,7 +1925,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -1944,7 +1944,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -1961,7 +1961,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -1980,7 +1980,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -1997,7 +1997,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2016,7 +2016,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2033,7 +2033,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2052,7 +2052,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       }
     ],
@@ -2071,7 +2071,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       }
     ],
@@ -2090,7 +2090,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       }
     ],
@@ -2109,7 +2109,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       }
     ],
@@ -2128,7 +2128,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       }
     ],
@@ -2147,7 +2147,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       }
     ],
@@ -2166,7 +2166,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": "counted 1 entries inside REGISTERED PROPRIETOR block"
       }
     ],
@@ -2185,7 +2185,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2202,7 +2202,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2221,7 +2221,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2238,7 +2238,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2257,7 +2257,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2274,7 +2274,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2293,7 +2293,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2310,7 +2310,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2329,7 +2329,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2346,7 +2346,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2365,7 +2365,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2382,7 +2382,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2401,7 +2401,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2418,7 +2418,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2437,7 +2437,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.533995",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2454,7 +2454,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2473,7 +2473,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2490,7 +2490,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2509,7 +2509,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2526,7 +2526,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2545,7 +2545,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2562,7 +2562,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2581,7 +2581,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2598,7 +2598,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2617,7 +2617,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2634,7 +2634,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2653,7 +2653,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2670,7 +2670,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2689,7 +2689,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2706,7 +2706,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2725,7 +2725,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2742,7 +2742,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2761,7 +2761,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2778,7 +2778,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2797,7 +2797,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2814,7 +2814,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2833,7 +2833,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2850,7 +2850,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2869,7 +2869,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2886,7 +2886,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2905,7 +2905,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2922,7 +2922,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2941,7 +2941,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2958,7 +2958,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -2977,7 +2977,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -2994,7 +2994,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -3013,7 +3013,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -3030,7 +3030,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -3049,7 +3049,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.534925",
+        "extracted_at": "2026-04-15T10:32:17.952540",
         "notes": null
       },
       {
@@ -3066,7 +3066,7 @@
           }
         ],
         "extractor": "rule:vic_title_v1",
-        "extracted_at": "2026-04-12T11:24:38.553953",
+        "extracted_at": "2026-04-15T10:32:17.982576",
         "notes": null
       }
     ],
@@ -3085,7 +3085,7 @@
           }
         ],
         "extractor": "rule:generic_doc_meta_v1",
-        "extracted_at": "2026-04-12T11:24:38.573870",
+        "extracted_at": "2026-04-15T10:32:18.005526",
         "notes": "auto-extracted from council_building_approval_cert document"
       }
     ],
@@ -3104,7 +3104,7 @@
           }
         ],
         "extractor": "rule:generic_doc_meta_v1",
-        "extracted_at": "2026-04-12T11:24:38.617335",
+        "extracted_at": "2026-04-15T10:32:18.052613",
         "notes": "auto-extracted from council_land_info_cert document"
       }
     ],
@@ -3123,7 +3123,7 @@
           }
         ],
         "extractor": "rule:generic_doc_meta_v1",
-        "extracted_at": "2026-04-12T11:24:38.684439",
+        "extracted_at": "2026-04-15T10:32:18.112901",
         "notes": "auto-extracted from epa_cert document"
       }
     ],
@@ -3142,7 +3142,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.877336",
+        "extracted_at": "2026-04-15T10:32:18.273561",
         "notes": null
       }
     ],
@@ -3161,7 +3161,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.877336",
+        "extracted_at": "2026-04-15T10:32:18.273561",
         "notes": "first date pattern in document"
       }
     ],
@@ -3180,7 +3180,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": "SRO certificate issue date"
       }
     ],
@@ -3199,7 +3199,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": null
       }
     ],
@@ -3218,7 +3218,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": null
       }
     ],
@@ -3237,7 +3237,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": null
       }
     ],
@@ -3256,7 +3256,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": null
       }
     ],
@@ -3275,7 +3275,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.294386",
         "notes": null
       }
     ],
@@ -3294,7 +3294,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.297792",
         "notes": null
       }
     ],
@@ -3313,7 +3313,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.297792",
         "notes": null
       }
     ],
@@ -3332,7 +3332,7 @@
           }
         ],
         "extractor": "rule:land_tax_certificate_v1",
-        "extracted_at": "2026-04-12T11:24:38.879345",
+        "extracted_at": "2026-04-15T10:32:18.297792",
         "notes": "SRO is always the land tax authority in Victoria"
       }
     ],
@@ -3351,7 +3351,7 @@
           }
         ],
         "extractor": "rule:generic_doc_meta_v1",
-        "extracted_at": "2026-04-12T11:24:38.893898",
+        "extracted_at": "2026-04-15T10:32:18.319946",
         "notes": "auto-extracted from vicroads_cert document"
       }
     ],
@@ -3370,7 +3370,7 @@
           }
         ],
         "extractor": "rule:policy_defaults_v1",
-        "extracted_at": "2026-04-12T11:24:38.893898",
+        "extracted_at": "2026-04-15T10:32:18.323563",
         "notes": "Firm policy: 'Their amounts are:' is always checked in Tab 1"
       }
     ],
@@ -3389,7 +3389,7 @@
           }
         ],
         "extractor": "rule:policy_defaults_v1",
-        "extracted_at": "2026-04-12T11:24:38.893898",
+        "extracted_at": "2026-04-15T10:32:18.323563",
         "notes": "Firm policy: 'Are contained in attached certificate(s)' is always checked"
       }
     ],
@@ -3408,7 +3408,7 @@
           }
         ],
         "extractor": "rule:policy_defaults_v1",
-        "extracted_at": "2026-04-12T11:24:38.893898",
+        "extracted_at": "2026-04-15T10:32:18.323563",
         "notes": "Firm policy: 'Their total does not exceed' is always checked"
       }
     ],
@@ -3427,7 +3427,7 @@
           }
         ],
         "extractor": "rule:policy_defaults_v1",
-        "extracted_at": "2026-04-12T11:24:38.893898",
+        "extracted_at": "2026-04-15T10:32:18.323563",
         "notes": "Firm policy: 'Is in the attached copies of title documents' is always checked"
       }
     ],
@@ -3446,7 +3446,7 @@
           }
         ],
         "extractor": "rule:policy_defaults_v1",
-        "extracted_at": "2026-04-12T11:24:38.893898",
+        "extracted_at": "2026-04-15T10:32:18.323563",
         "notes": "Firm policy: 'Particulars of any existing failure to comply...' is always checked"
       }
     ],
@@ -3465,7 +3465,7 @@
           }
         ],
         "extractor": "rule:policy_defaults_v1",
-        "extracted_at": "2026-04-12T11:24:38.893898",
+        "extracted_at": "2026-04-15T10:32:18.323563",
         "notes": "Firm standard text for failure-to-comply disclosure"
       }
     ],
@@ -3484,7 +3484,7 @@
           }
         ],
         "extractor": "rule:policy_defaults_v1",
-        "extracted_at": "2026-04-12T11:24:38.893898",
+        "extracted_at": "2026-04-15T10:32:18.323563",
         "notes": "Firm policy: 'Certificate with required information attached' is always checked"
       }
     ],
@@ -3503,7 +3503,7 @@
           }
         ],
         "extractor": "rule:policy_defaults_v1",
-        "extracted_at": "2026-04-12T11:24:38.893898",
+        "extracted_at": "2026-04-15T10:32:18.323563",
         "notes": "Firm policy: Due Diligence Checklist field always says 'Is attached'"
       }
     ],
@@ -3522,7 +3522,7 @@
           }
         ],
         "extractor": "rule:policy_computed_v1",
-        "extracted_at": "2026-04-12T11:24:38.893898",
+        "extracted_at": "2026-04-15T10:32:18.324563",
         "notes": "Computed as council $2,500.00 + water $900.00 + land tax $975.00 + owners corporation $0.00 + $1,000.00 buffer = $5,375.00"
       }
     ],
@@ -3541,7 +3541,7 @@
           }
         ],
         "extractor": "rule:policy_computed_v1",
-        "extracted_at": "2026-04-12T11:24:38.898206",
+        "extracted_at": "2026-04-15T10:32:18.324563",
         "notes": "Auto-built from extracted document dates, names, and identifiers"
       }
     ]

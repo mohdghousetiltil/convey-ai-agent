@@ -19,6 +19,8 @@ class DocumentSignature(BaseModel):
 class Settings(BaseModel):
     app_name: str = "triconvey-agent"
     default_encoding: str = "utf-8"
+    execution_artifact_retention_hours: int = 72
+    execution_artifact_keep_latest: int = 10
     supported_pdf_suffixes: tuple[str, ...] = (".pdf",)
     supported_yaml_suffixes: tuple[str, ...] = (".yaml", ".yml")
     supported_input_suffixes: tuple[str, ...] = (".pdf", ".yaml", ".yml")

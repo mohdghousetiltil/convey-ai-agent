@@ -420,6 +420,10 @@ class ActionResult(BaseModel):
     actual_value: Any | None = None
     error: str | None = None
     attempts: int = 1
+    locator_strategy: str | None = None
+    verification_mode: str | None = None
+    duration_ms: int | None = None
+    artifacts: list[str] = Field(default_factory=list)
 
 
 class ExecutionReport(BaseModel):
@@ -433,3 +437,8 @@ class ExecutionReport(BaseModel):
     total_failed: int = 0
     total_skipped: int = 0
     total_pending_review: int = 0
+    diagnostics_dir: str | None = None
+    event_log_path: str | None = None
+    session_fingerprint: dict[str, Any] = Field(default_factory=dict)
+    preflight_checks: list[dict[str, Any]] = Field(default_factory=list)
+    metrics: dict[str, Any] = Field(default_factory=dict)

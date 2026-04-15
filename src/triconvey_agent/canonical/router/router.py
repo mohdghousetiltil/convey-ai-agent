@@ -11,6 +11,8 @@ answer_all_questions(questions, store, *, policy=None) -> dict[str, AnswerObject
 from __future__ import annotations
 
 import json
+import re
+from datetime import date, datetime
 from collections.abc import Iterable
 
 from triconvey_agent.ai.client import AIClient
@@ -30,6 +32,25 @@ from triconvey_agent.canonical.schemas import (
 # ---------------------------------------------------------------------------
 
 DEFAULT_REVIEW_THRESHOLD = 0.75
+_PLACEHOLDER_NUMBER_TOKENS = {
+    "",
+    "-",
+    "--",
+    "---",
+    "n/a",
+    "na",
+    "nil",
+    "none",
+    "not applicable",
+    "not available",
+    "##",
+}
+_DATE_PATTERNS = (
+    "%d/%m/%Y",
+    "%d-%m-%Y",
+    "%d.%m.%Y",
+    "%Y-%m-%d",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -162,6 +183,157 @@ def _coerce_ai_value(value: object, expected_type: str | None) -> object | None:
     if expected_type == "string":
         return str(value).strip() if str(value).strip() else None
     return value
+
+
+def _looks_like_amount_question(question: Question) -> bool:
+    token_space = " ".join(
+        part
+        for part in (
+            question.id,
+            question.label,
+            question.description or "",
+        )
+        if part
+    ).lower()
+    return (
+        " amount" in token_space
+        or "_amount" in token_space
+        or "total does not exceed" in token_space
+    )
+
+
+def _looks_like_date_question(question: Question) -> bool:
+    if question.expected_type == "date":
+        return True
+    token_space = " ".join(
+        part
+        for part in (
+            question.id,
+            question.label,
+            question.description or "",
+        )
+        if part
+    ).lower()
+    return " date" in token_space or token_space.endswith("_date")
+
+
+def _normalize_amount_value(value: object) -> tuple[object, list[str]]:
+    notes: list[str] = []
+    if value is None:
+        return None, notes
+    if isinstance(value, (int, float)):
+        return f"{float(value):.2f}", notes
+    if not isinstance(value, str):
+        return value, notes
+
+    cleaned = value.strip()
+    normalized = cleaned.lower()
+    if normalized in _PLACEHOLDER_NUMBER_TOKENS:
+        notes.append(f"normalized numeric placeholder {cleaned!r} to '0.00'")
+        return "0.00", notes
+    return value, notes
+
+
+def _normalize_date_value(value: object) -> tuple[object, list[str]]:
+    notes: list[str] = []
+    if value is None:
+        return None, notes
+    if isinstance(value, datetime):
+        return value.strftime("%d/%m/%Y"), notes
+    if isinstance(value, date):
+        return value.strftime("%d/%m/%Y"), notes
+    if not isinstance(value, str):
+        return value, notes
+
+    cleaned = value.strip()
+    if not cleaned:
+        return value, notes
+    if cleaned.lower() in _PLACEHOLDER_NUMBER_TOKENS:
+        return value, notes
+    for pattern in _DATE_PATTERNS:
+        try:
+            parsed = datetime.strptime(cleaned, pattern)
+            normalized = parsed.strftime("%d/%m/%Y")
+            if normalized != cleaned:
+                notes.append(f"normalized date {cleaned!r} to {normalized!r}")
+            return normalized, notes
+        except ValueError:
+            continue
+    return value, notes
+
+
+def _normalize_answer_value(question: Question, value: object) -> tuple[object, list[str]]:
+    normalized = value
+    notes: list[str] = []
+    if _looks_like_amount_question(question):
+        normalized, amount_notes = _normalize_amount_value(normalized)
+        notes.extend(amount_notes)
+    if _looks_like_date_question(question):
+        normalized, date_notes = _normalize_date_value(normalized)
+        notes.extend(date_notes)
+    return normalized, notes
+
+
+def _value_requires_semantic_recovery(question: Question, value: object) -> bool:
+    normalized_value, notes = _normalize_answer_value(question, value)
+    if notes:
+        return True
+    if value is None:
+        return True
+    if question.options and value not in question.options:
+        return True
+    if isinstance(normalized_value, str):
+        lowered = normalized_value.strip().lower()
+        if _looks_like_amount_question(question) and lowered in _PLACEHOLDER_NUMBER_TOKENS:
+            return True
+        if _looks_like_date_question(question) and not re.fullmatch(r"\d{2}/\d{2}/\d{4}", normalized_value.strip()):
+            return True
+    return False
+
+
+def _attach_router_hints(answer: AnswerObject, **hints: object) -> AnswerObject:
+    merged = dict(answer.presentation_hints)
+    router_hints = dict(merged.get("router", {}))
+    for key, value in hints.items():
+        if value is not None:
+            router_hints[key] = value
+    if router_hints:
+        merged["router"] = router_hints
+    return answer.model_copy(update={"presentation_hints": merged})
+
+
+def _postprocess_answer(question: Question, answer: AnswerObject) -> AnswerObject:
+    normalized_value, notes = _normalize_answer_value(question, answer.value)
+    if normalized_value == answer.value and not notes:
+        return answer
+    return _attach_router_hints(
+        answer.model_copy(update={"value": normalized_value}),
+        normalized_value=normalized_value,
+        normalizations=notes,
+    )
+
+
+def _should_try_grounded_ai_recovery(question: Question, answer: AnswerObject, ai_client: AIClient | None) -> bool:
+    if ai_client is None:
+        return False
+    if question.answer_strategy != AnswerStrategy.DETERMINISTIC:
+        return False
+    return answer.needs_review or _value_requires_semantic_recovery(question, answer.value)
+
+
+def _prefer_recovery_answer(base: AnswerObject, recovered: AnswerObject) -> bool:
+    if recovered.value is None:
+        return False
+    if not recovered.needs_review and base.needs_review:
+        return True
+    if base.value is None and recovered.value is not None and recovered.confidence >= base.confidence:
+        return True
+    if (
+        recovered.confidence > base.confidence
+        and len(recovered.review_reasons) < len(base.review_reasons)
+    ):
+        return True
+    return False
 
 
 def _build_grounded_ai_prompt(question: Question, facts: list[Fact]) -> str:
@@ -368,7 +540,9 @@ def _answer_deterministic(
             f"confidence {confidence:.2f} below review threshold {review_threshold:.2f}"
         )
 
-    return AnswerObject(
+    return _postprocess_answer(
+        question,
+        AnswerObject(
         question_id=question.id,
         question_label=question.label,
         value=value,
@@ -379,6 +553,7 @@ def _answer_deterministic(
         needs_review=needs_review,
         review_reasons=review_reasons,
         conflicts_seen=conflicts,
+        ),
     )
 
 
@@ -449,7 +624,9 @@ def _answer_grounded_ai(
                 f"unresolved conflict on '{c.path}': {c.reason or 'no reason'}"
             )
 
-    return AnswerObject(
+    return _postprocess_answer(
+        question,
+        AnswerObject(
         question_id=question.id,
         question_label=question.label,
         value=value,
@@ -461,6 +638,7 @@ def _answer_grounded_ai(
         review_reasons=review_reasons,
         conflicts_seen=conflicts,
         presentation_hints=hints,
+        ),
     )
 
 
@@ -543,7 +721,24 @@ def answer_question(
     # 2) Strategy dispatch
     strategy = question.answer_strategy
     if strategy == AnswerStrategy.DETERMINISTIC:
-        return _answer_deterministic(question, store, review_threshold=threshold)
+        answer = _answer_deterministic(question, store, review_threshold=threshold)
+        if _should_try_grounded_ai_recovery(question, answer, ai_client):
+            recovered = _answer_grounded_ai(
+                question,
+                store,
+                ai_client=ai_client,
+                review_threshold=threshold,
+            )
+            recovered = _attach_router_hints(
+                recovered,
+                recovered_from="deterministic",
+                baseline_value=answer.value,
+                baseline_needs_review=answer.needs_review,
+            )
+            if _prefer_recovery_answer(answer, recovered):
+                return recovered
+            answer = _attach_router_hints(answer, grounded_ai_recovery_attempted=True)
+        return answer
     if strategy == AnswerStrategy.HUMAN_REVIEW:
         return _answer_human_review(question, store)
     if strategy == AnswerStrategy.GROUNDED_AI:

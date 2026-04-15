@@ -13,7 +13,11 @@
       "status": "skipped",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -28,7 +32,11 @@
       "status": "skipped",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -43,7 +51,11 @@
       "status": "skipped",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -58,7 +70,11 @@
       "status": "skipped",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -73,7 +89,11 @@
       "status": "skipped",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -88,7 +108,11 @@
       "status": "skipped",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -103,7 +127,11 @@
       "status": "skipped",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -118,7 +146,11 @@
       "status": "skipped",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -133,7 +165,11 @@
       "status": "skipped",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -148,7 +184,11 @@
       "status": "skipped",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -163,7 +203,11 @@
       "status": "pending_review",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -178,7 +222,11 @@
       "status": "pending_review",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -193,7 +241,11 @@
       "status": "pending_review",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -208,7 +260,11 @@
       "status": "pending_review",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -223,7 +279,11 @@
       "status": "pending_review",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -238,7 +298,11 @@
       "status": "pending_review",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -253,7 +317,11 @@
       "status": "pending_review",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -268,7 +336,11 @@
       "status": "pending_review",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -283,7 +355,11 @@
       "status": "pending_review",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -298,7 +374,11 @@
       "status": "pending_review",
       "actual_value": null,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": null,
+      "verification_mode": null,
+      "duration_ms": null,
+      "artifacts": []
     },
     {
       "action": {
@@ -311,9 +391,16 @@
         "source_answer_confidence": 0.97
       },
       "status": "filled",
-      "actual_value": null,
+      "actual_value": "Ballarat council",
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "edit:outgoings_grid",
+      "verification_mode": "readback_semantic",
+      "duration_ms": 284,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.1_outgoing_1_authority_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.1_outgoing_1_authority_after.png"
+      ]
     },
     {
       "action": {
@@ -326,9 +413,16 @@
         "source_answer_confidence": 0.97
       },
       "status": "filled",
-      "actual_value": null,
+      "actual_value": "2,500.00",
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "edit:outgoings_grid",
+      "verification_mode": "readback_semantic",
+      "duration_ms": 276,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.1_outgoing_1_amount_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.1_outgoing_1_amount_after.png"
+      ]
     },
     {
       "action": {
@@ -341,9 +435,16 @@
         "source_answer_confidence": 0.97
       },
       "status": "filled",
-      "actual_value": null,
+      "actual_value": "Central highlands water",
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "edit:outgoings_grid",
+      "verification_mode": "readback_semantic",
+      "duration_ms": 283,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.1_outgoing_2_authority_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.1_outgoing_2_authority_after.png"
+      ]
     },
     {
       "action": {
@@ -356,9 +457,16 @@
         "source_answer_confidence": 0.97
       },
       "status": "filled",
-      "actual_value": null,
+      "actual_value": "900.00",
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "edit:outgoings_grid",
+      "verification_mode": "readback_semantic",
+      "duration_ms": 272,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.1_outgoing_2_amount_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.1_outgoing_2_amount_after.png"
+      ]
     },
     {
       "action": {
@@ -371,9 +479,16 @@
         "source_answer_confidence": 0.99
       },
       "status": "filled",
-      "actual_value": null,
+      "actual_value": "State Revenue Office",
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "edit:outgoings_grid",
+      "verification_mode": "readback_semantic",
+      "duration_ms": 289,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.1_outgoing_3_authority_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.1_outgoing_3_authority_after.png"
+      ]
     },
     {
       "action": {
@@ -386,9 +501,16 @@
         "source_answer_confidence": 0.97
       },
       "status": "filled",
-      "actual_value": null,
+      "actual_value": "975.00",
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "edit:outgoings_grid",
+      "verification_mode": "readback_semantic",
+      "duration_ms": 272,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.1_outgoing_3_amount_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.1_outgoing_3_amount_after.png"
+      ]
     },
     {
       "action": {
@@ -403,7 +525,11 @@
       "status": "filled",
       "actual_value": true,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 2643,
+      "artifacts": []
     },
     {
       "action": {
@@ -418,7 +544,11 @@
       "status": "filled",
       "actual_value": true,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 931,
+      "artifacts": []
     },
     {
       "action": {
@@ -433,7 +563,14 @@
       "status": "filled",
       "actual_value": true,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 944,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__policy_1_total_does_not_exceed_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__policy_1_total_does_not_exceed_after.png"
+      ]
     },
     {
       "action": {
@@ -448,7 +585,14 @@
       "status": "filled",
       "actual_value": "5,375.00",
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "edit:label_proximity",
+      "verification_mode": "readback_semantic",
+      "duration_ms": 362,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__policy_1_total_does_not_exceed_amount_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__policy_1_total_does_not_exceed_amount_after.png"
+      ]
     },
     {
       "action": {
@@ -463,7 +607,14 @@
       "status": "filled",
       "actual_value": true,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 1713,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.4_sale_subject_to_mortgage_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_1__sec32_1.4_sale_subject_to_mortgage_after.png"
+      ]
     },
     {
       "action": {
@@ -478,7 +629,11 @@
       "status": "filled",
       "actual_value": true,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 403,
+      "artifacts": []
     },
     {
       "action": {
@@ -493,7 +648,11 @@
       "status": "filled",
       "actual_value": true,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 2316,
+      "artifacts": []
     },
     {
       "action": {
@@ -508,7 +667,11 @@
       "status": "filled",
       "actual_value": "To the best of the Vendor's knowledge there is no existing failure to comply with the terms of any easements, covenants or other similar restriction.",
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "edit:label_proximity",
+      "verification_mode": "readback_semantic",
+      "duration_ms": 198,
+      "artifacts": []
     },
     {
       "action": {
@@ -523,7 +686,11 @@
       "status": "filled",
       "actual_value": true,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 378,
+      "artifacts": []
     },
     {
       "action": {
@@ -538,7 +705,11 @@
       "status": "filled",
       "actual_value": false,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 419,
+      "artifacts": []
     },
     {
       "action": {
@@ -553,7 +724,14 @@
       "status": "filled",
       "actual_value": "Ballarat",
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "edit:label_proximity",
+      "verification_mode": "readback_semantic",
+      "duration_ms": 282,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_2__sec32_3.4_planning_scheme_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_2__sec32_3.4_planning_scheme_after.png"
+      ]
     },
     {
       "action": {
@@ -568,7 +746,14 @@
       "status": "filled",
       "actual_value": "Ballarat Council",
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "edit:label_proximity",
+      "verification_mode": "readback_semantic",
+      "duration_ms": 292,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_2__sec32_3.4_responsible_authority_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_2__sec32_3.4_responsible_authority_after.png"
+      ]
     },
     {
       "action": {
@@ -583,7 +768,14 @@
       "status": "filled",
       "actual_value": "UGZ - Urban Growth Zone",
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "combobox:label_proximity",
+      "verification_mode": "selected_text",
+      "duration_ms": 726,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_2__sec32_3.4_planning_zone_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_2__sec32_3.4_planning_zone_after.png"
+      ]
     },
     {
       "action": {
@@ -598,7 +790,14 @@
       "status": "filled",
       "actual_value": "DCPO - Development Contributions Plan Overlay",
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "edit:label_proximity",
+      "verification_mode": "readback_semantic",
+      "duration_ms": 271,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_2__sec32_3.4_planning_overlay_name_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_2__sec32_3.4_planning_overlay_name_after.png"
+      ]
     },
     {
       "action": {
@@ -613,7 +812,11 @@
       "status": "filled",
       "actual_value": false,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 346,
+      "artifacts": []
     },
     {
       "action": {
@@ -628,7 +831,11 @@
       "status": "filled",
       "actual_value": false,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 394,
+      "artifacts": []
     },
     {
       "action": {
@@ -643,7 +850,11 @@
       "status": "filled",
       "actual_value": false,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 400,
+      "artifacts": []
     },
     {
       "action": {
@@ -658,7 +869,11 @@
       "status": "filled",
       "actual_value": false,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 404,
+      "artifacts": []
     },
     {
       "action": {
@@ -673,7 +888,11 @@
       "status": "filled",
       "actual_value": false,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 424,
+      "artifacts": []
     },
     {
       "action": {
@@ -688,7 +907,11 @@
       "status": "filled",
       "actual_value": true,
       "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 429,
+      "artifacts": []
     },
     {
       "action": {
@@ -703,22 +926,11 @@
       "status": "filled",
       "actual_value": false,
       "error": null,
-      "attempts": 1
-    },
-    {
-      "action": {
-        "question_id": "sec32_oc_inactive",
-        "field_id": "Sec. 32 (4)::CheckBox::Owners Corporation is inactive::t267l-1875",
-        "action": "set_checkbox",
-        "payload": true,
-        "expected_after": true,
-        "needs_review_first": false,
-        "source_answer_confidence": 0.97
-      },
-      "status": "filled",
-      "actual_value": true,
-      "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 394,
+      "artifacts": []
     },
     {
       "action": {
@@ -733,22 +945,11 @@
       "status": "filled",
       "actual_value": false,
       "error": null,
-      "attempts": 1
-    },
-    {
-      "action": {
-        "question_id": "policy_6_due_diligence",
-        "field_id": "Sec. 32 (6)::Edit::Are as follows:::t256l-1870",
-        "action": "set_text",
-        "payload": "Is attached",
-        "expected_after": "Is attached",
-        "needs_review_first": false,
-        "source_answer_confidence": 1.0
-      },
-      "status": "filled",
-      "actual_value": "Is attached",
-      "error": null,
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "checkbox:fuzzy_label",
+      "verification_mode": "toggle_state",
+      "duration_ms": 406,
+      "artifacts": []
     },
     {
       "action": {
@@ -763,14 +964,112 @@
       "status": "failed",
       "actual_value": "- Due Diligence Checklist",
       "error": "Verify: expected '- Due Diligence Checklist\\n- Register Search Statement Volume 11910 Folio 328 dated 20/03/2026\\n- Plan of Subdivision 744342V dated 20/03/2026\\n- Covenant PS744342V dated 29/08/2017\\n- Section 173 Agreement AM638353G dated 20/03/2026\\n- Ballarat council Building Approval Certificate dated 23/03/2026\\n- Ballarat council Land Information Certificate dated 24/03/2026\\n- Central highlands water Encumbrance Certificate dated ##\\n- State Revenue Office Land Tax Certificate dated 20/03/2026\\n- Detailed Property Report dated 26/03/2026\\n- Owner Builder Report ***\\n- Vic Roads Certificate dated 20/03/2026\\n- EPA Certificate dated 23/03/2026\\n- Residential Tenancy Agreement dated 10/04/2024' got '- Due Diligence Checklist'",
-      "attempts": 1
+      "attempts": 1,
+      "locator_strategy": "edit:label_proximity",
+      "verification_mode": "readback_semantic",
+      "duration_ms": 318,
+      "artifacts": [
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_6__policy_6_attachments_before.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_6__policy_6_attachments_after.png",
+        "output\\execution_artifacts\\20260414T024821Z\\screenshots\\Sec._32_6__policy_6_attachments_mismatch.png"
+      ]
     }
   ],
-  "started_at": "2026-04-12T11:24:40.145625",
-  "completed_at": "2026-04-12T11:26:17.433993",
-  "total_filled": 30,
+  "started_at": "2026-04-14T02:48:21.013649",
+  "completed_at": "2026-04-14T02:49:36.015702",
+  "total_filled": 28,
   "total_verified": 0,
   "total_failed": 1,
   "total_skipped": 10,
-  "total_pending_review": 10
+  "total_pending_review": 10,
+  "diagnostics_dir": "output\\execution_artifacts\\20260414T024821Z",
+  "event_log_path": "output\\execution_artifacts\\20260414T024821Z\\events.jsonl",
+  "session_fingerprint": {
+    "agent_version": "0.1.0",
+    "screen": {
+      "width": 1920,
+      "height": 1080,
+      "dpi": 96,
+      "scale_percent": 100.0,
+      "remote_session": false,
+      "session_name": "Console"
+    },
+    "foreground_title": "Property Details",
+    "triconvey_exe": null,
+    "main_window": {
+      "title": "triConvey",
+      "handle": 2034052,
+      "auto_id": "SmokeballMainWindow",
+      "class_name": "Window",
+      "control_type": "Window",
+      "bounds": {
+        "left": 141,
+        "top": 41,
+        "right": 1581,
+        "bottom": 794
+      }
+    },
+    "matter_window": {
+      "title": "Azarnikow, Scott - Sale - Speranza, Anthony",
+      "handle": 199112,
+      "auto_id": "Matter_Details_Window",
+      "class_name": "Window",
+      "control_type": "Window",
+      "bounds": {
+        "left": 1912,
+        "top": -8,
+        "right": 3848,
+        "bottom": 1040
+      }
+    },
+    "property_window": {
+      "title": "Property Details",
+      "handle": 1049288,
+      "auto_id": null,
+      "class_name": "Window",
+      "control_type": "Window",
+      "bounds": {
+        "left": 2466,
+        "top": 125,
+        "right": 3294,
+        "bottom": 877
+      }
+    }
+  },
+  "preflight_checks": [
+    {
+      "name": "screen_resolution",
+      "status": "ok",
+      "detail": "1920x1080"
+    },
+    {
+      "name": "display_scaling",
+      "status": "ok",
+      "detail": "100.0%"
+    },
+    {
+      "name": "remote_session",
+      "status": "ok",
+      "detail": "Console"
+    },
+    {
+      "name": "foreground_window",
+      "status": "ok",
+      "detail": "Property Details"
+    },
+    {
+      "name": "property_window_visible",
+      "status": "ok",
+      "detail": "Property Details"
+    },
+    {
+      "name": "sec32_tab_strip",
+      "status": "ok",
+      "detail": "Sec. 32 tab strip detected"
+    }
+  ],
+  "metrics": {
+    "fill_duration_ms": 40300,
+    "total_duration_ms": 75002
+  }
 }

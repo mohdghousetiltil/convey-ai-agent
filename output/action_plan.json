@@ -334,15 +334,6 @@
       "source_answer_confidence": 0.85
     },
     {
-      "question_id": "sec32_oc_inactive",
-      "field_id": "Sec. 32 (4)::CheckBox::Owners Corporation is inactive::t267l-1875",
-      "action": "set_checkbox",
-      "payload": true,
-      "expected_after": true,
-      "needs_review_first": false,
-      "source_answer_confidence": 0.97
-    },
-    {
       "question_id": "policy_4_oc_cert_attached",
       "field_id": "Sec. 32 (4)::CheckBox::Attached is a current owners corporation certificate issued according to s151 of the Owners Corporations Act::t213l-1875",
       "action": "set_checkbox",
@@ -350,15 +341,6 @@
       "expected_after": false,
       "needs_review_first": false,
       "source_answer_confidence": 0.97
-    },
-    {
-      "question_id": "policy_6_due_diligence",
-      "field_id": "Sec. 32 (6)::Edit::Are as follows:::t256l-1870",
-      "action": "set_text",
-      "payload": "Is attached",
-      "expected_after": "Is attached",
-      "needs_review_first": false,
-      "source_answer_confidence": 1.0
     },
     {
       "question_id": "policy_6_attachments",

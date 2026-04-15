@@ -283,6 +283,7 @@ def fill(
             dry_run=dry_run,
             triconvey_exe=triconvey_exe,
             review_gate_callback=_review_callback,
+            output_dir=out,
         )
     except RuntimeError as exc:
         console.print(f"[red]ERROR: {exc}[/red]")
@@ -309,6 +310,8 @@ def fill(
                 console.print(f"  - {r.action.field_id}: {r.error}")
 
     console.print(f"\n[green]execution_report.json written[/green]  -  {(out / 'execution_report.json').resolve()}")
+    if report.diagnostics_dir:
+        console.print(f"  [cyan]Execution artifacts:[/cyan] {report.diagnostics_dir}")
 
 
 # ---------------------------------------------------------------------------
@@ -378,6 +381,23 @@ def review(
                 continue
             t2.add_row(qid, q_tab, repr(ans.value))
         console.print(t2)
+
+
+# ---------------------------------------------------------------------------
+# COMMAND: ui
+# ---------------------------------------------------------------------------
+
+@app.command()
+def ui(
+    host: str = typer.Option("127.0.0.1", "--host", help="Host interface for the web UI."),
+    port: int = typer.Option(8765, "--port", help="Port for the web UI."),
+):
+    """Launch the backend API used by the review UI and autofill workflow."""
+    import uvicorn
+
+    console.rule("[bold cyan]TriConvey Agent Backend API[/bold cyan]")
+    console.print(f"  Launching API on [bold]http://{host}:{port}[/bold]")
+    uvicorn.run("triconvey_agent.backend.api:app", host=host, port=port, reload=False)
 
 
 # ---------------------------------------------------------------------------
@@ -516,9 +536,12 @@ def run(
                 dry_run=dry_run,
                 triconvey_exe=triconvey_exe,
                 review_gate_callback=_review_cb,
+                output_dir=out,
             )
             (out / "execution_report.json").write_text(report.model_dump_json(indent=2), encoding="utf-8")
             console.print(f"  Filled:  [green]{report.total_filled}[/green]  |  Failed: [red]{report.total_failed}[/red]  |  Pending review: [yellow]{report.total_pending_review}[/yellow]")
+            if report.diagnostics_dir:
+                console.print(f"  Execution artifacts: [cyan]{report.diagnostics_dir}[/cyan]")
         except RuntimeError as exc:
             console.print(f"  [red]Brain E error:[/red] {exc}")
     elif fill_form:

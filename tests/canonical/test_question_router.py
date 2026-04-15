@@ -245,6 +245,37 @@ class TestConfidenceThreshold(unittest.TestCase):
         self.assertTrue(any("below review threshold" in r for r in ans.review_reasons))
 
 
+class TestRouterNormalization(unittest.TestCase):
+    def test_amount_placeholder_is_normalized_to_zero(self):
+        store = FactStoreImpl()
+        store.add(make_fact("rates.land_tax.amount", "-"))
+        q = Question(
+            id="sec32_1.1_outgoing_3_amount",
+            tab="T",
+            label="1.1 Outgoing 3 - Amount",
+            fact_paths=["rates.land_tax.amount"],
+            expected_type="string",
+        )
+        ans = answer_question(q, store)
+        self.assertEqual(ans.value, "0.00")
+        self.assertFalse(ans.needs_review)
+        self.assertIn("router", ans.presentation_hints)
+
+    def test_date_value_is_normalized_to_dd_mm_yyyy(self):
+        store = FactStoreImpl()
+        store.add(make_fact("cert.issue_date", "2026-04-14"))
+        q = Question(
+            id="certificate_issue_date",
+            tab="T",
+            label="Certificate date",
+            fact_paths=["cert.issue_date"],
+            expected_type="date",
+        )
+        ans = answer_question(q, store)
+        self.assertEqual(ans.value, "14/04/2026")
+        self.assertFalse(ans.needs_review)
+
+
 class TestStrategyRouting(unittest.TestCase):
     def test_human_review_always_escalates(self):
         store = FactStoreImpl()
@@ -313,6 +344,26 @@ class TestStrategyRouting(unittest.TestCase):
         ans = answer_question(q, store, ai_client=ai_client)
         self.assertTrue(ans.needs_review)
         self.assertTrue(any("quote" in reason for reason in ans.review_reasons))
+
+    def test_grounded_ai_recovers_deterministic_option_mismatch(self):
+        store = FactStoreImpl()
+        store.add(make_fact("planning.zone", "GRZ", quote="GRZ"))
+        q = Question(
+            id="sec32_3.4_planning_zone",
+            tab="T",
+            label="Planning zone",
+            fact_paths=["planning.zone"],
+            expected_type="string",
+            options=["GRZ - General Residential Zone", "NRZ - Neighbourhood Residential Zone"],
+        )
+        ai_client = StubAIClient(
+            '{"value":"GRZ - General Residential Zone","confidence":0.93,"quote":"GRZ","source_file":"test.pdf","reason":"Abbreviation expands to the allowed option.","needs_review":false}'
+        )
+        ans = answer_question(q, store, ai_client=ai_client)
+        self.assertEqual(ans.value, "GRZ - General Residential Zone")
+        self.assertEqual(ans.answer_strategy, AnswerStrategy.GROUNDED_AI)
+        self.assertFalse(ans.needs_review)
+        self.assertEqual(ans.presentation_hints.get("router", {}).get("recovered_from"), "deterministic")
 
     def test_policy_default_without_policy_escalates(self):
         store = FactStoreImpl()
