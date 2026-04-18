@@ -18,6 +18,7 @@ import re
 
 from triconvey_agent.canonical.extractors import paths as P
 from triconvey_agent.canonical.schemas import Fact, Source
+from triconvey_agent.normalizers.display_names import normalize_council_display_name
 
 EXTRACTOR_NAME = "rule:policy_attachments_v1"
 
@@ -135,12 +136,7 @@ def _normalise_council_name(name: object | None) -> str | None:
     """
     if name is None:
         return None
-    s = {
-        "Ballarat City Council": "City of Ballarat",
-    }.get(str(name).strip(), str(name).strip())
-    if "council" not in s.lower():
-        s = s + " Council"
-    return s
+    return normalize_council_display_name(str(name).strip())
 
 
 def _norm_vol(vol: str) -> str:
@@ -413,6 +409,24 @@ def _section_173_entries(store) -> list[str]:
     return lines
 
 
+def _building_permit_entries(store) -> list[str]:
+    lines: list[str] = []
+    for idx in range(12):
+        kind = _get_value(store, P.building_permit(idx, "kind"))
+        if kind is None:
+            continue
+        if not bool(_get_value(store, P.building_permit(idx, "within_last_7_years"))):
+            continue
+        issue_date = _clean_date(str(_get_value(store, P.building_permit(idx, "issue_date")) or _REVIEW_PLACEHOLDER))
+        number = str(_get_value(store, P.building_permit(idx, "number")) or "").strip()
+        label = "Occupancy Permit" if str(kind) == "occupancy_permit" else "Building Permit"
+        if number:
+            lines.append(f"- {label} No. {number} dated {issue_date}")
+        else:
+            lines.append(f"- {label} dated {issue_date}")
+    return lines
+
+
 def build_attachments_text(store) -> str:  # type: ignore[type-arg]
     """Build the complete formatted attachment list text for Tab 6 field 13.
 
@@ -487,6 +501,7 @@ def build_attachments_text(store) -> str:  # type: ignore[type-arg]
     # 9. Detailed Property Report
     prop_report_date = _date_from_path(store, P.DOCS_PROPERTY_REPORT_DATE)
     lines.append(_line_with_optional_date("Detailed Property Report", prop_report_date))
+    lines.extend(_building_permit_entries(store))
 
     # 10. Owner Builder Report — always mention it; add the extracted date when present.
     owner_builder_date = _date_from_path(store, P.DOCS_OWNER_BUILDER_REPORT_DATE)

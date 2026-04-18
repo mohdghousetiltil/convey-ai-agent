@@ -166,8 +166,51 @@ def _build_attachments(store) -> list[Fact]:  # type: ignore[type-arg]
     ]
 
 
+def _building_permit_rows(store) -> list[dict[str, object]]:  # type: ignore[type-arg]
+    rows: list[dict[str, object]] = []
+    for idx in range(12):
+        kind = store.get_value(P.building_permit(idx, "kind"))
+        if kind is None:
+            continue
+        rows.append(
+            {
+                "kind": kind,
+                "number": store.get_value(P.building_permit(idx, "number")) or "",
+                "issue_date": store.get_value(P.building_permit(idx, "issue_date")) or "",
+                "description": store.get_value(P.building_permit(idx, "description")) or "",
+                "recent": bool(store.get_value(P.building_permit(idx, "within_last_7_years"))),
+            }
+        )
+    return [row for row in rows if row["recent"]]
+
+
+def _format_building_permit_line(row: dict[str, object]) -> str:
+    kind = str(row.get("kind") or "")
+    number = str(row.get("number") or "").strip()
+    issue_date = str(row.get("issue_date") or "").strip()
+    description = str(row.get("description") or "").strip()
+    prefix = "Occupancy Permit" if kind == "occupancy_permit" else "Building Permit"
+    number_part = f" No. {number}" if number else ""
+    if kind == "occupancy_permit":
+        return f"{prefix}{number_part} issued {issue_date} and are attached herewith for further information."
+    description_part = f" for {description}" if description else ""
+    return f"{prefix}{number_part} issued on {issue_date}{description_part}."
+
+
+def _compute_building_permit_disclosure(store) -> list[Fact]:  # type: ignore[type-arg]
+    rows = _building_permit_rows(store)
+    has_recent_building_permit = any(str(row.get("kind")) == "building_permit" for row in rows)
+    text = "\n".join(_format_building_permit_line(row) for row in rows)
+    note = "Auto-built from building permit / occupancy permit documents issued within the last 7 years."
+    return [
+        _make_fact(P.POLICY_TAB3_BUILDING_PERMITS_AS_FOLLOWS, has_recent_building_permit, note, confidence=0.94),
+        _make_fact(P.POLICY_TAB3_BUILDING_PERMITS_TEXT, text, note, confidence=0.92),
+    ]
+
+
 def inject_computed_facts(store) -> None:  # type: ignore[type-arg]
     """Run all computed-fact generators and inject results into the FactStore."""
     store.add_many(_verify_water_amounts(store))
     store.add_many(_compute_tab1_total_amount(store))
+    store.add_many(_compute_building_permit_disclosure(store))
     store.add_many(_build_attachments(store))

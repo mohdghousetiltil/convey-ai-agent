@@ -51,6 +51,7 @@
 }
 
 :root {
+    --app-font-scale: 1;
     --background: oklch(0.97 0.01 240); /* #f4f7f9 */
     --foreground: oklch(0.25 0.03 240); /* #1e293b */
     --card: oklch(1 0 0);
@@ -112,8 +113,13 @@
     }
   body {
     @apply bg-background text-foreground;
+    font-size: 16px;
+    line-height: 1.5;
     }
   html {
     @apply font-sans;
+    font-size: calc(16px * var(--app-font-scale));
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     }
 }

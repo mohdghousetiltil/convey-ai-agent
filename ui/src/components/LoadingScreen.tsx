@@ -1,12 +1,16 @@
 import React from "react";
 import { motion } from "motion/react";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface LoadingScreenProps {
   message?: string;
+  cancellable?: boolean;
+  onCancel?: () => void;
+  cancelLabel?: string;
 }
 
-export function LoadingScreen({ message }: LoadingScreenProps) {
+export function LoadingScreen({ message, cancellable = false, onCancel, cancelLabel = "Cancel" }: LoadingScreenProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
       <div className="relative">
@@ -29,6 +33,13 @@ export function LoadingScreen({ message }: LoadingScreenProps) {
       >
         <h2 className="text-xl font-bold text-slate-900">Analyzing Matter Documents</h2>
         <p className="text-slate-400 text-sm">{message ?? "Extracting Section 32 answers, review flags, and autofill actions..."}</p>
+        {cancellable && onCancel ? (
+          <div className="pt-4">
+            <Button variant="outline" onClick={onCancel}>
+              {cancelLabel}
+            </Button>
+          </div>
+        ) : null}
       </motion.div>
     </div>
   );

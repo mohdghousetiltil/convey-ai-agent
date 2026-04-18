@@ -327,9 +327,16 @@ def _extract_property_booleans(doc: Document, lines: list[str]) -> list[Fact]:
         ("Do you live at the property?",            P.PROPERTY_OWNER_OCCUPIED),
         ("Is the Property rented/leased?",          P.PROPERTY_LEASED),
         ("Is the property insured?",                P.PROPERTY_INSURED),
-        ("Is the land in a bushfire prone area?",   P.PLANNING_BUSHFIRE_PRONE),
+        ((
+            "Is the land in a bushfire prone area?",
+            "Is the property in a bushfire prone area?",
+            "Is the land/property in a bushfire prone area?",
+        ), P.PLANNING_BUSHFIRE_PRONE),
         ("Is the land affected by any planning overlays?", P.PLANNING_OVERLAYS_EXIST),
-        ("Is there access to the property by road?", P.PROPERTY_ROAD_ACCESS),
+        ((
+            "Is there access to the property by road?",
+            "Is there access to the property by road",
+        ), P.PROPERTY_ROAD_ACCESS),
         ("Do you pay land tax?",                    P.RATES_LAND_TAX_PAYABLE),
         ("Is any vacant land residential land tax payable?", P.RATES_VACANT_LAND_TAX_PAYABLE),
         ("Have any building permits been issued in the last 7 years?", P.BUILDING_PERMITS_LAST_7_YEARS),
@@ -343,13 +350,30 @@ def _extract_property_booleans(doc: Document, lines: list[str]) -> list[Fact]:
         ("Was a permit required for the water tank", P.BUILDING_PERMIT_REQUIRED_WATER_TANK),
         ("Is the Property held by a Trust?",        P.VENDOR_IS_TRUST),
     ]
-    for label, path in bools:
-        value, label_idx, value_end = _find_value_after_label(lines, label)
-        bool_value = _yes_no_to_bool(value)
-        if bool_value is None:
-            continue
-        facts.append(_make_fact(doc, path, bool_value, _quote_for(lines, label_idx, value_end)))
+    for label_or_labels, path in bools:
+        labels = label_or_labels if isinstance(label_or_labels, tuple) else (label_or_labels,)
+        for label in labels:
+            value, label_idx, value_end = _find_value_after_label(lines, label)
+            bool_value = _yes_no_to_bool(value)
+            if bool_value is None:
+                continue
+            facts.append(_make_fact(doc, path, bool_value, _quote_for(lines, label_idx, value_end)))
+            break
     return facts
+
+
+_NULL_LIKE = frozenset({
+    "-", "–", "—", "n/a", "na", "nil", "none", "not applicable",
+    "unknown", "tba", "tbc", "$-", "$0", "0",
+})
+
+_AMOUNT_NULL_LIKE = frozenset({
+    "-", "–", "—", "n/a", "na", "nil", "none", "not applicable",
+    "unknown", "tba", "tbc", "$-",
+})
+
+_AUTHORITY_PATHS = {P.RATES_COUNCIL_AUTHORITY, P.RATES_WATER_AUTHORITY}
+_AMOUNT_PATHS = {P.RATES_COUNCIL_ANNUAL, P.RATES_WATER_ANNUAL}
 
 
 def _extract_rates(doc: Document, lines: list[str]) -> list[Fact]:
@@ -364,7 +388,35 @@ def _extract_rates(doc: Document, lines: list[str]) -> list[Fact]:
         value, label_idx, value_end = _find_value_after_label(lines, label)
         if value is None:
             continue
-        facts.append(_make_fact(doc, path, value, _quote_for(lines, label_idx, value_end)))
+        norm = value.strip().lower()
+        quote = _quote_for(lines, label_idx, value_end)
+
+        if path in _AUTHORITY_PATHS:
+            # Skip null-like authority names — let authority documents provide them.
+            if norm in _NULL_LIKE:
+                continue
+            facts.append(_make_fact(doc, path, value, quote))
+
+        elif path in _AMOUNT_PATHS:
+            # Null-like amounts → $0.00 (property may have no water/council charges).
+            if norm in _AMOUNT_NULL_LIKE:
+                facts.append(
+                    _make_fact(
+                        doc, path, "$0.00", quote,
+                        confidence=0.80,
+                        notes=f"Vendor form shows '{value}' — treated as $0.00",
+                    )
+                )
+            else:
+                # Vendor form amounts are treated as annual (vendor's stated figure).
+                # Authority docs (confidence 0.95) will win over this (0.90) when present.
+                facts.append(
+                    _make_fact(
+                        doc, path, value, quote,
+                        confidence=0.90,
+                        notes="Vendor-stated annual amount; authority certificate preferred when available.",
+                    )
+                )
     return facts
 
 
@@ -522,12 +574,24 @@ def _extract_owners_corp(doc: Document, lines: list[str]) -> list[Fact]:
         value, label_idx, value_end = _find_value_after_label(lines, label)
         bv = _yes_no_to_bool(value)
         if bv is not None:
-            return [
+            facts = [
                 _make_fact(
                     doc, P.RATES_OWNERS_CORPORATION, bv,
                     _quote_for(lines, label_idx, value_end),
                 )
             ]
+            if bv:
+                facts.append(
+                    _make_fact(
+                        doc,
+                        P.RATES_OC_AUTHORITY_NAME,
+                        "Owners Corporation",
+                        _quote_for(lines, label_idx, value_end),
+                        confidence=0.72,
+                        notes="Vendor form confirms an active owners corporation",
+                    )
+                )
+            return facts
     return []
 
 

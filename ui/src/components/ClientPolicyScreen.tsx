@@ -31,9 +31,9 @@ export function ClientPolicyScreen({ onBack }: ClientPolicyScreenProps) {
               <Shield className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Active TriConvey Policy</h2>
+              <h2 className="text-lg font-bold text-slate-900">Active Convey Policy</h2>
               <p className="text-slate-500 text-sm mt-1">
-                This policy governs how TriConvey Agent analyzes, flags, and prepares Section 32 answers using your firm's legal standards.
+                This policy governs how Convey Agent analyzes, flags, and prepares Section 32 answers using your firm's legal standards.
               </p>
             </div>
           </div>

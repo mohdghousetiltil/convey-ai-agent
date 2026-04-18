@@ -51,6 +51,19 @@ DEFAULT_AUTHORITY_RULES: list[AuthorityRule] = [
     ),
     # ---- Rates: council, water, land tax ----
     AuthorityRule(
+        path_pattern="rates.council.authority_name",
+        authoritative_extractors=[
+            "rule:vendor_form*",
+            "ai:doc_extractor:vendor_form*",
+            "rule:council_rates_certificate*",
+            "ai:doc_extractor:council_rates_certificate*",
+            "rule:property_report*",
+            "rule:planning_certificate*",
+        ],
+        on_unresolved="review",
+        note="Council outgoing name should come from vendor disclosure first; council documents are fallback naming sources.",
+    ),
+    AuthorityRule(
         path_pattern="rates.council.*",
         authoritative_extractors=[
             "rule:council_rates_certificate*",
@@ -75,17 +88,24 @@ DEFAULT_AUTHORITY_RULES: list[AuthorityRule] = [
     AuthorityRule(
         path_pattern="rates.water.*",
         authoritative_extractors=[
-            # Vendor form is authoritative for annual amounts (it's the vendor's
-            # stated annual outgoing). The water cert is quarterly and must be
-            # annualised -- treat it as a fallback / verification source only.
-            "rule:vendor_form*",
-            "ai:doc_extractor:vendor_form*",
             "rule:water_authority_certificate*",
             "ai:doc_extractor:water_authority_certificate*",
+            "rule:vendor_form*",
+            "ai:doc_extractor:vendor_form*",
             "rule:property_report*",
         ],
         on_unresolved="review",
-        note="Vendor form annual amount wins; water cert quarterly x4 is a fallback/verification.",
+        note="Water authority certificate is preferred; vendor form is fallback.",
+    ),
+    AuthorityRule(
+        path_pattern="rates.owners_corporation.*",
+        authoritative_extractors=[
+            "rule:owners_corporation*",
+            "ai:doc_extractor:owners_corporation*",
+            "rule:vendor_form*",
+        ],
+        on_unresolved="review",
+        note="Owners corporation document is preferred over vendor fallback for OC outgoings.",
     ),
     AuthorityRule(
         path_pattern="rates.land_tax.*",

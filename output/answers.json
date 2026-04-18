@@ -2,7 +2,7 @@
   "sec32_1.1_outgoing_1_authority": {
     "question_id": "sec32_1.1_outgoing_1_authority",
     "question_label": "1.1 Outgoing 1 - Authority name",
-    "value": "Ballarat council",
+    "value": "Ballarat City Council",
     "confidence": 0.97,
     "answer_strategy": "deterministic",
     "facts_used": [
@@ -10,23 +10,99 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
-        "quote": "Council\nBallarat council",
+        "quote": "Council\nBallarat City Council",
         "quote_verified": true,
         "extractor_note": null
       }
     ],
     "needs_review": false,
     "review_reasons": [],
-    "conflicts_seen": [],
+    "conflicts_seen": [
+      {
+        "path": "rates.council.authority_name",
+        "facts": [
+          {
+            "path": "rates.council.authority_name",
+            "value": "Council\nBallarat City Council",
+            "confidence": 0.92,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Jessica Mann.pdf",
+                "page": 10,
+                "quote": "Council\nBallarat City Council",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:building_permit_v1",
+            "extracted_at": "2026-04-17T05:11:46.376147",
+            "notes": null
+          },
+          {
+            "path": "rates.council.authority_name",
+            "value": "Ballarat City Council",
+            "confidence": 0.97,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Jessica Mann.pdf",
+                "page": null,
+                "quote": "Council\nBallarat City Council",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:vendor_form_v2",
+            "extracted_at": "2026-04-17T05:11:48.867039",
+            "notes": null
+          },
+          {
+            "path": "rates.council.authority_name",
+            "value": "City of Ballarat",
+            "confidence": 0.92,
+            "sources": [
+              {
+                "file": "VIC_ Enquiry - Ballarat_ Building Approval 326 (1).pdf",
+                "page": null,
+                "quote": "City of Ballarat",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:building_permit_v1",
+            "extracted_at": "2026-04-17T05:11:49.921861",
+            "notes": null
+          }
+        ],
+        "resolution": "authority_wins",
+        "winning_fact": {
+          "path": "rates.council.authority_name",
+          "value": "Ballarat City Council",
+          "confidence": 0.97,
+          "sources": [
+            {
+              "file": "Vendor Instruction Form-Jessica Mann.pdf",
+              "page": null,
+              "quote": "Council\nBallarat City Council",
+              "quote_verified": true,
+              "extractor_note": null
+            }
+          ],
+          "extractor": "rule:vendor_form_v2",
+          "extracted_at": "2026-04-17T05:11:48.867039",
+          "notes": null
+        },
+        "reason": "extractor 'rule:vendor_form_v2' matched authoritative pattern 'rule:vendor_form*' for path 'rates.council.authority_name'"
+      }
+    ],
     "presentation_hints": {},
     "presentation_value": null
   },
   "sec32_1.1_outgoing_1_amount": {
     "question_id": "sec32_1.1_outgoing_1_amount",
     "question_label": "1.1 Outgoing 1 - Amount",
-    "value": "$2,500.00",
+    "value": "$1,297.59",
     "confidence": 0.97,
     "answer_strategy": "deterministic",
     "facts_used": [
@@ -34,9 +110,9 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
-        "quote": "Council rates\n$2,500.00",
+        "quote": "Council rates\n$1,297.59",
         "quote_verified": true,
         "extractor_note": null
       }
@@ -50,7 +126,7 @@
   "sec32_1.1_outgoing_2_authority": {
     "question_id": "sec32_1.1_outgoing_2_authority",
     "question_label": "1.1 Outgoing 2 - Authority name",
-    "value": "Central highlands water",
+    "value": "Central Highlands Water",
     "confidence": 0.97,
     "answer_strategy": "deterministic",
     "facts_used": [
@@ -58,9 +134,9 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
-        "quote": "Water Authority\nCentral highlands water",
+        "quote": "Water Authority\nCentral Highlands Water",
         "quote_verified": true,
         "extractor_note": null
       }
@@ -74,7 +150,7 @@
   "sec32_1.1_outgoing_2_amount": {
     "question_id": "sec32_1.1_outgoing_2_amount",
     "question_label": "1.1 Outgoing 2 - Amount",
-    "value": "$900.00",
+    "value": "$1,144.12",
     "confidence": 0.97,
     "answer_strategy": "deterministic",
     "facts_used": [
@@ -82,9 +158,9 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
-        "quote": "Water rates\n$900.00",
+        "quote": "Water rates\n$1,144.12",
         "quote_verified": true,
         "extractor_note": null
       }
@@ -106,7 +182,7 @@
     ],
     "evidence": [
       {
-        "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+        "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 6 JORDY PLACE, BROWN HILL VIC 3350.pdf",
         "page": null,
         "quote": "Property Clearance Certificate - Land Tax",
         "quote_verified": true,
@@ -122,7 +198,7 @@
   "sec32_1.1_outgoing_3_amount": {
     "question_id": "sec32_1.1_outgoing_3_amount",
     "question_label": "1.1 Outgoing 3 - Amount",
-    "value": "$975.00",
+    "value": "$500.00",
     "confidence": 0.97,
     "answer_strategy": "deterministic",
     "facts_used": [
@@ -130,9 +206,9 @@
     ],
     "evidence": [
       {
-        "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+        "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 6 JORDY PLACE, BROWN HILL VIC 3350.pdf",
         "page": null,
-        "quote": "Tax Payable $975.00",
+        "quote": "Tax Payable $500.00",
         "quote_verified": true,
         "extractor_note": null
       }
@@ -146,16 +222,134 @@
   "sec32_1.1_outgoing_4_authority": {
     "question_id": "sec32_1.1_outgoing_4_authority",
     "question_label": "1.1 Outgoing 4 - Authority name",
-    "value": null,
-    "confidence": 0.0,
+    "value": "Owners Corporation",
+    "confidence": 0.75,
     "answer_strategy": "deterministic",
-    "facts_used": [],
-    "evidence": [],
-    "needs_review": true,
-    "review_reasons": [
-      "no facts found at any of the question's fact_paths"
+    "facts_used": [
+      "rates.owners_corporation.authority_name"
     ],
-    "conflicts_seen": [],
+    "evidence": [
+      {
+        "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+        "page": null,
+        "quote": "Owners Corporation document detected",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [
+      {
+        "path": "rates.owners_corporation.authority_name",
+        "facts": [
+          {
+            "path": "rates.owners_corporation.authority_name",
+            "value": "Owners Corporation",
+            "confidence": 0.75,
+            "sources": [
+              {
+                "file": "lease - Jordy Place 6 - Scott - LA 03.06.2025.pdf",
+                "page": null,
+                "quote": "Owners Corporation document detected",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:owners_corporation_v1",
+            "extracted_at": "2026-04-17T05:11:45.737912",
+            "notes": "Fallback display authority for outgoing row 4"
+          },
+          {
+            "path": "rates.owners_corporation.authority_name",
+            "value": "Owners Corporation",
+            "confidence": 0.72,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Jessica Mann.pdf",
+                "page": null,
+                "quote": "If your property a\ufb00ected by an Owners Corporation otherwise known as Strata Insurance for common property.\nYes",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:vendor_form_v2",
+            "extracted_at": "2026-04-17T05:11:48.867039",
+            "notes": "Vendor form confirms an active owners corporation"
+          },
+          {
+            "path": "rates.owners_corporation.authority_name",
+            "value": "Owners Corporation",
+            "confidence": 0.75,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Jessica Mann.pdf",
+                "page": null,
+                "quote": "Owners Corporation document detected",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:owners_corporation_v1",
+            "extracted_at": "2026-04-17T05:11:48.867039",
+            "notes": "Fallback display authority for outgoing row 4"
+          },
+          {
+            "path": "rates.owners_corporation.authority_name",
+            "value": "Owners Corporation",
+            "confidence": 0.75,
+            "sources": [
+              {
+                "file": "VIC_ Certificate - Owners Corporation Basic Report - 1_PS723695D.pdf",
+                "page": null,
+                "quote": "Owners Corporation document detected",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:owners_corporation_v1",
+            "extracted_at": "2026-04-17T05:11:49.876537",
+            "notes": "Fallback display authority for outgoing row 4"
+          },
+          {
+            "path": "rates.owners_corporation.authority_name",
+            "value": "Owners Corporation",
+            "confidence": 0.75,
+            "sources": [
+              {
+                "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+                "page": null,
+                "quote": "Owners Corporation document detected",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:owners_corporation_v1",
+            "extracted_at": "2026-04-17T05:11:49.902720",
+            "notes": "Fallback display authority for outgoing row 4"
+          }
+        ],
+        "resolution": "authority_wins",
+        "winning_fact": {
+          "path": "rates.owners_corporation.authority_name",
+          "value": "Owners Corporation",
+          "confidence": 0.75,
+          "sources": [
+            {
+              "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+              "page": null,
+              "quote": "Owners Corporation document detected",
+              "quote_verified": true,
+              "extractor_note": null
+            }
+          ],
+          "extractor": "rule:owners_corporation_v1",
+          "extracted_at": "2026-04-17T05:11:49.902720",
+          "notes": "Fallback display authority for outgoing row 4"
+        },
+        "reason": "multiple authoritative facts agreed on the same value for path 'rates.owners_corporation.authority_name'"
+      }
+    ],
     "presentation_hints": {},
     "presentation_value": null
   },
@@ -265,7 +459,7 @@
   "policy_1_total_does_not_exceed_amount": {
     "question_id": "policy_1_total_does_not_exceed_amount",
     "question_label": "Their total does not exceed (amount)",
-    "value": "$5,375.00",
+    "value": "$3,941.71",
     "confidence": 0.95,
     "answer_strategy": "deterministic",
     "facts_used": [
@@ -275,9 +469,9 @@
       {
         "file": "policy_computed",
         "page": null,
-        "quote": "Computed as council $2,500.00 + water $900.00 + land tax $975.00 + owners corporation $0.00 + $1,000.00 buffer = $5,375.00",
+        "quote": "Computed as council $1,297.59 + water $1,144.12 + land tax $500.00 + owners corporation $0.00 + $1,000.00 buffer = $3,941.71",
         "quote_verified": true,
-        "extractor_note": "Computed as council $2,500.00 + water $900.00 + land tax $975.00 + owners corporation $0.00 + $1,000.00 buffer = $5,375.00"
+        "extractor_note": "Computed as council $1,297.59 + water $1,144.12 + land tax $500.00 + owners corporation $0.00 + $1,000.00 buffer = $3,941.71"
       }
     ],
     "needs_review": false,
@@ -329,75 +523,16 @@
     ],
     "evidence": [
       {
-        "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+        "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
         "page": null,
-        "quote": "ENCUMBRANCES, CAVEATS AND NOTICES --------------------------------- MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act",
+        "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE AV710068B 06/06/2022 COMMONWEALTH BANK OF AUSTRALIA Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act 1987 AL543380Q 08/12/2014 AGREEMENT Section 173 Planning and",
         "quote_verified": true,
         "extractor_note": null
       }
     ],
     "needs_review": false,
     "review_reasons": [],
-    "conflicts_seen": [
-      {
-        "path": "title.has_mortgage",
-        "facts": [
-          {
-            "path": "title.has_mortgage",
-            "value": true,
-            "confidence": 0.97,
-            "sources": [
-              {
-                "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
-                "page": null,
-                "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act 1987 AM638353G 17/03/2016 DIAGRAM",
-                "quote_verified": true,
-                "extractor_note": null
-              }
-            ],
-            "extractor": "rule:vic_title_v1",
-            "extracted_at": "2026-04-15T10:32:17.952540",
-            "notes": null
-          },
-          {
-            "path": "title.has_mortgage",
-            "value": true,
-            "confidence": 0.97,
-            "sources": [
-              {
-                "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
-                "page": null,
-                "quote": "ENCUMBRANCES, CAVEATS AND NOTICES --------------------------------- MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act",
-                "quote_verified": true,
-                "extractor_note": null
-              }
-            ],
-            "extractor": "rule:vic_title_v1",
-            "extracted_at": "2026-04-15T10:32:17.982576",
-            "notes": null
-          }
-        ],
-        "resolution": "authority_wins",
-        "winning_fact": {
-          "path": "title.has_mortgage",
-          "value": true,
-          "confidence": 0.97,
-          "sources": [
-            {
-              "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
-              "page": null,
-              "quote": "ENCUMBRANCES, CAVEATS AND NOTICES --------------------------------- MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act",
-              "quote_verified": true,
-              "extractor_note": null
-            }
-          ],
-          "extractor": "rule:vic_title_v1",
-          "extracted_at": "2026-04-15T10:32:17.982576",
-          "notes": null
-        },
-        "reason": "multiple authoritative facts agreed on the same value for path 'title.has_mortgage'"
-      }
-    ],
+    "conflicts_seen": [],
     "presentation_hints": {},
     "presentation_value": null
   },
@@ -412,9 +547,9 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
-        "quote": "Please provide full particulars of your insurance cover:\nRacv - policy number HOM707678946\nInsured for building - $516856\nPolicy renewal date 03/06/2026",
+        "quote": "Please provide full particulars of your insurance cover:\nBuilding insured under the Body Corporate\nAxis Underwriting Services Pty Ltd\nPolicy no. P-023524\nExpires 16 June 2026\nContents insured personally\nBudget Direct\nPolicy no. 116375750 08\nExpires 11 February 2027",
         "quote_verified": true,
         "extractor_note": null
       }
@@ -614,7 +749,7 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
         "quote": "Is there access to the property by road?\nYes",
         "quote_verified": true,
@@ -630,52 +765,42 @@
   "sec32_3.3_bushfire_prone": {
     "question_id": "sec32_3.3_bushfire_prone",
     "question_label": "3.3 Designated Bushfire Prone Area",
-    "value": null,
-    "confidence": 0.0,
+    "value": true,
+    "confidence": 0.98,
     "answer_strategy": "deterministic",
-    "facts_used": [],
-    "evidence": [],
-    "needs_review": true,
-    "review_reasons": [
-      "no facts found at any of the question's fact_paths",
-      "unresolved conflict on 'planning.bushfire_prone': no authoritative extractor matched and rule mandates human review for path pattern 'planning.*'"
+    "facts_used": [
+      "planning.bushfire_prone"
     ],
+    "evidence": [
+      {
+        "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
+        "page": null,
+        "quote": "land is in a bushfire prone area as required by section 32C (b) of the Sale",
+        "quote_verified": true,
+        "extractor_note": null
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
     "conflicts_seen": [
       {
         "path": "planning.bushfire_prone",
         "facts": [
           {
             "path": "planning.bushfire_prone",
-            "value": false,
-            "confidence": 0.98,
-            "sources": [
-              {
-                "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Detailed-Property-Report.pdf",
-                "page": null,
-                "quote": "No Bushfire Management Overlay (BMO) detected in planning property report",
-                "quote_verified": true,
-                "extractor_note": null
-              }
-            ],
-            "extractor": "rule:planning_certificate_v1",
-            "extracted_at": "2026-04-15T10:32:04.522326",
-            "notes": "Absence of BMO in VicPlan report"
-          },
-          {
-            "path": "planning.bushfire_prone",
             "value": true,
             "confidence": 0.98,
             "sources": [
               {
-                "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+                "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
                 "page": null,
-                "quote": "Bushfire Management Overlay (BMO) present \u2014 land is in bushfire prone area",
+                "quote": "land is in a bushfire prone area as required by section 32C (b) of the Sale",
                 "quote_verified": true,
                 "extractor_note": null
               }
             ],
             "extractor": "rule:planning_certificate_v1",
-            "extracted_at": "2026-04-15T10:32:04.756593",
+            "extracted_at": "2026-04-17T05:11:44.344292",
             "notes": "Legally authoritative per s32C(b) Sale of Land Act 1962 (Vic)"
           },
           {
@@ -684,7 +809,7 @@
             "confidence": 0.97,
             "sources": [
               {
-                "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+                "file": "Vendor Instruction Form-Jessica Mann.pdf",
                 "page": null,
                 "quote": "Is the land in a bushfire prone area?\nNo",
                 "quote_verified": true,
@@ -692,13 +817,29 @@
               }
             ],
             "extractor": "rule:vendor_form_v2",
-            "extracted_at": "2026-04-15T10:32:17.862951",
+            "extracted_at": "2026-04-17T05:11:48.866037",
             "notes": null
           }
         ],
-        "resolution": "review_required",
-        "winning_fact": null,
-        "reason": "no authoritative extractor matched and rule mandates human review for path pattern 'planning.*'"
+        "resolution": "authority_wins",
+        "winning_fact": {
+          "path": "planning.bushfire_prone",
+          "value": true,
+          "confidence": 0.98,
+          "sources": [
+            {
+              "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
+              "page": null,
+              "quote": "land is in a bushfire prone area as required by section 32C (b) of the Sale",
+              "quote_verified": true,
+              "extractor_note": null
+            }
+          ],
+          "extractor": "rule:planning_certificate_v1",
+          "extracted_at": "2026-04-17T05:11:44.344292",
+          "notes": "Legally authoritative per s32C(b) Sale of Land Act 1962 (Vic)"
+        },
+        "reason": "extractor 'rule:planning_certificate_v1' matched authoritative pattern 'rule:planning_certificate*' for path 'planning.bushfire_prone'"
       }
     ],
     "presentation_hints": {},
@@ -715,7 +856,7 @@
     ],
     "evidence": [
       {
-        "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+        "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
         "page": null,
         "quote": "Planning Scheme - Ballarat",
         "quote_verified": true,
@@ -739,9 +880,9 @@
     ],
     "evidence": [
       {
-        "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+        "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
         "page": null,
-        "quote": "BALLARAT 2062096",
+        "quote": "BALLARAT 2059691",
         "quote_verified": true,
         "extractor_note": null
       }
@@ -758,15 +899,15 @@
             "confidence": 0.95,
             "sources": [
               {
-                "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Detailed-Property-Report.pdf",
+                "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Detailed-Property-Report.pdf",
                 "page": null,
-                "quote": "BALLARAT 2062096",
+                "quote": "BALLARAT 2059691",
                 "quote_verified": true,
                 "extractor_note": null
               }
             ],
             "extractor": "rule:planning_certificate_v1",
-            "extracted_at": "2026-04-15T10:32:04.522326",
+            "extracted_at": "2026-04-17T05:11:44.125408",
             "notes": null
           },
           {
@@ -775,15 +916,15 @@
             "confidence": 0.95,
             "sources": [
               {
-                "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+                "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
                 "page": null,
-                "quote": "BALLARAT 2062096",
+                "quote": "BALLARAT 2059691",
                 "quote_verified": true,
                 "extractor_note": null
               }
             ],
             "extractor": "rule:planning_certificate_v1",
-            "extracted_at": "2026-04-15T10:32:04.756593",
+            "extracted_at": "2026-04-17T05:11:44.338877",
             "notes": null
           }
         ],
@@ -794,15 +935,15 @@
           "confidence": 0.95,
           "sources": [
             {
-              "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+              "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
               "page": null,
-              "quote": "BALLARAT 2062096",
+              "quote": "BALLARAT 2059691",
               "quote_verified": true,
               "extractor_note": null
             }
           ],
           "extractor": "rule:planning_certificate_v1",
-          "extracted_at": "2026-04-15T10:32:04.756593",
+          "extracted_at": "2026-04-17T05:11:44.338877",
           "notes": null
         },
         "reason": "multiple authoritative facts agreed on the same value for path 'planning.responsible_authority'"
@@ -814,7 +955,7 @@
   "sec32_3.4_planning_zone": {
     "question_id": "sec32_3.4_planning_zone",
     "question_label": "3.4 Planning zone (dropdown)",
-    "value": "UGZ - Urban Growth Zone",
+    "value": "GRZ - General Residential Zone",
     "confidence": 0.95,
     "answer_strategy": "deterministic",
     "facts_used": [
@@ -822,9 +963,9 @@
     ],
     "evidence": [
       {
-        "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+        "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
         "page": null,
-        "quote": "UTILITIES Southern Rural Water Central Highlands Water Outside drainage boundary POWERCOR View location in VicPlan Planning Zones URBAN GROWTH ZONE (UGZ)",
+        "quote": "UTILITIES Southern Rural Water Central Highlands Water Outside drainage boundary POWERCOR View location in VicPlan Planning Zones GENERAL RESIDENTIAL ZONE (GRZ)",
         "quote_verified": true,
         "extractor_note": null
       }
@@ -838,7 +979,7 @@
   "sec32_3.4_planning_overlay_name": {
     "question_id": "sec32_3.4_planning_overlay_name",
     "question_label": "3.4 Name of planning overlay",
-    "value": "DCPO - Development Contributions Plan Overlay",
+    "value": "HO - Heritage Overlay",
     "confidence": 0.95,
     "answer_strategy": "deterministic",
     "facts_used": [
@@ -846,9 +987,9 @@
     ],
     "evidence": [
       {
-        "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+        "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
         "page": null,
-        "quote": "DCPO",
+        "quote": "HO",
         "quote_verified": true,
         "extractor_note": null
       }
@@ -877,20 +1018,44 @@
   },
   "sec32_5.1_building_permits_text": {
     "question_id": "sec32_5.1_building_permits_text",
-    "question_label": "5. Building Permits - Are contained in attached certificate",
+    "question_label": "5. Building Permits - Are as follows",
     "value": false,
-    "confidence": 0.97,
+    "confidence": 0.94,
     "answer_strategy": "deterministic",
     "facts_used": [
-      "building.permits_last_7_years"
+      "policy.tab3.building_permits_as_follows"
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "policy_computed",
         "page": null,
-        "quote": "Have any building permits been issued in the last 7 years?\nNo",
+        "quote": "Auto-built from building permit / occupancy permit documents issued within the last 7 years.",
         "quote_verified": true,
-        "extractor_note": null
+        "extractor_note": "Auto-built from building permit / occupancy permit documents issued within the last 7 years."
+      }
+    ],
+    "needs_review": false,
+    "review_reasons": [],
+    "conflicts_seen": [],
+    "presentation_hints": {},
+    "presentation_value": null
+  },
+  "sec32_5.1_building_permits_details": {
+    "question_id": "sec32_5.1_building_permits_details",
+    "question_label": "5. Building Permits - Details",
+    "value": "",
+    "confidence": 0.92,
+    "answer_strategy": "deterministic",
+    "facts_used": [
+      "policy.tab3.building_permits_text"
+    ],
+    "evidence": [
+      {
+        "file": "policy_computed",
+        "page": null,
+        "quote": "Auto-built from building permit / occupancy permit documents issued within the last 7 years.",
+        "quote_verified": true,
+        "extractor_note": "Auto-built from building permit / occupancy permit documents issued within the last 7 years."
       }
     ],
     "needs_review": false,
@@ -910,7 +1075,7 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
         "quote": "Are the services listed connected to the land?\nMains Electricity",
         "quote_verified": true,
@@ -934,7 +1099,7 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
         "quote": "Are the services listed connected to the land?\nMains Gas",
         "quote_verified": true,
@@ -958,7 +1123,7 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
         "quote": "Are the services listed connected to the land?\nMains Water",
         "quote_verified": true,
@@ -982,7 +1147,7 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
         "quote": "Are the services listed connected to the land?\nMains Sewerage",
         "quote_verified": true,
@@ -1006,9 +1171,9 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
-        "quote": "Are the services listed connected to the land?\ni.e. Can the services be used at the date the purchaser signs the Contract? ('Connected' is not defined in the Sale\nof Land Act 1962 (Vic).\nA service is connected where, at the date the purchaser signs the contract of sale, the service can be used.)\nMains Electricity\nMains Gas\nMains Water\nMains Sewerage\nDemands, Disputes, Notices, Orders, Letters and/or Flyers\nServices Connected\nPrimary Production Use\nNo\nIf no, when was the property last used for farming or agricultural purposes.\n\u2013",
+        "quote": "Are the services listed connected to the land?\ni.e. Can the services be used at the date the purchaser signs the Contract? ('Connected' is not defined in the Sale\nof Land Act 1962 (Vic).\nA service is connected where, at the date the purchaser signs the contract of sale, the service can be used.)\nMains Electricity\nMains Gas\nMains Water\nMains Sewerage\nVOIP phone via NBN\nLand Line Telephone not connected but available\nServices Connected\nPrimary Production Use\nNo\nIf no, when was the property last used for farming or agricultural purposes.\n\u2013",
         "quote_verified": true,
         "extractor_note": null
       }
@@ -1030,7 +1195,7 @@
     ],
     "evidence": [
       {
-        "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+        "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
         "page": null,
         "quote": "GAIC not mentioned in planning property report",
         "quote_verified": true,
@@ -1049,7 +1214,7 @@
             "confidence": 0.85,
             "sources": [
               {
-                "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Detailed-Property-Report.pdf",
+                "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Detailed-Property-Report.pdf",
                 "page": null,
                 "quote": "GAIC not mentioned in planning property report",
                 "quote_verified": true,
@@ -1057,7 +1222,7 @@
               }
             ],
             "extractor": "rule:planning_certificate_v1",
-            "extracted_at": "2026-04-15T10:32:04.522326",
+            "extracted_at": "2026-04-17T05:11:44.130251",
             "notes": null
           },
           {
@@ -1066,7 +1231,7 @@
             "confidence": 0.85,
             "sources": [
               {
-                "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+                "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
                 "page": null,
                 "quote": "GAIC not mentioned in planning property report",
                 "quote_verified": true,
@@ -1074,7 +1239,7 @@
               }
             ],
             "extractor": "rule:planning_certificate_v1",
-            "extracted_at": "2026-04-15T10:32:04.756593",
+            "extracted_at": "2026-04-17T05:11:44.344292",
             "notes": null
           }
         ],
@@ -1085,7 +1250,7 @@
           "confidence": 0.85,
           "sources": [
             {
-              "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+              "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
               "page": null,
               "quote": "GAIC not mentioned in planning property report",
               "quote_verified": true,
@@ -1093,7 +1258,7 @@
             }
           ],
           "extractor": "rule:planning_certificate_v1",
-          "extracted_at": "2026-04-15T10:32:04.756593",
+          "extracted_at": "2026-04-17T05:11:44.344292",
           "notes": null
         },
         "reason": "multiple authoritative facts agreed on the same value for path 'planning.gaic_trigger'"
@@ -1105,48 +1270,268 @@
   "sec32_oc_inactive": {
     "question_id": "sec32_oc_inactive",
     "question_label": "Owners Corporation is inactive",
-    "value": true,
-    "confidence": 0.97,
+    "value": false,
+    "confidence": 0.92,
     "answer_strategy": "deterministic",
     "facts_used": [
       "rates.owners_corporation.exists"
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
         "page": null,
-        "quote": "If your property a\ufb00ected by an Owners Corporation otherwise known as Strata Insurance for common property.\nNo",
+        "quote": "Owners Corporation document detected",
         "quote_verified": true,
         "extractor_note": null
       }
     ],
     "needs_review": false,
     "review_reasons": [],
-    "conflicts_seen": [],
+    "conflicts_seen": [
+      {
+        "path": "rates.owners_corporation.exists",
+        "facts": [
+          {
+            "path": "rates.owners_corporation.exists",
+            "value": true,
+            "confidence": 0.92,
+            "sources": [
+              {
+                "file": "lease - Jordy Place 6 - Scott - LA 03.06.2025.pdf",
+                "page": null,
+                "quote": "Owners Corporation document detected",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:owners_corporation_v1",
+            "extracted_at": "2026-04-17T05:11:45.737912",
+            "notes": "OC certificate/basic report implies an active owners corporation"
+          },
+          {
+            "path": "rates.owners_corporation.exists",
+            "value": true,
+            "confidence": 0.97,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Jessica Mann.pdf",
+                "page": null,
+                "quote": "If your property a\ufb00ected by an Owners Corporation otherwise known as Strata Insurance for common property.\nYes",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:vendor_form_v2",
+            "extracted_at": "2026-04-17T05:11:48.867039",
+            "notes": null
+          },
+          {
+            "path": "rates.owners_corporation.exists",
+            "value": true,
+            "confidence": 0.92,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Jessica Mann.pdf",
+                "page": null,
+                "quote": "Owners Corporation document detected",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:owners_corporation_v1",
+            "extracted_at": "2026-04-17T05:11:48.867039",
+            "notes": "OC certificate/basic report implies an active owners corporation"
+          },
+          {
+            "path": "rates.owners_corporation.exists",
+            "value": true,
+            "confidence": 0.92,
+            "sources": [
+              {
+                "file": "VIC_ Certificate - Owners Corporation Basic Report - 1_PS723695D.pdf",
+                "page": null,
+                "quote": "Owners Corporation document detected",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:owners_corporation_v1",
+            "extracted_at": "2026-04-17T05:11:49.876537",
+            "notes": "OC certificate/basic report implies an active owners corporation"
+          },
+          {
+            "path": "rates.owners_corporation.exists",
+            "value": true,
+            "confidence": 0.92,
+            "sources": [
+              {
+                "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+                "page": null,
+                "quote": "Owners Corporation document detected",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:owners_corporation_v1",
+            "extracted_at": "2026-04-17T05:11:49.902720",
+            "notes": "OC certificate/basic report implies an active owners corporation"
+          }
+        ],
+        "resolution": "authority_wins",
+        "winning_fact": {
+          "path": "rates.owners_corporation.exists",
+          "value": true,
+          "confidence": 0.92,
+          "sources": [
+            {
+              "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+              "page": null,
+              "quote": "Owners Corporation document detected",
+              "quote_verified": true,
+              "extractor_note": null
+            }
+          ],
+          "extractor": "rule:owners_corporation_v1",
+          "extracted_at": "2026-04-17T05:11:49.902720",
+          "notes": "OC certificate/basic report implies an active owners corporation"
+        },
+        "reason": "multiple authoritative facts agreed on the same value for path 'rates.owners_corporation.exists'"
+      }
+    ],
     "presentation_hints": {},
     "presentation_value": null
   },
   "policy_4_oc_cert_attached": {
     "question_id": "policy_4_oc_cert_attached",
     "question_label": "Attached is a current owners corporation certificate (s151)",
-    "value": false,
-    "confidence": 0.97,
+    "value": true,
+    "confidence": 0.92,
     "answer_strategy": "deterministic",
     "facts_used": [
       "rates.owners_corporation.exists"
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
         "page": null,
-        "quote": "If your property a\ufb00ected by an Owners Corporation otherwise known as Strata Insurance for common property.\nNo",
+        "quote": "Owners Corporation document detected",
         "quote_verified": true,
         "extractor_note": null
       }
     ],
     "needs_review": false,
     "review_reasons": [],
-    "conflicts_seen": [],
+    "conflicts_seen": [
+      {
+        "path": "rates.owners_corporation.exists",
+        "facts": [
+          {
+            "path": "rates.owners_corporation.exists",
+            "value": true,
+            "confidence": 0.92,
+            "sources": [
+              {
+                "file": "lease - Jordy Place 6 - Scott - LA 03.06.2025.pdf",
+                "page": null,
+                "quote": "Owners Corporation document detected",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:owners_corporation_v1",
+            "extracted_at": "2026-04-17T05:11:45.737912",
+            "notes": "OC certificate/basic report implies an active owners corporation"
+          },
+          {
+            "path": "rates.owners_corporation.exists",
+            "value": true,
+            "confidence": 0.97,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Jessica Mann.pdf",
+                "page": null,
+                "quote": "If your property a\ufb00ected by an Owners Corporation otherwise known as Strata Insurance for common property.\nYes",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:vendor_form_v2",
+            "extracted_at": "2026-04-17T05:11:48.867039",
+            "notes": null
+          },
+          {
+            "path": "rates.owners_corporation.exists",
+            "value": true,
+            "confidence": 0.92,
+            "sources": [
+              {
+                "file": "Vendor Instruction Form-Jessica Mann.pdf",
+                "page": null,
+                "quote": "Owners Corporation document detected",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:owners_corporation_v1",
+            "extracted_at": "2026-04-17T05:11:48.867039",
+            "notes": "OC certificate/basic report implies an active owners corporation"
+          },
+          {
+            "path": "rates.owners_corporation.exists",
+            "value": true,
+            "confidence": 0.92,
+            "sources": [
+              {
+                "file": "VIC_ Certificate - Owners Corporation Basic Report - 1_PS723695D.pdf",
+                "page": null,
+                "quote": "Owners Corporation document detected",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:owners_corporation_v1",
+            "extracted_at": "2026-04-17T05:11:49.876537",
+            "notes": "OC certificate/basic report implies an active owners corporation"
+          },
+          {
+            "path": "rates.owners_corporation.exists",
+            "value": true,
+            "confidence": 0.92,
+            "sources": [
+              {
+                "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+                "page": null,
+                "quote": "Owners Corporation document detected",
+                "quote_verified": true,
+                "extractor_note": null
+              }
+            ],
+            "extractor": "rule:owners_corporation_v1",
+            "extracted_at": "2026-04-17T05:11:49.902720",
+            "notes": "OC certificate/basic report implies an active owners corporation"
+          }
+        ],
+        "resolution": "authority_wins",
+        "winning_fact": {
+          "path": "rates.owners_corporation.exists",
+          "value": true,
+          "confidence": 0.92,
+          "sources": [
+            {
+              "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+              "page": null,
+              "quote": "Owners Corporation document detected",
+              "quote_verified": true,
+              "extractor_note": null
+            }
+          ],
+          "extractor": "rule:owners_corporation_v1",
+          "extracted_at": "2026-04-17T05:11:49.902720",
+          "notes": "OC certificate/basic report implies an active owners corporation"
+        },
+        "reason": "multiple authoritative facts agreed on the same value for path 'rates.owners_corporation.exists'"
+      }
+    ],
     "presentation_hints": {},
     "presentation_value": null
   },
@@ -1161,7 +1546,7 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
         "quote": "Do you live at the property?\nNo",
         "quote_verified": true,
@@ -1185,7 +1570,7 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
         "quote": "Is the Property rented/leased?\nYes",
         "quote_verified": true,
@@ -1209,7 +1594,7 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
         "quote": "Is the Property held by a Trust?\nNo",
         "quote_verified": true,
@@ -1233,7 +1618,7 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
         "quote": "Have any building permits been issued in the last 7 years?\nNo",
         "quote_verified": true,
@@ -1257,7 +1642,7 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
         "quote": "Has there been any building works/structures undertaken in the last 7 years?\nNo",
         "quote_verified": true,
@@ -1281,7 +1666,7 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
         "quote": "Have you done any works without obtaining a permit?\nNo",
         "quote_verified": true,
@@ -1305,7 +1690,7 @@
     ],
     "evidence": [
       {
-        "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+        "file": "Vendor Instruction Form-Jessica Mann.pdf",
         "page": null,
         "quote": "Does the property have a water tank?\nYes",
         "quote_verified": true,
@@ -1329,9 +1714,9 @@
     ],
     "evidence": [
       {
-        "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+        "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 6 JORDY PLACE, BROWN HILL VIC 3350.pdf",
         "page": null,
-        "quote": "Tax Payable $975.00",
+        "quote": "Tax Payable $500.00",
         "quote_verified": true,
         "extractor_note": null
       }
@@ -1348,7 +1733,7 @@
             "confidence": 0.97,
             "sources": [
               {
-                "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+                "file": "Vendor Instruction Form-Jessica Mann.pdf",
                 "page": null,
                 "quote": "Do you pay land tax?\nYes",
                 "quote_verified": true,
@@ -1356,7 +1741,7 @@
               }
             ],
             "extractor": "rule:vendor_form_v2",
-            "extracted_at": "2026-04-15T10:32:17.862951",
+            "extracted_at": "2026-04-17T05:11:48.866037",
             "notes": null
           },
           {
@@ -1365,16 +1750,16 @@
             "confidence": 0.99,
             "sources": [
               {
-                "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+                "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 6 JORDY PLACE, BROWN HILL VIC 3350.pdf",
                 "page": null,
-                "quote": "Tax Payable $975.00",
+                "quote": "Tax Payable $500.00",
                 "quote_verified": true,
                 "extractor_note": null
               }
             ],
             "extractor": "rule:land_tax_certificate_v1",
-            "extracted_at": "2026-04-15T10:32:18.294386",
-            "notes": "derived from Tax Payable = $975.00"
+            "extracted_at": "2026-04-17T05:11:50.100164",
+            "notes": "derived from Tax Payable = $500.00"
           }
         ],
         "resolution": "authority_wins",
@@ -1384,16 +1769,16 @@
           "confidence": 0.99,
           "sources": [
             {
-              "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - 11910_328 - 6 GOYIN STREET, BONSHAW VIC 3352.pdf",
+              "file": "VIC_ Enquiry - State Revenue Office_ Land Tax Certificate - Unknown - 6 JORDY PLACE, BROWN HILL VIC 3350.pdf",
               "page": null,
-              "quote": "Tax Payable $975.00",
+              "quote": "Tax Payable $500.00",
               "quote_verified": true,
               "extractor_note": null
             }
           ],
           "extractor": "rule:land_tax_certificate_v1",
-          "extracted_at": "2026-04-15T10:32:18.294386",
-          "notes": "derived from Tax Payable = $975.00"
+          "extracted_at": "2026-04-17T05:11:50.100164",
+          "notes": "derived from Tax Payable = $500.00"
         },
         "reason": "extractor 'rule:land_tax_certificate_v1' matched authoritative pattern 'rule:land_tax_certificate*' for path 'rates.land_tax.payable'"
       }
@@ -1424,7 +1809,7 @@
             "confidence": 0.7,
             "sources": [
               {
-                "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Detailed-Property-Report.pdf",
+                "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Detailed-Property-Report.pdf",
                 "page": null,
                 "quote": "no overlay heading found",
                 "quote_verified": true,
@@ -1432,7 +1817,7 @@
               }
             ],
             "extractor": "rule:planning_certificate_v1",
-            "extracted_at": "2026-04-15T10:32:04.522326",
+            "extracted_at": "2026-04-17T05:11:44.128936",
             "notes": null
           },
           {
@@ -1441,15 +1826,15 @@
             "confidence": 0.95,
             "sources": [
               {
-                "file": "6-Goyin-Street-Bonshaw-(ID424137496)-Vicplan-Planning-Property-Report.pdf",
+                "file": "6-Jordy-Place-Brown-Hill-(ID420961403)-Vicplan-Planning-Property-Report.pdf",
                 "page": null,
-                "quote": "DCPO",
+                "quote": "HO",
                 "quote_verified": true,
                 "extractor_note": null
               }
             ],
             "extractor": "rule:planning_certificate_v1",
-            "extracted_at": "2026-04-15T10:32:04.756593",
+            "extracted_at": "2026-04-17T05:11:44.343295",
             "notes": null
           }
         ],
@@ -1504,75 +1889,16 @@
     ],
     "evidence": [
       {
-        "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
+        "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
         "page": null,
-        "quote": "ENCUMBRANCES, CAVEATS AND NOTICES --------------------------------- MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act",
+        "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE AV710068B 06/06/2022 COMMONWEALTH BANK OF AUSTRALIA Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act 1987 AL543380Q 08/12/2014 AGREEMENT Section 173 Planning and",
         "quote_verified": true,
         "extractor_note": null
       }
     ],
     "needs_review": false,
     "review_reasons": [],
-    "conflicts_seen": [
-      {
-        "path": "title.has_mortgage",
-        "facts": [
-          {
-            "path": "title.has_mortgage",
-            "value": true,
-            "confidence": 0.97,
-            "sources": [
-              {
-                "file": "VIC_ Certificate - Register Search Statement (Copy of Title) - Volume 11910 Folio 328.pdf",
-                "page": null,
-                "quote": "ENCUMBRANCES, CAVEATS AND NOTICES MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act 1987 AM638353G 17/03/2016 DIAGRAM",
-                "quote_verified": true,
-                "extractor_note": null
-              }
-            ],
-            "extractor": "rule:vic_title_v1",
-            "extracted_at": "2026-04-15T10:32:17.952540",
-            "notes": null
-          },
-          {
-            "path": "title.has_mortgage",
-            "value": true,
-            "confidence": 0.97,
-            "sources": [
-              {
-                "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
-                "page": null,
-                "quote": "ENCUMBRANCES, CAVEATS AND NOTICES --------------------------------- MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act",
-                "quote_verified": true,
-                "extractor_note": null
-              }
-            ],
-            "extractor": "rule:vic_title_v1",
-            "extracted_at": "2026-04-15T10:32:17.982576",
-            "notes": null
-          }
-        ],
-        "resolution": "authority_wins",
-        "winning_fact": {
-          "path": "title.has_mortgage",
-          "value": true,
-          "confidence": 0.97,
-          "sources": [
-            {
-              "file": "VIC_ Certificate - Register Search Statement - Volume 11910 Folio 328.pdf",
-              "page": null,
-              "quote": "ENCUMBRANCES, CAVEATS AND NOTICES --------------------------------- MORTGAGE AU278713M 27/04/2021 WESTPAC BANKING CORPORATION COVENANT PS744342V 29/08/2017 Any encumbrances created by Section 98 Transfer of Land Act 1958 or Section 24 Subdivision Act 1988 and any other encumbrances shown or entered on the plan set out under DIAGRAM LOCATION below. AGREEMENT Section 173 Planning and Environment Act",
-              "quote_verified": true,
-              "extractor_note": null
-            }
-          ],
-          "extractor": "rule:vic_title_v1",
-          "extracted_at": "2026-04-15T10:32:17.982576",
-          "notes": null
-        },
-        "reason": "multiple authoritative facts agreed on the same value for path 'title.has_mortgage'"
-      }
-    ],
+    "conflicts_seen": [],
     "presentation_hints": {},
     "presentation_value": null
   },
@@ -1603,7 +1929,7 @@
   "policy_6_attachments": {
     "question_id": "policy_6_attachments",
     "question_label": "13. Attachments list",
-    "value": "- Due Diligence Checklist\n- Register Search Statement Volume 11910 Folio 328 dated 20/03/2026\n- Plan of Subdivision 744342V dated 20/03/2026\n- Covenant PS744342V dated 29/08/2017\n- Section 173 Agreement AM638353G dated 20/03/2026\n- Ballarat council Building Approval Certificate dated 23/03/2026\n- Ballarat council Land Information Certificate dated 24/03/2026\n- Central highlands water Encumbrance Certificate dated ##\n- State Revenue Office Land Tax Certificate dated 20/03/2026\n- Detailed Property Report dated 26/03/2026\n- Owner Builder Report ***\n- Vic Roads Certificate dated 20/03/2026\n- EPA Certificate dated 23/03/2026\n- Residential Tenancy Agreement dated 10/04/2024",
+    "value": "- Due Diligence Checklist\n- Register Search Statement Volume 11586 Folio 024 dated 31/03/2026\n- Plan of Subdivision 723695D dated 31/03/2026\n- Section 173 Agreement AL543380Q dated 31/03/2026\n- Section 173 Agreement AL969078N dated 31/03/2026\n- Owners Corporation Basic Report dated 31/03/2026\n- Owners Corporation Certificate\n- City of Ballarat Building Approval Certificate dated 31/03/2026\n- City of Ballarat Land Information Certificate dated 31/03/2026\n- Central Highlands Water Encumbrance Certificate dated ##\n- State Revenue Office Land Tax Certificate dated 31/03/2026\n- Detailed Property Report dated 02/04/2026\n- Owner Builder Report ***\n- Vic Roads Certificate dated 31/03/2026\n- EPA Certificate dated 31/03/2026\n- Residential Tenancy Agreement dated 27/03/2025",
     "confidence": 0.9,
     "answer_strategy": "deterministic",
     "facts_used": [

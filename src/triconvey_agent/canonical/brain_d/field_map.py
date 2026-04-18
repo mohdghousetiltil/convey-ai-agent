@@ -210,8 +210,17 @@ FIELD_MAP: dict[str, list[FieldBinding]] = {
     "sec32_5.1_building_permits_text": [
         FieldBinding(
             tab_name="Sec. 32 (3)", control_type="CheckBox",
-            match_name="Are contained in the attached certificate",
+            match_name="Are as follows:",
+            match_top=647,
             action="set_checkbox", value_adapter="bool_tick",
+        )
+    ],
+    "sec32_5.1_building_permits_details": [
+        FieldBinding(
+            tab_name="Sec. 32 (3)", control_type="Edit",
+            match_label="Are as follows:",
+            match_top=671,
+            action="set_text", value_adapter="str",
         )
     ],
 

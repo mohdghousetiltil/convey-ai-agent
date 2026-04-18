@@ -9,6 +9,8 @@ pytest-cache-files-*/
 .pytest-tmp/
 output/execution_artifacts/
 output/ui_runs/
+build/
+dist/
 ui/node_modules/
 ui/dist/
 

@@ -4,8 +4,8 @@
       "question_id": "sec32_1.1_outgoing_1_authority",
       "field_id": "Sec. 32 (1)::Edit::Authority::t282l-1871",
       "action": "set_text",
-      "payload": "Ballarat council",
-      "expected_after": "Ballarat council",
+      "payload": "City of Ballarat",
+      "expected_after": "City of Ballarat",
       "needs_review_first": false,
       "source_answer_confidence": 0.97
     },
@@ -13,8 +13,8 @@
       "question_id": "sec32_1.1_outgoing_1_amount",
       "field_id": "Sec. 32 (1)::Edit::Amount::t282l-1449",
       "action": "set_text",
-      "payload": "2,500.00",
-      "expected_after": "2,500.00",
+      "payload": "1,297.59",
+      "expected_after": "1,297.59",
       "needs_review_first": false,
       "source_answer_confidence": 0.97
     },
@@ -22,8 +22,8 @@
       "question_id": "sec32_1.1_outgoing_2_authority",
       "field_id": "Sec. 32 (1)::Edit::unnamed::t308l-1871",
       "action": "set_text",
-      "payload": "Central highlands water",
-      "expected_after": "Central highlands water",
+      "payload": "Central Highlands Water",
+      "expected_after": "Central Highlands Water",
       "needs_review_first": false,
       "source_answer_confidence": 0.97
     },
@@ -31,8 +31,8 @@
       "question_id": "sec32_1.1_outgoing_2_amount",
       "field_id": "Sec. 32 (1)::Edit::unnamed::t308l-1449",
       "action": "set_text",
-      "payload": "900.00",
-      "expected_after": "900.00",
+      "payload": "1,144.12",
+      "expected_after": "1,144.12",
       "needs_review_first": false,
       "source_answer_confidence": 0.97
     },
@@ -49,19 +49,19 @@
       "question_id": "sec32_1.1_outgoing_3_amount",
       "field_id": "Sec. 32 (1)::Edit::unnamed::t333l-1449",
       "action": "set_text",
-      "payload": "975.00",
-      "expected_after": "975.00",
+      "payload": "500.00",
+      "expected_after": "500.00",
       "needs_review_first": false,
       "source_answer_confidence": 0.97
     },
     {
       "question_id": "sec32_1.1_outgoing_4_authority",
       "field_id": "Sec. 32 (1)::Edit::unnamed::t360l-1871",
-      "action": "skip",
-      "payload": null,
-      "expected_after": null,
-      "needs_review_first": true,
-      "source_answer_confidence": 0.0
+      "action": "set_text",
+      "payload": "Owners Corporation",
+      "expected_after": "Owners Corporation",
+      "needs_review_first": false,
+      "source_answer_confidence": 0.75
     },
     {
       "question_id": "sec32_1.1_outgoing_4_amount",
@@ -103,8 +103,8 @@
       "question_id": "policy_1_total_does_not_exceed_amount",
       "field_id": "Sec. 32 (1)::Edit::Their total does not exceed::t226l-1300",
       "action": "set_text",
-      "payload": "5,375.00",
-      "expected_after": "5,375.00",
+      "payload": "3,941.71",
+      "expected_after": "3,941.71",
       "needs_review_first": false,
       "source_answer_confidence": 0.95
     },
@@ -219,11 +219,11 @@
     {
       "question_id": "sec32_3.3_bushfire_prone",
       "field_id": "Sec. 32 (2)::CheckBox::Land is in Designated Bushfire Prone Area::t540l-1873",
-      "action": "skip",
-      "payload": null,
-      "expected_after": null,
-      "needs_review_first": true,
-      "source_answer_confidence": 0.0
+      "action": "set_checkbox",
+      "payload": true,
+      "expected_after": true,
+      "needs_review_first": false,
+      "source_answer_confidence": 0.98
     },
     {
       "question_id": "sec32_3.4_planning_scheme",
@@ -238,8 +238,8 @@
       "question_id": "sec32_3.4_responsible_authority",
       "field_id": "Sec. 32 (2)::Edit::Name of responsible authority::t662l-1698",
       "action": "set_text",
-      "payload": "Ballarat Council",
-      "expected_after": "Ballarat Council",
+      "payload": "City of Ballarat",
+      "expected_after": "City of Ballarat",
       "needs_review_first": false,
       "source_answer_confidence": 0.95
     },
@@ -247,8 +247,8 @@
       "question_id": "sec32_3.4_planning_zone",
       "field_id": "Sec. 32 (2)::ComboBox::Name of responsible authority::t689l-1698",
       "action": "select_dropdown",
-      "payload": "UGZ - Urban Growth Zone",
-      "expected_after": "UGZ - Urban Growth Zone",
+      "payload": "GRZ - General Residential Zone",
+      "expected_after": "GRZ - General Residential Zone",
       "needs_review_first": false,
       "source_answer_confidence": 0.95
     },
@@ -256,8 +256,8 @@
       "question_id": "sec32_3.4_planning_overlay_name",
       "field_id": "Sec. 32 (2)::Edit::Name of planning overlay::t716l-1698",
       "action": "set_text",
-      "payload": "DCPO - Development Contributions Plan Overlay",
-      "expected_after": "DCPO - Development Contributions Plan Overlay",
+      "payload": "HO - Heritage Overlay",
+      "expected_after": "HO - Heritage Overlay",
       "needs_review_first": false,
       "source_answer_confidence": 0.95
     },
@@ -272,12 +272,21 @@
     },
     {
       "question_id": "sec32_5.1_building_permits_text",
-      "field_id": "Sec. 32 (3)::CheckBox::Are contained in the attached certificate::t622l-1872",
+      "field_id": "Sec. 32 (3)::CheckBox::Are as follows:::t647l-1872",
       "action": "set_checkbox",
       "payload": false,
       "expected_after": false,
       "needs_review_first": false,
-      "source_answer_confidence": 0.97
+      "source_answer_confidence": 0.94
+    },
+    {
+      "question_id": "sec32_5.1_building_permits_details",
+      "field_id": "Sec. 32 (3)::Edit::Are as follows:::t671l-1872",
+      "action": "set_text",
+      "payload": "",
+      "expected_after": "",
+      "needs_review_first": false,
+      "source_answer_confidence": 0.92
     },
     {
       "question_id": "sec32_8_electricity_not_connected",
@@ -337,17 +346,17 @@
       "question_id": "policy_4_oc_cert_attached",
       "field_id": "Sec. 32 (4)::CheckBox::Attached is a current owners corporation certificate issued according to s151 of the Owners Corporations Act::t213l-1875",
       "action": "set_checkbox",
-      "payload": false,
-      "expected_after": false,
+      "payload": true,
+      "expected_after": true,
       "needs_review_first": false,
-      "source_answer_confidence": 0.97
+      "source_answer_confidence": 0.92
     },
     {
       "question_id": "policy_6_attachments",
       "field_id": "Sec. 32 (6)::Edit::13. Attachments::t424l-1870",
       "action": "set_text",
-      "payload": "- Due Diligence Checklist\n- Register Search Statement Volume 11910 Folio 328 dated 20/03/2026\n- Plan of Subdivision 744342V dated 20/03/2026\n- Covenant PS744342V dated 29/08/2017\n- Section 173 Agreement AM638353G dated 20/03/2026\n- Ballarat council Building Approval Certificate dated 23/03/2026\n- Ballarat council Land Information Certificate dated 24/03/2026\n- Central highlands water Encumbrance Certificate dated ##\n- State Revenue Office Land Tax Certificate dated 20/03/2026\n- Detailed Property Report dated 26/03/2026\n- Owner Builder Report ***\n- Vic Roads Certificate dated 20/03/2026\n- EPA Certificate dated 23/03/2026\n- Residential Tenancy Agreement dated 10/04/2024",
-      "expected_after": "- Due Diligence Checklist\n- Register Search Statement Volume 11910 Folio 328 dated 20/03/2026\n- Plan of Subdivision 744342V dated 20/03/2026\n- Covenant PS744342V dated 29/08/2017\n- Section 173 Agreement AM638353G dated 20/03/2026\n- Ballarat council Building Approval Certificate dated 23/03/2026\n- Ballarat council Land Information Certificate dated 24/03/2026\n- Central highlands water Encumbrance Certificate dated ##\n- State Revenue Office Land Tax Certificate dated 20/03/2026\n- Detailed Property Report dated 26/03/2026\n- Owner Builder Report ***\n- Vic Roads Certificate dated 20/03/2026\n- EPA Certificate dated 23/03/2026\n- Residential Tenancy Agreement dated 10/04/2024",
+      "payload": "- Due Diligence Checklist\n- Register Search Statement Volume 11586 Folio 024 dated 31/03/2026\n- Plan of Subdivision 723695D dated 31/03/2026\n- Section 173 Agreement AL543380Q dated 31/03/2026\n- Section 173 Agreement AL969078N dated 31/03/2026\n- Owners Corporation Basic Report dated 31/03/2026\n- Owners Corporation Certificate\n- City of Ballarat Building Approval Certificate dated 31/03/2026\n- City of Ballarat Land Information Certificate dated 31/03/2026\n- Central Highlands Water Encumbrance Certificate dated ##\n- State Revenue Office Land Tax Certificate dated 31/03/2026\n- Detailed Property Report dated 02/04/2026\n- Owner Builder Report ***\n- Vic Roads Certificate dated 31/03/2026\n- EPA Certificate dated 31/03/2026\n- Residential Tenancy Agreement dated 27/03/2025",
+      "expected_after": "- Due Diligence Checklist\n- Register Search Statement Volume 11586 Folio 024 dated 31/03/2026\n- Plan of Subdivision 723695D dated 31/03/2026\n- Section 173 Agreement AL543380Q dated 31/03/2026\n- Section 173 Agreement AL969078N dated 31/03/2026\n- Owners Corporation Basic Report dated 31/03/2026\n- Owners Corporation Certificate\n- City of Ballarat Building Approval Certificate dated 31/03/2026\n- City of Ballarat Land Information Certificate dated 31/03/2026\n- Central Highlands Water Encumbrance Certificate dated ##\n- State Revenue Office Land Tax Certificate dated 31/03/2026\n- Detailed Property Report dated 02/04/2026\n- Owner Builder Report ***\n- Vic Roads Certificate dated 31/03/2026\n- EPA Certificate dated 31/03/2026\n- Residential Tenancy Agreement dated 27/03/2025",
       "needs_review_first": false,
       "source_answer_confidence": 0.9
     }

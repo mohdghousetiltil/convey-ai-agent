@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AlertCircle, Check, ChevronLeft, Copy, Edit2, LogOut, Settings, Shield, User } from "lucide-react";
+import { AlertCircle, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Edit2, LogOut, MessageSquare, Settings, Shield, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,7 +18,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AnswerUpdatePayload, ReviewFieldItem, ReviewRunPayload } from "../lib/api";
+import { AnswerUpdatePayload, ChatAnswerPayload, ReviewFieldItem, ReviewRunPayload } from "../lib/api";
+import { Chatbot } from "./Chatbot";
 
 type DraftValue = string | boolean | number | null;
 
@@ -80,7 +81,7 @@ function EditableField({ label, value, onChange }: EditableFieldProps) {
         />
       ) : (
         <div onClick={() => setIsEditing(true)} className="text-[0.95rem] font-medium cursor-text hover:text-primary transition-colors flex items-center gap-2 group/text">
-          {value || "—"}
+          {value || "-"}
           <Edit2 className="w-3 h-3 opacity-0 group-hover/text:opacity-50" />
         </div>
       )}
@@ -92,9 +93,18 @@ function StatusPill({ item }: { item?: ReviewFieldItem }) {
   if (!item) {
     return <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-slate-500">Unmapped</span>;
   }
-  return item.needs_review
-    ? <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-amber-700">Review</span>
-    : <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-emerald-700">Auto</span>;
+  if (item.needs_review) {
+    return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-amber-700">Review</span>;
+  }
+  if (item.confidence >= 0.9) {
+    return <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-emerald-700">Auto</span>;
+  }
+  return <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-yellow-800">Auto</span>;
+}
+
+function hasDisplayValue(value: DraftValue) {
+  if (value === null || value === undefined) return false;
+  return String(value).trim() !== "";
 }
 
 function FieldLabel({ text, item }: { text: string; item?: ReviewFieldItem }) {
@@ -115,6 +125,7 @@ interface ReviewScreenProps {
   onLogout: () => void;
   onSaveReview: (updates: Record<string, AnswerUpdatePayload>) => Promise<void> | void;
   onAutofill: (updates: Record<string, AnswerUpdatePayload>) => Promise<void> | void;
+  onAskAssistant: (question: string) => Promise<ChatAnswerPayload>;
   isSaving: boolean;
   isAutofilling: boolean;
   errorMessage?: string;
@@ -122,19 +133,27 @@ interface ReviewScreenProps {
 }
 
 export function ReviewScreen(props: ReviewScreenProps) {
-  const { run, onBack, onProfile, onSettings, onPolicy, onLogout, onSaveReview, onAutofill, isSaving, isAutofilling, errorMessage, onDismissError } = props;
+  const { run, onBack, onProfile, onSettings, onPolicy, onLogout, onSaveReview, onAutofill, onAskAssistant, isSaving, isAutofilling, errorMessage, onDismissError } = props;
   const [activeTab, setActiveTab] = useState("page-1");
   const [clientName, setClientName] = useState(run.matter.client_name || "Matter Client");
   const [volumeFolio, setVolumeFolio] = useState(run.matter.volume_folio || "Volume / Folio");
   const [propertyAddress, setPropertyAddress] = useState(run.matter.property_address || "Property Address");
   const [drafts, setDrafts] = useState<Record<string, DraftValue>>({});
+  const [reviewItemsCollapsed, setReviewItemsCollapsed] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     setClientName(run.matter.client_name || "Matter Client");
     setVolumeFolio(run.matter.volume_folio || "Volume / Folio");
     setPropertyAddress(run.matter.property_address || "Property Address");
     setDrafts({});
+    setReviewItemsCollapsed(true);
+    setChatOpen(false);
   }, [run]);
+
+  useEffect(() => {
+    setReviewItemsCollapsed(true);
+  }, [activeTab]);
 
   const pages = [
     { id: "page-1", label: "Sec 32 (1)", tab: "Sec. 32 (1)" },
@@ -184,17 +203,26 @@ export function ReviewScreen(props: ReviewScreenProps) {
   );
 
   return (
-    <div className="flex flex-col h-screen bg-background font-sans text-foreground overflow-hidden">
+    <div className="flex h-screen bg-background font-sans text-foreground overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden">
       <header className="h-16 border-b bg-white flex items-center justify-between px-6 shrink-0 z-50">
         <div className="w-10 flex items-center">
           <div onClick={onBack} className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center cursor-pointer hover:bg-slate-200 transition-colors">
             <ChevronLeft className="w-4 h-4 text-foreground stroke-[2.5]" />
           </div>
         </div>
-        <h1 className="text-2xl font-serif italic tracking-tight text-foreground">TriConvey Agent</h1>
-        <div className="w-10 flex items-center justify-end">
+        <h1 className="text-2xl font-serif italic tracking-tight text-foreground">Convey Agent</h1>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setChatOpen((value) => !value)}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${chatOpen ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-slate-50 text-slate-400 hover:bg-slate-100"}`}
+            title="Toggle document assistant"
+          >
+            <MessageSquare className="w-5 h-5" />
+          </button>
+          <div className="w-px h-6 bg-slate-200" />
           <DropdownMenu>
-            <DropdownMenuTrigger nativeButton={false} render={<div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-[0.8rem] font-semibold cursor-pointer hover:opacity-90 transition-opacity">JD</div>} />
+            <DropdownMenuTrigger nativeButton={false} render={<div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-[0.8rem] font-semibold cursor-pointer hover:opacity-90 transition-opacity ring-2 ring-white shadow-md">JD</div>} />
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuGroup><DropdownMenuLabel>My Account</DropdownMenuLabel></DropdownMenuGroup>
               <DropdownMenuSeparator />
@@ -222,7 +250,8 @@ export function ReviewScreen(props: ReviewScreenProps) {
         {Object.keys(drafts).length > 0 ? <span className="rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-700">Unsaved changes {Object.keys(drafts).length}</span> : null}
       </section>
 
-      <main className="flex-grow p-6 flex flex-col gap-5 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden">
+      <main className="flex-grow p-6 flex flex-col gap-5 overflow-hidden min-w-0">
         {errorMessage ? (
           <div className="flex items-start justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             <div className="flex items-start gap-2"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><span>{errorMessage}</span></div>
@@ -276,18 +305,26 @@ export function ReviewScreen(props: ReviewScreenProps) {
                                 {[1, 2, 3, 4].map((row) => {
                                   const authorityId = `sec32_1.1_outgoing_${row}_authority`;
                                   const amountId = `sec32_1.1_outgoing_${row}_amount`;
+                                  const authorityValue = getDraft(authorityId);
+                                  const amountValue = getDraft(amountId);
+                                  const showAuthorityStatus = hasDisplayValue(authorityValue);
+                                  const showAmountStatus = hasDisplayValue(amountValue);
                                   return (
                                     <TableRow key={row} className="border-border hover:bg-slate-50/30 transition-colors">
                                       <TableCell className="p-2 align-top">
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 min-w-[220px]">
+                                          <div className="flex items-center justify-between gap-2">
+                                            {showAuthorityStatus ? <StatusPill item={fields[authorityId]} /> : <span />}
+                                          </div>
                                           <Input value={textValue(authorityId)} onChange={(e) => setDraft(authorityId, e.target.value)} placeholder="Enter authority..." className="h-9 border-transparent bg-transparent focus:bg-white focus:border-border shadow-none text-sm" />
-                                          <StatusPill item={fields[authorityId]} />
                                         </div>
                                       </TableCell>
                                       <TableCell className="p-2 align-top">
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 min-w-[140px]">
+                                          <div className="flex items-center justify-between gap-2">
+                                            {showAmountStatus ? <StatusPill item={fields[amountId]} /> : <span />}
+                                          </div>
                                           <Input value={textValue(amountId)} onChange={(e) => setDraft(amountId, e.target.value)} placeholder="$0.00" className="h-9 border-transparent bg-transparent focus:bg-white focus:border-border shadow-none text-sm" />
-                                          <StatusPill item={fields[amountId]} />
                                         </div>
                                       </TableCell>
                                       <TableCell className="p-2"><Input value="N/A" disabled className="h-9 border-transparent bg-slate-50 text-slate-400 shadow-none text-sm" /></TableCell>
@@ -398,9 +435,9 @@ export function ReviewScreen(props: ReviewScreenProps) {
                             ["sec32_8_sewerage_not_connected", "Sewerage"],
                             ["sec32_8_telephone_not_connected", "Telephone services"],
                           ].map(([qid, label]) => (
-                            <div key={qid} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-transparent hover:border-border hover:bg-slate-50/50 transition-all">
-                              <Label className="text-[0.9rem] font-medium text-slate-600 cursor-pointer"><FieldLabel text={label} item={fields[qid]} /></Label>
+                            <div key={qid} className="flex items-center gap-3 p-3 rounded-lg border border-transparent hover:border-border hover:bg-slate-50/50 transition-all">
                               <Checkbox checked={boolValue(qid)} onCheckedChange={(checked) => setDraft(qid, Boolean(checked))} className="border-border data-checked:bg-destructive data-checked:border-destructive" />
+                              <Label className="text-[0.9rem] font-medium text-slate-600 cursor-pointer"><FieldLabel text={label} item={fields[qid]} /></Label>
                             </div>
                           ))}
                         </div>
@@ -425,16 +462,27 @@ export function ReviewScreen(props: ReviewScreenProps) {
                   </div>
                 ) : renderGeneric()}
                 {currentItems.filter((item) => item.needs_review).length > 0 ? (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-5">
-                    <h4 className="text-sm font-bold uppercase tracking-wider text-amber-800">Review Items On This Tab</h4>
-                    <div className="mt-3 grid gap-3">
-                      {currentItems.filter((item) => item.needs_review).map((item) => (
-                        <div key={item.question_id} className="rounded-xl bg-white px-4 py-3 shadow-sm">
-                          <p className="text-sm font-semibold text-slate-800">{item.label}</p>
-                          <p className="mt-1 text-xs text-amber-700">{item.review_reasons.join(", ")}</p>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50/80 overflow-hidden">
+                    <button
+                      onClick={() => setReviewItemsCollapsed((c) => !c)}
+                      className="w-full flex items-center justify-between px-5 py-4 hover:bg-amber-100/60 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-amber-800">Review Items On This Tab</h4>
+                        <span className="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-900">{currentItems.filter((i) => i.needs_review).length}</span>
+                      </div>
+                      {reviewItemsCollapsed ? <ChevronRight className="w-4 h-4 text-amber-700" /> : <ChevronDown className="w-4 h-4 text-amber-700" />}
+                    </button>
+                    {!reviewItemsCollapsed && (
+                      <div className="px-5 pb-5 grid gap-3">
+                        {currentItems.filter((item) => item.needs_review).map((item) => (
+                          <div key={item.question_id} className="rounded-xl bg-white px-4 py-3 shadow-sm">
+                            <p className="text-sm font-semibold text-slate-800">{item.label}</p>
+                            <p className="mt-1 text-xs text-amber-700">{item.review_reasons.join(", ")}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : null}
               </motion.div>
@@ -451,11 +499,14 @@ export function ReviewScreen(props: ReviewScreenProps) {
               {isSaving ? "Saving..." : "Save Review"}
             </Button>
             <Button className="bg-primary text-white font-semibold px-6 py-2.5 h-auto rounded-md border-none" disabled={isSaving || isAutofilling} onClick={() => onAutofill(buildUpdates())}>
-              {isAutofilling ? "Starting..." : "Auto-fill TriConvey"}
+              {isAutofilling ? "Starting..." : "Auto-fill Convey"}
             </Button>
           </div>
         </footer>
       </main>
+      <Chatbot isOpen={chatOpen} onClose={() => setChatOpen(false)} onAsk={onAskAssistant} />
+      </div>
+      </div>
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }

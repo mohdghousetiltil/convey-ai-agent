@@ -422,12 +422,21 @@ questions:
 
   - id: sec32_5.1_building_permits_text
     tab: "Sec. 32 (3)"
-    label: "5. Building Permits - Are contained in attached certificate"
+    label: "5. Building Permits - Are as follows"
     fact_paths:
-      - building.permits_last_7_years
+      - policy.tab3.building_permits_as_follows
     answer_strategy: deterministic
     value_transform: direct
     expected_type: bool
+
+  - id: sec32_5.1_building_permits_details
+    tab: "Sec. 32 (3)"
+    label: "5. Building Permits - Details"
+    fact_paths:
+      - policy.tab3.building_permits_text
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
 
   # ===========================================================================
   # Sec. 32 (4) — Services, GAIC, Owners Corporation

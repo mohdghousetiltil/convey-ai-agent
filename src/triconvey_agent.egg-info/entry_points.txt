@@ -1,2 +1,4 @@
 [console_scripts]
+convey-bootstrap = triconvey_agent.db.bootstrap:main
 triconvey-agent = triconvey_agent.cli:main
+triconvey-desktop = desktop_app:main

@@ -144,6 +144,16 @@ BUILDING_COMPLIANCE_CERTIFICATES = "building.compliance_certificates_obtained"
 BUILDING_PROPERTY_LESS_THAN_7_YEARS = "building.property_less_than_7_years_old"
 BUILDING_HAS_WATER_TANK = "building.has_water_tank"
 BUILDING_PERMIT_REQUIRED_WATER_TANK = "building.permit_required_for_water_tank"
+BUILDING_RECENT_PERMITS_EXIST = "building.recent_permits_exist"
+BUILDING_RECENT_PERMITS_COUNT = "building.recent_permits.count"
+
+
+def building_permit(index: int, field: str) -> str:
+    """Return e.g. 'building.permit.0.number'."""
+    return f"building.permit.{index}.{field}"
+
+
+BUILDING_PERMIT_FIELDS = ("kind", "number", "issue_date", "description", "within_last_7_years")
 
 # ---------------------------------------------------------------------------
 # Insurance (vendor disclosure)
@@ -300,4 +310,6 @@ POLICY_TAB2_TITLE_IN_ATTACHED = "policy.tab2.title_in_attached"
 POLICY_TAB2_FAILURE_CHECKED = "policy.tab2.failure_to_comply_checked"
 POLICY_TAB2_FAILURE_TEXT = "policy.tab2.failure_to_comply_text"
 POLICY_TAB2_PLANNING_CERT_ATTACHED = "policy.tab2.planning_cert_attached"
+POLICY_TAB3_BUILDING_PERMITS_AS_FOLLOWS = "policy.tab3.building_permits_as_follows"
+POLICY_TAB3_BUILDING_PERMITS_TEXT = "policy.tab3.building_permits_text"
 POLICY_TAB6_DUE_DILIGENCE_TEXT = "policy.tab6.due_diligence_text"

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Upload, FileText, X, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "./ui/button";
 
 interface UploadPageProps {
   onUploadComplete: (files: File[]) => void | Promise<void>;
@@ -40,7 +40,7 @@ export function UploadScreen({ onUploadComplete, errorMessage }: UploadPageProps
         className="w-full max-w-2xl space-y-8"
       >
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-serif italic tracking-tight text-slate-900">TriConvey Agent</h1>
+          <h1 className="text-4xl font-serif italic tracking-tight text-slate-900">Convey Agent</h1>
           <p className="text-slate-500 text-[1.05rem]">Upload Section 32 source documents to begin extraction and review</p>
         </div>
 
@@ -66,7 +66,7 @@ export function UploadScreen({ onUploadComplete, errorMessage }: UploadPageProps
           </div>
           <div className="text-center">
             <p className="text-[1.1rem] font-semibold text-slate-700">Drag and drop files here</p>
-            <p className="text-slate-400 text-sm mt-1">PDF files only, ready for canonical extraction and TriConvey autofill</p>
+            <p className="text-slate-400 text-sm mt-1">PDF files only, ready for canonical extraction and Convey autofill</p>
           </div>
           <Button 
             variant="outline" 

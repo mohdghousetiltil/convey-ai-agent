@@ -258,8 +258,19 @@ class TestRouterNormalization(unittest.TestCase):
         )
         ans = answer_question(q, store)
         self.assertEqual(ans.value, "0.00")
+
+
+class TestRegistryBushfireMapping(unittest.TestCase):
+    def test_registry_question_33_uses_planning_bushfire_fact(self):
+        store = FactStoreImpl()
+        store.add(make_fact("planning.bushfire_prone", True, quote="Is the land in a bushfire prone area? Yes"))
+        registry = load_question_registry()
+
+        ans = answer_question(registry["sec32_3.3_bushfire_prone"], store)
+
+        self.assertIs(ans.value, True)
         self.assertFalse(ans.needs_review)
-        self.assertIn("router", ans.presentation_hints)
+        self.assertEqual(ans.facts_used, ["planning.bushfire_prone"])
 
     def test_date_value_is_normalized_to_dd_mm_yyyy(self):
         store = FactStoreImpl()

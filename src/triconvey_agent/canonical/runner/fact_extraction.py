@@ -4,8 +4,11 @@ import json
 from pathlib import Path
 
 from triconvey_agent.canonical.extractors import (
+    extract_building_approval_facts,
+    extract_council_rates_certificate_facts,
     extract_generic_doc_meta_facts,
     extract_land_tax_certificate_facts,
+    extract_owners_corporation_facts,
     extract_planning_certificate_facts,
     extract_vendor_form_facts,
     extract_vic_title_facts,
@@ -17,11 +20,14 @@ from triconvey_agent.ingest.pdf_loader import load_pdf_document
 
 EXTRACTORS = [
     extract_generic_doc_meta_facts,
+    extract_building_approval_facts,
     extract_vendor_form_facts,
     extract_vic_title_facts,
     extract_water_authority_certificate_facts,
     extract_land_tax_certificate_facts,
     extract_planning_certificate_facts,
+    extract_owners_corporation_facts,
+    extract_council_rates_certificate_facts,  # council rates notices / land info statements
 ]
 
 SAMPLES_DIR = Path(__file__).resolve().parents[4] / "samples"

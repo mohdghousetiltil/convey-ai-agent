@@ -19,6 +19,22 @@ from triconvey_agent.schemas.documents import (
     InputFileType,
 )
 
+LARGE_PDF_PAGE_THRESHOLD = 100
+LARGE_PDF_HEAD_PAGES = 24
+LARGE_PDF_TAIL_PAGES = 6
+MEDIUM_PDF_PAGE_THRESHOLD = 60
+MEDIUM_PDF_HEAD_PAGES = 16
+MEDIUM_PDF_TAIL_PAGES = 4
+CONTRACT_PDF_PAGE_THRESHOLD = 40
+CONTRACT_PDF_HEAD_PAGES = 8
+CONTRACT_PDF_TAIL_PAGES = 2
+
+_CONTRACT_FILENAME_TERMS = (
+    "contract of sale",
+    "auction contract",
+    "section 32",
+)
+
 
 def _score_signature(
     signature: DocumentSignature,
@@ -97,7 +113,12 @@ def load_pdf_document(path: str | Path) -> Document:
     pages: list[DocumentPage] = []
     raw_page_texts: list[str] = []
 
-    for page_number, page in enumerate(reader.pages, start=1):
+    total_pages = len(reader.pages)
+    selected_indices = _selected_page_indices(file_path.name, total_pages)
+
+    for page_index in selected_indices:
+        page_number = page_index + 1
+        page = reader.pages[page_index]
         page_text = page.extract_text() or ""
         raw_page_texts.append(page_text.strip())
         pages.append(
@@ -138,7 +159,31 @@ def load_pdf_document(path: str | Path) -> Document:
             "loader": "pdf_loader",
             "file_size_bytes": file_path.stat().st_size,
             "source_subtype": source_subtype,
-            "page_count": len(pages),
+            "page_count": total_pages,
+            "pages_extracted": len(pages),
+            "page_extraction_truncated": len(selected_indices) < total_pages,
             "text_preview": collapse_snippet(normalized_text),
         },
     )
+
+
+def _selected_page_indices(filename: str, total_pages: int) -> list[int]:
+    lowered = filename.lower()
+    if any(term in lowered for term in _CONTRACT_FILENAME_TERMS):
+        if total_pages <= CONTRACT_PDF_PAGE_THRESHOLD:
+            return list(range(total_pages))
+        head = list(range(min(CONTRACT_PDF_HEAD_PAGES, total_pages)))
+        tail_start = max(CONTRACT_PDF_HEAD_PAGES, total_pages - CONTRACT_PDF_TAIL_PAGES)
+        tail = list(range(tail_start, total_pages))
+        return sorted(set(head + tail))
+    if total_pages <= MEDIUM_PDF_PAGE_THRESHOLD:
+        return list(range(total_pages))
+    if total_pages <= LARGE_PDF_PAGE_THRESHOLD:
+        head = list(range(min(MEDIUM_PDF_HEAD_PAGES, total_pages)))
+        tail_start = max(MEDIUM_PDF_HEAD_PAGES, total_pages - MEDIUM_PDF_TAIL_PAGES)
+        tail = list(range(tail_start, total_pages))
+        return sorted(set(head + tail))
+    head = list(range(min(LARGE_PDF_HEAD_PAGES, total_pages)))
+    tail_start = max(LARGE_PDF_HEAD_PAGES, total_pages - LARGE_PDF_TAIL_PAGES)
+    tail = list(range(tail_start, total_pages))
+    return sorted(set(head + tail))

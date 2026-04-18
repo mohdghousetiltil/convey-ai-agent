@@ -39,7 +39,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-slate-900">John Doe</h2>
-              <p className="text-slate-500 font-medium">TriConvey Automation Lead</p>
+              <p className="text-slate-500 font-medium">Convey Automation Lead</p>
             </div>
           </div>
 

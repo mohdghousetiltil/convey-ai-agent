@@ -3,7 +3,21 @@
     "allow": [
       "mcp__Claude_Preview__preview_start",
       "Bash(python -c ':*)",
-      "Bash(python run_pipeline.py --out output/kyle)"
+      "Bash(python run_pipeline.py --out output/kyle)",
+      "Bash(xargs wc:*)",
+      "Bash(python -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(python -c \"import pywinauto; print\\('pywinauto OK:', pywinauto.__version__\\)\")",
+      "Bash(python -c \"import pywinauto\")",
+      "Bash(C:\\\\Users\\\\moham\\\\projects\\\\triconvey-agent\\\\.venv\\\\Scripts\\\\python.exe -c \"import pywinauto; print\\('pywinauto in .venv:', pywinauto.__version__\\)\")",
+      "Bash(xargs grep:*)",
+      "Bash(python -c \"from triconvey_agent.backend.service import _choose_bushfire_fact\")",
+      "Bash(grep -E \"\\(^[^/]*\\\\.\\(py|toml|spec|json\\)$|/[^/]*\\\\.\\(py|toml|spec|json\\)$\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"import ast, sys; [ast.parse\\(open\\(f\\).read\\(\\)\\) for f in ['src/triconvey_agent/db/session.py','src/triconvey_agent/db/models.py','src/triconvey_agent/db/repositories.py','src/triconvey_agent/db/bootstrap.py','src/triconvey_agent/auth/security.py','src/triconvey_agent/auth/deps.py','src/triconvey_agent/sync/worker.py','src/triconvey_agent/backend/auth_api.py','src/triconvey_agent/backend/api.py']]; print\\('all parse OK'\\)\")",
+      "Bash(psql postgresql://postgres:sqlfordatamatically@localhost:5432/convey_agent -f src/triconvey_agent/db/migrations/001_oauth_columns.sql)",
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "Bash(find C:\\\\\\\\Users\\\\\\\\moham\\\\\\\\projects\\\\\\\\triconvey-agent -type f -name \"*.py\")",
+      "Bash(python -c \"from triconvey_agent.canonical.extractors import extract_council_rates_certificate_facts, extract_water_authority_certificate_facts, extract_owners_corporation_facts, extract_vendor_form_facts; print\\('All imports OK'\\)\")",
+      "Bash(python -c ' *)"
     ]
   }
 }

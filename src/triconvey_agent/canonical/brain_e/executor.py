@@ -55,7 +55,7 @@ from triconvey_agent.canonical.schemas import (
     FormActionPlan,
 )
 from triconvey_agent.config import settings
-from triconvey_agent.backend.runtime import prune_old_directories
+from triconvey_agent.backend.runtime import ensure_runtime_dirs, prune_old_directories
 
 log = logging.getLogger(__name__)
 
@@ -168,7 +168,19 @@ class _ExecutionDiagnostics:
         if not self.enabled:
             return
         stamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
-        artifacts_root = Path(output_dir) / EXECUTION_ARTIFACTS_DIRNAME
+        runtime = ensure_runtime_dirs()
+        artifacts_root = runtime.temp_ocr_dir
+        try:
+            for existing in artifacts_root.iterdir():
+                if existing.is_dir():
+                    for child in sorted(existing.rglob("*"), reverse=True):
+                        if child.is_file():
+                            child.unlink(missing_ok=True)
+                        elif child.is_dir():
+                            child.rmdir()
+                    existing.rmdir()
+        except Exception:
+            pass
         try:
             prune_old_directories(
                 artifacts_root,
@@ -1388,6 +1400,16 @@ class TriConveyAgent:
         # Computed by _calibrate_position_delta() after Property Details opens.
         self._coord_delta: tuple[int, int] = (0, 0)
 
+    def _interruptible_sleep(self, seconds: float, granularity: float = 0.1) -> None:
+        """Sleep for `seconds`, waking every `granularity` seconds to check for cancel."""
+        cancel = getattr(self, "_cancel_requested", None)
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline:
+            if callable(cancel) and cancel():
+                return
+            remaining = deadline - time.monotonic()
+            time.sleep(min(granularity, max(remaining, 0)))
+
     def _log(self, msg: str) -> None:
         print(f"  {msg}")
         log.info(msg)
@@ -1815,14 +1837,17 @@ class TriConveyAgent:
 
         elapsed = 0.0
         while elapsed < LAUNCH_TIMEOUT:
-            time.sleep(LAUNCH_POLL)
+            self._interruptible_sleep(LAUNCH_POLL)
             elapsed += LAUNCH_POLL
+            cancel = getattr(self, "_cancel_requested", None)
+            if callable(cancel) and cancel():
+                return False
             try:
                 self.app = Application(backend="uia").connect(title="triConvey", timeout=2)
                 self.main_window = self.app.window(title="triConvey")
                 if self.main_window.exists(timeout=2):
                     self._log(f"TriConvey launched ({elapsed:.0f}s).")
-                    time.sleep(3)
+                    self._interruptible_sleep(3)
                     return True
             except Exception:
                 if int(elapsed) % 10 == 0:
@@ -1880,7 +1905,7 @@ class TriConveyAgent:
                 search.click_input()
                 time.sleep(0.2)
                 search.type_keys("{ENTER}", with_spaces=False)
-                time.sleep(4)
+                self._interruptible_sleep(4)
                 self._log("  Search submitted.")
         except Exception as exc:
             self._log(f"  Search error: {exc}")
@@ -1924,7 +1949,7 @@ class TriConveyAgent:
                     self._log(f"  Found {len(rows)} row(s) — opening first.")
                     _ensure_focus(window)
                     rows[0].double_click_input()
-                    time.sleep(3)
+                    self._interruptible_sleep(3)
                     return self._detect_matter(client_name)
 
                 # Grid visible but no item controls — click inside it
@@ -1935,7 +1960,7 @@ class TriConveyAgent:
                     self._log(f"  Grid area click ({cx}, {cy})")
                     _ensure_focus(window)
                     _pw_mouse.double_click(coords=(cx, cy))
-                    time.sleep(3)
+                    self._interruptible_sleep(3)
                     return self._detect_matter(client_name)
         except Exception as exc:
             self._log(f"  Grid: {exc}")
@@ -1950,7 +1975,7 @@ class TriConveyAgent:
                         self._log(f"  Found ListItem: {(li.window_text() or '')[:60]}")
                         _ensure_focus(window)
                         li.double_click_input()
-                        time.sleep(3)
+                        self._interruptible_sleep(3)
                         return self._detect_matter(client_name)
                 except Exception:
                     continue
@@ -1973,7 +1998,7 @@ class TriConveyAgent:
                                 (parent or t).double_click_input()
                             except Exception:
                                 t.double_click_input()
-                            time.sleep(3)
+                            self._interruptible_sleep(3)
                             return self._detect_matter(client_name)
                 except Exception:
                     continue
@@ -1992,7 +2017,7 @@ class TriConveyAgent:
         A matter window always has ' - Sale' or ' - Purchase' in its title.
         We pick the first such window that isn't the main triConvey shell.
         """
-        time.sleep(2)
+        self._interruptible_sleep(2)
 
         for w in Desktop(backend="uia").windows():
             try:
@@ -2018,7 +2043,7 @@ class TriConveyAgent:
         self._log("Opening Property Details ...")
         window = self.matter_window or self.main_window
         _ensure_focus(window)
-        time.sleep(1)
+        self._interruptible_sleep(1)
 
         # Preferred route: Matter Details window → Property Details row → Sec. 32 tabs.
         if self._try_open_property_details_via_matter_details(window):
@@ -2039,7 +2064,7 @@ class TriConveyAgent:
                     ctrl.double_click_input()
                 except Exception:
                     return False
-            time.sleep(3.0)
+            self._interruptible_sleep(3.0)
             return self._wait_property_window()
 
         # Strategy 1: LbItems sidebar  (use descendants — WPF virtualises children)
@@ -2146,7 +2171,7 @@ class TriConveyAgent:
                         except Exception:
                             pass
                         self._log(f"  Property Details: {title}")
-                        time.sleep(2)   # let Sec. 32 form render fully
+                        self._interruptible_sleep(2)   # let Sec. 32 form render fully
                         return True
                 except Exception:
                     continue
@@ -2328,7 +2353,16 @@ class TriConveyAgent:
             tab_acts_sorted = sorted(tab_acts, key=self._outgoings_sort_key)
             ordered_actions.extend(tab_acts_sorted)
 
+        cancel_requested = getattr(self, "_cancel_requested", None)
+
         for action in ordered_actions:
+            if callable(cancel_requested) and cancel_requested():
+                results.append(ActionResult(
+                    action=action,
+                    status="skipped",
+                    error="cancelled",
+                ))
+                continue
             fid = _parse_field_id(action.field_id)
             tab_name = fid["tab"]
 
@@ -2612,6 +2646,18 @@ def _default_review_prompt(review_items: list[FormAction]) -> bool:
     return answer == "y"
 
 
+def _search_name_only(client_name: str) -> str:
+    name = (client_name or "").strip()
+    if not name:
+        return ""
+    return re.sub(
+        r"^(mr|mrs|ms|miss|dr|prof|professor|sir|madam|lady|hon|the hon|rev)\.?\s+",
+        "",
+        name,
+        flags=re.IGNORECASE,
+    ).strip()
+
+
 # ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
@@ -2620,10 +2666,12 @@ def execute_action_plan(
     plan: FormActionPlan,
     *,
     client_name: str = "",
+    matter_search: str = "",
     dry_run: bool = False,
     triconvey_exe: str | None = None,
     review_gate_callback=None,
     output_dir: str | Path | None = None,
+    cancel_requested=None,
 ) -> ExecutionReport:
     """Execute a FormActionPlan against the live TriConvey window.
 
@@ -2678,12 +2726,16 @@ def execute_action_plan(
     print()
     print("=" * 60)
     print("  Brain E --", "DRY-RUN preview" if dry_run else "TriConvey Form Executor")
+    search_name = matter_search.strip() or _search_name_only(client_name) or client_name
     if client_name:
         print(f"  Client:  {client_name}")
+    if matter_search:
+        print(f"  Search:  {matter_search}")
     print(f"  Actions: {len(auto_actions)} auto | {len(review_actions)} review | {len(skip_actions)} skip")
     print("=" * 60)
 
     agent = TriConveyAgent(triconvey_exe=triconvey_exe, diagnostics=diagnostics)
+    setattr(agent, "_cancel_requested", cancel_requested)
     report.session_fingerprint = agent.collect_session_fingerprint()
     report.preflight_checks = agent.run_preflight_checks()
     diagnostics.log_event(
@@ -2697,6 +2749,11 @@ def execute_action_plan(
     )
 
     if not dry_run:
+        if callable(cancel_requested) and cancel_requested():
+            diagnostics.log_event("execution_cancelled", stage="before_connect")
+            _finalise(report)
+            report.metrics["cancelled"] = True
+            return report
         if not agent.launch_or_connect():
             err = "Could not connect to TriConvey."
             diagnostics.capture_screenshot("connect_failure")
@@ -2706,7 +2763,12 @@ def execute_action_plan(
             raise RuntimeError(err)
 
         if client_name:
-            if not agent.find_and_open_matter(client_name):
+            if callable(cancel_requested) and cancel_requested():
+                diagnostics.log_event("execution_cancelled", stage="before_matter_search")
+                _finalise(report)
+                report.metrics["cancelled"] = True
+                return report
+            if not agent.find_and_open_matter(search_name):
                 err = f"Could not open matter for '{client_name}'."
                 diagnostics.capture_screenshot("matter_open_failure")
                 for a in auto_actions:
@@ -2738,6 +2800,7 @@ def execute_action_plan(
     fill_results = agent.fill_sec32_tabs(auto_actions, dry_run=dry_run)
     report.results.extend(fill_results)
     report.metrics["fill_duration_ms"] = int((time.perf_counter() - fill_started) * 1000)
+    report.metrics["cancelled"] = any(result.error == "cancelled" for result in fill_results)
     diagnostics.log_event(
         "execution_complete",
         total_results=len(report.results),

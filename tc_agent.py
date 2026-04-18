@@ -71,20 +71,24 @@ DEFAULT_OUT = Path("output")
 
 def _import_extractors():
     from triconvey_agent.canonical.extractors import (
+        extract_building_approval_facts,
         extract_generic_doc_meta_facts,
         extract_vendor_form_facts,
         extract_vic_title_facts,
         extract_water_authority_certificate_facts,
         extract_land_tax_certificate_facts,
         extract_planning_certificate_facts,
+        extract_owners_corporation_facts,
     )
     return [
         extract_generic_doc_meta_facts,
+        extract_building_approval_facts,
         extract_vendor_form_facts,
         extract_vic_title_facts,
         extract_water_authority_certificate_facts,
         extract_land_tax_certificate_facts,
         extract_planning_certificate_facts,
+        extract_owners_corporation_facts,
     ]
 
 

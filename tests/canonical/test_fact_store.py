@@ -195,6 +195,28 @@ class TestAuthorityResolution(unittest.TestCase):
         self.assertIsNotNone(conflict)
         self.assertEqual(conflict.resolution, "authority_wins")
 
+    def test_vendor_form_wins_for_council_authority_name(self):
+        store = FactStoreImpl()
+        store.add(make_fact(
+            "rates.council.authority_name",
+            "City of Monash",
+            extractor="rule:vendor_form_v2",
+            confidence=0.90,
+        ))
+        store.add(make_fact(
+            "rates.council.authority_name",
+            "Yarra City Council",
+            extractor="rule:planning_certificate_v1",
+            confidence=0.98,
+        ))
+
+        winner, conflict = store.get("rates.council.authority_name")
+        self.assertIsNotNone(winner)
+        self.assertEqual(winner.value, "City of Monash")
+        self.assertEqual(winner.extractor, "rule:vendor_form_v2")
+        self.assertIsNotNone(conflict)
+        self.assertEqual(conflict.resolution, "authority_wins")
+
     def test_glob_extractor_pattern_versioning(self):
         """rule:vic_title_v3 should still match rule:vic_title* pattern."""
         store = FactStoreImpl()

@@ -2,18 +2,18 @@ TRICONVEY AGENT - ANSWER SUMMARY
 ============================================================
 
 --- Sec. 32 (1) ---
-  * AUTO      1.1 Outgoing 1 - Authority name                     'Ballarat council'  
-  * AUTO      1.1 Outgoing 1 - Amount                             '$2,500.00'  
-  * AUTO      1.1 Outgoing 2 - Authority name                     'Central highlands water'  
-  * AUTO      1.1 Outgoing 2 - Amount                             '$900.00'  
+  * AUTO      1.1 Outgoing 1 - Authority name                     'Ballarat City Council'  
+  * AUTO      1.1 Outgoing 1 - Amount                             '$1,297.59'  
+  * AUTO      1.1 Outgoing 2 - Authority name                     'Central Highlands Water'  
+  * AUTO      1.1 Outgoing 2 - Amount                             '$1,144.12'  
   * AUTO      1.1 Outgoing 3 - Authority name                     'State Revenue Office'  
-  * AUTO      1.1 Outgoing 3 - Amount                             '$975.00'  
-  ! REVIEW    1.1 Outgoing 4 - Authority name                     ---  [no facts found at any of the question's fact_paths]
+  * AUTO      1.1 Outgoing 3 - Amount                             '$500.00'  
+  * AUTO      1.1 Outgoing 4 - Authority name                     'Owners Corporation'  
   ! REVIEW    1.1 Outgoing 4 - Amount                             ---  [no facts found at any of the question's fact_paths]
   * AUTO      Their amounts are: (checkbox)                       '1.00'  
   * AUTO      Are contained in attached certificate(s) (checkbox)  '1.00'  
   * AUTO      Their total does not exceed (checkbox)              '1.00'  
-  * AUTO      Their total does not exceed (amount)                '$5,375.00'  
+  * AUTO      Their total does not exceed (amount)                '$3,941.71'  
   ! REVIEW    1.2 There are NO amounts for which the purchaser may become liable other than  ---  [policy_default question with no ClientPolicy supplied]
   ! REVIEW    1.3 Terms Contract                                  ---  [no facts found at any of the question's fact_paths]
   * AUTO      1.4 Sale Subject to Mortgage                        True  
@@ -30,15 +30,16 @@ TRICONVEY AGENT - ANSWER SUMMARY
   ! REVIEW    3.1 Description of any easement, covenant or restriction  ---  [grounded_ai strategy requested but no AI client was supplied]
   ! REVIEW    3.1 Easement failure to comply text                 ---  [grounded_ai strategy requested but no AI client was supplied]
   * AUTO      3.2 Road Access - No road access                    False  
-  ! REVIEW    3.3 Designated Bushfire Prone Area                  ---  [no facts found at any of the question's fact_paths]
+  * AUTO      3.3 Designated Bushfire Prone Area                  True  
   * AUTO      3.4 Name of planning scheme                         'Ballarat'  
   * AUTO      3.4 Name of responsible authority                   'Ballarat'  
-  * AUTO      3.4 Planning zone (dropdown)                        'UGZ - Urban Growth Zone'  
-  * AUTO      3.4 Name of planning overlay                        'DCPO - Development Contributions Plan Overlay'  
+  * AUTO      3.4 Planning zone (dropdown)                        'GRZ - General Residential Zone'  
+  * AUTO      3.4 Name of planning overlay                        'HO - Heritage Overlay'  
 
 --- Sec. 32 (3) ---
   ! REVIEW    4.1 Notices - Are as follows (text)                 ---  [question is registered as human_review (legally sensitive)]
-  * AUTO      5. Building Permits - Are contained in attached certificate  False  
+  * AUTO      5. Building Permits - Are as follows                False  
+  * AUTO      5. Building Permits - Details                       ''  
 
 --- Sec. 32 (4) ---
   * AUTO      8. Services - Electricity supply (tick if NOT connected)  False  
@@ -47,12 +48,12 @@ TRICONVEY AGENT - ANSWER SUMMARY
   * AUTO      8. Services - Sewerage (tick if NOT connected)      False  
   * AUTO      8. Services - Telephone services (tick if NOT connected)  True  
   * AUTO      7. GAIC applies                                     False  
-  * AUTO      Owners Corporation is inactive                      True  
-  * AUTO      Attached is a current owners corporation certificate (s151)  False  
+  * AUTO      Owners Corporation is inactive                      False  
+  * AUTO      Attached is a current owners corporation certificate (s151)  True  
 
 --- Sec. 32 (6) ---
   * AUTO      12. Due Diligence Checklist                         'Is attached'  
-  * AUTO      13. Attachments list                                '- Due Diligence Checklist\n- Register Search Statement Volume 11910 Folio 328 dated 20/03/2026\n- Plan of Subdivision 744342V dated 20/03/2026\n- Covenant PS744342V dated 29/08/2017\n- Section 173 Agreement AM638353G dated 20/03/2026\n- Ballarat council Building Approval Certificate dated 23/03/2026\n- Ballarat council Land Information Certificate dated 24/03/2026\n- Central highlands water Encumbrance Certificate dated ##\n- State Revenue Office Land Tax Certificate dated 20/03/2026\n- Detailed Property Report dated 26/03/2026\n- Owner Builder Report ***\n- Vic Roads Certificate dated 20/03/2026\n- EPA Certificate dated 23/03/2026\n- Residential Tenancy Agreement dated 10/04/2024'  
+  * AUTO      13. Attachments list                                '- Due Diligence Checklist\n- Register Search Statement Volume 11586 Folio 024 dated 31/03/2026\n- Plan of Subdivision 723695D dated 31/03/2026\n- Section 173 Agreement AL543380Q dated 31/03/2026\n- Section 173 Agreement AL969078N dated 31/03/2026\n- Owners Corporation Basic Report dated 31/03/2026\n- Owners Corporation Certificate\n- City of Ballarat Building Approval Certificate dated 31/03/2026\n- City of Ballarat Land Information Certificate dated 31/03/2026\n- Central Highlands Water Encumbrance Certificate dated ##\n- State Revenue Office Land Tax Certificate dated 31/03/2026\n- Detailed Property Report dated 02/04/2026\n- Owner Builder Report ***\n- Vic Roads Certificate dated 31/03/2026\n- EPA Certificate dated 31/03/2026\n- Residential Tenancy Agreement dated 27/03/2025'  
 
 --- internal ---
   * AUTO      Do you live at the property?                        False  
