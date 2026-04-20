@@ -9,9 +9,11 @@ import { LoginScreen } from "./components/LoginScreen";
 import { AuthProvider, useAuth } from "./lib/AuthContext";
 import {
   askRunQuestion,
+  applyAnswerPatches,
   AnswerUpdatePayload,
   AutofillJobPayload,
   cancelAutofillJob,
+  continueAutofillJob,
   getSettings,
   getAutofillJob,
   ReviewRunPayload,
@@ -22,6 +24,150 @@ import {
 } from "./lib/api";
 
 type ViewState = "upload" | "loading" | "main" | "settings" | "profile" | "policy";
+
+type LocalSettingsForm = {
+  language: string;
+  openAiApiKey: string;
+  anthropicApiKey: string;
+  aiProvider: "openai" | "anthropic";
+  defaultModelName: string;
+  triconveyPath: string;
+  preferredAutofillFields: string[];
+};
+
+function firstRunKey(userId: string) {
+  return `convey:onboarded:${userId}`;
+}
+
+function sessionDismissKey(userId: string) {
+  return `convey:onboarding:dismissed:${userId}`;
+}
+
+function isSettingsConfigured(settings: LocalSettingsForm): boolean {
+  const hasProviderKey =
+    settings.aiProvider === "anthropic"
+      ? Boolean(settings.anthropicApiKey?.trim())
+      : Boolean(settings.openAiApiKey?.trim());
+  return Boolean(settings.defaultModelName?.trim()) && hasProviderKey && Boolean(settings.triconveyPath?.trim());
+}
+
+function FirstRunSetupModal({
+  open,
+  settings,
+  saving,
+  onChange,
+  onSave,
+  onLater,
+}: {
+  open: boolean;
+  settings: LocalSettingsForm;
+  saving: boolean;
+  onChange: (next: LocalSettingsForm) => void;
+  onSave: () => void;
+  onLater: () => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 px-4">
+      <div className="w-full max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+        <div className="border-b border-slate-100 px-6 py-5">
+          <h2 className="text-xl font-bold text-slate-900">Finish your desktop setup</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Save your AI provider, API key, default model, and Convey path so uploads, chat, and autofill work smoothly on this machine.
+          </p>
+        </div>
+
+        <div className="grid gap-6 px-6 py-6 md:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Language</label>
+            <select
+              value={settings.language}
+              onChange={(e) => onChange({ ...settings, language: e.target.value })}
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            >
+              <option value="English">English</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">AI Provider</label>
+            <select
+              value={settings.aiProvider}
+              onChange={(e) =>
+                onChange({
+                  ...settings,
+                  aiProvider: e.target.value as "openai" | "anthropic",
+                  defaultModelName: e.target.value === "anthropic" ? "claude-sonnet-4-6" : "gpt-4.1-mini",
+                })
+              }
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            >
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic</option>
+            </select>
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              {settings.aiProvider === "anthropic" ? "Anthropic API key" : "OpenAI API key"}
+            </label>
+            <input
+              type="password"
+              value={settings.aiProvider === "anthropic" ? settings.anthropicApiKey : settings.openAiApiKey}
+              onChange={(e) =>
+                onChange({
+                  ...settings,
+                  ...(settings.aiProvider === "anthropic"
+                    ? { anthropicApiKey: e.target.value }
+                    : { openAiApiKey: e.target.value }),
+                })
+              }
+              placeholder={settings.aiProvider === "anthropic" ? "sk-ant-..." : "sk-..."}
+              className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Default model</label>
+            <input
+              value={settings.defaultModelName}
+              onChange={(e) => onChange({ ...settings, defaultModelName: e.target.value })}
+              placeholder={settings.aiProvider === "anthropic" ? "claude-sonnet-4-6" : "gpt-4.1-mini"}
+              className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Convey executable path</label>
+            <input
+              value={settings.triconveyPath}
+              onChange={(e) => onChange({ ...settings, triconveyPath: e.target.value })}
+              placeholder="C:\\Program Files\\TriConvey\\TriConvey.exe"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4">
+          <button
+            onClick={onLater}
+            className="text-sm font-semibold text-slate-500 transition-colors hover:text-slate-700"
+          >
+            Later
+          </button>
+          <button
+            onClick={onSave}
+            disabled={saving}
+            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:shadow-none"
+          >
+            {saving ? "Saving..." : "Save and continue"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Root — wraps the whole app in AuthProvider so every descendant can useAuth()
@@ -47,8 +193,11 @@ function AppContent() {
   const [settings, setSettings] = useState({
     language: "English",
     openAiApiKey: "",
+    anthropicApiKey: "",
+    aiProvider: "openai" as "openai" | "anthropic",
     defaultModelName: "gpt-4.1-mini",
     triconveyPath: "",
+    preferredAutofillFields: [] as string[],
   });
   const [view, setView] = useState<ViewState>("upload");
   const [run, setRun] = useState<ReviewRunPayload | null>(null);
@@ -59,23 +208,38 @@ function AppContent() {
   const [saving, setSaving] = useState(false);
   const [autofilling, setAutofilling] = useState(false);
   const [autofillJob, setAutofillJob] = useState<AutofillJobPayload | null>(null);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [showSetupModal, setShowSetupModal] = useState(false);
+  const [setupSaving, setSetupSaving] = useState(false);
 
   // Fetch settings once the user is authenticated
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setSettingsLoaded(false);
+      setShowSetupModal(false);
+      return;
+    }
     void (async () => {
       try {
         const nextSettings = await getSettings();
         setSettings(nextSettings);
+        const seen = localStorage.getItem(firstRunKey(user.user_id)) === "true";
+        const dismissed = sessionStorage.getItem(sessionDismissKey(user.user_id)) === "true";
+        setShowSetupModal((!seen || !isSettingsConfigured(nextSettings)) && !dismissed);
       } catch {
         // Keep defaults if backend settings are not available yet.
+        const seen = localStorage.getItem(firstRunKey(user.user_id)) === "true";
+        const dismissed = sessionStorage.getItem(sessionDismissKey(user.user_id)) === "true";
+        setShowSetupModal((!seen || !isSettingsConfigured(settings)) && !dismissed);
+      } finally {
+        setSettingsLoaded(true);
       }
     })();
   }, [user]);
 
   // Poll autofill job status
   useEffect(() => {
-    if (!autofillJob || !["queued", "running", "cancelling"].includes(autofillJob.status)) {
+    if (!autofillJob || !["queued", "running", "cancelling", "awaiting_user"].includes(autofillJob.status)) {
       return;
     }
     const timer = window.setTimeout(async () => {
@@ -93,6 +257,11 @@ function AppContent() {
           setView("main");
           setAutofilling(false);
           setAutofillJob(null);
+        } else if (nextJob.status === "awaiting_user") {
+          setLoadingMessage(
+            nextJob.manual_action?.message ||
+              "Please open Property Details in Convey, then press Continue.",
+          );
         } else if (nextJob.status === "failed") {
           setUploadError(nextJob.error || "Autofill failed.");
           setView("main");
@@ -144,7 +313,13 @@ function AppContent() {
       setRun(nextRun);
       setView("main");
     } catch (error) {
-      setUploadError(error instanceof Error ? error.message : "Failed to analyze the uploaded PDFs.");
+      const message =
+        error instanceof TypeError && error.message === "Failed to fetch"
+          ? "Could not reach the local backend. Restart the app/backend and try again."
+          : error instanceof Error
+            ? error.message
+            : "Failed to analyze the uploaded PDFs.";
+      setUploadError(message);
       setView("upload");
     }
   };
@@ -195,6 +370,19 @@ function AppContent() {
     }
   };
 
+  const handleContinueAutofill = async () => {
+    if (!autofillJob) return;
+    try {
+      const job = await continueAutofillJob(autofillJob.job_id);
+      setAutofillJob(job);
+      setLoadingMessage("Resuming Convey autofill from Property Details...");
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Could not continue autofill.");
+      setView("main");
+      setAutofilling(false);
+    }
+  };
+
   const handleLogout = async () => {
     setRun(null);
     setUploadError("");
@@ -204,17 +392,58 @@ function AppContent() {
     await logout();
   };
 
-  const handleAskAssistant = async (question: string) => {
+  const handleAskAssistant = async (
+    question: string,
+    history: Array<{ role: "user" | "assistant"; content: string }>,
+    mode: "quick" | "standard" | "thorough",
+    signal?: AbortSignal,
+  ) => {
     if (!run) throw new Error("No review run is loaded yet.");
-    return askRunQuestion(run.manifest.run_id, question, { model: settings.defaultModelName });
+    return askRunQuestion(run.manifest.run_id, question, {
+      history,
+      mode,
+      signal,
+    });
   };
 
-  const handleSaveSettings = (nextSettings: typeof settings) => {
-    void (async () => {
-      const saved = await saveSettings(nextSettings);
-      setSettings(saved);
-    })();
+  const handleApplyPatch = async (questionId: string, newValue: string, _reason: string) => {
+    if (!run) return;
+    const nextRun = await applyAnswerPatches(run.manifest.run_id, [
+      { question_id: questionId, new_value: newValue, reason: _reason },
+    ]) as ReviewRunPayload;
+    setRun(nextRun);
+  };
+
+  const handleSaveSettings = async (nextSettings: typeof settings) => {
+    const saved = await saveSettings(nextSettings);
+    setSettings(saved);
+    if (user) {
+      localStorage.setItem(firstRunKey(user.user_id), "true");
+      sessionStorage.removeItem(sessionDismissKey(user.user_id));
+    }
+    setShowSetupModal(false);
     setView("main");
+  };
+
+  const handleSaveSetupModal = async () => {
+    if (!user || setupSaving) return;
+    setSetupSaving(true);
+    try {
+      const saved = await saveSettings(settings);
+      setSettings(saved);
+      localStorage.setItem(firstRunKey(user.user_id), "true");
+      sessionStorage.removeItem(sessionDismissKey(user.user_id));
+      setShowSetupModal(false);
+    } finally {
+      setSetupSaving(false);
+    }
+  };
+
+  const handleLaterSetup = () => {
+    if (user) {
+      sessionStorage.setItem(sessionDismissKey(user.user_id), "true");
+    }
+    setShowSetupModal(false);
   };
 
   // ── View routing ─────────────────────────────────────────────────────────────
@@ -222,18 +451,30 @@ function AppContent() {
   switch (view) {
     case "upload":
       return (
-        <UploadScreen
-          onUploadComplete={handleUploadComplete}
-          errorMessage={uploadError}
-        />
+        <>
+          <UploadScreen
+            onUploadComplete={handleUploadComplete}
+            errorMessage={uploadError}
+          />
+          <FirstRunSetupModal
+            open={settingsLoaded && showSetupModal}
+            settings={settings}
+            saving={setupSaving}
+            onChange={setSettings}
+            onSave={handleSaveSetupModal}
+            onLater={handleLaterSetup}
+          />
+        </>
       );
     case "loading":
       return (
         <LoadingScreen
           message={loadingMessage}
-          cancellable={Boolean(autofillJob && ["queued", "running", "cancelling"].includes(autofillJob.status))}
+          cancellable={Boolean(autofillJob && ["queued", "running", "cancelling", "awaiting_user"].includes(autofillJob.status))}
           onCancel={handleCancelAutofill}
           cancelLabel={autofillJob?.status === "cancelling" ? "Cancelling..." : "Cancel Autofill"}
+          actionLabel={autofillJob?.status === "awaiting_user" ? (autofillJob.manual_action?.cta || "Continue") : undefined}
+          onAction={autofillJob?.status === "awaiting_user" ? handleContinueAutofill : undefined}
         />
       );
     case "main":
@@ -246,21 +487,32 @@ function AppContent() {
         );
       }
       return (
-        <ReviewScreen
-          run={run}
-          onBack={() => setView("upload")}
-          onProfile={() => setView("profile")}
-          onSettings={() => setView("settings")}
+        <>
+          <ReviewScreen
+            run={run}
+            onBack={() => setView("upload")}
+            onProfile={() => setView("profile")}
+            onSettings={() => setView("settings")}
           onPolicy={() => setView("policy")}
-          onLogout={handleLogout}
-          onSaveReview={handleSaveReview}
-          onAutofill={handleAutofill}
-          onAskAssistant={handleAskAssistant}
-          isSaving={saving}
-          isAutofilling={autofilling}
-          errorMessage={uploadError}
-          onDismissError={() => setUploadError("")}
-        />
+            onLogout={handleLogout}
+            onSaveReview={handleSaveReview}
+            onAutofill={handleAutofill}
+            onAskAssistant={handleAskAssistant}
+            onApplyPatch={handleApplyPatch}
+            isSaving={saving}
+            isAutofilling={autofilling}
+            errorMessage={uploadError}
+            onDismissError={() => setUploadError("")}
+          />
+          <FirstRunSetupModal
+            open={settingsLoaded && showSetupModal}
+            settings={settings}
+            saving={setupSaving}
+            onChange={setSettings}
+            onSave={handleSaveSetupModal}
+            onLater={handleLaterSetup}
+          />
+        </>
       );
     case "settings":
       return (
@@ -273,7 +525,13 @@ function AppContent() {
     case "profile":
       return <ProfileScreen onBack={() => setView("main")} />;
     case "policy":
-      return <ClientPolicyScreen onBack={() => setView("main")} />;
+      return (
+        <ClientPolicyScreen
+          onBack={() => setView("main")}
+          settings={settings}
+          onSaveSettings={handleSaveSettings}
+        />
+      );
     default:
       return (
         <UploadScreen

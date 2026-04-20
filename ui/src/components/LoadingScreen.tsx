@@ -8,9 +8,11 @@ interface LoadingScreenProps {
   cancellable?: boolean;
   onCancel?: () => void;
   cancelLabel?: string;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
-export function LoadingScreen({ message, cancellable = false, onCancel, cancelLabel = "Cancel" }: LoadingScreenProps) {
+export function LoadingScreen({ message, cancellable = false, onCancel, cancelLabel = "Cancel", actionLabel, onAction }: LoadingScreenProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
       <div className="relative">
@@ -34,9 +36,20 @@ export function LoadingScreen({ message, cancellable = false, onCancel, cancelLa
         <h2 className="text-xl font-bold text-slate-900">Analyzing Matter Documents</h2>
         <p className="text-slate-400 text-sm">{message ?? "Extracting Section 32 answers, review flags, and autofill actions..."}</p>
         {cancellable && onCancel ? (
-          <div className="pt-4">
+          <div className="pt-4 flex items-center justify-center gap-3">
+            {actionLabel && onAction ? (
+              <Button onClick={onAction}>
+                {actionLabel}
+              </Button>
+            ) : null}
             <Button variant="outline" onClick={onCancel}>
               {cancelLabel}
+            </Button>
+          </div>
+        ) : actionLabel && onAction ? (
+          <div className="pt-4">
+            <Button onClick={onAction}>
+              {actionLabel}
             </Button>
           </div>
         ) : null}

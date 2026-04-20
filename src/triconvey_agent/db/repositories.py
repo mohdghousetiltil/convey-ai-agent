@@ -89,6 +89,50 @@ class ClientRepo:
         return q.scalar_one_or_none()
 
     @staticmethod
+    async def get_single_active(session: AsyncSession) -> Client | None:
+        """Returns the single active client row. Used for desktop (single-tenant) installs.
+        Returns None if there are zero or multiple active clients."""
+        q = await session.execute(select(Client).where(Client.is_active.is_(True)))
+        rows = list(q.scalars().all())
+        return rows[0] if len(rows) == 1 else None
+
+    @staticmethod
+    async def provision_from_oauth_tenant(
+        session: AsyncSession,
+        *,
+        tenant_id: str,
+        email_domain: str,
+    ) -> tuple["Client", bool]:
+        """Find or create a client from a Microsoft tenant ID.
+
+        Uses `license_key` to store the tenant ID (no schema change needed).
+        Returns (client, is_new) — `is_new` is True when the org was just created.
+        """
+        existing = await ClientRepo.get_by_license(session, tenant_id)
+        if existing is not None:
+            return existing, False
+
+        import re as _re
+        safe_slug = _re.sub(r"[^a-z0-9]+", "-", email_domain.lower()).strip("-")[:40]
+        # Ensure slug uniqueness by appending a suffix if needed
+        base_slug = safe_slug
+        for attempt in range(20):
+            slug_candidate = base_slug if attempt == 0 else f"{base_slug}-{attempt}"
+            check = await ClientRepo.get_by_slug(session, slug_candidate)
+            if check is None:
+                safe_slug = slug_candidate
+                break
+
+        client = Client(
+            slug=safe_slug,
+            name=email_domain,
+            license_key=tenant_id,
+        )
+        session.add(client)
+        await session.flush()
+        return client, True
+
+    @staticmethod
     async def ensure_local(
         session: AsyncSession,
         *,
@@ -134,6 +178,13 @@ class UserRepo:
         return list(q.scalars().all())
 
     @staticmethod
+    async def count_for_client(session: AsyncSession, client_id: uuid.UUID) -> int:
+        q = await session.execute(
+            select(func.count()).select_from(User).where(User.client_id == client_id)
+        )
+        return q.scalar_one() or 0
+
+    @staticmethod
     async def create(
         session: AsyncSession,
         *,
@@ -177,6 +228,7 @@ class UserRepo:
         oauth_subject: str,
         email: str,
         name: str,
+        default_role: str = "reviewer",
     ) -> User:
         """Find-or-create a user from an OAuth ID token.
 
@@ -208,12 +260,12 @@ class UserRepo:
             await session.flush()
             return user
 
-        # 3. New OAuth user — default to reviewer role
+        # 3. New OAuth user — role determined by caller (admin for first user, reviewer otherwise)
         user = User(
             client_id=client_id,
             email=email.lower(),
             name=name,
-            role="reviewer",
+            role=default_role,
             oauth_provider=oauth_provider,
             oauth_subject=oauth_subject,
         )
@@ -521,14 +573,25 @@ class FactRepo:
         Each item may include `sources: list[dict]` — inserted into fact_sources.
         """
         fact_rows: list[Fact] = []
+        pending_sources: list[tuple[Fact, list[dict[str, Any]]]] = []
+
         for item in facts:
-            sources = item.pop("sources", [])
-            fact = Fact(run_id=run_id, **item)
-            session.add(fact)
+            payload = dict(item)
+            sources = payload.pop("sources", [])
+            fact = Fact(run_id=run_id, **payload)
             fact_rows.append(fact)
-            await session.flush()  # get fact.id before inserting sources
-            if sources:
-                session.add_all([FactSource(fact_id=fact.id, **s) for s in sources])
+            pending_sources.append((fact, sources))
+
+        session.add_all(fact_rows)
+        await session.flush()
+
+        fact_sources: list[FactSource] = []
+        for fact, sources in pending_sources:
+            if not sources:
+                continue
+            fact_sources.extend(FactSource(fact_id=fact.id, **s) for s in sources)
+        if fact_sources:
+            session.add_all(fact_sources)
         return fact_rows
 
     @staticmethod
@@ -606,13 +669,16 @@ class AnswerRepo:
 
         if not answers:
             return
+        rows = []
         for row in answers:
-            row["run_id"] = run_id
-            stmt = pg_insert(Answer).values(**row)
-            stmt = stmt.on_conflict_do_nothing(
-                index_elements=[Answer.run_id, Answer.question_id]
-            )
-            await session.execute(stmt)
+            payload = dict(row)
+            payload["run_id"] = run_id
+            rows.append(payload)
+        stmt = pg_insert(Answer).values(rows)
+        stmt = stmt.on_conflict_do_nothing(
+            index_elements=[Answer.run_id, Answer.question_id]
+        )
+        await session.execute(stmt)
 
     @staticmethod
     async def for_run(session: AsyncSession, run_id: uuid.UUID) -> list[Answer]:
@@ -768,8 +834,14 @@ class AuditRepo:
         after: Any | None = None,
         ip_address: str | None = None,
     ) -> None:
+        # SQLite does not reliably auto-generate values for a BIGINT primary key
+        # the same way PostgreSQL does. Assign the audit id explicitly so desktop
+        # OAuth/login flows cannot fail on a missing audit_log.id value.
+        current_max = await session.execute(select(func.max(AuditLog.id)))
+        next_id = int(current_max.scalar_one() or 0) + 1
         session.add(
             AuditLog(
+                id=next_id,
                 client_id=client_id,
                 user_id=user_id,
                 run_id=run_id,

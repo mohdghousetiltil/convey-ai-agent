@@ -9,6 +9,8 @@ datas = [
     (str(project_root / "triconvey-mapping"), "triconvey-mapping"),
     (str(project_root / "src" / "triconvey_agent" / "canonical" / "questions" / "registry.yaml"),
      "triconvey_agent/canonical/questions"),
+    (str(project_root / "src" / "triconvey_agent" / "db" / "schema.sql"),
+     "triconvey_agent/db"),
 ]
 
 hiddenimports = [
@@ -16,6 +18,16 @@ hiddenimports = [
     "triconvey_agent.backend.api",
     "triconvey_agent.backend.service",
     "triconvey_agent.backend.runtime",
+    "triconvey_agent.backend.settings",
+    # --- Auth ---
+    "triconvey_agent.auth.security",
+    "triconvey_agent.auth.oauth",
+    "triconvey_agent.auth.deps",
+    # --- Database ---
+    "triconvey_agent.db.session",
+    "triconvey_agent.db.models",
+    "triconvey_agent.db.repositories",
+    "triconvey_agent.db.bootstrap",
     # --- Config ---
     "triconvey_agent.config",
     # --- AI / OpenAI ---
@@ -53,6 +65,14 @@ hiddenimports = [
     "triconvey_agent.canonical.runner.ai_review",
     "triconvey_agent.canonical.runner.fact_extraction",
     "triconvey_agent.canonical.runner.summary_writer",
+    # --- Brain F (AI Agent) ---
+    "triconvey_agent.brain_f.agent",
+    "triconvey_agent.brain_f.tools",
+    "triconvey_agent.brain_f.prompts",
+    "triconvey_agent.brain_f.cache",
+    "triconvey_agent.brain_f.memory",
+    # --- Sync ---
+    "triconvey_agent.sync.worker",
     # --- Ingest ---
     "triconvey_agent.ingest",
     "triconvey_agent.ingest.pdf_loader",
@@ -72,6 +92,9 @@ hiddenimports = [
     "dotenv",
     "yaml",
     "multipart",
+    # --- Database drivers ---
+    "aiosqlite",
+    "asyncpg",
     # --- uvicorn internals ---
     "uvicorn.logging",
     "uvicorn.loops",

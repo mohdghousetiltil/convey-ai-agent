@@ -20,8 +20,9 @@ from triconvey_agent.schemas.documents import (
 )
 
 LARGE_PDF_PAGE_THRESHOLD = 100
-LARGE_PDF_HEAD_PAGES = 24
-LARGE_PDF_TAIL_PAGES = 6
+LARGE_PDF_HEAD_PAGES = 25
+LARGE_PDF_MIDDLE_PAGES = 2
+LARGE_PDF_TAIL_PAGES = 5
 MEDIUM_PDF_PAGE_THRESHOLD = 60
 MEDIUM_PDF_HEAD_PAGES = 16
 MEDIUM_PDF_TAIL_PAGES = 4
@@ -178,12 +179,36 @@ def _selected_page_indices(filename: str, total_pages: int) -> list[int]:
         return sorted(set(head + tail))
     if total_pages <= MEDIUM_PDF_PAGE_THRESHOLD:
         return list(range(total_pages))
-    if total_pages <= LARGE_PDF_PAGE_THRESHOLD:
+    if total_pages < LARGE_PDF_PAGE_THRESHOLD:
         head = list(range(min(MEDIUM_PDF_HEAD_PAGES, total_pages)))
         tail_start = max(MEDIUM_PDF_HEAD_PAGES, total_pages - MEDIUM_PDF_TAIL_PAGES)
         tail = list(range(tail_start, total_pages))
         return sorted(set(head + tail))
     head = list(range(min(LARGE_PDF_HEAD_PAGES, total_pages)))
+    middle = _middle_page_indices(
+        total_pages,
+        count=LARGE_PDF_MIDDLE_PAGES,
+        start_after=len(head),
+        end_before=max(total_pages - LARGE_PDF_TAIL_PAGES, len(head)),
+    )
     tail_start = max(LARGE_PDF_HEAD_PAGES, total_pages - LARGE_PDF_TAIL_PAGES)
     tail = list(range(tail_start, total_pages))
-    return sorted(set(head + tail))
+    return sorted(set(head + middle + tail))
+
+
+def _middle_page_indices(total_pages: int, *, count: int, start_after: int, end_before: int) -> list[int]:
+    if count <= 0 or end_before <= start_after:
+        return []
+    available = end_before - start_after
+    if available <= count:
+        return list(range(start_after, end_before))
+
+    center = (start_after + end_before - 1) / 2
+    first = max(start_after, int(round(center - 0.5)))
+    indices = [first]
+    while len(indices) < count:
+        next_index = indices[-1] + 1
+        if next_index >= end_before:
+            break
+        indices.append(next_index)
+    return sorted(set(indices))

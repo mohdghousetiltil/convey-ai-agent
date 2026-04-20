@@ -1,5 +1,39 @@
 {
   "language": "English",
+  "aiProvider": "openai",
   "defaultModelName": "gpt-4.1-mini",
-  "triconveyPath": "C:\\Program Files\\Smokeball\\binaries\\triConvey.exe"
+  "triconveyPath": "C:\\Program Files\\Smokeball\\binaries\\triConvey.exe",
+  "preferredAutofillFields": [],
+  "preferredAutofillFieldsByUser": {
+    "813158df-f71a-4dc7-ad72-82a63ff14751": [
+      "policy_1_certs_attached",
+      "policy_1_total_does_not_exceed",
+      "policy_1_total_does_not_exceed_amount",
+      "policy_1_amounts_are_checked",
+      "sec32_1.1_outgoing_1_authority",
+      "sec32_1.1_outgoing_1_amount",
+      "sec32_1.1_outgoing_2_authority",
+      "sec32_1.1_outgoing_2_amount",
+      "sec32_1.1_outgoing_3_authority",
+      "sec32_1.1_outgoing_3_amount",
+      "sec32_1.1_outgoing_4_authority",
+      "sec32_1.1_outgoing_4_amount",
+      "policy_2_title_in_attached",
+      "policy_2_failure_checked",
+      "policy_2_failure_text",
+      "sec32_3.2_no_road_access",
+      "sec32_3.3_bushfire_prone",
+      "policy_2_planning_cert_attached",
+      "5. Building Permits - Are contained in the attached certificate",
+      "5. Building Permits - Are as follows",
+      "policy_4_oc_cert_attached",
+      "sec32_8_electricity_not_connected",
+      "sec32_8_gas_not_connected",
+      "sec32_8_water_not_connected",
+      "sec32_8_sewerage_not_connected",
+      "sec32_8_telephone_not_connected",
+      "policy_6_due_diligence",
+      "policy_6_attachments"
+    ]
+  }
 }

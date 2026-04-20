@@ -8,24 +8,146 @@ interface UploadPageProps {
   errorMessage?: string;
 }
 
+function stableDropStamp(content: string): number {
+  let hash = 0;
+  for (let i = 0; i < content.length; i += 1) {
+    hash = ((hash << 5) - hash + content.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function makeReferenceFile(content: string): File {
+  const stamp = stableDropStamp(content);
+  return new File([content], `triconvey-drop-${stamp}.json`, {
+    type: "application/json",
+    lastModified: stamp,
+  });
+}
+
+function extractLocalPaths(...rawValues: string[]): string[] {
+  const paths = new Set<string>();
+  const pushMatches = (text: string) => {
+    for (const match of text.matchAll(/file:\/\/\/[^\s"'<>]+/gi)) {
+      paths.add(match[0]);
+    }
+    for (const match of text.matchAll(/@?[A-Za-z]:\\[^\r\n"<>|?*]+/g)) {
+      paths.add(match[0].replace(/^@+/, ""));
+    }
+  };
+  for (const raw of rawValues) {
+    const text = raw.trim();
+    if (!text) continue;
+    pushMatches(text);
+    for (const token of text.split(/\s+/)) {
+      const cleaned = token.trim().replace(/^@+/, "");
+      if (cleaned.startsWith("file:///") || /^[A-Za-z]:\\/.test(cleaned)) {
+        paths.add(cleaned);
+      }
+    }
+  }
+  return Array.from(paths);
+}
+
+function isTriconveyReferenceName(name: string): boolean {
+  const lower = name.toLowerCase();
+  return (
+    lower.endsWith(".smokeball.tmp") ||
+    lower.endsWith(".smokeball.json") ||
+    /^triconvey-drop-\d+\.json$/.test(lower) ||
+    lower.endsWith("triconvey-drop.json")
+  );
+}
+
+function extractDroppedFilePaths(files: File[]): string[] {
+  const paths = new Set<string>();
+  for (const file of files) {
+    const candidate = (file as File & { path?: string }).path;
+    if (typeof candidate === "string" && candidate.trim()) {
+      paths.add(candidate.trim());
+    }
+  }
+  return Array.from(paths);
+}
+
+function parseDroppedReferenceText(rawPlain: string, rawUriList = "", rawHtml = ""): { localPaths?: string[]; matterPayload?: string } | null {
+  const matterPayload = rawPlain.trim().includes("\"MatterId\"") ? rawPlain.trim() : undefined;
+  const localPaths = extractLocalPaths(rawPlain, rawUriList, rawHtml);
+
+  if (!matterPayload && localPaths.length === 0) return null;
+  return {
+    matterPayload,
+    localPaths: localPaths.length ? localPaths : undefined,
+  };
+}
+
 export function UploadScreen({ onUploadComplete, errorMessage }: UploadPageProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFiles = (fileList: FileList | null) => {
-    if (!fileList) return;
-    const nextFiles = Array.from(fileList).filter((file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"));
+  const isSupportedUpload = (file: File) => {
+    const name = file.name.toLowerCase();
+    return (
+      file.type === "application/pdf" ||
+      name.endsWith(".pdf") ||
+      isTriconveyReferenceName(name)
+    );
+  };
+
+  const appendFiles = (nextFiles: File[]) => {
     setFiles((prev) => {
       const seen = new Set(prev.map((file) => `${file.name}:${file.size}:${file.lastModified}`));
       return [...prev, ...nextFiles.filter((file) => !seen.has(`${file.name}:${file.size}:${file.lastModified}`))];
     });
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleFiles = (fileList: FileList | null) => {
+    if (!fileList) return;
+    appendFiles(Array.from(fileList).filter(isSupportedUpload));
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    handleFiles(e.dataTransfer.files);
+    const plainText = e.dataTransfer.getData("text/plain");
+    const uriList = e.dataTransfer.getData("text/uri-list");
+    const htmlText = e.dataTransfer.getData("text/html");
+    const parsed = parseDroppedReferenceText(plainText, uriList, htmlText);
+    const droppedFiles = Array.from(e.dataTransfer.files ?? []).filter(isSupportedUpload);
+    const droppedFilePaths = extractDroppedFilePaths(droppedFiles);
+    const droppedPdfFiles = droppedFiles.filter((file) => !isTriconveyReferenceName(file.name));
+
+    const hasOnlyTriconveyRefs =
+      droppedFiles.length > 0 &&
+      droppedFiles.every((file) => isTriconveyReferenceName(file.name));
+
+    // In the desktop app, dropped File objects can carry a native `path`
+    // property. Prefer those concrete local paths over matter metadata so we
+    // import the exact cached PDF TriConvey just downloaded.
+    if (droppedFilePaths.length) {
+      appendFiles([makeReferenceFile(JSON.stringify({ LocalPaths: droppedFilePaths }, null, 2))]);
+      return;
+    }
+
+    // Next preference: explicit paths from drag text. Browsers often expose the
+    // dropped `.smokeball.tmp` items as virtual files that cannot actually be
+    // uploaded, which causes fetch to fail before the backend sees `/api/runs`.
+    if (parsed?.localPaths?.length) {
+      appendFiles([makeReferenceFile(JSON.stringify({ LocalPaths: parsed.localPaths }, null, 2))]);
+      return;
+    }
+    if (droppedPdfFiles.length > 0) {
+      appendFiles(droppedPdfFiles);
+      return;
+    }
+    if (parsed?.matterPayload) {
+      appendFiles([makeReferenceFile(parsed.matterPayload)]);
+      return;
+    }
+
+    if (droppedFiles.length > 0 && !hasOnlyTriconveyRefs) {
+      appendFiles(droppedFiles);
+    }
   };
 
   const removeFile = (index: number) => {
@@ -59,14 +181,14 @@ export function UploadScreen({ onUploadComplete, errorMessage }: UploadPageProps
             className="hidden" 
             multiple 
             onChange={(e) => handleFiles(e.target.files)}
-            accept=".pdf"
+            accept=".pdf,.json,.tmp"
           />
           <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-primary">
             <Upload className="w-8 h-8" />
           </div>
           <div className="text-center">
             <p className="text-[1.1rem] font-semibold text-slate-700">Drag and drop files here</p>
-            <p className="text-slate-400 text-sm mt-1">PDF files only, ready for canonical extraction and Convey autofill</p>
+            <p className="text-slate-400 text-sm mt-1">PDFs or TriConvey folder drops, ready for canonical extraction and Convey autofill</p>
           </div>
           <Button 
             variant="outline" 
@@ -120,7 +242,11 @@ export function UploadScreen({ onUploadComplete, errorMessage }: UploadPageProps
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-slate-700 truncate max-w-[300px]">{file.name}</p>
-                        <p className="text-xs text-slate-400">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        <p className="text-xs text-slate-400">
+                          {file.name.toLowerCase().endsWith(".pdf")
+                            ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
+                            : "TriConvey reference"}
+                        </p>
                       </div>
                     </div>
                     <button 

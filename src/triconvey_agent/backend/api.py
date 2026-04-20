@@ -5,9 +5,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import logging
+import json
 import os
 import shutil
 import threading
+from datetime import datetime, timedelta, UTC
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -31,7 +33,10 @@ from triconvey_agent.backend.service import (
     ensure_local_convey_running,
     load_run_payload,
     save_review_answers,
+    set_autofill_activity,
+    warm_brain_f_assets_async,
 )
+from triconvey_agent.canonical.questions.loader import load_question_registry
 from triconvey_agent.db.repositories import (
     AnswerRepo,
     ClientRepo,
@@ -70,6 +75,7 @@ class AutofillJobRecord(BaseModel):
     completed_at: str | None = None
     error: str | None = None
     result: dict[str, Any] | None = None
+    manual_action: dict[str, Any] | None = None
 
 
 class CreateRunResult(BaseModel):
@@ -78,16 +84,36 @@ class CreateRunResult(BaseModel):
     convey_launch_ok: bool | None = None
 
 
+class ChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
+
 class ChatRequest(BaseModel):
     question: str
-    model: str = "gpt-4.1-mini"
+    model: str | None = None          # if None, uses saved defaultModelName
+    history: list[ChatMessage] = Field(default_factory=list)
+    mode: str = "standard"            # "quick" | "standard" | "thorough"
+
+
+class AnswerPatch(BaseModel):
+    question_id: str
+    new_value: str
+    reason: str
+
+
+class ApplyPatchRequest(BaseModel):
+    patches: list[AnswerPatch]
 
 
 class LocalSettingsPayload(BaseModel):
     language: str = "English"
     openAiApiKey: str = ""
+    anthropicApiKey: str = ""
+    aiProvider: str = "openai"          # "openai" | "anthropic"
     defaultModelName: str = "gpt-4.1-mini"
     triconveyPath: str = ""
+    preferredAutofillFields: list[str] = Field(default_factory=list)
 
 
 _sync_worker_ref: dict[str, SyncWorker | None] = {"worker": None}
@@ -146,10 +172,26 @@ app.include_router(auth_router)
 _ui_dist_dir = get_runtime_paths().ui_dist_dir
 _autofill_jobs: dict[str, AutofillJobRecord] = {}
 _autofill_cancel_events: dict[str, threading.Event] = {}
+_autofill_job_context: dict[str, dict[str, Any]] = {}
 _autofill_lock = threading.Lock()
 apply_local_settings_env()
 if _ui_dist_dir.exists():
     app.mount("/assets", StaticFiles(directory=str(_ui_dist_dir / "assets")), name="ui-assets")
+
+
+def _triconvey_import_debug(event: str, **fields: Any) -> None:
+    try:
+        runtime = ensure_runtime_dirs()
+        log_file = runtime.local_app_dir / "triconvey_import_debug.log"
+        timestamp = datetime.now(UTC).isoformat()
+        parts = [f"ts={timestamp}", f"event={event}"]
+        for key, value in fields.items():
+            text = str(value).replace("\n", " ").replace("\r", " ")
+            parts.append(f"{key}={text}")
+        with log_file.open("a", encoding="utf-8") as fh:
+            fh.write(" | ".join(parts) + "\n")
+    except Exception:
+        pass
 
 
 @app.get("/api/health")
@@ -190,13 +232,16 @@ async def health(session: AsyncSession = Depends(get_session)) -> dict[str, Any]
 
 
 @app.get("/api/settings")
-def get_settings() -> dict[str, str]:
-    return load_local_settings()
+def get_settings(ctx: AuthContext = Depends(require_auth)) -> dict[str, Any]:
+    return load_local_settings(user_id=str(ctx.user.id))
 
 
 @app.post("/api/settings")
-def post_settings(body: LocalSettingsPayload) -> dict[str, str]:
-    return save_local_settings(body.model_dump(mode="json"))
+def post_settings(
+    body: LocalSettingsPayload,
+    ctx: AuthContext = Depends(require_auth),
+) -> dict[str, Any]:
+    return save_local_settings(body.model_dump(mode="json"), user_id=str(ctx.user.id))
 
 
 @app.get("/")
@@ -227,6 +272,12 @@ async def create_run(
     if not files:
         raise HTTPException(status_code=400, detail="At least one PDF is required.")
 
+    _triconvey_import_debug(
+        "create_run_start",
+        file_count=len(files),
+        filenames=[getattr(f, "filename", "") or "<unnamed>" for f in files],
+    )
+
     runtime = ensure_runtime_dirs()
     run_uuid = _uuid.uuid4()
     target_dir = runtime.ui_runs_dir / str(run_uuid)
@@ -234,19 +285,62 @@ async def create_run(
     uploads_dir.mkdir(parents=True, exist_ok=True)
 
     saved_paths: list[Path] = []
+    reference_uploads: list[Path] = []
     for upload in files:
         if not upload.filename:
             continue
         destination = uploads_dir / _safe_filename(upload.filename)
         with destination.open("wb") as output_stream:
             shutil.copyfileobj(upload.file, output_stream)
-        saved_paths.append(destination)
+        if destination.suffix.lower() == ".pdf":
+            saved_paths.append(destination)
+        elif _looks_like_triconvey_reference(destination):
+            reference_uploads.append(destination)
         await upload.close()
 
+    _triconvey_import_debug(
+        "create_run_saved_uploads",
+        pdf_count=len(saved_paths),
+        reference_count=len(reference_uploads),
+        reference_names=[p.name for p in reference_uploads],
+    )
+
+    deduped_reference_uploads = _dedupe_paths(reference_uploads)
+    if len(deduped_reference_uploads) != len(reference_uploads):
+        _triconvey_import_debug(
+            "create_run_deduped_references",
+            original_count=len(reference_uploads),
+            deduped_count=len(deduped_reference_uploads),
+        )
+
+    resolved_reference_pdfs: list[Path] = []
+    try:
+        for reference_path in deduped_reference_uploads:
+            resolved_reference_pdfs.extend(_resolve_triconvey_reference_upload(reference_path))
+    except Exception as exc:
+        _triconvey_import_debug("reference_resolution_exception", error=exc)
+        raise HTTPException(
+            status_code=400,
+            detail=f"TriConvey import failed while resolving cached files: {exc}",
+        ) from exc
+    for resolved_pdf in _dedupe_paths(resolved_reference_pdfs):
+        copied = _copy_into_uploads(resolved_pdf, uploads_dir)
+        if copied not in saved_paths:
+            saved_paths.append(copied)
+
     if not saved_paths:
+        if reference_uploads:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "TriConvey drop detected, but the PDFs haven't been downloaded yet. "
+                    "Open each document in TriConvey first so Smokeball caches it locally, "
+                    "then drag the files again."
+                ),
+            )
         raise HTTPException(status_code=400, detail="No valid files were uploaded.")
 
-    saved_settings = load_local_settings()
+    saved_settings = load_local_settings(user_id=str(ctx.user.id))
     resolved_model = model or saved_settings["defaultModelName"]
     resolved_triconvey_exe = triconvey_exe or saved_settings["triconveyPath"] or None
 
@@ -274,6 +368,7 @@ async def create_run(
             model=resolved_model,
         )
         payload: dict[str, Any] = await loop.run_in_executor(None, pipeline_fn)
+        LOG.info("Pipeline complete for run %s; starting DB persistence", run_uuid)
     except Exception as exc:
         await RunRepo.update_status(
             session,
@@ -286,9 +381,14 @@ async def create_run(
 
     # Persist pipeline output to DB (non-blocking, runs in same async context).
     await _persist_run_to_db(session, payload, client_id=ctx.client.id, run_uuid=run_uuid)
+    LOG.info("DB persistence complete for run %s", run_uuid)
+    warm_started = warm_brain_f_assets_async(target_dir)
+    if warm_started:
+        LOG.info("Brain F background warmup started for run %s", run_uuid)
 
     payload["convey_launch_attempted"] = bool(launch_convey)
     payload["convey_launch_ok"] = convey_launch_ok
+    payload["brain_f_warming"] = warm_started
     return payload
 
 
@@ -356,13 +456,63 @@ async def save_answers(
 
 @app.post("/api/runs/{run_id}/chat")
 def chat_about_run(run_id: str, body: ChatRequest) -> dict[str, Any]:
+    """Ask a question about a run.
+
+    Brain F (Anthropic agentic) is used when ANTHROPIC_API_KEY is set.
+    Falls back to OpenAI token-ranked retrieval otherwise.
+
+    Returns:
+        answer            — prose answer
+        citations         — [{file, page, quote}, ...]
+        proposed_patches  — [{question_id, new_value, reason, status}, ...] (Brain F only)
+        tool_calls_made   — int (Brain F only)
+        confidence_note   — str | null (Brain F only)
+    """
     run_dir = _resolve_run_dir(run_id)
     try:
         saved_settings = load_local_settings()
-        return ask_run_question(run_dir, question=body.question, model=body.model or saved_settings["defaultModelName"])
+        history = [{"role": m.role, "content": m.content} for m in (body.history or [])]
+        model = body.model or saved_settings.get("defaultModelName", "gpt-4.1-mini")
+        return ask_run_question(
+            run_dir,
+            question=body.question,
+            model=model,
+            history=history,
+            ai_provider=saved_settings.get("aiProvider", "openai"),
+            mode=body.mode or "standard",
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # pragma: no cover - surfaced to UI
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/runs/{run_id}/apply-patches")
+def apply_answer_patches(run_id: str, body: ApplyPatchRequest) -> dict[str, Any]:
+    """Apply one or more proposed answer patches (from Brain F) to the run.
+
+    The UI collects proposed_patches from a chat response, the conveyancer
+    reviews them, and submits the ones they want applied here.
+    """
+    run_dir = _resolve_run_dir(run_id)
+    try:
+        updates: dict[str, dict[str, Any]] = {}
+        unresolved: list[str] = []
+        for patch in body.patches:
+            targets = _resolve_patch_question_ids(patch.question_id)
+            if not targets:
+                unresolved.append(patch.question_id)
+                continue
+            for qid in targets:
+                updates[qid] = {"value": patch.new_value, "needs_review": False}
+        if unresolved:
+            raise ValueError(
+                "Could not resolve patch target(s): " + ", ".join(unresolved)
+            )
+        return save_review_answers(run_dir, updates)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -394,7 +544,7 @@ async def start_autofill_job(
     import uuid as _uuid
 
     run_dir = _resolve_run_dir(run_id)
-    saved_settings = load_local_settings()
+    saved_settings = load_local_settings(user_id=str(ctx.user.id))
 
     # Persist job to DB.
     from triconvey_agent.db.repositories import AutofillJobRepo
@@ -421,10 +571,15 @@ async def start_autofill_job(
     with _autofill_lock:
         _autofill_jobs[job_id_str] = record
         _autofill_cancel_events[job_id_str] = cancel_event
+        _autofill_job_context[job_id_str] = {
+            "run_dir": run_dir,
+            "body": body.model_dump(mode="json"),
+            "user_id": str(ctx.user.id),
+        }
 
     worker = threading.Thread(
         target=_run_autofill_job,
-        args=(job_id_str, job.id, run_dir, body, cancel_event),
+        args=(job_id_str, job.id, run_dir, body, cancel_event, False, str(ctx.user.id)),
         daemon=True,
     )
     worker.start()
@@ -459,6 +614,7 @@ async def get_autofill_job(
                 "completed_at": job.completed_at.isoformat() if job.completed_at else None,
                 "error": job.error,
                 "result": mem.result if mem else None,
+                "manual_action": mem.manual_action if mem else None,
             }
             return base
 
@@ -487,6 +643,43 @@ async def cancel_autofill_job(
     return record.model_dump(mode="json")
 
 
+@app.post("/api/autofill-jobs/{job_id}/continue")
+async def continue_autofill_job(
+    job_id: str,
+    ctx: AuthContext = Depends(require_auth),
+) -> dict[str, Any]:
+    with _autofill_lock:
+        record = _autofill_jobs.get(job_id)
+        cancel_event = _autofill_cancel_events.get(job_id)
+        context = _autofill_job_context.get(job_id)
+        if record is None or cancel_event is None or context is None:
+            raise HTTPException(status_code=404, detail=f"Autofill job '{job_id}' was not found.")
+        if record.status != "awaiting_user":
+            return record.model_dump(mode="json")
+        record.status = "queued"
+        record.error = None
+        record.manual_action = None
+        record.started_at = None
+        record.completed_at = None
+        _autofill_jobs[job_id] = record
+
+    worker = threading.Thread(
+        target=_run_autofill_job,
+        args=(
+            job_id,
+            None,
+            context["run_dir"],
+            AutofillRequest.model_validate(context["body"]),
+            cancel_event,
+            True,
+            context.get("user_id"),
+        ),
+        daemon=True,
+    )
+    worker.start()
+    return record.model_dump(mode="json")
+
+
 def _resolve_run_dir(run_id: str) -> Path:
     runtime = ensure_runtime_dirs()
     run_dir = runtime.ui_runs_dir / run_id
@@ -509,12 +702,312 @@ def _safe_filename(name: str) -> str:
     return Path(name).name.replace("/", "_").replace("\\", "_")
 
 
+def _looks_like_triconvey_reference(path: Path) -> bool:
+    name = path.name.lower()
+    return (
+        name.endswith(".smokeball.tmp")
+        or name.endswith(".smokeball.json")
+        or name == "triconvey-drop.json"
+        or (name.startswith("triconvey-drop-") and name.endswith(".json"))
+    )
+
+
+def _copy_into_uploads(source: Path, uploads_dir: Path) -> Path:
+    candidate = uploads_dir / _safe_filename(source.name)
+    if candidate.exists():
+        stem = candidate.stem
+        suffix = candidate.suffix
+        index = 2
+        while candidate.exists():
+            candidate = uploads_dir / f"{stem} ({index}){suffix}"
+            index += 1
+    shutil.copy2(source, candidate)
+    return candidate
+
+
+def _resolve_triconvey_reference_upload(reference_path: Path) -> list[Path]:
+    _triconvey_import_debug("reference_upload", path=reference_path, size=reference_path.stat().st_size if reference_path.exists() else -1)
+    payload = _read_triconvey_reference_payload(reference_path)
+    if not payload:
+        _triconvey_import_debug("reference_upload_unparsed", path=reference_path)
+        return []
+    return _resolve_triconvey_reference_payload(payload)
+
+
+def _read_triconvey_reference_payload(reference_path: Path) -> dict[str, Any] | None:
+    try:
+        raw_text = reference_path.read_text(encoding="utf-8")
+        payload = json.loads(raw_text)
+    except Exception as exc:
+        try:
+            preview = reference_path.read_text(encoding="utf-8", errors="ignore")[:300]
+        except Exception:
+            preview = "<unreadable>"
+        _triconvey_import_debug("reference_payload_parse_error", path=reference_path, error=exc, preview=preview)
+        return None
+    if not isinstance(payload, dict):
+        _triconvey_import_debug("reference_payload_not_dict", path=reference_path, payload_type=type(payload).__name__)
+        return None
+    if isinstance(payload.get("LocalPaths"), list):
+        _triconvey_import_debug("reference_payload_local_paths", count=len(payload.get("LocalPaths", [])))
+        return payload
+    if "MatterId" not in payload:
+        _triconvey_import_debug("reference_payload_missing_matter", keys=list(payload.keys()))
+        return None
+    if not isinstance(payload.get("Files", []), list):
+        _triconvey_import_debug("reference_payload_bad_files", files_type=type(payload.get("Files")).__name__)
+        return None
+    if not isinstance(payload.get("Folders", []), list):
+        _triconvey_import_debug("reference_payload_bad_folders", folders_type=type(payload.get("Folders")).__name__)
+        return None
+    _triconvey_import_debug(
+        "reference_payload_matter",
+        matter_id=payload.get("MatterId", ""),
+        file_count=len(payload.get("Files", [])),
+        folder_count=len(payload.get("Folders", [])),
+        file_ids=payload.get("Files", []),
+    )
+    return payload
+
+
+def _resolve_triconvey_reference_payload(payload: dict[str, Any]) -> list[Path]:
+    local_path_hits = _resolve_explicit_triconvey_paths(payload)
+    if local_path_hits:
+        _triconvey_import_debug("resolve_payload_local_hits", count=len(local_path_hits), names=[p.name for p in local_path_hits])
+        return local_path_hits
+
+    # TriConvey/Smokeball opens documents in an embedded WebView2 browser which
+    # downloads PDFs to:
+    #   %LOCALAPPDATA%\Temp\{hex6-9}\{hex6-9}\{hex6-9}\{filename}.pdf
+    # The GUID in the drop payload cannot be derived into these path segments —
+    # they are random WebView2 cache hashes.  We find the files by recency.
+    #
+    # Secondary fallback: the Smokeball desktop app caches at
+    #   %LOCALAPPDATA%\Temp\Smokeball\{yyyy_mm_dd}\{guid_prefix8}\{filename}.pdf
+    import re as _re
+
+    local_app_data = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData" / "Local")))
+    temp_root = local_app_data / "Temp"
+    matter_id = payload.get("MatterId", "")
+    requested_file_count = max(0, len(payload.get("Files", [])))
+    requested_folder_count = max(0, len(payload.get("Folders", [])))
+    requested_document_count = max(1, requested_file_count + requested_folder_count)
+
+    lookback_minutes = int(os.getenv("CONVEY_TRICONVEY_IMPORT_LOOKBACK_MINUTES", "60"))
+    cutoff = datetime.now(UTC) - timedelta(minutes=max(5, lookback_minutes))
+
+    def _limit_candidates(paths: list[Path]) -> list[Path]:
+        ranked: list[tuple[datetime, Path]] = []
+        for path in paths:
+            try:
+                mtime = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
+            except OSError:
+                continue
+            ranked.append((mtime, path))
+        ranked.sort(key=lambda item: (item[0], item[1].name.lower()), reverse=True)
+        limited = [path for _, path in ranked[:requested_document_count]]
+        _triconvey_import_debug(
+            "resolve_payload_limited",
+            matter_id=matter_id,
+            requested_document_count=requested_document_count,
+            candidate_count=len(paths),
+            selected_names=[path.name for path in limited],
+        )
+        return limited
+
+    # --- Primary: %TEMP%\{hex}\{hex}\{hex}\*.pdf (WebView2 download cache) ----
+    _hex_dir = _re.compile(r"^[0-9a-f]{5,9}$", _re.I)
+
+    def _collect_hex3_pdfs(root: Path) -> list[Path]:
+        seen: set[Path] = set()
+        found: list[Path] = []
+        try:
+            l1_dirs = [d for d in root.iterdir() if d.is_dir() and _hex_dir.match(d.name)]
+        except OSError:
+            return found
+        for l1 in l1_dirs:
+            try:
+                l2_dirs = [d for d in l1.iterdir() if d.is_dir() and _hex_dir.match(d.name)]
+            except OSError:
+                continue
+            for l2 in l2_dirs:
+                try:
+                    l3_dirs = [d for d in l2.iterdir() if d.is_dir() and _hex_dir.match(d.name)]
+                except OSError:
+                    continue
+                for l3 in l3_dirs:
+                    try:
+                        pdfs = list(l3.glob("*.pdf"))
+                    except OSError:
+                        continue
+                    for pdf in pdfs:
+                        if pdf in seen:
+                            continue
+                        try:
+                            mtime = datetime.fromtimestamp(pdf.stat().st_mtime, tz=UTC)
+                        except OSError:
+                            continue
+                        if mtime >= cutoff:
+                            seen.add(pdf)
+                            found.append(pdf)
+        return found
+
+    webview2_pdfs = _collect_hex3_pdfs(temp_root)
+    if webview2_pdfs:
+        result = _limit_candidates(webview2_pdfs)
+        _triconvey_import_debug("resolve_payload_webview2_hits", matter_id=matter_id, count=len(result), names=[p.name for p in result])
+        LOG.info(
+            "Resolved %d PDF(s) from WebView2 temp cache for matter %s: %s",
+            len(result), matter_id, [p.name for p in result],
+        )
+        return result
+
+    # --- Fallback: %TEMP%\Smokeball\{date}\{guid_prefix8}\*.pdf ---------------
+    smokeball_root = temp_root / "Smokeball"
+    if not smokeball_root.exists():
+        LOG.warning(
+            "No PDFs found for matter %s — open each file in TriConvey first "
+            "so Smokeball downloads it locally, then drag the files again.",
+            matter_id,
+        )
+        return []
+
+    fallback: list[Path] = []
+    try:
+        date_dirs = sorted(
+            (d for d in smokeball_root.iterdir() if d.is_dir() and d.name != "webview2"),
+            reverse=True,
+        )
+    except OSError:
+        return []
+
+    for date_dir in date_dirs:
+        try:
+            sub_dirs = [d for d in date_dir.iterdir() if d.is_dir()]
+        except OSError:
+            continue
+        for sub_dir in sub_dirs:
+            try:
+                pdfs = list(sub_dir.glob("*.pdf"))
+            except OSError:
+                continue
+            for pdf in pdfs:
+                try:
+                    mtime = datetime.fromtimestamp(pdf.stat().st_mtime, tz=UTC)
+                except OSError:
+                    continue
+                if mtime >= cutoff:
+                    fallback.append(pdf)
+
+    if fallback:
+        result = _limit_candidates(fallback)
+        _triconvey_import_debug("resolve_payload_smokeball_hits", matter_id=matter_id, count=len(result), names=[p.name for p in result])
+        LOG.info(
+            "Resolved %d PDF(s) from Smokeball app cache for matter %s: %s",
+            len(result), matter_id, [p.name for p in result],
+        )
+        return result
+
+    LOG.warning(
+        "No cached PDFs found for matter %s — open each file in TriConvey first.",
+        matter_id,
+    )
+    _triconvey_import_debug("resolve_payload_no_hits", matter_id=matter_id)
+    return []
+
+
+def _resolve_explicit_triconvey_paths(payload: dict[str, Any]) -> list[Path]:
+    explicit_paths = payload.get("LocalPaths")
+    if not isinstance(explicit_paths, list):
+        return []
+
+    resolved: list[Path] = []
+    seen: set[Path] = set()
+    for raw_value in explicit_paths:
+        path = _normalize_triconvey_local_path(str(raw_value or ""))
+        _triconvey_import_debug("explicit_path_candidate", raw=raw_value, normalized=path or "<none>")
+        if path is None or path in seen or not path.exists():
+            continue
+        seen.add(path)
+        if path.suffix.lower() == ".pdf":
+            resolved.append(path)
+            continue
+        if _looks_like_triconvey_reference(path):
+            resolved.extend(_resolve_triconvey_reference_upload(path))
+    if resolved:
+        _triconvey_import_debug("explicit_path_hits", count=len(resolved), names=[p.name for p in resolved])
+        LOG.info("Resolved %d PDF(s) from explicit TriConvey local paths: %s", len(resolved), [p.name for p in resolved])
+    return _dedupe_paths(resolved)
+
+
+def _normalize_triconvey_local_path(raw_value: str) -> Path | None:
+    from urllib.parse import unquote, urlparse
+
+    text = raw_value.strip().strip('"').strip("'")
+    if not text:
+        return None
+    if text.startswith("@"):
+        text = text[1:]
+    if text.lower().startswith("file:///"):
+        parsed = urlparse(text)
+        path_text = unquote(parsed.path or "")
+        if path_text.startswith("/") and len(path_text) >= 3 and path_text[2] == ":":
+            path_text = path_text[1:]
+        return Path(path_text)
+    if len(text) >= 3 and text[1] == ":":
+        return Path(text)
+    return None
+
+
+def _dedupe_paths(paths: list[Path]) -> list[Path]:
+    seen: set[str] = set()
+    unique: list[Path] = []
+    for path in paths:
+        key = str(path.resolve()) if path.exists() else str(path)
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(path)
+    return unique
+
+
+def _resolve_patch_question_ids(requested_id: str) -> list[str]:
+    registry = load_question_registry()
+    if requested_id in registry:
+        return [requested_id]
+
+    # Primary: match by fact_path (AI uses fact paths like 'rates.water.authority_name')
+    by_fact_path: list[str] = []
+    for qid, question in registry.items():
+        fact_paths = question.fact_paths or []
+        if requested_id in fact_paths:
+            by_fact_path.append(qid)
+    if by_fact_path:
+        return by_fact_path
+
+    # Fallback: fuzzy match against question label (normalise both sides)
+    def _norm(s: str) -> str:
+        import re as _re
+        return _re.sub(r"[^a-z0-9]", "", (s or "").lower())
+
+    norm_req = _norm(requested_id)
+    if len(norm_req) >= 4:
+        for qid, question in registry.items():
+            label = getattr(question, "label", None) or ""
+            if norm_req in _norm(label) or _norm(label) in norm_req:
+                return [qid]
+
+    return []
+
+
 def _run_autofill_job(
     job_id: str,
-    db_job_id: "uuid.UUID",
+    db_job_id: "uuid.UUID | None",
     run_dir: Path,
     body: AutofillRequest,
     cancel_event: threading.Event,
+    resume_from_property_details: bool = False,
+    user_id: str | None = None,
 ) -> None:
     """Background thread: runs autofill and persists results to DB."""
     import asyncio
@@ -531,6 +1024,8 @@ def _run_autofill_job(
 
     # Persist running state to DB via a new event loop in this thread.
     def _db_update(status: str, **kw: Any) -> None:
+        if db_job_id is None:
+            return
         async def _inner() -> None:
             factory = get_session_factory()
             async with factory() as s:
@@ -544,13 +1039,16 @@ def _run_autofill_job(
     _db_update("running", started=True)
 
     try:
-        saved_settings = load_local_settings()
+        set_autofill_activity(run_dir, True)
+        saved_settings = load_local_settings(user_id=user_id)
         result = autofill_run(
             run_dir,
             dry_run=body.dry_run,
             triconvey_exe=body.triconvey_exe or saved_settings["triconveyPath"] or None,
             skip_review_gate=body.skip_review_gate,
             cancel_requested=cancel_event.is_set,
+            resume_from_property_details=resume_from_property_details,
+            preferred_autofill_fields=saved_settings.get("preferredAutofillFields") or [],
         )
         report = result.get("execution_report", {})
         metrics = report.get("metrics", {})
@@ -574,6 +1072,16 @@ def _run_autofill_job(
             _autofill_jobs[job_id] = record
 
     except Exception as exc:  # pragma: no cover - runtime surfacing
+        from triconvey_agent.canonical.brain_e.executor import ManualInterventionRequired
+        if isinstance(exc, ManualInterventionRequired):
+            _db_update("awaiting_user", error=exc.message)
+            with _autofill_lock:
+                record = _autofill_jobs[job_id]
+                record.status = "awaiting_user"
+                record.error = exc.message
+                record.manual_action = {"action": exc.action, "message": exc.message, "cta": "Continue"}
+                _autofill_jobs[job_id] = record
+            return
         final_status = "cancelled" if cancel_event.is_set() else "failed"
         _db_update(final_status, completed=True, error=str(exc))
         with _autofill_lock:
@@ -582,6 +1090,8 @@ def _run_autofill_job(
             record.error = str(exc)
             record.completed_at = _utc_now()
             _autofill_jobs[job_id] = record
+    finally:
+        set_autofill_activity(run_dir, False)
 
 
 async def _persist_run_to_db(

@@ -1,0 +1,89 @@
+ts=2026-04-19T17:13:01.231781+00:00 | event=oauth_start | provider=microsoft | poll_key=fM4B619FZ2p3y847iWvH3g | client_slug=- | opener_origin=http://127.0.0.1:8765
+ts=2026-04-19T17:13:01.501289+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=fM4B619FZ2p3y847iWvH3g
+ts=2026-04-19T17:13:01.866242+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=fM4B619FZ2p3y847iWvH3g
+ts=2026-04-19T17:13:02.351984+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=fM4B619FZ2p3y847iWvH3g
+ts=2026-04-19T17:13:03.345525+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=fM4B619FZ2p3y847iWvH3g
+ts=2026-04-19T17:13:03.366106+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=fM4B619FZ2p3y847iWvH3g
+ts=2026-04-19T17:13:04.337660+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=fM4B619FZ2p3y847iWvH3g
+ts=2026-04-19T17:13:04.866942+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=fM4B619FZ2p3y847iWvH3g
+ts=2026-04-19T17:13:05.429369+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=fM4B619FZ2p3y847iWvH3g
+ts=2026-04-19T17:13:06.240791+00:00 | event=oauth_callback_commit_ok | provider=microsoft | email=mohammed@datamatically.com
+ts=2026-04-19T17:13:06.246784+00:00 | event=oauth_callback_success | provider=microsoft | poll_key=fM4B619FZ2p3y847iWvH3g | email=mohammed@datamatically.com | client_slug=datamatically-com | has_opener=True
+ts=2026-04-19T17:13:06.375825+00:00 | event=oauth_poll_ready | provider=microsoft | poll_key=fM4B619FZ2p3y847iWvH3g | user_email=mohammed@datamatically.com
+ts=2026-04-19T17:13:06.386820+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=fM4B619FZ2p3y847iWvH3g
+ts=2026-04-19T17:13:06.492351+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:13:06.614938+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:18:57.424138+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:19:40.475266+00:00 | event=oauth_start | provider=microsoft | poll_key=ZwKJxj6eDYb1dYyiFr9mMQ | client_slug=- | opener_origin=http://localhost:3000
+ts=2026-04-19T17:19:40.683414+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=ZwKJxj6eDYb1dYyiFr9mMQ
+ts=2026-04-19T17:19:41.141559+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=ZwKJxj6eDYb1dYyiFr9mMQ
+ts=2026-04-19T17:19:41.589498+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=ZwKJxj6eDYb1dYyiFr9mMQ
+ts=2026-04-19T17:19:42.601554+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=ZwKJxj6eDYb1dYyiFr9mMQ
+ts=2026-04-19T17:19:42.642557+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=ZwKJxj6eDYb1dYyiFr9mMQ
+ts=2026-04-19T17:19:43.587649+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=ZwKJxj6eDYb1dYyiFr9mMQ
+ts=2026-04-19T17:19:44.127369+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=ZwKJxj6eDYb1dYyiFr9mMQ
+ts=2026-04-19T17:19:44.821882+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=ZwKJxj6eDYb1dYyiFr9mMQ
+ts=2026-04-19T17:19:45.620124+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=ZwKJxj6eDYb1dYyiFr9mMQ
+ts=2026-04-19T17:19:45.634224+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=ZwKJxj6eDYb1dYyiFr9mMQ
+ts=2026-04-19T17:19:45.676806+00:00 | event=oauth_callback_commit_ok | provider=microsoft | email=mohammed@datamatically.com
+ts=2026-04-19T17:19:45.679806+00:00 | event=oauth_callback_success | provider=microsoft | poll_key=ZwKJxj6eDYb1dYyiFr9mMQ | email=mohammed@datamatically.com | client_slug=datamatically-com | has_opener=True
+ts=2026-04-19T17:19:46.020294+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:19:46.751584+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:24:35.812646+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:25:21.651346+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:33:42.689599+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:35:27.545571+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:37:55.796103+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:38:21.473905+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:41:29.855772+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:44:16.106690+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-19T17:47:07.209777+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T02:30:37.415895+00:00 | event=oauth_start | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g | client_slug=- | opener_origin=http://127.0.0.1:8765
+ts=2026-04-20T02:30:37.737694+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:37.765694+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:38.586863+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:39.308358+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:39.584469+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:40.579972+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:40.761252+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:41.582910+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:42.239401+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:42.583229+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:43.582685+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:44.317794+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:44.654557+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:44.808948+00:00 | event=oauth_callback_commit_ok | provider=microsoft | email=mohammed@datamatically.com
+ts=2026-04-20T02:30:44.815431+00:00 | event=oauth_callback_success | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g | email=mohammed@datamatically.com | client_slug=datamatically-com | has_opener=True
+ts=2026-04-20T02:30:45.251992+00:00 | event=oauth_poll_ready | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g | user_email=mohammed@datamatically.com
+ts=2026-04-20T02:30:45.425685+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T02:30:45.625866+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=KGc2LLTFEFxpRfsJyzEN6g
+ts=2026-04-20T02:30:45.678562+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T02:30:45.862971+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T02:30:46.109158+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T02:51:42.059343+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T02:52:17.012032+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T02:59:18.358774+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T03:00:56.789590+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T03:12:01.657811+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T03:14:20.220661+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T14:54:57.726649+00:00 | event=oauth_start | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ | client_slug=- | opener_origin=http://127.0.0.1:8765
+ts=2026-04-20T14:54:57.943065+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:54:58.481182+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:54:58.854010+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:54:59.854500+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:54:59.983757+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:55:00.867700+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:55:01.489280+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:55:01.845990+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:55:02.848957+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:55:03.857141+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:55:03.865742+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:55:04.507397+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:55:04.849098+00:00 | event=oauth_poll_pending | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ
+ts=2026-04-20T14:55:05.501769+00:00 | event=oauth_callback_commit_ok | provider=microsoft | email=mohammed@datamatically.com
+ts=2026-04-20T14:55:05.509676+00:00 | event=oauth_callback_success | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ | email=mohammed@datamatically.com | client_slug=datamatically-com | has_opener=True
+ts=2026-04-20T14:55:05.853551+00:00 | event=oauth_poll_ready | provider=microsoft | poll_key=9Uj6Sw4OIRYm5izANVI7cQ | user_email=mohammed@datamatically.com
+ts=2026-04-20T14:55:06.007859+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T14:55:06.129961+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T14:55:06.331598+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-04-20T14:55:06.342612+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com

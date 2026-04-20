@@ -111,7 +111,8 @@ _PLAN_PREFIX_LABEL: dict[str, str] = {
 }
 
 _PLAN_NUMBER_RE = re.compile(
-    r"\b(PS|PC|LP|TP|RP|SP|AL)(\d{5,8}[A-Z]?)\b"
+    r"\b(PS|PC|LP|TP|RP|SP|AL)\s?(\d{4,8}[A-Z]?)\b",
+    re.IGNORECASE,
 )
 
 # ---------------------------------------------------------------------------
@@ -382,8 +383,8 @@ def _extract_plan_numbers(text: str, filename: str) -> list[dict]:
     plans = []
     seen: set[str] = set()
     for m in _PLAN_NUMBER_RE.finditer(text + " " + filename.upper()):
-        prefix = m.group(1)
-        num = m.group(2)
+        prefix = m.group(1).upper()
+        num = m.group(2).upper()
         full = f"{prefix}{num}"
         if full not in seen:
             seen.add(full)

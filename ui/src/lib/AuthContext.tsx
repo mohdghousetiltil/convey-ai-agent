@@ -9,7 +9,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { AuthUser, StoredAuth } from "./auth";
 import { clearAuth, loadAuth } from "./auth";
-import { AUTH_LOGOUT_EVENT, login as apiLogin, loginWithOAuth, logout as apiLogout } from "./api";
+import { AUTH_LOGOUT_EVENT, login as apiLogin, loginWithOAuth, logout as apiLogout, register as apiRegister, resumePendingOAuthLogin } from "./api";
 import type { LoginPayload } from "./api";
 
 // ---------------------------------------------------------------------------
@@ -20,8 +20,10 @@ interface AuthContextValue {
   user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
-  /** Password-based login */
-  login: (clientSlug: string, email: string, password: string) => Promise<void>;
+  /** Password-based login — clientSlug optional for single-tenant desktop */
+  login: (email: string, password: string, clientSlug?: string) => Promise<void>;
+  /** Self-registration with activation key */
+  register: (name: string, email: string, password: string, activationKey: string) => Promise<void>;
   /** OAuth popup-based login (provider = 'google' | 'microsoft') */
   loginOAuth: (provider: "google" | "microsoft") => Promise<void>;
   logout: () => Promise<void>;
@@ -40,13 +42,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // On mount: restore from localStorage.
   useEffect(() => {
-    const stored: StoredAuth | null = loadAuth();
-    if (stored) {
-      setUser(stored.user);
-      setToken(stored.token);
-    }
-    setIsLoading(false);
+    let cancelled = false;
+
+    void (async () => {
+      const stored: StoredAuth | null = loadAuth();
+      if (stored) {
+        if (!cancelled) {
+          setUser(stored.user);
+          setToken(stored.token);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      const resumed = await resumePendingOAuthLogin();
+      if (!cancelled && resumed) {
+        setUser(resumed.user);
+        setToken(resumed.access_token);
+      }
+
+      if (!cancelled) {
+        setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  // Desktop OAuth recovery: while the app is sitting on the login screen,
+  // keep checking whether an external-browser OAuth flow has completed.
+  useEffect(() => {
+    if (user) return;
+
+    let cancelled = false;
+
+    async function checkPendingOAuth() {
+      if (cancelled) return;
+      const resumed = await resumePendingOAuthLogin();
+      if (!cancelled && resumed) {
+        setUser(resumed.user);
+        setToken(resumed.access_token);
+        setIsLoading(false);
+      }
+    }
+
+    void checkPendingOAuth();
+    const timer = window.setInterval(() => {
+      void checkPendingOAuth();
+    }, 1500);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [user]);
 
   // Listen for global 401 events (fired by apiRequest when the server rejects the token).
   useEffect(() => {
@@ -59,8 +110,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(
-    async (clientSlug: string, email: string, password: string): Promise<void> => {
-      const payload: LoginPayload = await apiLogin(clientSlug, email, password);
+    async (email: string, password: string, clientSlug = ""): Promise<void> => {
+      const payload: LoginPayload = await apiLogin(email, password, clientSlug);
+      setUser(payload.user);
+      setToken(payload.access_token);
+    },
+    [],
+  );
+
+  const register = useCallback(
+    async (name: string, email: string, password: string, activationKey: string): Promise<void> => {
+      const payload: LoginPayload = await apiRegister(name, email, password, activationKey);
       setUser(payload.user);
       setToken(payload.access_token);
     },
@@ -68,7 +128,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const loginOAuth = useCallback(async (provider: "google" | "microsoft"): Promise<void> => {
-    const payload: LoginPayload = await loginWithOAuth(provider);
+    const payload: LoginPayload | null = await loginWithOAuth(provider);
+    if (!payload) return;
     setUser(payload.user);
     setToken(payload.access_token);
   }, []);
@@ -84,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, loginOAuth, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, register, loginOAuth, logout }}>
       {children}
     </AuthContext.Provider>
   );

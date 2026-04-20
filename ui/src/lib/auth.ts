@@ -45,7 +45,8 @@ export function loadAuth(): StoredAuth | null {
 
 export function saveAuth(token: string, user: AuthUser): void {
   const claims = decodeJwtPayload(token);
-  const expiresAt: number = claims?.exp ?? Math.floor(Date.now() / 1000) + 3600;
+  const expClaim = claims?.exp;
+  const expiresAt = typeof expClaim === "number" ? expClaim : Math.floor(Date.now() / 1000) + 3600;
   const stored: StoredAuth = { token, user, expiresAt };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
 }

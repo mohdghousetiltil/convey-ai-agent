@@ -61,6 +61,47 @@ class TestBackendSettings(unittest.TestCase):
                         child.rmdir()
                 base.rmdir()
 
+    def test_preferred_autofill_fields_are_scoped_per_user(self):
+        base = ensure_runtime_dirs(get_runtime_paths()).pytest_temp_dir / f"settings-user-scope-{uuid4().hex}"
+        runtime = _runtime(base)
+        try:
+            first_user = str(uuid4())
+            second_user = str(uuid4())
+
+            save_local_settings(
+                {
+                    "language": "English",
+                    "preferredAutofillFields": ["policy_1_certs_attached", "policy_1_total_does_not_exceed"],
+                },
+                runtime,
+                user_id=first_user,
+            )
+            save_local_settings(
+                {
+                    "language": "English",
+                    "preferredAutofillFields": ["policy_6_attachments"],
+                },
+                runtime,
+                user_id=second_user,
+            )
+
+            first_loaded = load_local_settings(runtime, user_id=first_user)
+            second_loaded = load_local_settings(runtime, user_id=second_user)
+
+            self.assertEqual(
+                first_loaded["preferredAutofillFields"],
+                ["policy_1_certs_attached", "policy_1_total_does_not_exceed"],
+            )
+            self.assertEqual(second_loaded["preferredAutofillFields"], ["policy_6_attachments"])
+        finally:
+            if base.exists():
+                for child in sorted(base.rglob("*"), reverse=True):
+                    if child.is_file():
+                        child.unlink(missing_ok=True)
+                    elif child.is_dir():
+                        child.rmdir()
+                base.rmdir()
+
 
 if __name__ == "__main__":
     unittest.main()

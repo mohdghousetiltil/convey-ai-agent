@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
-import { AlertCircle, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Edit2, LogOut, MessageSquare, Settings, Shield, User } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { AlertCircle, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, LogOut, MessageSquare, Settings, Shield, User } from "lucide-react";
+import { useAuth } from "../lib/AuthContext";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,28 +20,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AnswerUpdatePayload, ChatAnswerPayload, ReviewFieldItem, ReviewRunPayload } from "../lib/api";
+
+type HistoryTurn = { role: "user" | "assistant"; content: string };
+type ChatMode = "quick" | "standard" | "thorough";
 import { Chatbot } from "./Chatbot";
 
 type DraftValue = string | boolean | number | null;
 
-interface EditableFieldProps {
-  label: string;
-  value: string;
-  onChange: (val: string) => void;
-}
-
-function EditableField({ label, value, onChange }: EditableFieldProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempValue, setTempValue] = useState(value);
+function CopyOnlyField({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => setTempValue(value), [value]);
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isEditing]);
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -57,34 +45,9 @@ function EditableField({ label, value, onChange }: EditableFieldProps) {
           {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
         </button>
       </label>
-      {isEditing ? (
-        <input
-          ref={inputRef}
-          type="text"
-          value={tempValue}
-          onChange={(e) => setTempValue(e.target.value)}
-          onBlur={() => {
-            setIsEditing(false);
-            onChange(tempValue);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setIsEditing(false);
-              onChange(tempValue);
-            }
-            if (e.key === "Escape") {
-              setTempValue(value);
-              setIsEditing(false);
-            }
-          }}
-          className="text-[0.95rem] font-medium bg-slate-50 border-b border-primary outline-none py-0.5 w-full"
-        />
-      ) : (
-        <div onClick={() => setIsEditing(true)} className="text-[0.95rem] font-medium cursor-text hover:text-primary transition-colors flex items-center gap-2 group/text">
-          {value || "-"}
-          <Edit2 className="w-3 h-3 opacity-0 group-hover/text:opacity-50" />
-        </div>
-      )}
+      <div className="text-[0.95rem] font-medium text-slate-700 select-all cursor-default leading-snug">
+        {value || <span className="text-slate-400">—</span>}
+      </div>
     </div>
   );
 }
@@ -125,7 +88,8 @@ interface ReviewScreenProps {
   onLogout: () => void;
   onSaveReview: (updates: Record<string, AnswerUpdatePayload>) => Promise<void> | void;
   onAutofill: (updates: Record<string, AnswerUpdatePayload>) => Promise<void> | void;
-  onAskAssistant: (question: string) => Promise<ChatAnswerPayload>;
+  onAskAssistant: (question: string, history: HistoryTurn[], mode: ChatMode, signal?: AbortSignal) => Promise<ChatAnswerPayload>;
+  onApplyPatch?: (questionId: string, newValue: string, reason: string) => Promise<void>;
   isSaving: boolean;
   isAutofilling: boolean;
   errorMessage?: string;
@@ -133,22 +97,28 @@ interface ReviewScreenProps {
 }
 
 export function ReviewScreen(props: ReviewScreenProps) {
-  const { run, onBack, onProfile, onSettings, onPolicy, onLogout, onSaveReview, onAutofill, onAskAssistant, isSaving, isAutofilling, errorMessage, onDismissError } = props;
+  const { run, onBack, onProfile, onSettings, onPolicy, onLogout, onSaveReview, onAutofill, onAskAssistant, onApplyPatch, isSaving, isAutofilling, errorMessage, onDismissError } = props;
+  const { user } = useAuth();
+  const userInitials = user?.name
+    ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    : (user?.email?.[0] ?? "?").toUpperCase();
   const [activeTab, setActiveTab] = useState("page-1");
-  const [clientName, setClientName] = useState(run.matter.client_name || "Matter Client");
-  const [volumeFolio, setVolumeFolio] = useState(run.matter.volume_folio || "Volume / Folio");
-  const [propertyAddress, setPropertyAddress] = useState(run.matter.property_address || "Property Address");
+  const clientName = run.matter.client_name || "Matter Client";
+  const volumeFolio = run.matter.volume_folio || "Volume / Folio";
+  const propertyAddress = run.matter.property_address || "Property Address";
   const [drafts, setDrafts] = useState<Record<string, DraftValue>>({});
   const [reviewItemsCollapsed, setReviewItemsCollapsed] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
 
+  const runIdRef = React.useRef(run.manifest?.run_id);
   useEffect(() => {
-    setClientName(run.matter.client_name || "Matter Client");
-    setVolumeFolio(run.matter.volume_folio || "Volume / Folio");
-    setPropertyAddress(run.matter.property_address || "Property Address");
+    const newRunId = run.manifest?.run_id;
+    const isNewRun = newRunId !== runIdRef.current;
+    runIdRef.current = newRunId;
     setDrafts({});
     setReviewItemsCollapsed(true);
-    setChatOpen(false);
+    // Only close chatbot when a genuinely new run is loaded, not on patch-apply refetches
+    if (isNewRun) setChatOpen(false);
   }, [run]);
 
   useEffect(() => {
@@ -178,6 +148,19 @@ export function ReviewScreen(props: ReviewScreenProps) {
   const boolValue = (qid: string) => Boolean(getDraft(qid));
   const buildUpdates = (): Record<string, AnswerUpdatePayload> =>
     Object.fromEntries(Object.entries(drafts).map(([qid, value]) => [qid, { value, needs_review: false }]));
+  const handleApplyPatchToReview = async (questionId: string, newValue: string, reason: string) => {
+    const previous = questionId in drafts ? drafts[questionId] : fields[questionId]?.value ?? "";
+    setDrafts((prev) => ({ ...prev, [questionId]: newValue }));
+    if (!onApplyPatch) {
+      return;
+    }
+    try {
+      await onApplyPatch(questionId, newValue, reason);
+    } catch (error) {
+      setDrafts((prev) => ({ ...prev, [questionId]: previous }));
+      throw error;
+    }
+  };
 
   const planningZoneOptions = fields["sec32_3.4_planning_zone"]?.options ?? [];
 
@@ -222,7 +205,7 @@ export function ReviewScreen(props: ReviewScreenProps) {
           </button>
           <div className="w-px h-6 bg-slate-200" />
           <DropdownMenu>
-            <DropdownMenuTrigger nativeButton={false} render={<div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-[0.8rem] font-semibold cursor-pointer hover:opacity-90 transition-opacity ring-2 ring-white shadow-md">JD</div>} />
+            <DropdownMenuTrigger nativeButton={false} render={<div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-[0.8rem] font-semibold cursor-pointer hover:opacity-90 transition-opacity ring-2 ring-white shadow-md">{userInitials}</div>} />
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuGroup><DropdownMenuLabel>My Account</DropdownMenuLabel></DropdownMenuGroup>
               <DropdownMenuSeparator />
@@ -237,9 +220,9 @@ export function ReviewScreen(props: ReviewScreenProps) {
       </header>
 
       <section className="bg-white border-b px-6 py-5 shrink-0 z-40 grid grid-cols-3 gap-8">
-        <EditableField label="Client Name" value={clientName} onChange={setClientName} />
-        <EditableField label="Volume / Folio Number" value={volumeFolio} onChange={setVolumeFolio} />
-        <EditableField label="Property Address" value={propertyAddress} onChange={setPropertyAddress} />
+        <CopyOnlyField label="Client Name" value={clientName} />
+        <CopyOnlyField label="Volume / Folio Number" value={volumeFolio} />
+        <CopyOnlyField label="Property Address" value={propertyAddress} />
       </section>
 
       <section className="bg-slate-50/80 border-b px-6 py-3 shrink-0 flex flex-wrap items-center gap-3">
@@ -260,7 +243,7 @@ export function ReviewScreen(props: ReviewScreenProps) {
         ) : null}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col gap-5 overflow-hidden">
-          <TabsList className="bg-transparent p-0 h-auto gap-2 border-b border-border rounded-none pb-3 shrink-0">
+          <TabsList className="bg-transparent p-0 h-auto gap-2 border-b border-border rounded-none pb-3 shrink-0 w-full justify-center">
             {pages.map((page) => <TabsTrigger key={page.id} value={page.id} className="rounded-md px-4 py-2 text-[0.85rem] font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white transition-all shadow-none">{page.label}</TabsTrigger>)}
           </TabsList>
 
@@ -504,7 +487,15 @@ export function ReviewScreen(props: ReviewScreenProps) {
           </div>
         </footer>
       </main>
-      <Chatbot isOpen={chatOpen} onClose={() => setChatOpen(false)} onAsk={onAskAssistant} />
+      <Chatbot
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        onAsk={onAskAssistant}
+        onApplyPatch={handleApplyPatchToReview}
+        initialConflicts={run.agent_context?.unresolved_conflicts ?? []}
+        initialTurns={run.chat_history?.turns ?? []}
+        runId={run.manifest.run_id}
+      />
       </div>
       </div>
 

@@ -47,7 +47,18 @@ def _env(name: str, default: str = "") -> str:
     return os.getenv(name, default).strip()
 
 
-REDIRECT_BASE = _env("OAUTH_REDIRECT_BASE", "http://127.0.0.1:8765")
+def get_redirect_base() -> str:
+    """Read at call time so that env var set after module import is respected.
+
+    In the desktop .exe the port is found dynamically; the launcher sets
+    OAUTH_REDIRECT_BASE=http://127.0.0.1:{port} before starting uvicorn.
+    """
+    return os.getenv("OAUTH_REDIRECT_BASE", "http://127.0.0.1:8765").strip()
+
+
+# Keep a module-level alias for any code that imports the old name directly.
+# This will be stale if the env var is set after import, so prefer get_redirect_base().
+REDIRECT_BASE = get_redirect_base()
 
 _PROVIDERS: dict[str, dict[str, str]] = {
     "google": {
@@ -111,30 +122,45 @@ def _code_challenge(verifier: str) -> str:
 # ---------------------------------------------------------------------------
 
 _STATE_TTL = 600  # 10 minutes
+_RESULT_TTL = 300  # 5 minutes — how long a completed auth result waits to be consumed
+
 
 @dataclass
 class _OAuthState:
     provider: str
     client_slug: str
+    opener_origin: str
     verifier: str
+    created: float
+    poll_key: str   # one-time key for the desktop polling flow
+
+
+@dataclass
+class OAuthPollResult:
+    token: str
+    user: dict[str, Any]
     created: float
 
 
 _pending: dict[str, _OAuthState] = {}
+_results: dict[str, OAuthPollResult] = {}  # keyed by poll_key
 
 
-def _create_state(provider: str, client_slug: str) -> tuple[str, str]:
-    """Returns (state_token, code_verifier)."""
+def _create_state(provider: str, client_slug: str, opener_origin: str = "") -> tuple[str, str, str]:
+    """Returns (state_token, code_verifier, poll_key)."""
     _evict_old()
     state = secrets.token_urlsafe(24)
     verifier = _code_verifier()
+    poll_key = secrets.token_urlsafe(16)
     _pending[state] = _OAuthState(
         provider=provider,
         client_slug=client_slug,
+        opener_origin=opener_origin,
         verifier=verifier,
         created=time.monotonic(),
+        poll_key=poll_key,
     )
-    return state, verifier
+    return state, verifier, poll_key
 
 
 def _consume_state(state: str) -> _OAuthState:
@@ -145,11 +171,29 @@ def _consume_state(state: str) -> _OAuthState:
     return entry
 
 
+def store_oauth_result(poll_key: str, token: str, user: dict[str, Any]) -> None:
+    """Store a completed auth result for the desktop polling flow."""
+    _results[poll_key] = OAuthPollResult(token=token, user=user, created=time.monotonic())
+
+
+def consume_oauth_result(poll_key: str) -> OAuthPollResult | None:
+    """Pop and return a completed auth result, or None if not ready yet."""
+    _evict_old_results()
+    return _results.pop(poll_key, None)
+
+
 def _evict_old() -> None:
     cutoff = time.monotonic() - _STATE_TTL
     expired = [k for k, v in _pending.items() if v.created < cutoff]
     for k in expired:
         _pending.pop(k, None)
+
+
+def _evict_old_results() -> None:
+    cutoff = time.monotonic() - _RESULT_TTL
+    expired = [k for k, v in _results.items() if v.created < cutoff]
+    for k in expired:
+        _results.pop(k, None)
 
 
 # ---------------------------------------------------------------------------
@@ -184,10 +228,16 @@ class OAuthUserInfo:
     email: str
     name: str
     client_slug: str
+    tenant_id: str | None = None   # Microsoft Azure AD tenant ID (tid claim)
+    opener_origin: str = ""
+    poll_key: str = ""             # desktop polling key; empty in browser popup flow
 
 
-def build_auth_url(provider: str, client_slug: str) -> str:
-    """Generate the URL the frontend should open in a popup."""
+def build_auth_url(provider: str, client_slug: str, opener_origin: str = "") -> tuple[str, str]:
+    """Generate the URL the frontend should open and the poll_key for the desktop flow.
+
+    Returns (auth_url, poll_key).
+    """
     cfg = _provider_cfg(provider)
     client_id = _env(cfg["client_id_env"])
     if not client_id:
@@ -196,9 +246,9 @@ def build_auth_url(provider: str, client_slug: str) -> str:
             f"Set {cfg['client_id_env']} in .env."
         )
 
-    state, verifier = _create_state(provider, client_slug)
+    state, verifier, poll_key = _create_state(provider, client_slug, opener_origin)
     challenge = _code_challenge(verifier)
-    redirect_uri = f"{REDIRECT_BASE}/api/auth/oauth/{provider}/callback"
+    redirect_uri = f"{get_redirect_base()}/api/auth/oauth/{provider}/callback"
 
     params: dict[str, str] = {
         "client_id": client_id,
@@ -214,7 +264,7 @@ def build_auth_url(provider: str, client_slug: str) -> str:
     if provider == "microsoft":
         params["nonce"] = secrets.token_urlsafe(16)
 
-    return cfg["auth_url"] + "?" + urlencode(params)
+    return cfg["auth_url"] + "?" + urlencode(params), poll_key
 
 
 async def exchange_code(provider: str, code: str, state: str) -> OAuthUserInfo:
@@ -229,7 +279,7 @@ async def exchange_code(provider: str, code: str, state: str) -> OAuthUserInfo:
     cfg = _provider_cfg(provider)
     client_id = _env(cfg["client_id_env"])
     client_secret = _env(cfg["client_secret_env"])
-    redirect_uri = f"{REDIRECT_BASE}/api/auth/oauth/{provider}/callback"
+    redirect_uri = f"{get_redirect_base()}/api/auth/oauth/{provider}/callback"
 
     # 1. Exchange code for tokens
     async with httpx.AsyncClient(timeout=15) as client:
@@ -266,12 +316,18 @@ async def exchange_code(provider: str, code: str, state: str) -> OAuthUserInfo:
         or email.split("@")[0]
     )
 
+    # Microsoft includes `tid` (tenant ID) — unique per Azure AD organisation
+    tenant_id: str | None = claims.get("tid") if provider == "microsoft" else None
+
     return OAuthUserInfo(
         provider=provider,
         subject=claims["sub"],
         email=email.lower(),
         name=name,
         client_slug=entry.client_slug,
+        tenant_id=tenant_id,
+        opener_origin=entry.opener_origin,
+        poll_key=entry.poll_key,
     )
 
 
@@ -298,11 +354,26 @@ def _verify_id_token(
             key,
             algorithms=[header.get("alg", "RS256")],
             audience=audience,
-            issuer=issuer,
-            options={"verify_at_hash": False},
+            options={"verify_at_hash": False, "verify_iss": False},
         )
     except JWTError as exc:
         raise ValueError(f"ID token verification failed: {exc}") from exc
+
+    actual_issuer = str(claims.get("iss") or "")
+    if not actual_issuer:
+        raise ValueError("ID token verification failed: Missing issuer claim.")
+
+    expected_issuer = issuer
+    if issuer.endswith("/common/v2.0"):
+        tenant_id = str(claims.get("tid") or "").strip()
+        if not tenant_id:
+            raise ValueError("ID token verification failed: Missing tid claim for multitenant issuer validation.")
+        expected_issuer = issuer.replace("/common/v2.0", f"/{tenant_id}/v2.0")
+
+    if actual_issuer != expected_issuer:
+        raise ValueError(
+            f"ID token verification failed: Invalid issuer: expected {expected_issuer}, got {actual_issuer}"
+        )
 
     return claims
 
@@ -311,42 +382,82 @@ def _verify_id_token(
 # HTML response for popup close
 # ---------------------------------------------------------------------------
 
-def popup_success_html(token: str, user: dict[str, Any]) -> str:
-    """Returns an HTML page that posts the token to the opener and closes."""
+def popup_success_html(token: str, user: dict[str, Any], target_origin: str = "*") -> str:
+    """HTML shown in the browser after a successful OAuth callback.
+
+    Two modes:
+    - Browser popup (window.opener present): postMessage the token and close.
+    - Desktop system browser (no opener): show a "return to app" message.
+      The desktop app polls /oauth/{provider}/poll for the result.
+    """
     payload_json = json.dumps({"type": "oauth_success", "token": token, "user": user})
+    safe_target = json.dumps(target_origin or "*")
+    name = json.dumps(user.get("name") or user.get("email") or "")
     return f"""<!doctype html>
 <html>
-<head><title>Login successful</title></head>
+<head>
+  <title>Login successful</title>
+  <style>
+    body{{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;
+          min-height:100vh;margin:0;background:#f8fafc}}
+    .card{{background:#fff;border-radius:12px;padding:2.5rem 3rem;box-shadow:0 4px 24px rgba(0,0,0,.1);
+           text-align:center;max-width:380px}}
+    h2{{margin:0 0 .5rem;color:#0f172a;font-size:1.4rem}}
+    p{{color:#64748b;margin:.25rem 0}}
+    .check{{font-size:3rem;margin-bottom:1rem}}
+  </style>
+</head>
 <body>
-<p style="font-family:sans-serif;color:#334155;padding:2rem">
-  Login successful — closing this window…
-</p>
+<div class="card">
+  <div class="check">✅</div>
+  <h2>Signed in successfully</h2>
+  <p>Welcome, <strong id="uname"></strong></p>
+  <p style="margin-top:1.5rem;font-size:.9rem;color:#94a3b8">
+    You can close this window and return to TriConvey Agent.
+  </p>
+</div>
 <script>
+  document.getElementById('uname').textContent = {name};
+  // Browser popup mode: notify the opener and close.
   try {{
-    var payload = {payload_json};
     if (window.opener) {{
-      window.opener.postMessage(payload, window.location.origin);
+      window.opener.postMessage({payload_json}, {safe_target});
+      setTimeout(function(){{ window.close(); }}, 1200);
     }}
   }} catch(e) {{}}
-  setTimeout(function(){{ window.close(); }}, 800);
 </script>
 </body>
 </html>"""
 
 
-def popup_error_html(message: str) -> str:
+def popup_error_html(message: str, target_origin: str = "*") -> str:
     payload_json = json.dumps({"type": "oauth_error", "error": message})
+    safe_target = json.dumps(target_origin or "*")
     return f"""<!doctype html>
 <html>
-<head><title>Login failed</title></head>
+<head>
+  <title>Login failed</title>
+  <style>
+    body{{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;
+          min-height:100vh;margin:0;background:#f8fafc}}
+    .card{{background:#fff;border-radius:12px;padding:2.5rem 3rem;box-shadow:0 4px 24px rgba(0,0,0,.1);
+           text-align:center;max-width:380px}}
+    h2{{margin:0 0 .5rem;color:#dc2626;font-size:1.4rem}}
+    p{{color:#64748b;margin:.25rem 0}}
+    .icon{{font-size:3rem;margin-bottom:1rem}}
+  </style>
+</head>
 <body>
-<p style="font-family:sans-serif;color:#dc2626;padding:2rem">
-  Login failed: {message}<br>You may close this window.
-</p>
+<div class="card">
+  <div class="icon">⚠️</div>
+  <h2>Login failed</h2>
+  <p>{message}</p>
+  <p style="margin-top:1.5rem;font-size:.9rem;color:#94a3b8">You may close this window and try again.</p>
+</div>
 <script>
   try {{
     if (window.opener) {{
-      window.opener.postMessage({payload_json}, window.location.origin);
+      window.opener.postMessage({payload_json}, {safe_target});
     }}
   }} catch(e) {{}}
 </script>

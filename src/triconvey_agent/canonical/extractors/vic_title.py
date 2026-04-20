@@ -52,11 +52,28 @@ _CREATED_BY_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Plan info embedded in land description, e.g. "Plan of Subdivision 826454D".
+# Plan info embedded in land description, e.g. "Plan of Subdivision PS826454D" or "Plan of Subdivision 826454D".
 _PLAN_RE = re.compile(
     r"(Plan of Consolidation|Plan of Subdivision|Plan of Survey|Title Plan)\s+([A-Z0-9]+)",
     re.IGNORECASE,
 )
+
+_PLAN_TYPE_TO_PREFIX: dict[str, str] = {
+    "plan of subdivision": "PS",
+    "plan of survey": "PS",
+    "plan of consolidation": "PC",
+    "title plan": "TP",
+}
+_KNOWN_PLAN_PREFIXES = ("PS", "PC", "LP", "TP", "RP", "SP", "AL")
+
+
+def _normalize_plan_number(plan_type: str, number: str) -> str:
+    """Ensure plan number has the correct prefix (e.g. '502358G' → 'PS502358G')."""
+    upper = number.strip().upper()
+    if any(upper.startswith(p) for p in _KNOWN_PLAN_PREFIXES):
+        return upper
+    prefix = _PLAN_TYPE_TO_PREFIX.get(plan_type.strip().lower(), "")
+    return f"{prefix}{upper}" if prefix else upper
 
 # Lot number, e.g. "Lot 1620 on ...".
 _LOT_RE = re.compile(r"Lot\s+([A-Z0-9]+)\s+on\s+", re.IGNORECASE)
@@ -202,7 +219,7 @@ def _extract_land_description(doc: Document, text: str) -> list[Fact]:
 
     if plan_match := _PLAN_RE.search(description):
         plan_type = _compact(plan_match.group(1))
-        plan_number = _compact(plan_match.group(2))
+        plan_number = _normalize_plan_number(plan_type, _compact(plan_match.group(2)))
         facts.append(
             _make_fact(doc, P.TITLE_PLAN_TYPE, plan_type, quote)
         )

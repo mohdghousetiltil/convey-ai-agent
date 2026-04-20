@@ -16,6 +16,7 @@ from triconvey_agent.canonical.extractors import (
 )
 from triconvey_agent.canonical.facts.store import FactStoreImpl
 from triconvey_agent.canonical.policy import run_policy_pass
+from triconvey_agent.brain_f.cache import prime_cached_pdf_analysis
 from triconvey_agent.ingest.pdf_loader import load_pdf_document
 
 EXTRACTORS = [
@@ -65,6 +66,7 @@ def extract_fact_store(doc_paths: list[Path], out_dir: Path) -> tuple[FactStoreI
         print(f"  Loading {path.name} …", end=" ", flush=True)
         try:
             doc = load_pdf_document(path)
+            prime_cached_pdf_analysis(path, doc)
             facts = run_all_extractors(doc)
             store.add_many(facts)
             total_facts += len(facts)

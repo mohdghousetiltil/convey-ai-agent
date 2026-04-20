@@ -42,6 +42,7 @@ import os
 import re
 import subprocess
 import time
+import warnings
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -143,6 +144,13 @@ CRITICAL_ACTION_HINTS = (
     "insurance",
     "owner_builder",
 )
+
+
+class ManualInterventionRequired(RuntimeError):
+    def __init__(self, *, action: str, message: str):
+        super().__init__(message)
+        self.action = action
+        self.message = message
 
 
 class _Point(ctypes.Structure):
@@ -361,7 +369,9 @@ def _ensure_focus(window) -> None:
         if window.has_style(0x20000000):   # WS_MINIMIZE
             window.restore()
             time.sleep(0.5)
-        window.set_focus()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            window.set_focus()
         time.sleep(0.3)
     except Exception:
         pass
@@ -1548,7 +1558,13 @@ class TriConveyAgent:
         noise_markers = ("leads", "matters", "contacts", "events", "tasks", "memos", "documents")
         return any(marker in text for marker in header_markers) or text in noise_markers
 
-    def _choose_first_result_row(self, rows: list[dict[str, Any]]):
+    def _normalise_search_text(self, text: str) -> str:
+        return re.sub(r"[^a-z0-9]+", " ", (text or "").lower()).strip()
+
+    def _choose_first_result_row(self, rows: list[dict[str, Any]], search_text: str = ""):
+        normalised_search = self._normalise_search_text(search_text)
+        search_tokens = [token for token in normalised_search.split() if token]
+        search_digits = re.findall(r"\d+", search_text or "")
         candidates = []
         for row in rows:
             label = row["label"].strip()
@@ -1556,11 +1572,25 @@ class TriConveyAgent:
             if self._is_result_header_or_noise(lower):
                 continue
             score = 0
+            normalised_label = self._normalise_search_text(label)
+            label_digits = re.findall(r"\d+", label)
+            if normalised_search:
+                if normalised_search in normalised_label:
+                    score += 10
+                if search_tokens and all(token in normalised_label for token in search_tokens):
+                    score += 7
+                matched_digits = sum(1 for token in search_digits if token in label_digits)
+                if matched_digits:
+                    score += matched_digits * 4
+                if search_digits and matched_digits == len(search_digits):
+                    score += 6
             if any(ch.isdigit() for ch in label):
                 score += 2
             if any(word in lower for word in ("sale", "purchase", "transfer", "subdivision")):
                 score += 2
             if any(state in lower for state in ("vic", "nsw", "qld", "wa")):
+                score += 1
+            if "volume" in lower or "folio" in lower:
                 score += 1
             if len(label) > 12:
                 score += 1
@@ -1570,32 +1600,38 @@ class TriConveyAgent:
         candidates.sort(key=lambda item: (-item[0], item[1]["center_y"]))
         return candidates[0][1]
 
-    def _click_first_result_by_ocr(self, window) -> bool:
+    def _click_first_result_by_ocr(self, window, search_text: str = "") -> bool:
         if not (_pil_available and _ocr_available):
             self._log("  OCR route unavailable for matter search results.")
             return False
         _ensure_focus(window)
         rect = self._get_search_results_rect(window)
-        rows = _get_ocr_rows_from_rect(rect, psm=6)
-        if not rows:
+        saw_rows = False
+        for psm in (6, 11):
+            rows = _get_ocr_rows_from_rect(rect, psm=psm)
+            if not rows:
+                continue
+            saw_rows = True
+            best_row = self._choose_first_result_row(rows, search_text=search_text)
+            if not best_row:
+                continue
+            click_x = max(rect.left + 20, best_row["left"] + 30)
+            click_y = best_row["center_y"]
+            self._log(f"  OCR selected result row: {best_row['label']}")
+            try:
+                _pw_mouse.click(button="left", coords=(click_x, click_y))
+                time.sleep(0.4)
+                _pw_mouse.double_click(coords=(click_x, click_y))
+                time.sleep(2.5)
+                return True
+            except Exception as exc:
+                self._log(f"  OCR result click failed: {exc}")
+                return False
+        if not saw_rows:
             self._log("  No OCR rows found in search results.")
-            return False
-        best_row = self._choose_first_result_row(rows)
-        if not best_row:
+        else:
             self._log("  Could not identify a valid search result row.")
-            return False
-        click_x = max(rect.left + 20, best_row["left"] + 30)
-        click_y = best_row["center_y"]
-        self._log(f"  OCR selected result row: {best_row['label']}")
-        try:
-            _pw_mouse.click(button="left", coords=(click_x, click_y))
-            time.sleep(0.4)
-            _pw_mouse.double_click(coords=(click_x, click_y))
-            time.sleep(2.5)
-            return True
-        except Exception as exc:
-            self._log(f"  OCR result click failed: {exc}")
-            return False
+        return False
 
     def _connect_to_matter_window(self, timeout: int = 20) -> bool:
         self._log("  Looking for matter window ...")
@@ -1910,12 +1946,30 @@ class TriConveyAgent:
         except Exception as exc:
             self._log(f"  Search error: {exc}")
 
-        if self._click_first_result_by_ocr(window):
-            if self._connect_to_matter_window(timeout=20):
-                return True
-            self._log("  OCR opened a row, but the matter window was not detected yet.")
+        for attempt in range(3):
+            if attempt:
+                self._log(f"  Retrying OCR result detection ({attempt + 1}/3) ...")
+                self._interruptible_sleep(2)
+                _ensure_focus(window)
+                try:
+                    tab = window.child_window(auto_id="MainView_Left_Docked_Tab_Matters_TabItem")
+                    if tab.exists(timeout=1):
+                        tab.click_input()
+                        time.sleep(0.5)
+                except Exception:
+                    pass
+            if self._click_first_result_by_ocr(window, search_text=client_name):
+                if self._connect_to_matter_window(timeout=20):
+                    return True
+                self._log("  OCR opened a row, but the matter window was not detected yet.")
+                break
 
-        return self._click_matter(client_name)
+        if self._click_matter(client_name):
+            return True
+        raise ManualInterventionRequired(
+            action="open_property_details",
+            message="Could not open the matter automatically. Please open Property Details in Convey, then press Continue.",
+        )
 
     def _click_matter(self, client_name: str) -> bool:
         """Open the top search result in TriConvey's matter list.
@@ -2005,11 +2059,8 @@ class TriConveyAgent:
         except Exception:
             pass
 
-        # Manual fallback
         self._log("Could not open matter automatically.")
-        self._log("Please double-click the matter row, then press Enter.")
-        input("  Press Enter when matter is open ...")
-        return self._detect_matter(client_name)
+        return False
 
     def _detect_matter(self, _client_name: str = "") -> bool:
         """Find the matter window that opened after a double-click.
@@ -2148,11 +2199,11 @@ class TriConveyAgent:
         except Exception:
             pass
 
-        # Manual fallback
         self._log("Could not auto-open Property Details.")
-        self._log("Please open Property Details from the Matter Details window, then press Enter.")
-        input("  Press Enter when Property Details is open ...")
-        return self._wait_property_window()
+        raise ManualInterventionRequired(
+            action="open_property_details",
+            message="Please open Property Details from the Matter Details window, then press Continue in Convey Agent.",
+        )
 
     def _wait_property_window(self, timeout: int = 20) -> bool:
         self._log("  Waiting for Property Details window ...")
@@ -2672,6 +2723,7 @@ def execute_action_plan(
     review_gate_callback=None,
     output_dir: str | Path | None = None,
     cancel_requested=None,
+    resume_from_property_details: bool = False,
 ) -> ExecutionReport:
     """Execute a FormActionPlan against the live TriConvey window.
 
@@ -2762,28 +2814,44 @@ def execute_action_plan(
             _finalise(report)
             raise RuntimeError(err)
 
-        if client_name:
+        if client_name and not resume_from_property_details:
             if callable(cancel_requested) and cancel_requested():
                 diagnostics.log_event("execution_cancelled", stage="before_matter_search")
                 _finalise(report)
                 report.metrics["cancelled"] = True
                 return report
-            if not agent.find_and_open_matter(search_name):
-                err = f"Could not open matter for '{client_name}'."
-                diagnostics.capture_screenshot("matter_open_failure")
+            try:
+                if not agent.find_and_open_matter(search_name):
+                    err = f"Could not open matter for '{client_name}'."
+                    diagnostics.capture_screenshot("matter_open_failure")
+                    for a in auto_actions:
+                        report.results.append(ActionResult(action=a, status="failed", error=err))
+                    _finalise(report)
+                    raise RuntimeError(err)
+            except ManualInterventionRequired:
+                diagnostics.capture_screenshot("matter_manual_intervention")
+                _finalise(report)
+                raise
+            time.sleep(2)
+
+        try:
+            if resume_from_property_details:
+                if not agent._wait_property_window(timeout=20):
+                    raise ManualInterventionRequired(
+                        action="open_property_details",
+                        message="Property Details is not open yet. Please open it in Convey, then press Continue.",
+                    )
+            elif not agent.open_property_details():
+                err = "Could not open Property Details."
+                diagnostics.capture_screenshot("property_details_open_failure")
                 for a in auto_actions:
                     report.results.append(ActionResult(action=a, status="failed", error=err))
                 _finalise(report)
                 raise RuntimeError(err)
-            time.sleep(2)
-
-        if not agent.open_property_details():
-            err = "Could not open Property Details."
-            diagnostics.capture_screenshot("property_details_open_failure")
-            for a in auto_actions:
-                report.results.append(ActionResult(action=a, status="failed", error=err))
+        except ManualInterventionRequired:
+            diagnostics.capture_screenshot("property_details_manual_intervention")
             _finalise(report)
-            raise RuntimeError(err)
+            raise
 
         time.sleep(1)
         report.session_fingerprint = agent.collect_session_fingerprint()

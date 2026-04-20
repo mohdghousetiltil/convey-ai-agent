@@ -1,32 +1,77 @@
 /**
- * LoginScreen — email/password + Google/Microsoft OAuth.
+ * LoginScreen — email/password + Microsoft/Google OAuth + self-registration.
  *
- * Matches the existing app visual language:
- *  - Playfair Display serif italic heading
- *  - Geist sans body
- *  - Slate colour palette + motion animations
+ * No firm slug required — the desktop app resolves the client automatically.
+ * Views: "login" | "register"
  */
 
 import React, { useEffect, useRef, useState } from "react";
-import { motion } from "motion/react";
-import { Eye, EyeOff, LogIn } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Eye, EyeOff, KeyRound, LogIn, UserPlus } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "../lib/AuthContext";
-import { getClientSlug } from "../lib/auth";
 import { getOAuthProviders } from "../lib/api";
 import type { OAuthProviders } from "../lib/api";
 
-interface LoginScreenProps {
-  /** Optional override; if absent, falls back to VITE_CLIENT_SLUG env var. */
-  clientSlug?: string;
+type View = "login" | "register";
+
+export function LoginScreen() {
+  const { login, register, loginOAuth } = useAuth();
+  const [view, setView] = useState<View>("login");
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="w-full max-w-md"
+      >
+        {/* Header */}
+        <div className="text-center mb-10 space-y-1">
+          <h1 className="text-4xl font-serif italic tracking-tight text-slate-900">
+            Convey Agent
+          </h1>
+          <p className="text-slate-500 text-sm">
+            {view === "login" ? "Sign in to your account" : "Create your account"}
+          </p>
+        </div>
+
+        <AnimatePresence mode="wait">
+          {view === "login" ? (
+            <LoginForm
+              key="login"
+              login={login}
+              loginOAuth={loginOAuth}
+              onCreateAccount={() => setView("register")}
+            />
+          ) : (
+            <RegisterForm
+              key="register"
+              register={register}
+              loginOAuth={loginOAuth}
+              onBack={() => setView("login")}
+            />
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </div>
+  );
 }
 
-export function LoginScreen({ clientSlug: slugProp }: LoginScreenProps) {
-  const { login, loginOAuth } = useAuth();
-  const envSlug = getClientSlug();
-  const resolvedSlug = slugProp || envSlug;
+// ---------------------------------------------------------------------------
+// Login form
+// ---------------------------------------------------------------------------
 
-  const [clientSlug, setClientSlug] = useState(resolvedSlug);
+function LoginForm({
+  login,
+  loginOAuth,
+  onCreateAccount,
+}: {
+  login: (email: string, password: string) => Promise<void>;
+  loginOAuth: (provider: "google" | "microsoft") => Promise<void>;
+  onCreateAccount: () => void;
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -38,21 +83,19 @@ export function LoginScreen({ clientSlug: slugProp }: LoginScreenProps) {
 
   useEffect(() => {
     emailRef.current?.focus();
-    // Fetch which OAuth providers are configured on this install.
     getOAuthProviders()
       .then(setProviders)
-      .catch(() => {/* silently ignore — may be offline */});
+      .catch(() => {});
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!clientSlug.trim()) { setError("Enter the firm slug."); return; }
     if (!email.trim()) { setError("Enter your email."); return; }
     if (!password) { setError("Enter your password."); return; }
     setError("");
     setLoading(true);
     try {
-      await login(clientSlug.trim(), email.trim(), password);
+      await login(email.trim(), password);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed.");
     } finally {
@@ -61,7 +104,6 @@ export function LoginScreen({ clientSlug: slugProp }: LoginScreenProps) {
   }
 
   async function handleOAuth(provider: "google" | "microsoft") {
-    if (!clientSlug.trim()) { setError("Enter the firm slug first."); return; }
     setError("");
     setOauthLoading(provider);
     try {
@@ -78,161 +120,332 @@ export function LoginScreen({ clientSlug: slugProp }: LoginScreenProps) {
   const showOAuth = googleConfigured || msConfigured;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-        className="w-full max-w-md"
-      >
-        {/* Header */}
-        <div className="text-center mb-10 space-y-1">
-          <h1 className="text-4xl font-serif italic tracking-tight text-slate-900">
-            Convey Agent
-          </h1>
-          <p className="text-slate-500 text-sm">Sign in to your account</p>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          {/* OAuth buttons */}
-          {showOAuth && (
-            <div className="p-6 border-b border-slate-100 space-y-3">
-              {googleConfigured && (
-                <button
-                  type="button"
-                  disabled={!!oauthLoading || loading}
-                  onClick={() => handleOAuth("google")}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {oauthLoading === "google" ? (
-                    <Spinner />
-                  ) : (
-                    <GoogleIcon />
-                  )}
-                  Continue with Google
-                </button>
-              )}
-              {msConfigured && (
-                <button
-                  type="button"
-                  disabled={!!oauthLoading || loading}
-                  onClick={() => handleOAuth("microsoft")}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {oauthLoading === "microsoft" ? (
-                    <Spinner />
-                  ) : (
-                    <MicrosoftIcon />
-                  )}
-                  Continue with Microsoft
-                </button>
-              )}
-              <div className="flex items-center gap-3 pt-1">
-                <hr className="flex-1 border-slate-100" />
-                <span className="text-xs text-slate-400 shrink-0">or sign in with email</span>
-                <hr className="flex-1 border-slate-100" />
-              </div>
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.22 }}
+    >
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {/* OAuth buttons — primary auth for Microsoft */}
+        {showOAuth && (
+          <div className="p-6 border-b border-slate-100 space-y-3">
+            {msConfigured && (
+              <button
+                type="button"
+                disabled={!!oauthLoading || loading}
+                onClick={() => handleOAuth("microsoft")}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {oauthLoading === "microsoft" ? <Spinner /> : <MicrosoftIcon />}
+                Continue with Microsoft
+              </button>
+            )}
+            {googleConfigured && (
+              <button
+                type="button"
+                disabled={!!oauthLoading || loading}
+                onClick={() => handleOAuth("google")}
+                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {oauthLoading === "google" ? <Spinner /> : <GoogleIcon />}
+                Continue with Google
+              </button>
+            )}
+            <div className="flex items-center gap-3 pt-1">
+              <hr className="flex-1 border-slate-100" />
+              <span className="text-xs text-slate-400 shrink-0">or sign in with email</span>
+              <hr className="flex-1 border-slate-100" />
             </div>
+          </div>
+        )}
+
+        {/* Email / password form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">
+              Email
+            </label>
+            <input
+              ref={emailRef}
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3.5 py-2.5"
+            >
+              {error}
+            </motion.p>
           )}
 
-          {/* Email / password form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {/* Firm slug — only shown when not pre-configured via env */}
-            {!envSlug && (
-              <div className="space-y-1">
-                <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">
-                  Firm slug
-                </label>
-                <input
-                  type="text"
-                  autoComplete="organization"
-                  value={clientSlug}
-                  onChange={(e) => setClientSlug(e.target.value)}
-                  placeholder="e.g. acme-conveyancing"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
-                />
-              </div>
-            )}
+          <Button
+            type="submit"
+            disabled={loading || !!oauthLoading}
+            className="w-full flex items-center justify-center gap-2 mt-2"
+            size="md"
+          >
+            {loading ? <Spinner light /> : <LogIn size={16} />}
+            {loading ? "Signing in…" : "Sign in"}
+          </Button>
+        </form>
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">
-                Email
-              </label>
-              <input
-                ref={emailRef}
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
-                />
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Error message */}
-            {error && (
-              <motion.p
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3.5 py-2.5"
-              >
-                {error}
-              </motion.p>
-            )}
-
-            <Button
-              type="submit"
-              disabled={loading || !!oauthLoading}
-              className="w-full flex items-center justify-center gap-2 mt-2"
-              size="md"
-            >
-              {loading ? (
-                <Spinner light />
-              ) : (
-                <LogIn size={16} />
-              )}
-              {loading ? "Signing in…" : "Sign in"}
-            </Button>
-          </form>
-        </div>
-
-        <p className="text-center text-xs text-slate-400 mt-6">
-          Contact your administrator if you don't have an account.
-        </p>
-      </motion.div>
-    </div>
+      <p className="text-center text-xs text-slate-400 mt-5">
+        New to Convey Agent?{" "}
+        <button
+          onClick={onCreateAccount}
+          className="text-slate-600 font-semibold hover:text-slate-900 transition-colors underline underline-offset-2"
+        >
+          Create an account
+        </button>
+      </p>
+    </motion.div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Inline micro-components
+// Register form
+// ---------------------------------------------------------------------------
+
+function RegisterForm({
+  register,
+  loginOAuth,
+  onBack,
+}: {
+  register: (name: string, email: string, password: string, activationKey: string) => Promise<void>;
+  loginOAuth: (provider: "google" | "microsoft") => Promise<void>;
+  onBack: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<"microsoft" | "google" | null>(null);
+  const [error, setError] = useState("");
+  const [providers, setProviders] = useState<OAuthProviders | null>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    nameRef.current?.focus();
+    getOAuthProviders().then(setProviders).catch(() => {});
+  }, []);
+
+  const msConfigured = providers?.microsoft?.configured ?? false;
+  const googleConfigured = providers?.google?.configured ?? false;
+
+  async function handleOAuth(provider: "google" | "microsoft") {
+    setError("");
+    setOauthLoading(provider);
+    try {
+      await loginOAuth(provider);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `${provider} sign-up failed.`);
+    } finally {
+      setOauthLoading(null);
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) { setError("Enter your full name."); return; }
+    if (!email.trim()) { setError("Enter your email."); return; }
+    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (password !== confirm) { setError("Passwords do not match."); return; }
+    setError("");
+    setLoading(true);
+    try {
+      await register(name.trim(), email.trim(), password, "");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      transition={{ duration: 0.22 }}
+    >
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {/* Microsoft / Google OAuth — fastest path for corporate accounts */}
+        {(msConfigured || googleConfigured) && (
+          <div className="p-6 border-b border-slate-100 space-y-3">
+            {msConfigured && (
+              <button
+                type="button"
+                disabled={!!oauthLoading || loading}
+                onClick={() => handleOAuth("microsoft")}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-[#2f6bc4] bg-[#2f6bc4] text-white text-sm font-semibold hover:bg-[#1a5bb5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {oauthLoading === "microsoft" ? <Spinner light /> : <MicrosoftIcon />}
+                Create account with Microsoft
+              </button>
+            )}
+            {googleConfigured && (
+              <button
+                type="button"
+                disabled={!!oauthLoading || loading}
+                onClick={() => handleOAuth("google")}
+                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {oauthLoading === "google" ? <Spinner /> : <GoogleIcon />}
+                Create account with Google
+              </button>
+            )}
+            {msConfigured && (
+              <p className="text-[0.68rem] text-slate-400 text-center px-2">
+                Your Microsoft organisation is automatically detected — no activation key needed.
+              </p>
+            )}
+            <div className="flex items-center gap-3 pt-1">
+              <hr className="flex-1 border-slate-100" />
+              <span className="text-xs text-slate-400 shrink-0">or create with email</span>
+              <hr className="flex-1 border-slate-100" />
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Full name</label>
+            <input
+              ref={nameRef}
+              type="text"
+              autoComplete="name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Jane Smith"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Email</label>
+            <input
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@yourfirm.com"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min. 8 characters"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Confirm password</label>
+            <input
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              required
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Repeat password"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+            />
+          </div>
+
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3.5 py-2.5"
+            >
+              {error}
+            </motion.p>
+          )}
+
+          <Button
+            type="submit"
+            disabled={loading || !!oauthLoading}
+            className="w-full flex items-center justify-center gap-2 mt-2"
+            size="md"
+          >
+            {loading ? <Spinner light /> : <UserPlus size={16} />}
+            {loading ? "Creating account…" : "Create account"}
+          </Button>
+        </form>
+      </div>
+
+      <p className="text-center text-xs text-slate-400 mt-5">
+        Already have an account?{" "}
+        <button
+          onClick={onBack}
+          className="text-slate-600 font-semibold hover:text-slate-900 transition-colors underline underline-offset-2"
+        >
+          Sign in
+        </button>
+      </p>
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Micro-components
 // ---------------------------------------------------------------------------
 
 function Spinner({ light = false }: { light?: boolean }) {
@@ -244,11 +457,7 @@ function Spinner({ light = false }: { light?: boolean }) {
       viewBox="0 0 24 24"
     >
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-      />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
   );
 }
@@ -266,7 +475,7 @@ function GoogleIcon() {
 
 function MicrosoftIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 23 23" className="shrink-0">
+    <svg width="20" height="20" viewBox="0 0 23 23" className="shrink-0">
       <path fill="#f3f3f3" d="M0 0h23v23H0z" />
       <path fill="#f35325" d="M1 1h10v10H1z" />
       <path fill="#81bc06" d="M12 1h10v10H12z" />

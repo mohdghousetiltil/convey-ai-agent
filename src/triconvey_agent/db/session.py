@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 from collections.abc import AsyncGenerator
 
+from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -31,6 +32,9 @@ DATABASE_URL = os.getenv(
 DB_POOL_SIZE = int(os.getenv("CONVEY_DB_POOL_SIZE", "5"))
 DB_MAX_OVERFLOW = int(os.getenv("CONVEY_DB_MAX_OVERFLOW", "10"))
 DB_ECHO = _env_bool("CONVEY_DB_ECHO", False)
+DB_POOL_PRE_PING = _env_bool("CONVEY_DB_POOL_PRE_PING", os.name != "nt")
+DB_USE_NULL_POOL = _env_bool("CONVEY_DB_USE_NULL_POOL", os.name == "nt")
+DB_POOL_RECYCLE = int(os.getenv("CONVEY_DB_POOL_RECYCLE_SECONDS", "1800"))
 
 
 class Base(DeclarativeBase):
@@ -44,14 +48,23 @@ _session_factory: async_sessionmaker[AsyncSession] | None = None
 def get_engine() -> AsyncEngine:
     global _engine
     if _engine is None:
-        _engine = create_async_engine(
-            DATABASE_URL,
-            pool_size=DB_POOL_SIZE,
-            max_overflow=DB_MAX_OVERFLOW,
-            pool_pre_ping=True,
-            echo=DB_ECHO,
-            future=True,
-        )
+        engine_kwargs = {
+            "echo": DB_ECHO,
+            "future": True,
+        }
+        if DB_USE_NULL_POOL:
+            engine_kwargs["poolclass"] = NullPool
+        else:
+            engine_kwargs.update(
+                {
+                    "pool_size": DB_POOL_SIZE,
+                    "max_overflow": DB_MAX_OVERFLOW,
+                    "pool_pre_ping": DB_POOL_PRE_PING,
+                    "pool_recycle": DB_POOL_RECYCLE,
+                    "pool_use_lifo": True,
+                }
+            )
+        _engine = create_async_engine(DATABASE_URL, **engine_kwargs)
     return _engine
 
 
