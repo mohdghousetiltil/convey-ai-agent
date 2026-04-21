@@ -1,0 +1,42 @@
+# Desktop build files (not needed on Railway)
+desktop_app.py
+desktop_app.spec
+build_desktop.ps1
+build_installer.ps1
+setup_client.ps1
+spy_window.py
+run_pipeline.py
+tc_agent.py
+
+# Build output
+dist/
+build/
+installer/
+*.spec
+
+# UI source (already built into .exe for desktop)
+ui/src/
+ui/node_modules/
+ui/public/
+
+# Local dev / secrets
+.env
+.env.local
+.local_app/
+.venv/
+.venv-1/
+.claude/
+
+# Test / temp
+tests/
+samples/
+output/
+tmp*/
+jsons/
+.pytest-tmp/
+.cache/
+__pycache__/
+*.pyc
+
+# Mapping files (desktop-only)
+triconvey-mapping/
