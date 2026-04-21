@@ -24,10 +24,21 @@ def _env_bool(name: str, default: bool = False) -> bool:
         return default
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
+def _normalize_database_url(raw_url: str | None) -> str:
+    value = (raw_url or "").strip()
+    if not value:
+        return "postgresql+asyncpg://postgres:sqlfordatamatically@localhost:5432/convey_agent"
+    if value.startswith("postgresql+asyncpg://") or value.startswith("sqlite+aiosqlite://"):
+        return value
+    if value.startswith("postgres://"):
+        return "postgresql+asyncpg://" + value[len("postgres://") :]
+    if value.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + value[len("postgresql://") :]
+    return value
 
-DATABASE_URL = os.getenv(
-    "CONVEY_DATABASE_URL",
-    "postgresql+asyncpg://postgres:sqlfordatamatically@localhost:5432/convey_agent",
+
+DATABASE_URL = _normalize_database_url(
+    os.getenv("CONVEY_DATABASE_URL") or os.getenv("DATABASE_URL")
 )
 DB_POOL_SIZE = int(os.getenv("CONVEY_DB_POOL_SIZE", "5"))
 DB_MAX_OVERFLOW = int(os.getenv("CONVEY_DB_MAX_OVERFLOW", "10"))
