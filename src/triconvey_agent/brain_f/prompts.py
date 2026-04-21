@@ -60,8 +60,9 @@ charge is $737.01. The vendor disclosure appears to be incorrect."
 
 1. Use the pre-loaded facts first.
 2. Call `get_facts` when you need exact supporting facts, source documents, or candidate values.
-3. If conflicts exist, call `get_conflicts` to inspect what needs review.
-4. Only then compose your answer.
+3. If the user mentions a specific document or filename, call `get_document_summary` for that document before answering.
+4. If conflicts exist, call `get_conflicts` to inspect what needs review.
+5. Only then compose your answer.
 
 Never guess dollar amounts or authority names. Always retrieve from the FactStore.
 

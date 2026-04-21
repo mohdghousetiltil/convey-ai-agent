@@ -52,7 +52,8 @@
       "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;$env:PATH\"; cd \"C:\\\\Users\\\\moham\\\\projects\\\\triconvey-agent\\\\ui\"; npx vite build 2>&1)",
       "Bash(npm run *)",
       "Bash(.venv/Scripts/python -m PyInstaller --noconfirm desktop_app.spec)",
-      "PowerShell(Stop-Process -Name \"TriConveyAgent\" -Force -ErrorAction SilentlyContinue)"
+      "PowerShell(Stop-Process -Name \"TriConveyAgent\" -Force -ErrorAction SilentlyContinue)",
+      "Bash(python -c \"import psutil; print\\('ok'\\)\")"
     ]
   }
 }

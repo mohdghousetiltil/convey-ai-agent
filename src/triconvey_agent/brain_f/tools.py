@@ -472,6 +472,30 @@ def _tokenize(text: str) -> set[str]:
     return set(re.findall(r"[a-z0-9]+", (text or "").lower()))
 
 
+def _filename_hint_score(query: str, filename: str) -> float:
+    q = (query or "").lower()
+    name = (filename or "").lower()
+    if not q or not name:
+        return 0.0
+    score = 0.0
+    stem = name.rsplit(".", 1)[0]
+    if name in q or stem in q:
+        score += 8.0
+    filename_tokens = _tokenize(stem.replace("_", " ").replace("-", " "))
+    query_tokens = _tokenize(q)
+    overlap = len(filename_tokens & query_tokens)
+    score += overlap * 1.5
+    if "state revenue" in q and ("state revenue" in name or "land tax" in name):
+        score += 6.0
+    if "land tax" in q and "land tax" in name:
+        score += 6.0
+    if "water" in q and "water" in name:
+        score += 4.0
+    if "council" in q and ("council" in name or "land information" in name):
+        score += 4.0
+    return score
+
+
 def _cosine_similarity(left: list[float], right: list[float]) -> float:
     if not left or not right or len(left) != len(right):
         return 0.0
@@ -491,11 +515,13 @@ def _rank_corpus_chunks(query: str, corpus_chunks: list[dict[str, Any]]) -> list
     scored: list[tuple[float, dict[str, Any]]] = []
     for chunk in corpus_chunks:
         text = str(chunk.get("text") or "")
+        filename = str(chunk.get("file") or "")
         if not text.strip():
             continue
         token_overlap = len(query_tokens & _tokenize(text))
         phrase_boost = 3 if lower_query and lower_query in text.lower() else 0
-        score = float(token_overlap + phrase_boost)
+        filename_boost = _filename_hint_score(query, filename)
+        score = float(token_overlap + phrase_boost + filename_boost)
         # Use pre-computed embeddings only if already attached to the chunk (no live API calls)
         embedding = chunk.get("embedding")
         if isinstance(embedding, list) and embedding:

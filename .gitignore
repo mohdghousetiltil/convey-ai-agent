@@ -1,5 +1,7 @@
 .env
 .env.example
+.local_app/*
+.venv*
 *.pdf
 __pycache__/
 *.pyc
@@ -13,6 +15,7 @@ build/
 dist/
 ui/node_modules/
 ui/dist/
+
 
 final_output.json
 fill_artifact.json

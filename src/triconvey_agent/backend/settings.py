@@ -5,16 +5,21 @@ import os
 from pathlib import Path
 from typing import Any
 
+from triconvey_agent.app_meta import DEFAULT_UPDATE_REPOSITORY
 from triconvey_agent.backend.runtime import AppRuntimePaths, ensure_runtime_dirs, get_runtime_paths
 
 DEFAULT_LOCAL_SETTINGS = {
     "language": "English",
     "openAiApiKey": "",
     "anthropicApiKey": "",
-    "aiProvider": "openai",          # "openai" | "anthropic"
+    "aiProvider": "openai",          # "openai" | "anthropic" | "hybrid"
+    "aiMode": "cost_efficient",      # "cost_efficient" | "all_time_best" | "turbo"
     "defaultModelName": "gpt-4.1-mini",
     "triconveyPath": "",
     "preferredAutofillFields": [],
+    "updateRepository": DEFAULT_UPDATE_REPOSITORY,
+    "includePrereleaseUpdates": False,
+    "autoCheckForUpdates": True,
 }
 
 
@@ -74,6 +79,10 @@ def load_local_settings(paths: AppRuntimePaths | None = None, user_id: str | Non
                 payload["defaultModelName"] = str(raw.get("defaultModelName") or payload["defaultModelName"])
                 payload["triconveyPath"] = str(raw.get("triconveyPath") or payload["triconveyPath"])
                 payload["aiProvider"] = str(raw.get("aiProvider") or payload["aiProvider"])
+                payload["aiMode"] = str(raw.get("aiMode") or payload["aiMode"])
+                payload["updateRepository"] = DEFAULT_UPDATE_REPOSITORY
+                payload["includePrereleaseUpdates"] = bool(raw.get("includePrereleaseUpdates", payload["includePrereleaseUpdates"]))
+                payload["autoCheckForUpdates"] = bool(raw.get("autoCheckForUpdates", payload["autoCheckForUpdates"]))
                 preferred = raw.get("preferredAutofillFields")
                 if isinstance(preferred, list):
                     payload["preferredAutofillFields"] = [str(item) for item in preferred if str(item).strip()]
@@ -121,8 +130,12 @@ def save_local_settings(
         "openAiApiKey": str(settings.get("openAiApiKey") or ""),
         "anthropicApiKey": str(settings.get("anthropicApiKey") or ""),
         "aiProvider": str(settings.get("aiProvider") or current["aiProvider"] or DEFAULT_LOCAL_SETTINGS["aiProvider"]),
+        "aiMode": str(settings.get("aiMode") or current.get("aiMode") or DEFAULT_LOCAL_SETTINGS["aiMode"]),
         "defaultModelName": str(settings.get("defaultModelName") or current["defaultModelName"] or DEFAULT_LOCAL_SETTINGS["defaultModelName"]),
         "triconveyPath": str(settings.get("triconveyPath") or current["triconveyPath"] or ""),
+        "updateRepository": DEFAULT_UPDATE_REPOSITORY,
+        "includePrereleaseUpdates": bool(settings.get("includePrereleaseUpdates", current.get("includePrereleaseUpdates", DEFAULT_LOCAL_SETTINGS["includePrereleaseUpdates"]))),
+        "autoCheckForUpdates": bool(settings.get("autoCheckForUpdates", current.get("autoCheckForUpdates", DEFAULT_LOCAL_SETTINGS["autoCheckForUpdates"]))),
         "preferredAutofillFields": [
             str(item)
             for item in (settings.get("preferredAutofillFields") or current.get("preferredAutofillFields") or [])
@@ -139,8 +152,12 @@ def save_local_settings(
             {
                 "language": merged["language"],
                 "aiProvider": merged["aiProvider"],
+                "aiMode": merged["aiMode"],
                 "defaultModelName": merged["defaultModelName"],
                 "triconveyPath": merged["triconveyPath"],
+                "updateRepository": merged["updateRepository"],
+                "includePrereleaseUpdates": merged["includePrereleaseUpdates"],
+                "autoCheckForUpdates": merged["autoCheckForUpdates"],
                 "preferredAutofillFields": raw_settings.get("preferredAutofillFields", []),
                 "preferredAutofillFieldsByUser": per_user,
             },

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from triconvey_agent.ai.client import AIClient
 
@@ -59,55 +62,95 @@ def build_ai_review_prompt(question, answer) -> str:
     )
 
 
+def _review_one_answer(qid: str, answer, question, ai_client: AIClient) -> tuple[str, dict]:
+    response = ai_client.complete(build_ai_review_prompt(question, answer))
+    parsed = extract_json_dict(response.raw_text)
+    if parsed is None:
+        return qid, {
+            "status": "invalid_json",
+            "suggested_value": None,
+            "confidence": 0.0,
+            "quote": None,
+            "source_file": None,
+            "reason": "AI review did not return valid JSON.",
+            "raw_text": response.raw_text,
+        }
+
+    quote = parsed.get("quote")
+    source_file = str(parsed.get("source_file") or "")
+    verified = False
+    if quote:
+        for source in answer.evidence:
+            source_quote = source.quote or ""
+            if (quote == source_quote or quote in source_quote) and (
+                not source_file or source.file == source_file
+            ):
+                verified = True
+                break
+    elif parsed.get("status") == "insufficient_evidence":
+        verified = True
+
+    suggestion = {
+        "status": parsed.get("status", "invalid_json"),
+        "suggested_value": parsed.get("suggested_value"),
+        "confidence": parsed.get("confidence", 0.0),
+        "quote": quote,
+        "source_file": source_file or None,
+        "reason": parsed.get("reason"),
+        "quote_verified": verified,
+        "raw_text": response.raw_text,
+    }
+    if not verified:
+        suggestion["status"] = "invalid_quote"
+        suggestion["reason"] = "AI review quote did not match the provided evidence."
+    return qid, suggestion
+
+
 def run_ai_review(answers: dict, registry: dict, ai_client: AIClient) -> dict[str, dict]:
-    suggestions: dict[str, dict] = {}
+    started = time.perf_counter()
+    review_targets: list[tuple[str, object, object]] = []
     for qid, answer in answers.items():
         question = registry.get(qid)
         if question is None or not answer.evidence:
             continue
         if answer.value is None and not answer.needs_review:
             continue
+        review_targets.append((qid, answer, question))
 
-        response = ai_client.complete(build_ai_review_prompt(question, answer))
-        parsed = extract_json_dict(response.raw_text)
-        if parsed is None:
-            suggestions[qid] = {
-                "status": "invalid_json",
-                "suggested_value": None,
-                "confidence": 0.0,
-                "quote": None,
-                "source_file": None,
-                "reason": "AI review did not return valid JSON.",
-                "raw_text": response.raw_text,
-            }
-            continue
+    suggestions: dict[str, dict] = {}
+    if not review_targets:
+        return suggestions
 
-        quote = parsed.get("quote")
-        source_file = str(parsed.get("source_file") or "")
-        verified = False
-        if quote:
-            for source in answer.evidence:
-                source_quote = source.quote or ""
-                if (quote == source_quote or quote in source_quote) and (
-                    not source_file or source.file == source_file
-                ):
-                    verified = True
-                    break
-        elif parsed.get("status") == "insufficient_evidence":
-            verified = True
+    print(f"  [AI Review] Reviewing {len(review_targets)} field(s)...")
+    max_workers = min(
+        len(review_targets),
+        max(1, int(os.getenv("CONVEY_AI_REVIEW_MAX_WORKERS", "4"))),
+    )
 
-        suggestions[qid] = {
-            "status": parsed.get("status", "invalid_json"),
-            "suggested_value": parsed.get("suggested_value"),
-            "confidence": parsed.get("confidence", 0.0),
-            "quote": quote,
-            "source_file": source_file or None,
-            "reason": parsed.get("reason"),
-            "quote_verified": verified,
-            "raw_text": response.raw_text,
+    completed = 0
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_map = {
+            executor.submit(_review_one_answer, qid, answer, question, ai_client): qid
+            for qid, answer, question in review_targets
         }
-        if not verified:
-            suggestions[qid]["status"] = "invalid_quote"
-            suggestions[qid]["reason"] = "AI review quote did not match the provided evidence."
+        for future in as_completed(future_map):
+            qid = future_map[future]
+            try:
+                result_qid, result = future.result()
+                suggestions[result_qid] = result
+            except Exception as exc:
+                suggestions[qid] = {
+                    "status": "error",
+                    "suggested_value": None,
+                    "confidence": 0.0,
+                    "quote": None,
+                    "source_file": None,
+                    "reason": f"AI review failed: {exc}",
+                    "raw_text": "",
+                }
+            completed += 1
+            if completed == len(review_targets) or completed % 5 == 0:
+                print(f"  [AI Review] {completed}/{len(review_targets)} complete")
 
+    print(f"  [Time] AI Review total: {time.perf_counter() - started:.2f}s")
     return suggestions

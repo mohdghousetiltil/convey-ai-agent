@@ -1,8 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from pathlib import Path
+import os
 
 project_root = Path.cwd()
+icon_path = os.environ.get("TRICONVEY_APP_ICON") or None
+version_file = os.environ.get("TRICONVEY_VERSION_FILE") or None
 
 datas = [
     (str(project_root / "ui" / "dist"), "ui/dist"),
@@ -142,4 +145,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    version=version_file,
+    icon=icon_path,
 )

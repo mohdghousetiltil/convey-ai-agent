@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AlertCircle, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, LogOut, MessageSquare, Settings, Shield, User } from "lucide-react";
+import { AlertCircle, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Info, LogOut, MessageSquare, Settings, Shield, User } from "lucide-react";
 import { useAuth } from "../lib/AuthContext";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AnswerUpdatePayload, ChatAnswerPayload, ReviewFieldItem, ReviewRunPayload } from "../lib/api";
+import { AnswerUpdatePayload, ChatAnswerPayload, ReviewFieldItem, ReviewRunPayload, UpdateStatusPayload } from "../lib/api";
 
 type HistoryTurn = { role: "user" | "assistant"; content: string };
 type ChatMode = "quick" | "standard" | "thorough";
@@ -84,6 +84,7 @@ interface ReviewScreenProps {
   onBack: () => void;
   onProfile: () => void;
   onSettings: () => void;
+  onAbout: () => void;
   onPolicy: () => void;
   onLogout: () => void;
   onSaveReview: (updates: Record<string, AnswerUpdatePayload>) => Promise<void> | void;
@@ -94,10 +95,11 @@ interface ReviewScreenProps {
   isAutofilling: boolean;
   errorMessage?: string;
   onDismissError?: () => void;
+  updateStatus?: UpdateStatusPayload | null;
 }
 
 export function ReviewScreen(props: ReviewScreenProps) {
-  const { run, onBack, onProfile, onSettings, onPolicy, onLogout, onSaveReview, onAutofill, onAskAssistant, onApplyPatch, isSaving, isAutofilling, errorMessage, onDismissError } = props;
+  const { run, onBack, onProfile, onSettings, onAbout, onPolicy, onLogout, onSaveReview, onAutofill, onAskAssistant, onApplyPatch, isSaving, isAutofilling, errorMessage, onDismissError, updateStatus } = props;
   const { user } = useAuth();
   const userInitials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
@@ -117,8 +119,8 @@ export function ReviewScreen(props: ReviewScreenProps) {
     runIdRef.current = newRunId;
     setDrafts({});
     setReviewItemsCollapsed(true);
-    // Only close chatbot when a genuinely new run is loaded, not on patch-apply refetches
-    if (isNewRun) setChatOpen(false);
+    // Open the AI side agent automatically for new runs.
+    if (isNewRun) setChatOpen(true);
   }, [run]);
 
   useEffect(() => {
@@ -213,6 +215,7 @@ export function ReviewScreen(props: ReviewScreenProps) {
               <DropdownMenuItem className="cursor-pointer" onClick={onSettings}><Settings className="mr-2 h-4 w-4" /><span>Settings</span></DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer" onClick={onPolicy}><Shield className="mr-2 h-4 w-4" /><span>Custom Policy</span></DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer" onClick={onAbout}><Info className="mr-2 h-4 w-4" /><span>About & Updates</span></DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={onLogout}><LogOut className="mr-2 h-4 w-4" /><span>Logout</span></DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -231,6 +234,11 @@ export function ReviewScreen(props: ReviewScreenProps) {
         <span className="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-semibold text-amber-700">Needs review {run.metrics.needs_review}</span>
         <span className="rounded-full bg-white border border-border px-3 py-1 text-xs font-semibold text-slate-600">Actions {run.metrics.action_count}</span>
         {Object.keys(drafts).length > 0 ? <span className="rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-700">Unsaved changes {Object.keys(drafts).length}</span> : null}
+        {updateStatus?.update_available ? (
+          <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+            Update ready {updateStatus.latest_version}
+          </span>
+        ) : null}
       </section>
 
       <div className="flex flex-1 overflow-hidden">

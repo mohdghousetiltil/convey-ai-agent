@@ -69,12 +69,6 @@ def test_execution_diagnostics_logs_jsonl():
 
 def test_non_executable_brain_d_questions_are_skipped_from_plan():
     answers = {
-        "policy_6_due_diligence": AnswerObject(
-            question_id="policy_6_due_diligence",
-            question_label="12. Due Diligence Checklist",
-            value="Is attached",
-            confidence=1.0,
-        ),
         "sec32_oc_inactive": AnswerObject(
             question_id="sec32_oc_inactive",
             question_label="Owners Corporation is inactive",
@@ -84,6 +78,46 @@ def test_non_executable_brain_d_questions_are_skipped_from_plan():
     }
     plan = build_action_plan(answers, YAML_DIR)
     assert plan.actions == []
+
+
+def test_due_diligence_field_is_written_to_action_plan():
+    answers = {
+        "policy_6_due_diligence": AnswerObject(
+            question_id="policy_6_due_diligence",
+            question_label="12. Due Diligence Checklist",
+            value="Is attached",
+            confidence=1.0,
+        ),
+    }
+
+    plan = build_action_plan(answers, YAML_DIR)
+
+    assert len(plan.actions) == 1
+    action = plan.actions[0]
+    assert action.question_id == "policy_6_due_diligence"
+    assert action.action == "set_text"
+    assert action.payload == "Is attached"
+    assert action.field_id == "Sec. 32 (6)::Edit::Are as follows:::t256l-1870"
+
+
+def test_planning_certificate_checkbox_is_kept_checked_in_action_plan():
+    answers = {
+        "policy_2_planning_cert_attached": AnswerObject(
+            question_id="policy_2_planning_cert_attached",
+            question_label="Certificate with required information attached (planning scheme)",
+            value=True,
+            confidence=1.0,
+        ),
+    }
+
+    plan = build_action_plan(answers, YAML_DIR)
+
+    assert len(plan.actions) == 1
+    action = plan.actions[0]
+    assert action.question_id == "policy_2_planning_cert_attached"
+    assert action.action == "set_checkbox"
+    assert action.payload is True
+    assert action.field_id == "Sec. 32 (2)::CheckBox::Certificate with required information attached::t588l-1873"
 
 
 def test_control_cache_reuses_descendants_until_invalidated():

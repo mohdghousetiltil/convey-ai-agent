@@ -4,35 +4,56 @@ import { LoadingScreen } from "./components/LoadingScreen";
 import { ReviewScreen } from "./components/ReviewScreen";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { ProfileScreen } from "./components/ProfileScreen";
+import { AboutScreen } from "./components/AboutScreen";
 import { ClientPolicyScreen } from "./components/ClientPolicyScreen";
 import { LoginScreen } from "./components/LoginScreen";
 import { AuthProvider, useAuth } from "./lib/AuthContext";
 import {
   askRunQuestion,
+  AppInfoPayload,
   applyAnswerPatches,
   AnswerUpdatePayload,
   AutofillJobPayload,
   cancelAutofillJob,
+  checkForUpdates,
   continueAutofillJob,
+  downloadUpdateInstaller,
+  getAppInfo,
   getSettings,
   getAutofillJob,
+  getRun,
   ReviewRunPayload,
   createRun,
   saveAnswers,
   saveSettings,
   startAutofillJob,
+  UpdateStatusPayload,
 } from "./lib/api";
 
-type ViewState = "upload" | "loading" | "main" | "settings" | "profile" | "policy";
+type ViewState = "upload" | "loading" | "main" | "settings" | "profile" | "policy" | "about";
+type LoadingKind = "analysis" | "autofill" | null;
 
 type LocalSettingsForm = {
   language: string;
   openAiApiKey: string;
   anthropicApiKey: string;
-  aiProvider: "openai" | "anthropic";
+  aiProvider: "openai" | "anthropic" | "hybrid";
+  aiMode: "cost_efficient" | "all_time_best" | "turbo";
   defaultModelName: string;
   triconveyPath: string;
   preferredAutofillFields: string[];
+  updateRepository: string;
+  includePrereleaseUpdates: boolean;
+  autoCheckForUpdates: boolean;
+};
+
+type DesktopBridge = {
+  pywebview?: {
+    api?: {
+      launch_installer?: (installerPath: string) => Promise<boolean> | boolean;
+      close_app?: () => void;
+    };
+  };
 };
 
 function firstRunKey(userId: string) {
@@ -43,12 +64,78 @@ function sessionDismissKey(userId: string) {
   return `convey:onboarding:dismissed:${userId}`;
 }
 
+function activeRunKey(userId: string) {
+  return `convey:active-run:${userId}`;
+}
+
+function activeAutofillJobKey(userId: string) {
+  return `convey:active-autofill-job:${userId}`;
+}
+
+function clearPersistedWorkflowState(userId: string) {
+  localStorage.removeItem(activeRunKey(userId));
+  localStorage.removeItem(activeAutofillJobKey(userId));
+}
+
 function isSettingsConfigured(settings: LocalSettingsForm): boolean {
   const hasProviderKey =
-    settings.aiProvider === "anthropic"
-      ? Boolean(settings.anthropicApiKey?.trim())
-      : Boolean(settings.openAiApiKey?.trim());
+    settings.aiProvider === "hybrid"
+      ? Boolean(settings.openAiApiKey?.trim()) && Boolean(settings.anthropicApiKey?.trim())
+      : settings.aiProvider === "anthropic"
+        ? Boolean(settings.anthropicApiKey?.trim())
+        : Boolean(settings.openAiApiKey?.trim());
   return Boolean(settings.defaultModelName?.trim()) && hasProviderKey && Boolean(settings.triconveyPath?.trim());
+}
+
+function UpdateBanner({
+  update,
+  busy,
+  error,
+  onDismiss,
+  onInstall,
+}: {
+  update: UpdateStatusPayload;
+  busy: boolean;
+  error: string;
+  onDismiss: () => void;
+  onInstall: () => void;
+}) {
+  return (
+    <div className="fixed bottom-5 right-5 z-[120] w-full max-w-md rounded-3xl border border-amber-200 bg-white/95 p-5 shadow-2xl backdrop-blur">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Update Available</p>
+          <h3 className="mt-1 text-lg font-bold text-slate-900">TriConvey Agent {update.latest_version ?? "latest"}</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            You are on {update.current_version}. A newer installer is ready to download and replace this app.
+          </p>
+        </div>
+        <button onClick={onDismiss} className="text-xs font-semibold uppercase tracking-wider text-slate-400 hover:text-slate-600">
+          Later
+        </button>
+      </div>
+      {error ? <p className="mt-3 text-sm font-medium text-rose-600">{error}</p> : null}
+      <div className="mt-4 flex items-center gap-3">
+        {update.release_url ? (
+          <a
+            href={update.release_url}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm font-semibold text-slate-500 hover:text-slate-700"
+          >
+            Release notes
+          </a>
+        ) : null}
+        <button
+          onClick={onInstall}
+          disabled={busy}
+          className="ml-auto rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+        >
+          {busy ? "Preparing installer..." : "Download and install"}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function FirstRunSetupModal({
@@ -97,14 +184,38 @@ function FirstRunSetupModal({
               onChange={(e) =>
                 onChange({
                   ...settings,
-                  aiProvider: e.target.value as "openai" | "anthropic",
-                  defaultModelName: e.target.value === "anthropic" ? "claude-sonnet-4-6" : "gpt-4.1-mini",
+                  aiProvider: e.target.value as "openai" | "anthropic" | "hybrid",
+                  defaultModelName:
+                    e.target.value === "anthropic"
+                      ? "claude-sonnet-4-6"
+                      : e.target.value === "hybrid"
+                        ? "claude-sonnet-4-6"
+                        : "gpt-4.1-mini",
                 })
               }
               className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             >
               <option value="openai">OpenAI</option>
               <option value="anthropic">Anthropic</option>
+              <option value="hybrid">OpenAI + Claude</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">AI mode</label>
+            <select
+              value={settings.aiMode}
+              onChange={(e) =>
+                onChange({
+                  ...settings,
+                  aiMode: e.target.value as "cost_efficient" | "all_time_best" | "turbo",
+                })
+              }
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            >
+              <option value="cost_efficient">Cost efficient</option>
+              <option value="all_time_best">All time best</option>
+              <option value="turbo">Turbo</option>
             </select>
           </div>
 
@@ -127,6 +238,19 @@ function FirstRunSetupModal({
               className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
             />
           </div>
+
+          {settings.aiProvider === "hybrid" ? (
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Anthropic API key</label>
+              <input
+                type="password"
+                value={settings.anthropicApiKey}
+                onChange={(e) => onChange({ ...settings, anthropicApiKey: e.target.value })}
+                placeholder="sk-ant-..."
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          ) : null}
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Default model</label>
@@ -194,16 +318,21 @@ function AppContent() {
     language: "English",
     openAiApiKey: "",
     anthropicApiKey: "",
-    aiProvider: "openai" as "openai" | "anthropic",
+    aiProvider: "openai" as "openai" | "anthropic" | "hybrid",
+    aiMode: "cost_efficient" as "cost_efficient" | "all_time_best" | "turbo",
     defaultModelName: "gpt-4.1-mini",
     triconveyPath: "",
     preferredAutofillFields: [] as string[],
+    updateRepository: "",
+    includePrereleaseUpdates: false,
+    autoCheckForUpdates: true,
   });
   const [view, setView] = useState<ViewState>("upload");
   const [run, setRun] = useState<ReviewRunPayload | null>(null);
   const [loadingMessage, setLoadingMessage] = useState(
     "Extracting Section 32 answers, review flags, and autofill actions...",
   );
+  const [loadingKind, setLoadingKind] = useState<LoadingKind>(null);
   const [uploadError, setUploadError] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [autofilling, setAutofilling] = useState(false);
@@ -211,18 +340,30 @@ function AppContent() {
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [setupSaving, setSetupSaving] = useState(false);
+  const [appInfo, setAppInfo] = useState<AppInfoPayload | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatusPayload | null>(null);
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
+  const [installingUpdate, setInstallingUpdate] = useState(false);
+  const [updateError, setUpdateError] = useState("");
+  const [dismissedUpdateVersion, setDismissedUpdateVersion] = useState<string | null>(null);
 
   // Fetch settings once the user is authenticated
   useEffect(() => {
     if (!user) {
       setSettingsLoaded(false);
       setShowSetupModal(false);
+      setAppInfo(null);
       return;
     }
     void (async () => {
       try {
         const nextSettings = await getSettings();
         setSettings(nextSettings);
+        try {
+          setAppInfo(await getAppInfo());
+        } catch {
+          setAppInfo({ name: "TriConvey Agent", publisher: "TriConvey Agent", version: "0.1.0" });
+        }
         const seen = localStorage.getItem(firstRunKey(user.user_id)) === "true";
         const dismissed = sessionStorage.getItem(sessionDismissKey(user.user_id)) === "true";
         setShowSetupModal((!seen || !isSettingsConfigured(nextSettings)) && !dismissed);
@@ -236,6 +377,110 @@ function AppContent() {
       }
     })();
   }, [user]);
+
+  useEffect(() => {
+    if (!settingsLoaded || !user || !settings.autoCheckForUpdates || checkingUpdates) {
+      return;
+    }
+    void handleCheckForUpdates(false);
+  }, [settingsLoaded, user, settings.autoCheckForUpdates, checkingUpdates]);
+
+  useEffect(() => {
+    if (!updateStatus?.latest_version) {
+      return;
+    }
+    if (dismissedUpdateVersion && dismissedUpdateVersion !== updateStatus.latest_version) {
+      setDismissedUpdateVersion(null);
+    }
+  }, [updateStatus?.latest_version, dismissedUpdateVersion]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    let cancelled = false;
+    const savedRunId = localStorage.getItem(activeRunKey(user.user_id));
+    const savedJobId = localStorage.getItem(activeAutofillJobKey(user.user_id));
+
+    void (async () => {
+      if (savedRunId) {
+        try {
+          const savedRun = await getRun(savedRunId);
+          if (!cancelled) {
+            setRun(savedRun);
+            if (!savedJobId) {
+              setView("main");
+            }
+          }
+        } catch {
+          localStorage.removeItem(activeRunKey(user.user_id));
+        }
+      }
+
+      if (savedJobId) {
+        try {
+          const savedJob = await getAutofillJob(savedJobId);
+          if (cancelled) return;
+          setAutofillJob(savedJob);
+          if (["queued", "running", "cancelling", "awaiting_user"].includes(savedJob.status)) {
+            setAutofilling(true);
+            setLoadingMessage("Starting Convey autofill and waiting for execution feedback...");
+            setLoadingKind("autofill");
+            setView("loading");
+          } else if (savedJob.status === "completed") {
+            if (savedJob.result) {
+              setRun(savedJob.result);
+            }
+            setAutofilling(false);
+            setAutofillJob(null);
+            setLoadingKind(null);
+            setView("main");
+          } else if (savedJob.status === "cancelled" || savedJob.status === "failed") {
+            setAutofilling(false);
+            setAutofillJob(null);
+            setLoadingKind(null);
+            setView("main");
+          }
+        } catch {
+          localStorage.removeItem(activeAutofillJobKey(user.user_id));
+          if (!cancelled) {
+            setLoadingKind(null);
+            setView(savedRunId ? "main" : "upload");
+          }
+        }
+      } else if (!cancelled) {
+        setLoadingKind(null);
+        setView(savedRunId ? "main" : "upload");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    if (run?.manifest.run_id) {
+      localStorage.setItem(activeRunKey(user.user_id), run.manifest.run_id);
+    } else {
+      localStorage.removeItem(activeRunKey(user.user_id));
+    }
+  }, [run, user]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    if (autofillJob?.job_id) {
+      localStorage.setItem(activeAutofillJobKey(user.user_id), autofillJob.job_id);
+    } else {
+      localStorage.removeItem(activeAutofillJobKey(user.user_id));
+    }
+  }, [autofillJob, user]);
 
   // Poll autofill job status
   useEffect(() => {
@@ -304,13 +549,16 @@ function AppContent() {
     setUploadError("");
     setAutofillJob(null);
     setLoadingMessage("Extracting Section 32 answers, review flags, and autofill actions...");
+    setLoadingKind("analysis");
     setView("loading");
     try {
       const nextRun = await createRun(files, {
+        useAiReview: true,
         model: settings.defaultModelName,
         triconveyExe: settings.triconveyPath || null,
       });
       setRun(nextRun);
+      setLoadingKind(null);
       setView("main");
     } catch (error) {
       const message =
@@ -320,6 +568,7 @@ function AppContent() {
             ? error.message
             : "Failed to analyze the uploaded PDFs.";
       setUploadError(message);
+      setLoadingKind(null);
       setView("upload");
     }
   };
@@ -344,6 +593,7 @@ function AppContent() {
         : run;
       setRun(savedRun);
       setLoadingMessage("Starting Convey autofill and waiting for execution feedback...");
+      setLoadingKind("autofill");
       setView("loading");
       const job = await startAutofillJob(savedRun.manifest.run_id, {
         skipReviewGate: true,
@@ -352,6 +602,7 @@ function AppContent() {
       setAutofillJob(job);
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : "Autofill failed.");
+      setLoadingKind(null);
       setView("main");
       setAutofilling(false);
     }
@@ -365,6 +616,7 @@ function AppContent() {
       setLoadingMessage("Cancelling Convey autofill...");
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : "Could not cancel autofill.");
+      setLoadingKind(null);
       setView("main");
       setAutofilling(false);
     }
@@ -378,16 +630,21 @@ function AppContent() {
       setLoadingMessage("Resuming Convey autofill from Property Details...");
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : "Could not continue autofill.");
+      setLoadingKind(null);
       setView("main");
       setAutofilling(false);
     }
   };
 
   const handleLogout = async () => {
+    if (user) {
+      clearPersistedWorkflowState(user.user_id);
+    }
     setRun(null);
     setUploadError("");
     setAutofillJob(null);
     setAutofilling(false);
+    setLoadingKind(null);
     setView("upload");
     await logout();
   };
@@ -402,6 +659,7 @@ function AppContent() {
     return askRunQuestion(run.manifest.run_id, question, {
       history,
       mode,
+      aiMode: settings.aiMode,
       signal,
     });
   };
@@ -425,6 +683,63 @@ function AppContent() {
     setView("main");
   };
 
+  const handleCheckForUpdates = async (manual = true) => {
+    if (checkingUpdates) return;
+    setCheckingUpdates(true);
+    if (manual) {
+      setUpdateError("");
+    }
+    try {
+      const next = await checkForUpdates({
+        includePrerelease: settings.includePrereleaseUpdates,
+        updateRepository: settings.updateRepository || undefined,
+      });
+      setUpdateStatus(next);
+      if (manual) {
+        if (next.error) {
+          setUpdateError(next.error);
+        } else if (!next.update_available) {
+          setUpdateError("You already have the latest version.");
+        } else {
+          setUpdateError("");
+        }
+      }
+    } catch (error) {
+      if (manual) {
+        setUpdateError(error instanceof Error ? error.message : "Could not check for updates.");
+      }
+    } finally {
+      setCheckingUpdates(false);
+    }
+  };
+
+  const handleDownloadAndInstallUpdate = async () => {
+    if (installingUpdate) return;
+    setInstallingUpdate(true);
+    setUpdateError("");
+    try {
+      const payload = await downloadUpdateInstaller({
+        includePrerelease: settings.includePrereleaseUpdates,
+        updateRepository: settings.updateRepository || undefined,
+      });
+      setUpdateStatus(payload.release);
+      const bridge = window as unknown as DesktopBridge;
+      const launchInstaller = bridge.pywebview?.api?.launch_installer;
+      if (launchInstaller) {
+        await Promise.resolve(launchInstaller(payload.download.installer_path));
+        bridge.pywebview?.api?.close_app?.();
+        return;
+      }
+      if (payload.release.release_url) {
+        window.open(payload.release.release_url, "_blank", "noopener,noreferrer");
+      }
+    } catch (error) {
+      setUpdateError(error instanceof Error ? error.message : "Could not download the update installer.");
+    } finally {
+      setInstallingUpdate(false);
+    }
+  };
+
   const handleSaveSetupModal = async () => {
     if (!user || setupSaving) return;
     setSetupSaving(true);
@@ -446,6 +761,10 @@ function AppContent() {
     setShowSetupModal(false);
   };
 
+  const showUpdateBanner =
+    Boolean(updateStatus?.update_available) &&
+    updateStatus?.latest_version !== dismissedUpdateVersion;
+
   // ── View routing ─────────────────────────────────────────────────────────────
 
   switch (view) {
@@ -464,9 +783,86 @@ function AppContent() {
             onSave={handleSaveSetupModal}
             onLater={handleLaterSetup}
           />
+          {showUpdateBanner && updateStatus ? (
+            <UpdateBanner
+              update={updateStatus}
+              busy={installingUpdate}
+              error={updateError}
+              onDismiss={() => setDismissedUpdateVersion(updateStatus.latest_version ?? null)}
+              onInstall={() => void handleDownloadAndInstallUpdate()}
+            />
+          ) : null}
         </>
       );
     case "loading":
+      if (loadingKind === null) {
+        if (run) {
+          return (
+            <>
+              <ReviewScreen
+                run={run}
+                onBack={() => setView("upload")}
+                onProfile={() => setView("profile")}
+                onSettings={() => setView("settings")}
+                onAbout={() => setView("about")}
+                onPolicy={() => setView("policy")}
+                onLogout={handleLogout}
+                onSaveReview={handleSaveReview}
+                onAutofill={handleAutofill}
+                onAskAssistant={handleAskAssistant}
+                onApplyPatch={handleApplyPatch}
+                isSaving={saving}
+                isAutofilling={autofilling}
+                errorMessage={uploadError}
+                onDismissError={() => setUploadError("")}
+                updateStatus={updateStatus}
+              />
+              <FirstRunSetupModal
+                open={settingsLoaded && showSetupModal}
+                settings={settings}
+                saving={setupSaving}
+                onChange={setSettings}
+                onSave={handleSaveSetupModal}
+                onLater={handleLaterSetup}
+              />
+              {showUpdateBanner && updateStatus ? (
+                <UpdateBanner
+                  update={updateStatus}
+                  busy={installingUpdate}
+                  error={updateError}
+                  onDismiss={() => setDismissedUpdateVersion(updateStatus.latest_version ?? null)}
+                  onInstall={() => void handleDownloadAndInstallUpdate()}
+                />
+              ) : null}
+            </>
+          );
+        }
+        return (
+          <>
+            <UploadScreen
+              onUploadComplete={handleUploadComplete}
+              errorMessage={uploadError}
+            />
+            <FirstRunSetupModal
+              open={settingsLoaded && showSetupModal}
+              settings={settings}
+              saving={setupSaving}
+              onChange={setSettings}
+              onSave={handleSaveSetupModal}
+              onLater={handleLaterSetup}
+            />
+            {showUpdateBanner && updateStatus ? (
+              <UpdateBanner
+                update={updateStatus}
+                busy={installingUpdate}
+                error={updateError}
+                onDismiss={() => setDismissedUpdateVersion(updateStatus.latest_version ?? null)}
+                onInstall={() => void handleDownloadAndInstallUpdate()}
+              />
+            ) : null}
+          </>
+        );
+      }
       return (
         <LoadingScreen
           message={loadingMessage}
@@ -493,7 +889,8 @@ function AppContent() {
             onBack={() => setView("upload")}
             onProfile={() => setView("profile")}
             onSettings={() => setView("settings")}
-          onPolicy={() => setView("policy")}
+            onAbout={() => setView("about")}
+            onPolicy={() => setView("policy")}
             onLogout={handleLogout}
             onSaveReview={handleSaveReview}
             onAutofill={handleAutofill}
@@ -503,6 +900,7 @@ function AppContent() {
             isAutofilling={autofilling}
             errorMessage={uploadError}
             onDismissError={() => setUploadError("")}
+            updateStatus={updateStatus}
           />
           <FirstRunSetupModal
             open={settingsLoaded && showSetupModal}
@@ -512,6 +910,15 @@ function AppContent() {
             onSave={handleSaveSetupModal}
             onLater={handleLaterSetup}
           />
+          {showUpdateBanner && updateStatus ? (
+            <UpdateBanner
+              update={updateStatus}
+              busy={installingUpdate}
+              error={updateError}
+              onDismiss={() => setDismissedUpdateVersion(updateStatus.latest_version ?? null)}
+              onInstall={() => void handleDownloadAndInstallUpdate()}
+            />
+          ) : null}
         </>
       );
     case "settings":
@@ -520,10 +927,30 @@ function AppContent() {
           onBack={() => setView("main")}
           settings={settings}
           onSaveSettings={handleSaveSettings}
+          appInfo={appInfo}
+          updateStatus={updateStatus}
+          updateMessage={updateError}
+          isCheckingUpdates={checkingUpdates}
+          isInstallingUpdate={installingUpdate}
+          onCheckForUpdates={() => void handleCheckForUpdates(true)}
+          onInstallUpdate={() => void handleDownloadAndInstallUpdate()}
         />
       );
     case "profile":
       return <ProfileScreen onBack={() => setView("main")} />;
+    case "about":
+      return (
+        <AboutScreen
+          onBack={() => setView("main")}
+          appInfo={appInfo}
+          updateStatus={updateStatus}
+          updateMessage={updateError}
+          isCheckingUpdates={checkingUpdates}
+          isInstallingUpdate={installingUpdate}
+          onCheckForUpdates={() => void handleCheckForUpdates(true)}
+          onInstallUpdate={() => void handleDownloadAndInstallUpdate()}
+        />
+      );
     case "policy":
       return (
         <ClientPolicyScreen

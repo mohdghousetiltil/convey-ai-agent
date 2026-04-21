@@ -49,11 +49,13 @@ class BrainFAgent:
         model: str = "gpt-4.1-mini",
         provider: str = "openai",
         corpus_chunks: list[dict[str, Any]] | None = None,
+        persist_chat: bool = True,
     ) -> None:
         self._store = store
         self._run_dir = run_dir
         self._model = model
         self._provider = provider.lower()
+        self._persist_chat = persist_chat
         self._corpus_chunks: list[dict[str, Any]] = corpus_chunks or _load_corpus(run_dir)
         self._memory: dict[str, Any] = load_document_memory(run_dir)
         self._fact_snapshot = _build_fact_snapshot(store)
@@ -103,7 +105,8 @@ class BrainFAgent:
         result["critic_applied"] = critic_applied
         result["field_answers"] = []  # field suggestions disabled — AI derives from corpus, not draft answers
         result["reasoning_steps"] = reasoning_steps
-        _save_chat_state(self._run_dir, self._chat_state, question, result["answer"])
+        if self._persist_chat:
+            _save_chat_state(self._run_dir, self._chat_state, question, result["answer"])
         return result
 
     # ------------------------------------------------------------------ #

@@ -4,24 +4,23 @@ import {
   Bell,
   Bot,
   ChevronLeft,
+  Download,
   FolderOpen,
   Globe,
   KeyRound,
+  RefreshCw,
   Shield,
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { AppInfoPayload, UpdateStatusPayload } from "@/lib/api";
 
 const OPENAI_MODELS = [
   { id: "gpt-4.1", label: "GPT-4.1", badge: "Latest" },
   { id: "gpt-4o", label: "GPT-4o", badge: "Smart" },
   { id: "gpt-4.1-mini", label: "GPT-4.1 Mini", badge: "Fast" },
-  { id: "gpt-4o-mini", label: "GPT-4o Mini", badge: "Fast" },
-  { id: "gpt-4.1-nano", label: "GPT-4.1 Nano", badge: "Fastest" },
-  { id: "o3-mini", label: "o3-mini", badge: "Reasoning" },
-  { id: "o1", label: "o1", badge: "Reasoning" },
 ] as const;
 
 const ANTHROPIC_MODELS = [
@@ -44,19 +43,41 @@ interface SettingsForm {
   language: string;
   openAiApiKey: string;
   anthropicApiKey: string;
-  aiProvider: "openai" | "anthropic";
+  aiProvider: "openai" | "anthropic" | "hybrid";
+  aiMode: "cost_efficient" | "all_time_best" | "turbo";
   defaultModelName: string;
   triconveyPath: string;
   preferredAutofillFields: string[];
+  updateRepository: string;
+  includePrereleaseUpdates: boolean;
+  autoCheckForUpdates: boolean;
 }
 
 interface SettingsScreenProps {
   onBack: () => void;
   settings: SettingsForm;
   onSaveSettings: (settings: SettingsForm) => Promise<void> | void;
+  appInfo: AppInfoPayload | null;
+  updateStatus: UpdateStatusPayload | null;
+  updateMessage: string;
+  isCheckingUpdates: boolean;
+  isInstallingUpdate: boolean;
+  onCheckForUpdates: () => void;
+  onInstallUpdate: () => void;
 }
 
-export function SettingsScreen({ onBack, settings, onSaveSettings }: SettingsScreenProps) {
+export function SettingsScreen({
+  onBack,
+  settings,
+  onSaveSettings,
+  appInfo,
+  updateStatus,
+  updateMessage,
+  isCheckingUpdates,
+  isInstallingUpdate,
+  onCheckForUpdates,
+  onInstallUpdate,
+}: SettingsScreenProps) {
   const [form, setForm] = React.useState<SettingsForm>({
     anthropicApiKey: "",
     ...settings,
@@ -68,10 +89,10 @@ export function SettingsScreen({ onBack, settings, onSaveSettings }: SettingsScr
     setForm({ anthropicApiKey: "", ...settings });
   }, [settings]);
 
-  const models = form.aiProvider === "anthropic" ? ANTHROPIC_MODELS : OPENAI_MODELS;
+  const models = form.aiProvider === "anthropic" ? ANTHROPIC_MODELS : form.aiProvider === "hybrid" ? ANTHROPIC_MODELS : OPENAI_MODELS;
 
-  function handleProviderChange(provider: "openai" | "anthropic") {
-    const defaultModel = provider === "anthropic" ? ANTHROPIC_MODELS[1].id : OPENAI_MODELS[2].id;
+  function handleProviderChange(provider: "openai" | "anthropic" | "hybrid") {
+    const defaultModel = provider === "anthropic" || provider === "hybrid" ? ANTHROPIC_MODELS[1].id : OPENAI_MODELS[2].id;
     setForm((prev) => ({ ...prev, aiProvider: provider, defaultModelName: defaultModel }));
   }
 
@@ -117,15 +138,25 @@ export function SettingsScreen({ onBack, settings, onSaveSettings }: SettingsScr
               <div className="grid gap-2 text-[0.78rem]">
                 <div className="rounded-xl bg-slate-50 px-3 py-2">
                   <p className="font-semibold text-slate-700">Provider</p>
-                  <p className="text-slate-500">{form.aiProvider === "openai" ? "OpenAI" : "Anthropic"}</p>
+                  <p className="text-slate-500">
+                    {form.aiProvider === "openai" ? "OpenAI" : form.aiProvider === "anthropic" ? "Anthropic" : "OpenAI + Claude"}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-slate-50 px-3 py-2">
                   <p className="font-semibold text-slate-700">Model</p>
                   <p className="break-all text-slate-500">{form.defaultModelName}</p>
                 </div>
                 <div className="rounded-xl bg-slate-50 px-3 py-2">
+                  <p className="font-semibold text-slate-700">Mode</p>
+                  <p className="text-slate-500">{form.aiMode.replace(/_/g, " ")}</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 px-3 py-2">
                   <p className="font-semibold text-slate-700">Language</p>
                   <p className="text-slate-500">{form.language}</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 px-3 py-2">
+                  <p className="font-semibold text-slate-700">App version</p>
+                  <p className="text-slate-500">{appInfo?.version ?? "0.1.0"}</p>
                 </div>
               </div>
             </CardContent>
@@ -183,7 +214,7 @@ export function SettingsScreen({ onBack, settings, onSaveSettings }: SettingsScr
             <Card className="border-slate-200 shadow-sm">
               <CardContent className="space-y-6 p-6">
                 <div className="grid gap-4 md:grid-cols-2">
-                  {(["openai", "anthropic"] as const).map((provider) => {
+                  {(["openai", "anthropic", "hybrid"] as const).map((provider) => {
                     const active = form.aiProvider === provider;
                     return (
                       <button
@@ -196,15 +227,44 @@ export function SettingsScreen({ onBack, settings, onSaveSettings }: SettingsScr
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1">
-                            <p className="text-sm font-bold capitalize text-slate-900">{provider === "openai" ? "OpenAI" : "Anthropic"}</p>
+                            <p className="text-sm font-bold capitalize text-slate-900">
+                              {provider === "openai" ? "OpenAI" : provider === "anthropic" ? "Anthropic" : "OpenAI + Claude"}
+                            </p>
                             <p className="text-xs text-slate-500">
-                              {provider === "openai" ? "GPT-4.1, GPT-4o, o-series reasoning models" : "Claude Opus, Sonnet, and Haiku models"}
+                              {provider === "openai"
+                                ? "Parallel OpenAI reviewers"
+                                : provider === "anthropic"
+                                  ? "Parallel Claude reviewers"
+                                  : "Cross-check OpenAI with Claude synthesis"}
                             </p>
                           </div>
                           <div className={["rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wider", active ? "bg-primary text-white" : "bg-white text-slate-500"].join(" ")}>
                             {active ? "Active" : "Available"}
                           </div>
                         </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-3">
+                  {([
+                    { id: "cost_efficient", label: "Cost efficient", note: "Balanced throughput and spend" },
+                    { id: "all_time_best", label: "All time best", note: "Best answer quality" },
+                    { id: "turbo", label: "Turbo", note: "Fast collaboration" },
+                  ] as const).map((mode) => {
+                    const active = form.aiMode === mode.id;
+                    return (
+                      <button
+                        key={mode.id}
+                        onClick={() => setForm((prev) => ({ ...prev, aiMode: mode.id }))}
+                        className={[
+                          "rounded-2xl border-2 px-4 py-3 text-left transition-all",
+                          active ? "border-primary bg-primary/5" : "border-slate-200 bg-white hover:border-slate-300",
+                        ].join(" ")}
+                      >
+                        <p className={["text-sm font-semibold", active ? "text-primary" : "text-slate-800"].join(" ")}>{mode.label}</p>
+                        <p className="mt-1 text-[11px] text-slate-400">{mode.note}</p>
                       </button>
                     );
                   })}
@@ -291,6 +351,78 @@ export function SettingsScreen({ onBack, settings, onSaveSettings }: SettingsScr
                     Review workflow
                   </div>
                   <p className="mt-2 text-sm text-slate-500">Saved settings are used by upload, chat, and Convey autofill.</p>
+                </div>
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 md:col-span-2">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <Bell className="h-4 w-4 text-blue-600" />
+                    Update channel
+                  </div>
+                  <p className="mt-2 text-sm text-slate-500">GitHub Releases for this app are managed internally and are not editable here.</p>
+                </div>
+                <label className="flex items-center gap-3 md:col-span-2">
+                  <input
+                    type="checkbox"
+                    checked={form.autoCheckForUpdates}
+                    onChange={(e) => setForm((prev) => ({ ...prev, autoCheckForUpdates: e.target.checked }))}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                  <span className="text-sm text-slate-700">Automatically check for updates on startup</span>
+                </label>
+                <label className="flex items-center gap-3 md:col-span-2">
+                  <input
+                    type="checkbox"
+                    checked={form.includePrereleaseUpdates}
+                    onChange={(e) => setForm((prev) => ({ ...prev, includePrereleaseUpdates: e.target.checked }))}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                  <span className="text-sm text-slate-700">Include prerelease builds when checking GitHub Releases</span>
+                </label>
+                <div className="rounded-2xl border border-slate-100 bg-white p-4 md:col-span-2">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-slate-800">Updates</div>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {updateStatus?.update_available
+                          ? `Version ${updateStatus.latest_version} is available.`
+                          : updateStatus?.checked_at
+                            ? `Last checked at ${new Date(updateStatus.checked_at).toLocaleString()}.`
+                            : "No update check has run yet."}
+                      </p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-10 rounded-xl border-slate-200"
+                        disabled={isCheckingUpdates}
+                        onClick={onCheckForUpdates}
+                      >
+                        <RefreshCw className={`mr-2 h-4 w-4 ${isCheckingUpdates ? "animate-spin" : ""}`} />
+                        {isCheckingUpdates ? "Checking..." : "Check for updates"}
+                      </Button>
+                      <Button
+                        type="button"
+                        className="h-10 rounded-xl bg-primary"
+                        disabled={!updateStatus?.update_available || isInstallingUpdate}
+                        onClick={onInstallUpdate}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        {isInstallingUpdate ? "Preparing..." : "Download and install"}
+                      </Button>
+                    </div>
+                  </div>
+                  {updateStatus?.release_url ? (
+                    <a
+                      href={updateStatus.release_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-3 inline-block text-sm font-semibold text-primary hover:underline"
+                    >
+                      Open release page
+                    </a>
+                  ) : null}
+                  {updateMessage ? <p className="mt-3 text-sm font-medium text-slate-600">{updateMessage}</p> : null}
+                  {updateStatus?.error ? <p className="mt-2 text-sm font-medium text-rose-600">{updateStatus.error}</p> : null}
                 </div>
               </CardContent>
             </Card>

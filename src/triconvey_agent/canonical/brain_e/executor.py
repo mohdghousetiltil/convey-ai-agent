@@ -172,6 +172,7 @@ class _ExecutionDiagnostics:
         self.enabled = output_dir is not None
         self.base_dir: Path | None = None
         self.events_path: Path | None = None
+        self.text_log_path: Path | None = None
         self._screenshots_dir: Path | None = None
         if not self.enabled:
             return
@@ -201,6 +202,7 @@ class _ExecutionDiagnostics:
         self._screenshots_dir = self.base_dir / "screenshots"
         self._screenshots_dir.mkdir(parents=True, exist_ok=True)
         self.events_path = self.base_dir / "events.jsonl"
+        self.text_log_path = self.base_dir / "autofill_debug.log"
 
     def log_event(self, kind: str, **payload: Any) -> None:
         if not self.enabled or self.events_path is None:
@@ -213,16 +215,28 @@ class _ExecutionDiagnostics:
         with self.events_path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(event, default=str) + "\n")
 
-    def capture_screenshot(self, name: str, *, window=None) -> str | None:
+    def log_text(self, message: str) -> None:
+        if not self.enabled or self.text_log_path is None:
+            return
+        line = f"{datetime.utcnow().isoformat(timespec='milliseconds')}Z {message.rstrip()}\n"
+        with self.text_log_path.open("a", encoding="utf-8") as fh:
+            fh.write(line)
+
+    def capture_screenshot(self, name: str, *, window=None, all_screens: bool = False) -> str | None:
         if not (self.enabled and _pil_available and self._screenshots_dir is not None):
             return None
         safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", name).strip("._") or "capture"
         target = self._screenshots_dir / f"{safe_name}.png"
         try:
-            if window is not None:
-                rect = window.rectangle()
-                bbox = (rect.left, rect.top, rect.right, rect.bottom)
-                img = ImageGrab.grab(bbox=bbox)
+            if all_screens:
+                img = ImageGrab.grab(all_screens=True)
+            elif window is not None:
+                try:
+                    img = window.capture_as_image()
+                except Exception:
+                    rect = window.rectangle()
+                    bbox = (rect.left, rect.top, rect.right, rect.bottom)
+                    img = ImageGrab.grab(bbox=bbox)
             else:
                 img = ImageGrab.grab()
             img.save(target)
@@ -364,7 +378,7 @@ def _parse_field_id(field_id: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 def _ensure_focus(window) -> None:
-    """Bring window to front; restore if minimised."""
+    """Soft-focus a window without aggressively reshuffling desktop state."""
     try:
         if window.has_style(0x20000000):   # WS_MINIMIZE
             window.restore()
@@ -372,9 +386,47 @@ def _ensure_focus(window) -> None:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
             window.set_focus()
-        time.sleep(0.3)
+        time.sleep(0.2)
     except Exception:
         pass
+
+
+def _window_is_triconvey(window) -> bool:
+    title = _safe_window_text(window).lower()
+    return title == "triconvey" or "triconvey" in title
+
+
+def _ensure_triconvey_front(window, *, maximize: bool = False) -> bool:
+    """Gently bring triConvey to the front once at the start of autofill."""
+    try:
+        hwnd = _safe_window_handle(window)
+        if hwnd is None:
+            return False
+        try:
+            if window.has_style(0x20000000):
+                window.restore()
+                time.sleep(0.3)
+        except Exception:
+            pass
+        if maximize and _window_is_triconvey(window):
+            try:
+                ctypes.windll.user32.ShowWindow(hwnd, 3)  # SW_MAXIMIZE
+            except Exception:
+                try:
+                    window.maximize()
+                except Exception:
+                    pass
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            window.set_focus()
+        try:
+            ctypes.windll.user32.SetForegroundWindow(hwnd)
+        except Exception:
+            pass
+        time.sleep(0.25)
+    except Exception:
+        pass
+    return "triconvey" in _current_foreground_title().lower()
 
 
 def _safe_window_text(window) -> str:
@@ -468,7 +520,7 @@ def _ocr_data_from_rect(rect: _SimpleRect, psm: int = 6):
         return None, None
 
     bbox = (rect.left, rect.top, rect.right, rect.bottom)
-    img = ImageGrab.grab(bbox=bbox)
+    img = ImageGrab.grab(bbox=bbox, all_screens=True)
     img = _preprocess_image(img)
     data = pytesseract.image_to_data(
         img,
@@ -1424,6 +1476,7 @@ class TriConveyAgent:
         print(f"  {msg}")
         log.info(msg)
         if self.diagnostics:
+            self.diagnostics.log_text(msg)
             self.diagnostics.log_event("log", message=msg)
 
     def _log_window_event(self, kind: str, window=None, **extra: Any) -> None:
@@ -1527,9 +1580,41 @@ class TriConveyAgent:
         time.sleep(0.8)
 
     def _normalize_matter_window(self, window) -> None:
-        self._maximize_matter_window(window)
+        _ensure_focus(window)
+        time.sleep(0.3)
+
+    def _is_search_results_view(self, window) -> bool:
+        try:
+            if window.child_window(auto_id="SearchTextBox").exists(timeout=0.2):
+                return True
+        except Exception:
+            pass
+        try:
+            for text in _descendants_cached(window, "Text"):
+                try:
+                    label = _sanitize(text.window_text() or getattr(text.element_info, "name", "") or "").lower()
+                    if "search results for" in label:
+                        return True
+                except Exception:
+                    continue
+        except Exception:
+            pass
+        return False
 
     def _get_search_results_rect(self, window) -> _SimpleRect:
+        try:
+            grid = window.child_window(auto_id="MatterSummaryDataGrid")
+            if grid.exists(timeout=0.5):
+                rect = grid.rectangle()
+                if rect.width() > 200 and rect.height() > 120:
+                    return _SimpleRect(
+                        rect.left + 4,
+                        rect.top + 4,
+                        rect.right - 4,
+                        rect.bottom - 4,
+                    )
+        except Exception:
+            pass
         rect = window.rectangle()
         return _SimpleRect(
             rect.left + 340,
@@ -1561,64 +1646,349 @@ class TriConveyAgent:
     def _normalise_search_text(self, text: str) -> str:
         return re.sub(r"[^a-z0-9]+", " ", (text or "").lower()).strip()
 
-    def _choose_first_result_row(self, rows: list[dict[str, Any]], search_text: str = ""):
+    def _score_result_row(self, row: dict[str, Any], search_text: str = "") -> tuple[int, str]:
+        label = row["label"].strip()
+        lower = label.lower()
+        if self._is_result_header_or_noise(lower):
+            return (-999, "header_or_noise")
+
+        score = 0
         normalised_search = self._normalise_search_text(search_text)
         search_tokens = [token for token in normalised_search.split() if token]
         search_digits = re.findall(r"\d+", search_text or "")
+        normalised_label = self._normalise_search_text(label)
+        label_digits = re.findall(r"\d+", label)
+
+        if normalised_search:
+            if normalised_search in normalised_label:
+                score += 10
+            if search_tokens:
+                matched_tokens = sum(1 for t in search_tokens if t in normalised_label)
+                if matched_tokens == len(search_tokens):
+                    score += 7  # full match
+                elif matched_tokens >= max(1, len(search_tokens) // 2):
+                    # Partial match — handles OCR-truncated names (e.g. "Franz" → "Fr.")
+                    score += matched_tokens
+            matched_digits = sum(1 for token in search_digits if token in label_digits)
+            if matched_digits:
+                score += matched_digits * 4
+            if search_digits and matched_digits == len(search_digits):
+                score += 6
+        if any(ch.isdigit() for ch in label):
+            score += 2
+        if any(word in lower for word in ("sale", "purchase", "transfer", "subdivision")):
+            score += 2
+        if any(state in lower for state in ("vic", "nsw", "qld", "wa")):
+            score += 1
+        if "volume" in lower or "folio" in lower:
+            score += 1
+        if len(label) > 12:
+            score += 1
+        return score, normalised_label
+
+    def _choose_first_result_row(self, rows: list[dict[str, Any]], search_text: str = ""):
+        normalised_search = self._normalise_search_text(search_text)
         candidates = []
         for row in rows:
-            label = row["label"].strip()
-            lower = label.lower()
-            if self._is_result_header_or_noise(lower):
+            score, _ = self._score_result_row(row, search_text=search_text)
+            if score < 0:
                 continue
-            score = 0
-            normalised_label = self._normalise_search_text(label)
-            label_digits = re.findall(r"\d+", label)
-            if normalised_search:
-                if normalised_search in normalised_label:
-                    score += 10
-                if search_tokens and all(token in normalised_label for token in search_tokens):
-                    score += 7
-                matched_digits = sum(1 for token in search_digits if token in label_digits)
-                if matched_digits:
-                    score += matched_digits * 4
-                if search_digits and matched_digits == len(search_digits):
-                    score += 6
-            if any(ch.isdigit() for ch in label):
-                score += 2
-            if any(word in lower for word in ("sale", "purchase", "transfer", "subdivision")):
-                score += 2
-            if any(state in lower for state in ("vic", "nsw", "qld", "wa")):
-                score += 1
-            if "volume" in lower or "folio" in lower:
-                score += 1
-            if len(label) > 12:
-                score += 1
             candidates.append((score, row))
         if not candidates:
             return None
         candidates.sort(key=lambda item: (-item[0], item[1]["center_y"]))
-        return candidates[0][1]
+        best_score, best_row = candidates[0]
+        if normalised_search and best_score < 7:
+            return None
+        return best_row
+
+    def _log_result_rows_debug(self, rows: list[dict[str, Any]], *, search_text: str, psm: int) -> None:
+        self._log(f"  OCR debug: psm={psm}, rows={len(rows)}, match_text={search_text!r}")
+        for index, row in enumerate(rows[:8], start=1):
+            score, normalised_label = self._score_result_row(row, search_text=search_text)
+            self._log(
+                "    "
+                f"row {index}: score={score:>2} "
+                f"y={row.get('center_y')} "
+                f"label={row.get('label', '').strip()!r} "
+                f"norm={normalised_label!r}"
+            )
+
+    def _log_grid_debug(self, window) -> None:
+        try:
+            grid = window.child_window(auto_id="MatterSummaryDataGrid")
+            if not grid.exists(timeout=1):
+                self._log("  Grid debug: MatterSummaryDataGrid not found.")
+                return
+            rows: list[Any] = []
+            row_type = ""
+            for ct in ("DataItem", "ListItem", "TreeItem", "Custom"):
+                rows = list(grid.descendants(control_type=ct))
+                if rows:
+                    row_type = ct
+                    break
+            if not rows:
+                rows = list(grid.children())
+                row_type = "children"
+            self._log(f"  Grid debug: row_type={row_type or 'none'}, row_count={len(rows)}")
+            for index, row in enumerate(rows[:5], start=1):
+                try:
+                    label = _sanitize(row.window_text() or getattr(row.element_info, 'name', '') or "")
+                except Exception:
+                    label = ""
+                self._log(f"    grid row {index}: {label!r}")
+        except Exception as exc:
+            self._log(f"  Grid debug failed: {exc}")
+
+    def _choose_search_box(self, window):
+        candidates = []
+        search_button_rect = None
+        window_rect = window.rectangle()
+        search_results_view = self._is_search_results_view(window)
+        try:
+            for button in window.descendants(control_type="Button"):
+                try:
+                    label = _sanitize(button.window_text() or getattr(button.element_info, "name", "") or "").lower()
+                    if "search" in label:
+                        rect = button.rectangle()
+                        if rect.width() > 20 and rect.height() > 10:
+                            search_button_rect = rect
+                            break
+                except Exception:
+                    continue
+        except Exception:
+            pass
+
+        try:
+            for control in window.descendants():
+                try:
+                    element_info = getattr(control, "element_info", None)
+                    control_type = getattr(element_info, "control_type", "") or ""
+                    auto_id = getattr(element_info, "automation_id", "") or ""
+                    name = _sanitize(control.window_text() or getattr(element_info, "name", "") or "")
+                    lower_name = name.lower()
+
+                    if control_type not in {"Edit", "Pane", "Custom", "Document", "ComboBox"} and "search" not in lower_name and auto_id != "TbTheTextBox":
+                        continue
+
+                    target = control
+                    if control_type != "Edit":
+                        try:
+                            nested_edits = [
+                                child
+                                for child in control.descendants(control_type="Edit")
+                                if child.rectangle().width() >= 120 and child.rectangle().height() >= 18
+                            ]
+                            if nested_edits:
+                                nested_edits.sort(key=lambda child: (-child.rectangle().width(), child.rectangle().top))
+                                target = nested_edits[0]
+                        except Exception:
+                            pass
+
+                    rect = target.rectangle()
+                    if rect.width() < 120 or rect.height() < 18:
+                        continue
+                    score = 0
+                    if "quick search" in lower_name:
+                        score += 20
+                    elif "quick" in lower_name and "search" in lower_name:
+                        score += 14
+                    if "search" in lower_name:
+                        score += 5
+                    if auto_id == "TbTheTextBox":
+                        score += 4
+                    if search_button_rect is not None:
+                        dx = abs(rect.right - search_button_rect.left)
+                        dy = abs((rect.top + rect.bottom) // 2 - (search_button_rect.top + search_button_rect.bottom) // 2)
+                        if dx < 220 and dy < 60:
+                            score += 10
+                    if rect.top < window_rect.top + 260:
+                        score += 10
+                    elif rect.top < window_rect.top + 320:
+                        score += 2
+                    else:
+                        score -= 12
+                    if rect.left > window_rect.left + (window_rect.width() // 2):
+                        score += 8
+                    if rect.width() >= 450:
+                        score += 6
+                    if rect.left < window_rect.left + 250:
+                        score -= 6
+                    if search_results_view:
+                        if auto_id == "SearchTextBox":
+                            score += 30
+                        if auto_id == "TbTheTextBox":
+                            score -= 16
+                        if "search results for" in lower_name:
+                            score -= 20
+                    else:
+                        if auto_id == "SearchTextBox":
+                            score -= 6
+                    candidates.append((score, rect.top, -rect.width(), rect.left, name, auto_id, control_type, target))
+                except Exception:
+                    continue
+        except Exception:
+            return None
+
+        if not candidates:
+            return None
+        candidates.sort(key=lambda item: (-item[0], item[1], item[2], item[3]))
+        for score, top, neg_width, left, name, auto_id, control_type, _ in candidates[:5]:
+            self._log(
+                f"  Search box candidate: score={score} top={top} left={left} width={-neg_width} "
+                f"type={control_type!r} name={name!r} auto_id={auto_id!r}"
+            )
+        chosen = candidates[0]
+        self._log(
+            f"  Using search box: top={chosen[1]} left={chosen[3]} width={-chosen[2]} "
+            f"type={chosen[6]!r} name={chosen[4]!r} auto_id={chosen[5]!r}"
+        )
+        return chosen[-1]
+
+    def _submit_search(self, window, search_text: str) -> bool:
+        _ensure_focus(window)
+        try:
+            search = self._choose_search_box(window)
+            typed = False
+            if search is not None:
+                search.click_input()
+                time.sleep(0.5)
+                try:
+                    search.set_edit_text(search_text)
+                    typed = True
+                except Exception:
+                    pass
+                if not typed:
+                    try:
+                        search.type_keys("^a{BACKSPACE}", with_spaces=False, set_foreground=False)
+                        time.sleep(0.2)
+                        search.type_keys(search_text, with_spaces=True, set_foreground=False)
+                        typed = True
+                    except Exception:
+                        pass
+                if typed:
+                    time.sleep(0.5)
+                    try:
+                        current_text = _sanitize(search.window_text() or getattr(search.element_info, "name", "") or "")
+                        self._log(f"  Search box text after set: {current_text!r}")
+                    except Exception:
+                        pass
+                    _ensure_focus(window)
+                    search.click_input()
+                    time.sleep(0.2)
+                    search.type_keys("{ENTER}", with_spaces=False)
+                    self._interruptible_sleep(3)
+                    self._log("  Search submitted.")
+                    return True
+                self._log("  Search box could not be typed into.")
+
+            self._log("  Search box not found via UIA; trying Quick Search area fallback.")
+            rect = window.rectangle()
+            fallback_x = rect.right - min(440, max(260, rect.width() // 4))
+            fallback_y = rect.top + min(182, max(155, rect.height() // 6))
+            self._log(f"  Quick Search fallback click: ({fallback_x}, {fallback_y})")
+            _pw_mouse.click(button="left", coords=(fallback_x, fallback_y))
+            time.sleep(0.4)
+            try:
+                window.type_keys("^a{BACKSPACE}", with_spaces=False, set_foreground=False)
+                time.sleep(0.2)
+                window.type_keys(search_text, with_spaces=True, set_foreground=False)
+                time.sleep(0.2)
+                window.type_keys("{ENTER}", with_spaces=False, set_foreground=False)
+                self._interruptible_sleep(3)
+                self._log("  Search submitted via Quick Search fallback.")
+                return True
+            except Exception as exc:
+                self._log(f"  Quick Search fallback failed: {exc}")
+                return False
+        except Exception as exc:
+            self._log(f"  Search error: {exc}")
+            return False
+
+    def _search_and_open_via_ocr(
+        self,
+        window,
+        *,
+        search_text: str,
+        result_match_text: str = "",
+        retry_label: str,
+        click_matters_first: bool = False,
+    ) -> bool:
+        if click_matters_first:
+            self._log("Navigating to Matters ...")
+            try:
+                tab = window.child_window(auto_id="MainView_Left_Docked_Tab_Matters_TabItem")
+                if tab.exists(timeout=3):
+                    tab.click_input()
+                    time.sleep(1)
+            except Exception:
+                pass
+
+        self._log(f"Searching: {search_text}")
+        if not self._submit_search(window, search_text):
+            return False
+
+        for attempt in range(3):
+            if attempt:
+                self._log(f"  Retrying OCR result detection ({attempt + 1}/3) ...")
+                self._interruptible_sleep(2)
+                _ensure_focus(window)
+                if click_matters_first:
+                    try:
+                        tab = window.child_window(auto_id="MainView_Left_Docked_Tab_Matters_TabItem")
+                        if tab.exists(timeout=1):
+                            tab.click_input()
+                            time.sleep(0.5)
+                    except Exception:
+                        pass
+                self._log("  Re-submitting search to refresh visible results ...")
+                if not self._submit_search(window, search_text):
+                    self._log("  Search refresh failed.")
+                    continue
+            if self._click_first_result_by_ocr(
+                window,
+                search_text=result_match_text or search_text,
+            ):
+                if self._connect_to_matter_window(timeout=20):
+                    return True
+                self._log(f"  OCR opened a row from {retry_label}, but the matter window was not detected yet.")
+                break
+        return False
 
     def _click_first_result_by_ocr(self, window, search_text: str = "") -> bool:
         if not (_pil_available and _ocr_available):
             self._log("  OCR route unavailable for matter search results.")
             return False
         _ensure_focus(window)
+        foreground = _current_foreground_title()
+        self._log(
+            f"  OCR target window={_safe_window_text(window)!r}, foreground={foreground!r}"
+        )
         rect = self._get_search_results_rect(window)
+        if self.diagnostics:
+            self.diagnostics.capture_screenshot("matter_search_results", window=window)
+            if "triconvey" not in foreground.lower():
+                self.diagnostics.capture_screenshot("matter_search_results_all_screens", all_screens=True)
         saw_rows = False
         for psm in (6, 11):
             rows = _get_ocr_rows_from_rect(rect, psm=psm)
             if not rows:
                 continue
             saw_rows = True
+            self._log_result_rows_debug(rows, search_text=search_text, psm=psm)
             best_row = self._choose_first_result_row(rows, search_text=search_text)
             if not best_row:
                 continue
-            click_x = max(rect.left + 20, best_row["left"] + 30)
+            row_width = max(1, best_row["right"] - best_row["left"])
+            click_x = min(best_row["right"] - 20, best_row["left"] + max(120, row_width // 3))
             click_y = best_row["center_y"]
             self._log(f"  OCR selected result row: {best_row['label']}")
+            self._log(f"  OCR row click point: ({click_x}, {click_y})")
             try:
+                if "triconvey" not in _current_foreground_title().lower():
+                    self._log("  triConvey lost foreground before result click; capturing all screens.")
+                    if self.diagnostics:
+                        self.diagnostics.capture_screenshot("matter_result_click_confusion", all_screens=True)
                 _pw_mouse.click(button="left", coords=(click_x, click_y))
                 time.sleep(0.4)
                 _pw_mouse.double_click(coords=(click_x, click_y))
@@ -1629,8 +1999,13 @@ class TriConveyAgent:
                 return False
         if not saw_rows:
             self._log("  No OCR rows found in search results.")
+            if self.diagnostics:
+                self.diagnostics.capture_screenshot("matter_search_no_rows_all_screens", all_screens=True)
         else:
             self._log("  Could not identify a valid search result row.")
+            if self.diagnostics:
+                self.diagnostics.capture_screenshot("matter_search_unmatched_rows_all_screens", all_screens=True)
+        self._log_grid_debug(window)
         return False
 
     def _connect_to_matter_window(self, timeout: int = 20) -> bool:
@@ -1691,6 +2066,52 @@ class TriConveyAgent:
             ),
         ]
 
+    def _matter_details_ready(self, window) -> bool:
+        try:
+            if window.child_window(auto_id="LbItems").exists(timeout=0.5):
+                return True
+        except Exception:
+            pass
+
+        if not (_pil_available and _ocr_available):
+            return False
+
+        for content_rect in self._get_matter_details_content_rects(window):
+            try:
+                _, data = _ocr_data_from_rect(content_rect, psm=6)
+            except Exception:
+                continue
+            if not data:
+                continue
+            texts = " ".join(str(t or "") for t in data.get("text", [])).lower()
+            if any(
+                marker in texts
+                for marker in (
+                    "property details",
+                    "conveyancing details",
+                    "nomination details",
+                    "vendor",
+                    "purchaser",
+                    "matter type",
+                )
+            ):
+                return True
+        return False
+
+    def _wait_for_matter_details_ready(self, window, attempts: int = 3, delay_seconds: float = 2.0) -> bool:
+        for attempt in range(attempts):
+            _ensure_focus(window)
+            self._normalize_matter_window(window)
+            if self._matter_details_ready(window):
+                if attempt:
+                    self._log(f"  Matter Details became ready on retry {attempt + 1}/{attempts}.")
+                return True
+            if attempt < attempts - 1:
+                self._log(f"  Matter Details still loading; retrying in {delay_seconds:.0f}s ({attempt + 1}/{attempts - 1}) ...")
+                self._interruptible_sleep(delay_seconds)
+        self._log("  Matter Details did not report ready state.")
+        return False
+
     def _find_property_details_row_rect(self, window):
         if not (_pil_available and _ocr_available):
             return None
@@ -1750,6 +2171,7 @@ class TriConveyAgent:
 
         self._log("  Trying Matter Details pane route ...")
         self._normalize_matter_window(window)
+        self._wait_for_matter_details_ready(window)
         row_rect = self._find_property_details_row_rect(window)
         if not row_rect:
             self._log("  Matter Details pane OCR did not find the Property Details row.")
@@ -1835,6 +2257,7 @@ class TriConveyAgent:
             self.app = Application(backend="uia").connect(title="triConvey", timeout=3)
             self.main_window = self.app.window(title="triConvey")
             if self.main_window.exists(timeout=2):
+                _ensure_triconvey_front(self.main_window, maximize=True)
                 self._log("TriConvey is running.")
                 return True
         except Exception:
@@ -1896,7 +2319,7 @@ class TriConveyAgent:
     # Step 2: find and open matter  (v4 strategy)
     # ------------------------------------------------------------------
 
-    def find_and_open_matter(self, client_name: str) -> bool:
+    def find_and_open_matter(self, search_text: str, client_name: str = "") -> bool:
         # Already open? Check if a matter window is already showing
         for win in (self.matter_window, self.main_window):
             if win:
@@ -1915,56 +2338,29 @@ class TriConveyAgent:
             return False
 
         _ensure_focus(window)
+        result_match_text = _search_name_only(client_name) or client_name or search_text
 
-        # Matters tab
-        self._log("Navigating to Matters ...")
-        try:
-            tab = window.child_window(auto_id="MainView_Left_Docked_Tab_Matters_TabItem")
-            if tab.exists(timeout=3):
-                tab.click_input()
-                time.sleep(1)
-        except Exception:
-            pass
+        self._log("Trying direct client search from the current TriConvey screen ...")
+        if self._search_and_open_via_ocr(
+            window,
+            search_text=search_text,
+            result_match_text=result_match_text,
+            retry_label="current screen search",
+            click_matters_first=False,
+        ):
+            return True
 
-        # Search box -- set_edit_text (no stray keystrokes)
-        self._log(f"Searching: {client_name}")
-        try:
-            search = window.child_window(auto_id="TbTheTextBox", control_type="Edit")
-            if not search.exists(timeout=5):
-                self._log("Search box not found.")
-            else:
-                search.click_input()
-                time.sleep(0.5)
-                search.set_edit_text(client_name)
-                time.sleep(0.5)
-                _ensure_focus(window)
-                search.click_input()
-                time.sleep(0.2)
-                search.type_keys("{ENTER}", with_spaces=False)
-                self._interruptible_sleep(4)
-                self._log("  Search submitted.")
-        except Exception as exc:
-            self._log(f"  Search error: {exc}")
+        self._log("Client was not opened from the current screen. Falling back to Matters search ...")
+        if self._search_and_open_via_ocr(
+            window,
+            search_text=search_text,
+            result_match_text=result_match_text,
+            retry_label="Matters search",
+            click_matters_first=True,
+        ):
+            return True
 
-        for attempt in range(3):
-            if attempt:
-                self._log(f"  Retrying OCR result detection ({attempt + 1}/3) ...")
-                self._interruptible_sleep(2)
-                _ensure_focus(window)
-                try:
-                    tab = window.child_window(auto_id="MainView_Left_Docked_Tab_Matters_TabItem")
-                    if tab.exists(timeout=1):
-                        tab.click_input()
-                        time.sleep(0.5)
-                except Exception:
-                    pass
-            if self._click_first_result_by_ocr(window, search_text=client_name):
-                if self._connect_to_matter_window(timeout=20):
-                    return True
-                self._log("  OCR opened a row, but the matter window was not detected yet.")
-                break
-
-        if self._click_matter(client_name):
+        if self._click_matter(result_match_text):
             return True
         raise ManualInterventionRequired(
             action="open_property_details",
@@ -2006,16 +2402,7 @@ class TriConveyAgent:
                     self._interruptible_sleep(3)
                     return self._detect_matter(client_name)
 
-                # Grid visible but no item controls — click inside it
-                rect = grid.rectangle()
-                if rect.width() > 50 and rect.height() > 30:
-                    cx = rect.left + rect.width() // 2
-                    cy = rect.top + 30
-                    self._log(f"  Grid area click ({cx}, {cy})")
-                    _ensure_focus(window)
-                    _pw_mouse.double_click(coords=(cx, cy))
-                    self._interruptible_sleep(3)
-                    return self._detect_matter(client_name)
+                self._log("  Grid visible but no accessible rows were found; skipping blind grid click.")
         except Exception as exc:
             self._log(f"  Grid: {exc}")
 
@@ -2082,19 +2469,24 @@ class TriConveyAgent:
             except Exception:
                 continue
 
-        self._log("Matter window not found — using main window as fallback.")
-        self.matter_window = self.main_window
-        return True
+        self._log("Matter window not found.")
+        self.matter_window = None
+        return False
 
     # ------------------------------------------------------------------
     # Step 3: open Property Details  (v4 strategy)
     # ------------------------------------------------------------------
 
     def open_property_details(self) -> bool:
+        if self.matter_window is None:
+            self._log("Opening Property Details skipped because no matter window is open.")
+            return False
         self._log("Opening Property Details ...")
         window = self.matter_window or self.main_window
         _ensure_focus(window)
+        self._normalize_matter_window(window)
         self._interruptible_sleep(1)
+        self._wait_for_matter_details_ready(window)
 
         # Preferred route: Matter Details window → Property Details row → Sec. 32 tabs.
         if self._try_open_property_details_via_matter_details(window):
@@ -2115,6 +2507,10 @@ class TriConveyAgent:
                     ctrl.double_click_input()
                 except Exception:
                     return False
+            try:
+                (ctrl.parent() or ctrl).type_keys("{ENTER}", with_spaces=False)
+            except Exception:
+                pass
             self._interruptible_sleep(3.0)
             return self._wait_property_window()
 
@@ -2129,6 +2525,20 @@ class TriConveyAgent:
                     lr = lb.rectangle()
                     _pw_mouse.click(button='left', coords=(lr.left + 10, lr.top + 10))
                     time.sleep(0.5)
+                except Exception:
+                    pass
+
+                try:
+                    option_labels = []
+                    for desc in lb.descendants():
+                        try:
+                            n = _sanitize(desc.element_info.name or desc.window_text() or "")
+                            if n:
+                                option_labels.append(n)
+                        except Exception:
+                            continue
+                    if option_labels:
+                        self._log("  Matter Details options seen: " + " | ".join(option_labels[:20]))
                 except Exception:
                     pass
 
@@ -2214,13 +2624,6 @@ class TriConveyAgent:
                     if "property details" in title.lower():
                         self.app = Application(backend="uia").connect(handle=w.handle)
                         self.property_window = self.app.window(handle=w.handle)
-                        # Keep non-fullscreen
-                        try:
-                            if self.property_window.is_maximized():
-                                self.property_window.restore()
-                                time.sleep(0.4)
-                        except Exception:
-                            pass
                         self._log(f"  Property Details: {title}")
                         self._interruptible_sleep(2)   # let Sec. 32 form render fully
                         return True
@@ -2749,6 +3152,8 @@ def execute_action_plan(
         report.diagnostics_dir = str(diagnostics.base_dir)
     if diagnostics.events_path is not None:
         report.event_log_path = str(diagnostics.events_path)
+    if diagnostics.text_log_path is not None:
+        report.debug_log_path = str(diagnostics.text_log_path)
 
     auto_actions   = [a for a in plan.actions if a.action != "skip" and not a.needs_review_first]
     review_actions = [a for a in plan.actions if a.needs_review_first]
@@ -2782,7 +3187,7 @@ def execute_action_plan(
     if client_name:
         print(f"  Client:  {client_name}")
     if matter_search:
-        print(f"  Search:  {matter_search}")
+        print(f"  Alt search:  {matter_search}")
     print(f"  Actions: {len(auto_actions)} auto | {len(review_actions)} review | {len(skip_actions)} skip")
     print("=" * 60)
 
@@ -2821,7 +3226,7 @@ def execute_action_plan(
                 report.metrics["cancelled"] = True
                 return report
             try:
-                if not agent.find_and_open_matter(search_name):
+                if not agent.find_and_open_matter(search_name, client_name=client_name):
                     err = f"Could not open matter for '{client_name}'."
                     diagnostics.capture_screenshot("matter_open_failure")
                     for a in auto_actions:

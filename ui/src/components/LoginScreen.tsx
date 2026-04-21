@@ -7,7 +7,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Eye, EyeOff, KeyRound, LogIn, UserPlus } from "lucide-react";
+import { Building2, Eye, EyeOff, KeyRound, LogIn, UserPlus } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "../lib/AuthContext";
 import { getOAuthProviders } from "../lib/api";
@@ -247,14 +247,16 @@ function RegisterForm({
   loginOAuth,
   onBack,
 }: {
-  register: (name: string, email: string, password: string, activationKey: string) => Promise<void>;
+  register: (name: string, companyName: string, email: string, password: string, activationKey: string) => Promise<void>;
   loginOAuth: (provider: "google" | "microsoft") => Promise<void>;
   onBack: () => void;
 }) {
   const [name, setName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [activationKey, setActivationKey] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"microsoft" | "google" | null>(null);
@@ -285,13 +287,14 @@ function RegisterForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) { setError("Enter your full name."); return; }
+    if (!companyName.trim()) { setError("Enter your firm or company name."); return; }
     if (!email.trim()) { setError("Enter your email."); return; }
     if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
     if (password !== confirm) { setError("Passwords do not match."); return; }
     setError("");
     setLoading(true);
     try {
-      await register(name.trim(), email.trim(), password, "");
+      await register(name.trim(), companyName.trim(), email.trim(), password, activationKey.trim());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed.");
     } finally {
@@ -361,6 +364,25 @@ function RegisterForm({
           </div>
 
           <div className="space-y-1">
+            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Firm / Company name</label>
+            <div className="relative">
+              <input
+                type="text"
+                autoComplete="organization"
+                required
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="Acme Conveyancing"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 pl-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+              />
+              <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            </div>
+            <p className="text-[11px] text-slate-400">
+              We use this as your firm name and create the workspace/client slug from it if needed.
+            </p>
+          </div>
+
+          <div className="space-y-1">
             <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Email</label>
             <input
               type="email"
@@ -407,6 +429,21 @@ function RegisterForm({
               placeholder="Repeat password"
               className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
             />
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Activation key (optional)</label>
+            <div className="relative">
+              <input
+                type="text"
+                autoComplete="off"
+                value={activationKey}
+                onChange={(e) => setActivationKey(e.target.value)}
+                placeholder="Enter only if your firm gave you one"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 pl-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+              />
+              <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            </div>
           </div>
 
           {error && (

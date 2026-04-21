@@ -439,6 +439,7 @@ class ExecutionReport(BaseModel):
     total_pending_review: int = 0
     diagnostics_dir: str | None = None
     event_log_path: str | None = None
+    debug_log_path: str | None = None
     session_fingerprint: dict[str, Any] = Field(default_factory=dict)
     preflight_checks: list[dict[str, Any]] = Field(default_factory=list)
     metrics: dict[str, Any] = Field(default_factory=dict)

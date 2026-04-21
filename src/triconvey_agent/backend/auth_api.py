@@ -133,6 +133,7 @@ class SelfRegisterRequest(BaseModel):
     """
     email: EmailStr
     name: str = Field(..., min_length=1)
+    company_name: str = Field(..., min_length=1, description="Firm or company name used to create or resolve the workspace.")
     password: str = Field(..., min_length=8)
     activation_key: str = Field(default="", description="Firm's license/activation key. Omit for single-tenant desktop installs.")
 
@@ -275,12 +276,12 @@ async def self_register(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ) -> LoginResponse:
-    """Public self-registration using an activation key (= firm's license key).
+    """Public self-registration using an activation key or firm/company name.
 
     Anyone with a valid activation key can create their own account.
     Accounts are created with the 'reviewer' role; admins can promote later.
     """
-    # Resolve client: by activation key, or single active client for desktop installs
+    # Resolve client: by activation key, single active client, or company name.
     if body.activation_key.strip():
         client = await ClientRepo.get_by_license(session, body.activation_key.strip())
         if client is None or not client.is_active:
@@ -291,10 +292,16 @@ async def self_register(
     else:
         client = await ClientRepo.get_single_active(session)
         if client is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Could not determine your firm automatically. Please use Microsoft login or enter an activation key.",
-            )
+            try:
+                client, _ = await ClientRepo.provision_from_company_name(
+                    session,
+                    company_name=body.company_name,
+                )
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=str(exc),
+                ) from exc
 
     # Check for duplicate email
     existing = await UserRepo.get_by_email(session, client_id=client.id, email=body.email)
@@ -318,7 +325,7 @@ async def self_register(
         event_type="user_self_registered",
         entity_type="user",
         entity_id=user.id,
-        after={"email": user.email, "name": user.name},
+        after={"email": user.email, "name": user.name, "company_name": body.company_name},
     )
 
     token, expires_at = create_access_token(

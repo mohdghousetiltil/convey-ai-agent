@@ -1,0 +1,79 @@
+name: Windows Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+    env:
+      TRICONVEY_APP_PUBLISHER: ${{ vars.TRICONVEY_APP_PUBLISHER || 'TriConvey Agent' }}
+      TRICONVEY_APP_PUBLISHER_URL: ${{ vars.TRICONVEY_APP_PUBLISHER_URL || format('https://github.com/{0}', github.repository) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m venv .venv
+          .\.venv\Scripts\python.exe -m pip install --upgrade pip
+          .\.venv\Scripts\python.exe -m pip install -e .
+
+      - name: Install UI dependencies
+        shell: pwsh
+        run: |
+          Push-Location ui
+          npm.cmd ci
+          Pop-Location
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+
+      - name: Restore signing certificate
+        if: ${{ secrets.TRICONVEY_SIGN_CERT_BASE64 != '' }}
+        shell: pwsh
+        run: |
+          $certPath = Join-Path $env:RUNNER_TEMP "triconvey-signing.pfx"
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String("${{ secrets.TRICONVEY_SIGN_CERT_BASE64 }}"))
+          "TRICONVEY_SIGN_CERT_FILE=$certPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TRICONVEY_SIGN_CERT_PASSWORD=${{ secrets.TRICONVEY_SIGN_CERT_PASSWORD }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Build desktop exe
+        shell: pwsh
+        run: |
+          .\build_desktop.ps1
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          .\build_installer.ps1
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: triconvey-windows-installer
+          path: dist/installer/*.exe
+
+      - name: Publish GitHub release assets
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/installer/*.exe

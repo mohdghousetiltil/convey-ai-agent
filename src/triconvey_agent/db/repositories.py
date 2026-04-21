@@ -75,6 +75,23 @@ async def _enqueue_sync(
 
 class ClientRepo:
     @staticmethod
+    def _slugify(value: str) -> str:
+        import re as _re
+
+        slug = _re.sub(r"[^a-z0-9]+", "-", (value or "").strip().lower()).strip("-")
+        return slug[:40] or "firm"
+
+    @staticmethod
+    async def ensure_unique_slug(session: AsyncSession, base_value: str) -> str:
+        base_slug = ClientRepo._slugify(base_value)
+        for attempt in range(100):
+            candidate = base_slug if attempt == 0 else f"{base_slug}-{attempt}"
+            check = await ClientRepo.get_by_slug(session, candidate)
+            if check is None:
+                return candidate
+        return f"{base_slug}-{uuid.uuid4().hex[:6]}"
+
+    @staticmethod
     async def get_by_id(session: AsyncSession, client_id: uuid.UUID) -> Client | None:
         return await session.get(Client, client_id)
 
@@ -112,21 +129,35 @@ class ClientRepo:
         if existing is not None:
             return existing, False
 
-        import re as _re
-        safe_slug = _re.sub(r"[^a-z0-9]+", "-", email_domain.lower()).strip("-")[:40]
-        # Ensure slug uniqueness by appending a suffix if needed
-        base_slug = safe_slug
-        for attempt in range(20):
-            slug_candidate = base_slug if attempt == 0 else f"{base_slug}-{attempt}"
-            check = await ClientRepo.get_by_slug(session, slug_candidate)
-            if check is None:
-                safe_slug = slug_candidate
-                break
+        safe_slug = await ClientRepo.ensure_unique_slug(session, email_domain)
 
         client = Client(
             slug=safe_slug,
             name=email_domain,
             license_key=tenant_id,
+        )
+        session.add(client)
+        await session.flush()
+        return client, True
+
+    @staticmethod
+    async def provision_from_company_name(
+        session: AsyncSession,
+        *,
+        company_name: str,
+    ) -> tuple["Client", bool]:
+        normalized_name = (company_name or "").strip()
+        if not normalized_name:
+            raise ValueError("Company name is required.")
+
+        preferred_slug = ClientRepo._slugify(normalized_name)
+        existing = await ClientRepo.get_by_slug(session, preferred_slug)
+        if existing is not None:
+            return existing, False
+
+        client = Client(
+            slug=await ClientRepo.ensure_unique_slug(session, normalized_name),
+            name=normalized_name,
         )
         session.add(client)
         await session.flush()

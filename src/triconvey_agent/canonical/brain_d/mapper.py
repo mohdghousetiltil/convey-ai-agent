@@ -20,9 +20,6 @@ from triconvey_agent.canonical.schemas import (
 )
 
 _NON_EXECUTABLE_QUESTIONS = {
-    # Tab 6 field 12 is display-only in the captured TriConvey maps; trying to
-    # write "Is attached" was landing in the preceding free-text area.
-    "policy_6_due_diligence",
     # Firm preference: when there is no OC, leave the field blank rather than
     # auto-marking "Owners Corporation is inactive".
     "sec32_oc_inactive",

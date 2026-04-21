@@ -9,6 +9,7 @@ import json
 import os
 import shutil
 import threading
+import uuid as _uuid
 from datetime import datetime, timedelta, UTC
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -22,20 +23,25 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from triconvey_agent.app_meta import APP_NAME, APP_PUBLISHER, get_app_version
 from triconvey_agent.auth.deps import AuthContext, require_auth
 from triconvey_agent.backend.auth_api import router as auth_router
 from triconvey_agent.backend.runtime import ensure_runtime_dirs, get_runtime_paths
 from triconvey_agent.backend.settings import apply_local_settings_env, load_local_settings, save_local_settings
+from triconvey_agent.backend.update_manager import check_for_updates, download_update_installer
 from triconvey_agent.backend.service import (
     ask_run_question,
     autofill_run,
     build_review_run,
+    check_triconvey_running_passive,
     ensure_local_convey_running,
     load_run_payload,
     save_review_answers,
     set_autofill_activity,
     warm_brain_f_assets_async,
 )
+from triconvey_agent.brain_f.cache import prime_cached_pdf_analysis
+from triconvey_agent.ingest.pdf_loader import load_pdf_document
 from triconvey_agent.canonical.questions.loader import load_question_registry
 from triconvey_agent.db.repositories import (
     AnswerRepo,
@@ -94,6 +100,7 @@ class ChatRequest(BaseModel):
     model: str | None = None          # if None, uses saved defaultModelName
     history: list[ChatMessage] = Field(default_factory=list)
     mode: str = "standard"            # "quick" | "standard" | "thorough"
+    aiMode: str | None = None
 
 
 class AnswerPatch(BaseModel):
@@ -110,10 +117,24 @@ class LocalSettingsPayload(BaseModel):
     language: str = "English"
     openAiApiKey: str = ""
     anthropicApiKey: str = ""
-    aiProvider: str = "openai"          # "openai" | "anthropic"
+    aiProvider: str = "openai"          # "openai" | "anthropic" | "hybrid"
+    aiMode: str = "cost_efficient"      # "cost_efficient" | "all_time_best" | "turbo"
     defaultModelName: str = "gpt-4.1-mini"
     triconveyPath: str = ""
     preferredAutofillFields: list[str] = Field(default_factory=list)
+    updateRepository: str = ""
+    includePrereleaseUpdates: bool = False
+    autoCheckForUpdates: bool = True
+
+
+class UpdateCheckRequest(BaseModel):
+    include_prerelease: bool | None = None
+    update_repository: str | None = None
+
+
+class UpdateInstallRequest(BaseModel):
+    include_prerelease: bool | None = None
+    update_repository: str | None = None
 
 
 _sync_worker_ref: dict[str, SyncWorker | None] = {"worker": None}
@@ -154,7 +175,7 @@ async def _lifespan(app: FastAPI):
         await dispose_engine()
 
 
-app = FastAPI(title="Convey Agent Backend API", version="0.1.0", lifespan=_lifespan)
+app = FastAPI(title="Convey Agent Backend API", version=get_app_version(), lifespan=_lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -244,6 +265,62 @@ def post_settings(
     return save_local_settings(body.model_dump(mode="json"), user_id=str(ctx.user.id))
 
 
+@app.get("/api/app/info")
+def get_app_info(ctx: AuthContext = Depends(require_auth)) -> dict[str, Any]:
+    _ = ctx
+    return {
+        "name": APP_NAME,
+        "publisher": APP_PUBLISHER,
+        "version": get_app_version(),
+    }
+
+
+@app.post("/api/app/update/check")
+def post_update_check(
+    body: UpdateCheckRequest,
+    ctx: AuthContext = Depends(require_auth),
+) -> dict[str, Any]:
+    settings = load_local_settings(user_id=str(ctx.user.id))
+    return check_for_updates(
+        current_version=get_app_version(),
+        update_repository=body.update_repository or settings.get("updateRepository"),
+        include_prerelease=(
+            body.include_prerelease
+            if body.include_prerelease is not None
+            else bool(settings.get("includePrereleaseUpdates"))
+        ),
+    )
+
+
+@app.post("/api/app/update/download")
+def post_update_download(
+    body: UpdateInstallRequest,
+    ctx: AuthContext = Depends(require_auth),
+) -> dict[str, Any]:
+    settings = load_local_settings(user_id=str(ctx.user.id))
+    release = check_for_updates(
+        current_version=get_app_version(),
+        update_repository=body.update_repository or settings.get("updateRepository"),
+        include_prerelease=(
+            body.include_prerelease
+            if body.include_prerelease is not None
+            else bool(settings.get("includePrereleaseUpdates"))
+        ),
+    )
+    if release.get("error"):
+        raise HTTPException(status_code=400, detail=str(release["error"]))
+    if not release.get("update_available"):
+        raise HTTPException(status_code=400, detail="No newer update is currently available.")
+    try:
+        download = download_update_installer(release)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return {
+        "release": release,
+        "download": download,
+    }
+
+
 @app.get("/")
 def ui_index() -> FileResponse:
     if not _ui_dist_dir.exists():
@@ -259,7 +336,6 @@ async def create_run(
     files: list[UploadFile] = File(...),
     use_ai_review: bool = Form(False),
     model: str = Form("gpt-4.1-mini"),
-    launch_convey: bool = Form(True),
     triconvey_exe: str | None = Form(None),
     ctx: AuthContext = Depends(require_auth),
     session: AsyncSession = Depends(get_session),
@@ -353,9 +429,7 @@ async def create_run(
         use_ai_review=use_ai_review,
     )
 
-    convey_launch_ok: bool | None = None
-    if launch_convey:
-        convey_launch_ok = ensure_local_convey_running(triconvey_exe=resolved_triconvey_exe)
+    convey_running = check_triconvey_running_passive()
 
     # Run the sync-heavy pipeline in a thread pool (keeps event loop free).
     try:
@@ -386,8 +460,9 @@ async def create_run(
     if warm_started:
         LOG.info("Brain F background warmup started for run %s", run_uuid)
 
-    payload["convey_launch_attempted"] = bool(launch_convey)
-    payload["convey_launch_ok"] = convey_launch_ok
+    payload["convey_launch_attempted"] = False
+    payload["convey_launch_ok"] = None
+    payload["convey_running"] = convey_running
     payload["brain_f_warming"] = warm_started
     return payload
 
@@ -455,7 +530,12 @@ async def save_answers(
 
 
 @app.post("/api/runs/{run_id}/chat")
-def chat_about_run(run_id: str, body: ChatRequest) -> dict[str, Any]:
+async def chat_about_run(
+    run_id: str,
+    body: ChatRequest,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
     """Ask a question about a run.
 
     Brain F (Anthropic agentic) is used when ANTHROPIC_API_KEY is set.
@@ -468,9 +548,17 @@ def chat_about_run(run_id: str, body: ChatRequest) -> dict[str, Any]:
         tool_calls_made   — int (Brain F only)
         confidence_note   — str | null (Brain F only)
     """
+    try:
+        run_uuid = _uuid.UUID(run_id)
+        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid)
+        if run is None:
+            raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+
     run_dir = _resolve_run_dir(run_id)
     try:
-        saved_settings = load_local_settings()
+        saved_settings = load_local_settings(user_id=str(ctx.user.id))
         history = [{"role": m.role, "content": m.content} for m in (body.history or [])]
         model = body.model or saved_settings.get("defaultModelName", "gpt-4.1-mini")
         return ask_run_question(
@@ -479,12 +567,65 @@ def chat_about_run(run_id: str, body: ChatRequest) -> dict[str, Any]:
             model=model,
             history=history,
             ai_provider=saved_settings.get("aiProvider", "openai"),
+            ai_mode=body.aiMode or saved_settings.get("aiMode", "cost_efficient"),
             mode=body.mode or "standard",
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # pragma: no cover - surfaced to UI
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/runs/{run_id}/chat-files")
+async def upload_chat_files(
+    run_id: str,
+    files: list[UploadFile] = File(...),
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    try:
+        run_uuid = _uuid.UUID(run_id)
+        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid)
+        if run is None:
+            raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+
+    run_dir = _resolve_run_dir(run_id)
+    uploads_dir = run_dir / "uploads"
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+    saved_files: list[str] = []
+
+    for upload in files:
+        if not upload.filename:
+            continue
+        destination = uploads_dir / _safe_filename(upload.filename)
+        with destination.open("wb") as output_stream:
+            shutil.copyfileobj(upload.file, output_stream)
+        await upload.close()
+        if destination.suffix.lower() == ".pdf":
+            saved_files.append(destination.name)
+            try:
+                document = load_pdf_document(destination)
+                prime_cached_pdf_analysis(destination, document)
+            except Exception:
+                pass
+
+    if not saved_files:
+        raise HTTPException(status_code=400, detail="No valid PDF files were uploaded.")
+
+    for path in (
+        run_dir / "document_corpus_manifest.json",
+        run_dir / "document_memory.json",
+    ):
+        try:
+            path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    warm_brain_f_assets_async(run_dir)
+
+    return {"uploaded": saved_files, "message": f"Uploaded {len(saved_files)} file(s) to Brain F."}
 
 
 @app.post("/api/runs/{run_id}/apply-patches")

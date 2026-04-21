@@ -1,17 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   AlertTriangle,
   Bot,
-  CircleStop,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  CircleStop,
   FileText,
   Maximize2,
   Minimize2,
   Pencil,
-  Search,
   Send,
   ShieldCheck,
   Sparkles,
@@ -19,10 +18,13 @@ import {
   Wrench,
   X,
   XCircle,
-  Zap,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { ChatAnswerPayload, ProposedPatch, ReasoningStep } from "../lib/api";
+import {
+  ChatAnswerPayload,
+  ProposedPatch,
+  ReasoningStep,
+} from "../lib/api";
 
 type Mode = "quick" | "standard" | "thorough";
 
@@ -54,6 +56,9 @@ interface Message {
   confidence_note?: string | null;
   critic_applied?: boolean;
   patchStates?: Record<string, "pending" | "applied" | "dismissed">;
+  agent_runs?: ChatAnswerPayload["agent_runs"];
+  summary_model?: string | null;
+  summary_provider?: string | null;
 }
 
 interface ChatbotProps {
@@ -74,7 +79,8 @@ interface ChatbotProps {
 const WELCOME_MESSAGE: Message = {
   id: "welcome",
   role: "assistant",
-  text: "Hello! I'm your Convey Agent AI assistant. I can inspect extracted facts, compare document sources, surface conflicts, and propose safe corrections.\n\nAsk me anything about the uploaded documents.",
+  text:
+    "AI review is ready. I can cross-check extracted facts, review uploaded PDFs again, compare sources, and suggest safe corrections before autofill.",
 };
 
 const SUGGESTED: string[] = [
@@ -93,9 +99,33 @@ const MODES: { id: Mode; label: string }[] = [
   { id: "thorough", label: "Deep" },
 ];
 
+const THINKING_LABELS: Record<Mode, string[]> = {
+  quick: [
+    "thinking",
+    "reviewing the files",
+    "finding the clue",
+    "checking the corpus",
+  ],
+  standard: [
+    "thinking hard",
+    "reviewing the files",
+    "cross-checking sources",
+    "building the branch",
+    "tightening the answer",
+  ],
+  thorough: [
+    "thinking hard",
+    "reviewing the files",
+    "cross-checking every source",
+    "finding the clue",
+    "building the branch",
+    "final AI review in progress",
+  ],
+};
+
 function buildConflictIntro(conflicts: ConflictPreview[]): string {
   if (!conflicts.length) {
-    return "No unresolved fact conflicts were found. I'm ready to help with document questions, source checks, and safe corrections.";
+    return "No unresolved fact conflicts were found. I am ready to help with document questions, source checks, and safe corrections.";
   }
   const lines = conflicts.slice(0, 4).map((conflict) => {
     const summary = conflict.candidates
@@ -105,9 +135,9 @@ function buildConflictIntro(conflicts: ConflictPreview[]): string {
         return `${candidate.extractor} says "${candidate.value}"${source}`;
       })
       .join(" vs ");
-    return `• ${conflict.path} — ${summary}`;
+    return `- ${conflict.path}: ${summary}`;
   });
-  return `⚠️ ${conflicts.length} unresolved conflict${conflicts.length !== 1 ? "s" : ""} found:\n${lines.join("\n")}\n\nAsk me about any of these and I'll help resolve them.`;
+  return `${conflicts.length} unresolved conflict${conflicts.length !== 1 ? "s" : ""} found:\n${lines.join("\n")}\n\nAsk me about any of these and I will help resolve them.`;
 }
 
 function loadFromSession(runId: string): Message[] | null {
@@ -125,22 +155,22 @@ function saveToSession(runId: string, messages: Message[]) {
   try {
     sessionStorage.setItem(`chatbot_${runId}`, JSON.stringify(messages));
   } catch {
-    // sessionStorage unavailable or full — ignore
+    // Ignore session storage failures.
   }
 }
 
 function CitationCard({ citation }: { citation: NonNullable<ChatAnswerPayload["citations"]>[number] }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white text-[0.73rem]">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white text-[0.73rem] shadow-sm">
       <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-left transition-colors hover:bg-slate-50"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center gap-1.5 px-2.5 py-2 text-left transition-colors hover:bg-slate-50"
       >
         <FileText className="h-3 w-3 shrink-0 text-primary/60" />
         <span className="flex-1 truncate font-semibold text-slate-700">
           {citation.file || "Unknown file"}
-          {citation.page ? ` — p.${citation.page}` : ""}
+          {citation.page ? ` - p.${citation.page}` : ""}
         </span>
         {open ? <ChevronUp className="h-3 w-3 text-slate-400" /> : <ChevronDown className="h-3 w-3 text-slate-400" />}
       </button>
@@ -159,13 +189,13 @@ function humanizeFieldId(qid: string): string {
     .replace(/^policy_\d+_/, "")
     .replace(/_/g, " ")
     .replace(/\b(\d+)\b/g, "#$1")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .replace(/\b\w/g, (char) => char.toUpperCase())
     .trim();
 }
 
 function shortReason(reason: string): string {
-  const s = (reason || "").split(/\.\s/)[0].trim();
-  return s.length > 100 ? s.slice(0, 97) + "…" : s;
+  const firstSentence = (reason || "").split(/\.\s/)[0].trim();
+  return firstSentence.length > 100 ? `${firstSentence.slice(0, 97)}...` : firstSentence;
 }
 
 function PatchCard({
@@ -188,17 +218,19 @@ function PatchCard({
     <div
       className={[
         "overflow-hidden rounded-xl border transition-all",
-        isApplied ? "border-emerald-200 bg-emerald-50/60"
-          : isDismissed ? "border-slate-200 bg-slate-50 opacity-50"
-          : "border-amber-200 bg-amber-50/60",
+        isApplied
+          ? "border-emerald-200 bg-emerald-50/60"
+          : isDismissed
+            ? "border-slate-200 bg-slate-50 opacity-50"
+            : "border-amber-200 bg-amber-50/70",
       ].join(" ")}
     >
       <div className="flex items-center gap-3 px-3 py-2.5">
         <AlertTriangle className={["h-3.5 w-3.5 shrink-0", isApplied ? "text-emerald-500" : "text-amber-500"].join(" ")} />
         <div className="min-w-0 flex-1">
-          <p className="text-[0.78rem] font-semibold text-slate-800 truncate">{label}</p>
-          <p className="text-[0.76rem] text-slate-700 font-bold">{patch.new_value}</p>
-          {brief ? <p className="text-[0.7rem] text-slate-400 truncate mt-0.5">{brief}</p> : null}
+          <p className="truncate text-[0.78rem] font-semibold text-slate-800">{label}</p>
+          <p className="text-[0.76rem] font-bold text-slate-700">{patch.new_value}</p>
+          {brief ? <p className="mt-0.5 truncate text-[0.7rem] text-slate-400">{brief}</p> : null}
         </div>
         {state === "pending" ? (
           <div className="flex shrink-0 gap-1">
@@ -206,7 +238,8 @@ function PatchCard({
               onClick={onApply}
               className="flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-[0.7rem] font-semibold text-white transition-colors hover:bg-emerald-700"
             >
-              <CheckCircle2 className="h-3 w-3" /> Apply
+              <CheckCircle2 className="h-3 w-3" />
+              Apply
             </button>
             <button
               onClick={onDismiss}
@@ -245,7 +278,7 @@ function MessageBubble({
       animate={{ opacity: 1, y: 0 }}
       className={`flex gap-2.5 group/bubble ${isUser ? "flex-row-reverse" : ""}`}
     >
-      <div className={["mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full", isUser ? "bg-slate-200" : "bg-primary/10"].join(" ")}>
+      <div className={["mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl shadow-sm", isUser ? "bg-slate-200" : "bg-primary/10"].join(" ")}>
         {isUser ? <User className="h-3.5 w-3.5 text-slate-600" /> : <Bot className="h-3.5 w-3.5 text-primary" />}
       </div>
 
@@ -254,7 +287,7 @@ function MessageBubble({
           {isUser && onEdit ? (
             <button
               onClick={() => onEdit(msg.id, msg.text)}
-              className="opacity-0 group-hover/bubble:opacity-100 transition-opacity mt-2 shrink-0 rounded-lg p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              className="mt-2 shrink-0 rounded-lg p-1 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 group-hover/bubble:opacity-100"
               title="Edit and resend"
             >
               <Pencil className="h-3 w-3" />
@@ -262,17 +295,17 @@ function MessageBubble({
           ) : null}
           <div
             className={[
-              "rounded-2xl px-4 py-3 text-[0.84rem] leading-relaxed",
+              "rounded-3xl px-4 py-3 text-[0.84rem] leading-relaxed shadow-sm",
               isUser
-                ? "rounded-tr-none bg-primary text-white shadow-md shadow-primary/10"
-                : "rounded-tl-none bg-slate-100 text-slate-800",
+                ? "rounded-tr-md bg-primary text-white shadow-primary/20"
+                : "rounded-tl-md border border-slate-200/80 bg-white text-slate-800",
             ].join(" ")}
           >
             <p className="whitespace-pre-wrap">{msg.text}</p>
           </div>
         </div>
 
-        {!isUser && (msg.tool_calls_made || msg.critic_applied) ? (
+        {!isUser && (msg.tool_calls_made || msg.critic_applied || msg.summary_model) ? (
           <div className="flex flex-wrap items-center gap-1.5 px-1">
             {msg.tool_calls_made ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[0.67rem] font-medium text-slate-500">
@@ -283,7 +316,13 @@ function MessageBubble({
             {msg.critic_applied ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[0.67rem] font-medium text-violet-600">
                 <ShieldCheck className="h-2.5 w-2.5" />
-                Critic reviewed
+                AI reviewed
+              </span>
+            ) : null}
+            {msg.summary_model ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[0.67rem] font-medium text-blue-700">
+                <Sparkles className="h-2.5 w-2.5" />
+                Finalised by {msg.summary_provider || "ai"} / {msg.summary_model}
               </span>
             ) : null}
           </div>
@@ -292,7 +331,7 @@ function MessageBubble({
         {!isUser && msg.citations && msg.citations.length > 0 ? (
           <div className="w-full space-y-1">
             <button
-              onClick={() => setCitationsOpen((v) => !v)}
+              onClick={() => setCitationsOpen((value) => !value)}
               className="flex items-center gap-1.5 px-1 text-[0.7rem] font-semibold text-slate-400 transition-colors hover:text-slate-600"
             >
               <FileText className="h-3 w-3" />
@@ -301,8 +340,8 @@ function MessageBubble({
             </button>
             {citationsOpen ? (
               <div className="space-y-1">
-                {msg.citations.map((citation, idx) => (
-                  <CitationCard key={`${msg.id}-c${idx}`} citation={citation} />
+                {msg.citations.map((citation, index) => (
+                  <CitationCard key={`${msg.id}-citation-${index}`} citation={citation} />
                 ))}
               </div>
             ) : null}
@@ -327,14 +366,16 @@ function MessageBubble({
         ) : null}
 
         {!isUser && msg.reasoning_steps && msg.reasoning_steps.length > 0 ? (
-          <details className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[0.73rem]">
+          <details className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[0.73rem] shadow-sm">
             <summary className="cursor-pointer font-semibold text-slate-600">
               Reasoning ({msg.reasoning_steps.length} step{msg.reasoning_steps.length !== 1 ? "s" : ""})
             </summary>
             <div className="mt-2 space-y-2 text-slate-500">
-              {msg.reasoning_steps.map((step, idx) => (
-                <div key={`${msg.id}-s${idx}`} className="rounded-lg bg-slate-50 px-3 py-2">
-                  <div className="font-semibold text-slate-700">{idx + 1}. {step.tool}</div>
+              {msg.reasoning_steps.map((step, index) => (
+                <div key={`${msg.id}-step-${index}`} className="rounded-lg bg-slate-50 px-3 py-2">
+                  <div className="font-semibold text-slate-700">
+                    {index + 1}. {step.tool}
+                  </div>
                   <div className="mt-1 text-slate-500">{step.summary}</div>
                 </div>
               ))}
@@ -346,24 +387,39 @@ function MessageBubble({
   );
 }
 
-function ThinkingIndicator({ mode }: { mode: Mode }) {
-  const labels: Record<Mode, string> = {
-    quick: "Thinking…",
-    standard: "Searching documents…",
-    thorough: "Deep analysis…",
-  };
+function ThinkingIndicator({ mode, uploadState }: { mode: Mode; uploadState: string | null }) {
+  const [labelIndex, setLabelIndex] = useState(0);
+  const labels = useMemo(() => {
+    if (uploadState) {
+      return [uploadState];
+    }
+    return THINKING_LABELS[mode];
+  }, [mode, uploadState]);
+
+  useEffect(() => {
+    setLabelIndex(0);
+  }, [labels]);
+
+  useEffect(() => {
+    if (labels.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setLabelIndex((current) => (current + 1) % labels.length);
+    }, 1700);
+    return () => window.clearInterval(timer);
+  }, [labels]);
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2.5">
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">
         <Bot className="h-3.5 w-3.5 text-primary" />
       </div>
-      <div className="flex items-center gap-3 rounded-2xl rounded-tl-none bg-slate-100 px-4 py-3">
+      <div className="flex items-center gap-3 rounded-3xl rounded-tl-md border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <div className="flex items-center gap-1">
           <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />
           <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]" />
           <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400" />
         </div>
-        <span className="text-[0.78rem] text-slate-500">{labels[mode]}</span>
+        <span className="text-[0.78rem] font-medium capitalize text-slate-500">{labels[labelIndex]}</span>
       </div>
     </motion.div>
   );
@@ -378,7 +434,6 @@ export function Chatbot({
   initialTurns = [],
   runId,
 }: ChatbotProps) {
-  // ── Messages — restored from sessionStorage if available ─────────────────
   const [messages, setMessages] = useState<Message[]>(() => {
     if (runId) {
       const stored = loadFromSession(runId);
@@ -386,41 +441,37 @@ export function Chatbot({
     }
     return [WELCOME_MESSAGE];
   });
-
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [mode, setMode] = useState<Mode>("standard");
   const [expanded, setExpanded] = useState(false);
   const [conflictInjected, setConflictInjected] = useState(() => {
-    // If we restored from session, conflicts were already injected
     if (runId) {
       const stored = loadFromSession(runId);
       return stored !== null && stored.length > 1;
     }
     return false;
   });
+  const [uploadState, setUploadState] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const requestRef = useRef<AbortController | null>(null);
   const prevRunIdRef = useRef(runId);
-
-  // ── Persist messages to sessionStorage on every change ───────────────────
   useEffect(() => {
     if (runId && messages.length > 0) {
       saveToSession(runId, messages);
     }
   }, [messages, runId]);
 
-  // ── Reset when run changes (new upload) ──────────────────────────────────
   useEffect(() => {
     if (prevRunIdRef.current === runId) return;
     prevRunIdRef.current = runId;
 
-    // Cancel any in-flight request
     requestRef.current?.abort();
     requestRef.current = null;
     setSending(false);
+    setUploadState(null);
     setInput("");
 
     if (runId) {
@@ -435,22 +486,18 @@ export function Chatbot({
     setConflictInjected(false);
   }, [runId]);
 
-  // ── Scroll to bottom on new messages ────────────────────────────────────
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
 
-  // ── Focus textarea when panel opens; clear input on close ───────────────
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => textareaRef.current?.focus(), 300);
+      window.setTimeout(() => textareaRef.current?.focus(), 300);
     } else {
-      // Only clear the draft — do NOT abort an in-progress request
       setInput("");
     }
   }, [isOpen]);
 
-  // ── Abort on unmount ──────────────────────────────────────────────────────
   useEffect(() => {
     return () => {
       requestRef.current?.abort();
@@ -458,11 +505,10 @@ export function Chatbot({
     };
   }, []);
 
-  // ── Inject conflict intro once on first open ─────────────────────────────
   useEffect(() => {
     if (!isOpen || conflictInjected) return;
     setMessages((prev) => {
-      if (prev.some((m) => m.id === "conflicts-intro")) return prev;
+      if (prev.some((message) => message.id === "conflicts-intro")) return prev;
       return [
         ...prev,
         {
@@ -475,14 +521,12 @@ export function Chatbot({
     setConflictInjected(true);
   }, [isOpen, conflictInjected, initialConflicts]);
 
-  // ── Restore history from initialTurns if no session data ─────────────────
   useEffect(() => {
     if (!initialTurns.length) return;
     setMessages((prev) => {
-      // Only restore if we only have the welcome message (no session data)
       if (prev.length > 1) return prev;
-      const restored: Message[] = initialTurns.map((turn, idx) => ({
-        id: `history-${idx}`,
+      const restored: Message[] = initialTurns.map((turn, index) => ({
+        id: `history-${index}`,
         role: turn.role,
         text: turn.content,
       }));
@@ -490,19 +534,17 @@ export function Chatbot({
     });
   }, [initialTurns]);
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
   const buildHistory = (): HistoryTurn[] =>
     messages
-      .filter((m) => m.id !== "welcome" && m.id !== "conflicts-intro")
-      .map((m) => ({ role: m.role, content: m.text }));
+      .filter((message) => message.id !== "welcome" && message.id !== "conflicts-intro")
+      .map((message) => ({ role: message.role, content: message.text }));
 
-  // ── Send ──────────────────────────────────────────────────────────────────
   const handleSend = async (text?: string) => {
     const question = (text ?? input).trim();
     if (!question || sending) return;
 
     const history = buildHistory();
-    setMessages((prev) => [...prev, { id: `${Date.now()}-u`, role: "user", text: question }]);
+    setMessages((prev) => [...prev, { id: `${Date.now()}-user`, role: "user", text: question }]);
     setInput("");
     setSending(true);
     const controller = new AbortController();
@@ -513,18 +555,19 @@ export function Chatbot({
       setMessages((prev) => [
         ...prev,
         {
-          id: `${Date.now()}-a`,
+          id: `${Date.now()}-assistant`,
           role: "assistant",
-          text: response.answer || "I couldn't find a precise answer in the uploaded documents.",
+          text: response.answer || "I could not find a precise answer in the uploaded documents.",
           citations: response.citations,
           proposed_patches: response.proposed_patches,
           reasoning_steps: response.reasoning_steps,
           tool_calls_made: response.tool_calls_made,
           confidence_note: response.confidence_note,
           critic_applied: response.critic_applied,
-          patchStates: Object.fromEntries(
-            (response.proposed_patches ?? []).map((p) => [p.question_id, "pending" as const]),
-          ),
+          patchStates: Object.fromEntries((response.proposed_patches ?? []).map((patch) => [patch.question_id, "pending" as const])),
+          agent_runs: response.agent_runs,
+          summary_model: response.summary_model,
+          summary_provider: response.summary_provider,
         },
       ]);
     } catch (error) {
@@ -535,7 +578,7 @@ export function Chatbot({
       setMessages((prev) => [
         ...prev,
         {
-          id: `${Date.now()}-err`,
+          id: `${Date.now()}-error`,
           role: "assistant",
           text: error instanceof Error ? `Error: ${error.message}` : "Something went wrong. Please try again.",
         },
@@ -546,55 +589,53 @@ export function Chatbot({
     }
   };
 
-  // ── Cancel ────────────────────────────────────────────────────────────────
   const handleCancel = () => {
     requestRef.current?.abort();
     requestRef.current = null;
     setSending(false);
   };
 
-  // ── Edit — cancel ongoing request, restore text to input ─────────────────
   const handleEditMessage = (msgId: string, text: string) => {
-    // Always cancel any in-progress request first
     if (sending) {
       requestRef.current?.abort();
       requestRef.current = null;
       setSending(false);
     }
-    const idx = messages.findIndex((m) => m.id === msgId);
-    if (idx === -1) return;
-    setMessages((prev) => prev.slice(0, idx));
+    const index = messages.findIndex((message) => message.id === msgId);
+    if (index === -1) return;
+    setMessages((prev) => prev.slice(0, index));
     setInput(text);
-    setTimeout(() => textareaRef.current?.focus(), 50);
+    window.setTimeout(() => textareaRef.current?.focus(), 50);
   };
 
-  // ── Patch apply / dismiss ─────────────────────────────────────────────────
   const handleApplyPatch = async (msgId: string, questionId: string) => {
-    const message = messages.find((m) => m.id === msgId);
-    const patch = message?.proposed_patches?.find((p) => p.question_id === questionId);
+    const message = messages.find((entry) => entry.id === msgId);
+    const patch = message?.proposed_patches?.find((entry) => entry.question_id === questionId);
     if (!patch || !onApplyPatch) return;
 
     try {
       await onApplyPatch(questionId, patch.new_value, patch.reason);
       setMessages((prev) =>
-        prev.map((m) =>
-          m.id === msgId ? { ...m, patchStates: { ...m.patchStates, [questionId]: "applied" } } : m,
+        prev.map((entry) =>
+          entry.id === msgId ? { ...entry, patchStates: { ...entry.patchStates, [questionId]: "applied" } } : entry,
         ),
       );
     } catch {
-      // leave pending if apply fails
+      // Leave pending if patch apply fails.
     }
   };
 
   const handleDismissPatch = (msgId: string, questionId: string) => {
     setMessages((prev) =>
-      prev.map((m) =>
-        m.id === msgId ? { ...m, patchStates: { ...m.patchStates, [questionId]: "dismissed" } } : m,
+      prev.map((entry) =>
+        entry.id === msgId ? { ...entry, patchStates: { ...entry.patchStates, [questionId]: "dismissed" } } : entry,
       ),
     );
   };
 
-  const panelWidth = expanded ? 640 : 470;
+  const isBusy = sending || Boolean(uploadState);
+  const statusText = isBusy ? "multi-agent review" : "ready";
+  const panelWidth = expanded ? 660 : 500;
   const showSuggestions = messages.length <= 2 && !sending;
 
   return (
@@ -602,68 +643,67 @@ export function Chatbot({
       initial={false}
       animate={{ width: isOpen ? panelWidth : 0, opacity: isOpen ? 1 : 0 }}
       transition={{ type: "spring", stiffness: 320, damping: 32 }}
-      className="relative z-10 flex h-full shrink-0 flex-col overflow-hidden border-l bg-white shadow-2xl"
+      className="relative z-10 flex h-full shrink-0 flex-col overflow-hidden border-l border-slate-200 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.08),_transparent_38%),linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] shadow-2xl"
     >
-      {/* Header */}
-      <div className="flex h-14 items-center justify-between border-b bg-gradient-to-r from-slate-50 to-white px-4 shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
-            <Sparkles className="h-4 w-4 text-primary" />
+      <div className="flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="group/icon relative flex h-10 w-10 items-center justify-center rounded-[1.1rem] bg-[linear-gradient(135deg,#0f172a_0%,#1e3a8a_55%,#0ea5e9_100%)] text-white shadow-lg shadow-sky-900/20 transition-transform duration-200 hover:scale-105">
+            <Bot className="h-4 w-4" />
+            <Sparkles className="absolute -right-0.5 -top-0.5 h-3 w-3 text-sky-200 transition-transform duration-300 group-hover/icon:-translate-y-0.5 group-hover/icon:translate-x-0.5 group-hover/icon:rotate-12" />
+            <span className="absolute inset-0 rounded-[1.1rem] border border-white/10 transition-opacity duration-200 group-hover/icon:opacity-0" />
           </div>
           <div>
             <h3 className="text-sm font-bold leading-tight text-slate-900">AI Agent</h3>
-            <div className="flex items-center gap-1">
-              <span className={["h-1.5 w-1.5 rounded-full", sending ? "bg-amber-400 animate-pulse" : "bg-emerald-500 animate-pulse"].join(" ")} />
-              <span className="text-[10px] font-medium text-slate-400">
-                {sending ? "processing…" : "ready"}
-              </span>
+            <div className="flex items-center gap-1.5">
+              <span className={["h-1.5 w-1.5 rounded-full", isBusy ? "animate-pulse bg-amber-400" : "bg-emerald-500"].join(" ")} />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{statusText}</span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <select
             value={mode}
-            onChange={(e) => setMode(e.target.value as Mode)}
-            className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-[0.74rem] font-semibold text-slate-600 outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+            onChange={(event) => setMode(event.target.value as Mode)}
+            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-[0.74rem] font-semibold text-slate-600 outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
           >
             {MODES.map((item) => (
-              <option key={item.id} value={item.id}>{item.label}</option>
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
             ))}
           </select>
           <button
-            onClick={() => setExpanded((v) => !v)}
-            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100"
+            onClick={() => setExpanded((value) => !value)}
+            className="rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-slate-100"
             title={expanded ? "Collapse" : "Expand"}
           >
             {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100">
+          <button onClick={onClose} className="rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-slate-100">
             <X className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      {/* Messages */}
       <div className="custom-scrollbar flex-1 space-y-5 overflow-y-auto px-4 py-4">
         <AnimatePresence initial={false}>
           {(() => {
-            const lastUserIdx = messages.reduce((acc, m, i) => m.role === "user" ? i : acc, -1);
-            return messages.map((message, idx) => (
+            const lastUserIndex = messages.reduce((last, message, index) => (message.role === "user" ? index : last), -1);
+            return messages.map((message, index) => (
               <MessageBubble
                 key={message.id}
                 msg={message}
                 onApplyPatch={handleApplyPatch}
                 onDismissPatch={handleDismissPatch}
-                onEdit={idx === lastUserIdx ? handleEditMessage : undefined}
+                onEdit={index === lastUserIndex ? handleEditMessage : undefined}
               />
             ));
           })()}
         </AnimatePresence>
-        {sending ? <ThinkingIndicator mode={mode} /> : null}
+        {sending ? <ThinkingIndicator mode={mode} uploadState={uploadState} /> : null}
         <div ref={bottomRef} />
       </div>
 
-      {/* Suggested questions */}
       {showSuggestions ? (
         <div className="px-4 pb-2 shrink-0">
           <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Suggested</p>
@@ -673,7 +713,7 @@ export function Chatbot({
                 key={question}
                 onClick={() => void handleSend(question)}
                 disabled={sending}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-left text-[0.76rem] text-slate-600 transition-colors hover:border-primary hover:text-primary disabled:opacity-40"
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-left text-[0.76rem] text-slate-600 shadow-sm transition-colors hover:border-primary hover:text-primary disabled:opacity-40"
               >
                 {question}
               </button>
@@ -682,20 +722,23 @@ export function Chatbot({
         </div>
       ) : null}
 
-      {/* Input */}
-      <div className="border-t bg-white px-3 pb-3 pt-2 shrink-0">
-        <div className="relative flex items-end gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 transition-colors focus-within:border-primary focus-within:bg-white">
+      <div className="border-t border-slate-200 bg-white/85 px-3 pb-3 pt-2 backdrop-blur shrink-0">
+        <div className="relative flex items-end gap-2 rounded-3xl border border-slate-200 bg-slate-50/90 px-3 py-2 transition-colors focus-within:border-primary focus-within:bg-white">
           <Textarea
             ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
                 void handleSend();
               }
             }}
-            placeholder={sending ? "Processing… press ✕ to cancel" : "Ask anything… (Shift+Enter for new line)"}
+            placeholder={
+              sending
+                ? "AI is reviewing... press stop to cancel"
+                : "Ask anything about the documents... (Shift+Enter for new line)"
+            }
             rows={1}
             disabled={sending}
             className="min-h-[1.5rem] max-h-32 flex-1 resize-none border-0 bg-transparent p-0 text-[0.85rem] leading-relaxed outline-none focus-visible:ring-0 disabled:opacity-60"
@@ -712,7 +755,7 @@ export function Chatbot({
             <button
               onClick={() => void handleSend()}
               disabled={!input.trim()}
-              className="shrink-0 rounded-xl bg-primary p-1.5 text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-40"
+              className="shrink-0 rounded-2xl bg-primary p-1.5 text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-40"
               title="Send"
             >
               <Send className="h-4 w-4" />
@@ -720,7 +763,7 @@ export function Chatbot({
           )}
         </div>
         <p className="mt-1.5 text-center text-[10px] text-slate-400">
-          Answers are grounded in uploaded documents. Verify important values.
+          Every answer is AI-reviewed against the uploaded matter files. Verify important values before autofill.
         </p>
       </div>
 

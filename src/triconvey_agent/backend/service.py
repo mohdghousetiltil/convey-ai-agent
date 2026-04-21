@@ -5,6 +5,7 @@ import os
 import re
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -32,6 +33,58 @@ _BRAIN_F_DEFAULT_WARMUP_DELAY_SECONDS = max(
     float(os.getenv("CONVEY_BRAIN_F_WARMUP_DELAY_SECONDS", "0")),
 )
 
+_AI_MODE_CHOICES = {"cost_efficient", "all_time_best", "turbo"}
+_OPENAI_MODELS = ("gpt-4.1-mini", "gpt-4.1", "gpt-4o")
+_ANTHROPIC_MODELS = ("claude-haiku-4-5-20251001", "claude-sonnet-4-6", "claude-opus-4-7")
+_AI_COLLABORATION_PRESETS: dict[str, dict[str, list[dict[str, str]]]] = {
+    "openai": {
+        "cost_efficient": [
+            {"provider": "openai", "model": "gpt-4.1-mini", "role": "Scout"},
+            {"provider": "openai", "model": "gpt-4.1", "role": "Reviewer"},
+        ],
+        "all_time_best": [
+            {"provider": "openai", "model": "gpt-4.1", "role": "Lead"},
+            {"provider": "openai", "model": "gpt-4o", "role": "Cross-check"},
+        ],
+        "turbo": [
+            {"provider": "openai", "model": "gpt-4o", "role": "Turbo"},
+            {"provider": "openai", "model": "gpt-4.1-mini", "role": "Verifier"},
+        ],
+    },
+    "anthropic": {
+        "cost_efficient": [
+            {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "role": "Scout"},
+            {"provider": "anthropic", "model": "claude-sonnet-4-6", "role": "Reviewer"},
+        ],
+        "all_time_best": [
+            {"provider": "anthropic", "model": "claude-opus-4-7", "role": "Lead"},
+            {"provider": "anthropic", "model": "claude-sonnet-4-6", "role": "Cross-check"},
+        ],
+        "turbo": [
+            {"provider": "anthropic", "model": "claude-sonnet-4-6", "role": "Turbo"},
+            {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "role": "Verifier"},
+        ],
+    },
+    "hybrid": {
+        "cost_efficient": [
+            {"provider": "openai", "model": "gpt-4.1-mini", "role": "OpenAI"},
+            {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "role": "Claude"},
+        ],
+        "all_time_best": [
+            {"provider": "openai", "model": "gpt-4.1", "role": "OpenAI"},
+            {"provider": "anthropic", "model": "claude-opus-4-7", "role": "Claude"},
+        ],
+        "turbo": [
+            {"provider": "openai", "model": "gpt-4o", "role": "OpenAI"},
+            {"provider": "anthropic", "model": "claude-sonnet-4-6", "role": "Claude"},
+        ],
+    },
+}
+
+
+def _format_elapsed(seconds: float) -> str:
+    return f"{seconds:.2f}s"
+
 
 def build_review_run(
     doc_paths: list[Path],
@@ -40,6 +93,7 @@ def build_review_run(
     use_ai_review: bool = False,
     model: str = "gpt-4.1-mini",
 ) -> dict[str, Any]:
+    overall_started = time.perf_counter()
     runtime = ensure_runtime_dirs()
     target_dir = Path(run_dir) if run_dir is not None else runtime.ui_runs_dir / _new_run_id()
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -58,24 +112,34 @@ def build_review_run(
     # screen immediately after Brain C.
 
     registry = load_question_registry()
+    print("\n=== Brain D — Answering questions ===")
+    brain_d_started = time.perf_counter()
     answers = answer_all_questions(registry.values(), store, ai_client=ai_client)
     _apply_answer_fallbacks(answers, store)
     _write_answers(target_dir / "answers.json", answers)
+    print(f"  [Time] Brain D total: {_format_elapsed(time.perf_counter() - brain_d_started)}")
 
     ai_review_results: dict[str, dict[str, Any]] = {}
     if use_ai_review and ai_client is not None:
+        print("\n=== AI Review — Verifying answers ===")
         ai_review_results = run_ai_review(answers, registry, ai_client)
         (target_dir / "ai_review.json").write_text(
             json.dumps(ai_review_results, indent=2, default=str),
             encoding="utf-8",
         )
 
+    print("\n=== Brain E — Building action plan ===")
+    brain_e_started = time.perf_counter()
     action_plan = build_action_plan(answers, runtime.yaml_dir)
     (target_dir / "action_plan.json").write_text(
         action_plan.model_dump_json(indent=2),
         encoding="utf-8",
     )
+    print(f"  [Time] Brain E total: {_format_elapsed(time.perf_counter() - brain_e_started)}")
+    print("\n=== Writing summary ===")
+    summary_started = time.perf_counter()
     write_summary(answers, target_dir)
+    print(f"  [Time] Summary write total: {_format_elapsed(time.perf_counter() - summary_started)}")
 
     manifest = {
         "run_id": target_dir.name,
@@ -90,6 +154,7 @@ def build_review_run(
         json.dumps(manifest, indent=2),
         encoding="utf-8",
     )
+    print(f"\n[Time] Review run total: {_format_elapsed(time.perf_counter() - overall_started)}")
     return load_run_payload(target_dir)
 
 
@@ -211,6 +276,18 @@ def ensure_local_convey_running(*, triconvey_exe: str | None = None) -> bool:
         return False
 
 
+def check_triconvey_running_passive() -> bool:
+    """Check whether triConvey.exe is running without touching its window."""
+    try:
+        import psutil
+        return any(
+            "triconvey" in (p.name() or "").lower()
+            for p in psutil.process_iter(["name"])
+        )
+    except Exception:
+        return False
+
+
 def warm_brain_f_assets_async(run_dir: str | Path) -> bool:
     """Warm Brain F assets in the background after the review UI loads.
 
@@ -272,6 +349,7 @@ def ask_run_question(
     model: str = "gpt-4.1-mini",
     history: list[dict[str, Any]] | None = None,
     ai_provider: str = "openai",
+    ai_mode: str = "cost_efficient",
     mode: str = "standard",
 ) -> dict[str, Any]:
     """Answer a question about a run using Brain F (agentic, tool-use).
@@ -288,21 +366,45 @@ def ask_run_question(
     target_dir = Path(run_dir)
     normalized_mode = _normalize_brain_f_mode(mode)
     _ensure_brain_f_assets(target_dir, include_memory=normalized_mode in {"deep", "thorough"})
+    execution_plan = _build_ai_execution_plan(
+        preferred_provider=ai_provider,
+        ai_mode=ai_mode,
+        requested_model=model,
+    )
 
-    provider = _infer_provider(model, ai_provider)
+    if not execution_plan["agents"]:
+        return _ask_openai_fallback(target_dir, question=question, model=model)
 
-    if provider == "anthropic":
-        key = os.getenv("ANTHROPIC_API_KEY")
-        if key:
-            return _ask_brain_f(target_dir, question=question, history=history or [],
-                                model=model, provider="anthropic", mode=normalized_mode)
-    if provider == "openai":
-        key = os.getenv("OPENAI_API_KEY")
-        if key:
-            return _ask_brain_f(target_dir, question=question, history=history or [],
-                                model=model, provider="openai", mode=normalized_mode)
+    if len(execution_plan["agents"]) == 1:
+        agent_cfg = execution_plan["agents"][0]
+        result = _ask_brain_f(
+            target_dir,
+            question=question,
+            history=history or [],
+            model=agent_cfg["model"],
+            provider=agent_cfg["provider"],
+            mode=normalized_mode,
+            persist_chat=True,
+        )
+        result["agent_runs"] = [
+            {
+                "provider": agent_cfg["provider"],
+                "model": agent_cfg["model"],
+                "role": agent_cfg["role"],
+                "status": "completed",
+            }
+        ]
+        result["summary_model"] = agent_cfg["model"]
+        result["summary_provider"] = agent_cfg["provider"]
+        return result
 
-    return _ask_openai_fallback(target_dir, question=question, model=model)
+    return _ask_brain_f_collaborative(
+        target_dir,
+        question=question,
+        history=history or [],
+        mode=normalized_mode,
+        execution_plan=execution_plan,
+    )
 
 
 def _ask_brain_f(
@@ -313,12 +415,306 @@ def _ask_brain_f(
     model: str,
     provider: str,
     mode: str = "standard",
+    persist_chat: bool = True,
 ) -> dict[str, Any]:
     from triconvey_agent.brain_f.agent import BrainFAgent
 
     store = _load_fact_store(target_dir)
-    agent = BrainFAgent(store=store, run_dir=target_dir, model=model, provider=provider)
+    agent = BrainFAgent(store=store, run_dir=target_dir, model=model, provider=provider, persist_chat=persist_chat)
     return agent.ask(question=question, history=history, mode=mode)
+
+
+def _ask_brain_f_collaborative(
+    target_dir: Path,
+    *,
+    question: str,
+    history: list[dict[str, Any]],
+    mode: str,
+    execution_plan: dict[str, Any],
+) -> dict[str, Any]:
+    agent_runs: list[dict[str, Any]] = []
+    successful_results: list[dict[str, Any]] = []
+    agent_configs = list(execution_plan.get("agents") or [])
+
+    with ThreadPoolExecutor(max_workers=len(agent_configs)) as executor:
+        future_map = {
+            executor.submit(
+                _ask_brain_f,
+                target_dir,
+                question=question,
+                history=history,
+                model=str(agent_cfg["model"]),
+                provider=str(agent_cfg["provider"]),
+                mode=mode,
+                persist_chat=False,
+            ): agent_cfg
+            for agent_cfg in agent_configs
+        }
+        for future in as_completed(future_map):
+            agent_cfg = future_map[future]
+            run_info = {
+                "provider": agent_cfg["provider"],
+                "model": agent_cfg["model"],
+                "role": agent_cfg["role"],
+            }
+            try:
+                result = future.result()
+                run_info["status"] = "completed"
+                agent_runs.append(run_info)
+                successful_results.append({"config": agent_cfg, "result": result})
+            except Exception as exc:
+                run_info["status"] = "failed"
+                run_info["error"] = str(exc)
+                agent_runs.append(run_info)
+
+    if not successful_results:
+        raise ValueError("No AI agent could complete the question.")
+
+    if len(successful_results) == 1:
+        winner = successful_results[0]
+        result = dict(winner["result"])
+        result["agent_runs"] = agent_runs
+        result["summary_model"] = winner["config"]["model"]
+        result["summary_provider"] = winner["config"]["provider"]
+        _persist_chat_summary(target_dir, question, str(result.get("answer") or ""))
+        return result
+
+    summary_model = str(execution_plan.get("summary_model") or successful_results[0]["config"]["model"])
+    summary_provider = str(execution_plan.get("summary_provider") or successful_results[0]["config"]["provider"])
+    combined_answer = _summarize_collaborative_answers(
+        question=question,
+        candidates=successful_results,
+        summary_model=summary_model,
+        summary_provider=summary_provider,
+    )
+    citations = _merge_citations([entry["result"] for entry in successful_results])
+    proposed_patches = _merge_proposed_patches([entry["result"] for entry in successful_results])
+    reasoning_steps = _merge_reasoning_steps(successful_results)
+    best_result = max(
+        successful_results,
+        key=lambda entry: (
+            len(entry["result"].get("citations") or []),
+            entry["result"].get("tool_calls_made") or 0,
+        ),
+    )["result"]
+    final_result = {
+        "answer": combined_answer,
+        "citations": citations,
+        "proposed_patches": proposed_patches,
+        "field_answers": [],
+        "reasoning_steps": reasoning_steps,
+        "tool_calls_made": sum(int(entry["result"].get("tool_calls_made") or 0) for entry in successful_results),
+        "confidence_note": best_result.get("confidence_note"),
+        "critic_applied": any(bool(entry["result"].get("critic_applied")) for entry in successful_results),
+        "agent_runs": agent_runs,
+        "summary_model": summary_model,
+        "summary_provider": summary_provider,
+    }
+    _persist_chat_summary(target_dir, question, combined_answer)
+    return final_result
+
+
+def _build_ai_execution_plan(
+    *,
+    preferred_provider: str,
+    ai_mode: str,
+    requested_model: str,
+) -> dict[str, Any]:
+    provider = (preferred_provider or "openai").strip().lower()
+    if provider not in {"openai", "anthropic", "hybrid"}:
+        provider = "openai"
+    normalized_ai_mode = (ai_mode or "cost_efficient").strip().lower()
+    if normalized_ai_mode not in _AI_MODE_CHOICES:
+        normalized_ai_mode = "cost_efficient"
+
+    has_openai = bool(os.getenv("OPENAI_API_KEY"))
+    has_anthropic = bool(os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY"))
+    if provider == "hybrid" and not (has_openai and has_anthropic):
+        provider = "openai" if has_openai else "anthropic"
+    if provider == "openai" and not has_openai and has_anthropic:
+        provider = "anthropic"
+    if provider == "anthropic" and not has_anthropic and has_openai:
+        provider = "openai"
+
+    agents = [dict(item) for item in _AI_COLLABORATION_PRESETS.get(provider, _AI_COLLABORATION_PRESETS["openai"])[normalized_ai_mode]]
+    if provider == "openai":
+        agents = [item for item in agents if item["provider"] == "openai" and has_openai]
+    elif provider == "anthropic":
+        agents = [item for item in agents if item["provider"] == "anthropic" and has_anthropic]
+    else:
+        agents = [
+            item for item in agents
+            if (item["provider"] == "openai" and has_openai) or (item["provider"] == "anthropic" and has_anthropic)
+        ]
+
+    inferred_provider = _infer_provider(requested_model, provider)
+    if requested_model and inferred_provider in {"openai", "anthropic"}:
+        for agent in agents:
+            if agent["provider"] == inferred_provider:
+                agent["model"] = requested_model
+                break
+
+    if not agents and requested_model:
+        provider_hint = _infer_provider(requested_model, provider)
+        if provider_hint == "openai" and has_openai:
+            agents = [{"provider": "openai", "model": requested_model, "role": "Solo"}]
+        elif provider_hint == "anthropic" and has_anthropic:
+            agents = [{"provider": "anthropic", "model": requested_model, "role": "Solo"}]
+
+    summary_provider = "anthropic" if provider == "hybrid" and has_anthropic else (agents[0]["provider"] if agents else provider)
+    summary_model = requested_model
+    if not summary_model or _infer_provider(summary_model, summary_provider) != summary_provider:
+        summary_model = _summary_model_for(summary_provider, normalized_ai_mode)
+    return {
+        "provider": provider,
+        "ai_mode": normalized_ai_mode,
+        "agents": agents,
+        "summary_provider": summary_provider,
+        "summary_model": summary_model,
+    }
+
+
+def _summary_model_for(provider: str, ai_mode: str) -> str:
+    if provider == "anthropic":
+        return {
+            "cost_efficient": "claude-sonnet-4-6",
+            "all_time_best": "claude-opus-4-7",
+            "turbo": "claude-sonnet-4-6",
+        }.get(ai_mode, "claude-sonnet-4-6")
+    return {
+        "cost_efficient": "gpt-4.1",
+        "all_time_best": "gpt-4.1",
+        "turbo": "gpt-4o",
+    }.get(ai_mode, "gpt-4.1")
+
+
+def _summarize_collaborative_answers(
+    *,
+    question: str,
+    candidates: list[dict[str, Any]],
+    summary_model: str,
+    summary_provider: str,
+) -> str:
+    candidate_blocks = []
+    for index, entry in enumerate(candidates, start=1):
+        config = entry["config"]
+        result = entry["result"]
+        candidate_blocks.append(
+            json.dumps(
+                {
+                    "agent": f"{config['provider']}:{config['model']}",
+                    "role": config["role"],
+                    "answer": result.get("answer"),
+                    "citations": result.get("citations") or [],
+                    "confidence_note": result.get("confidence_note"),
+                },
+                ensure_ascii=False,
+            )
+        )
+    prompt = (
+        "You are synthesizing multiple grounded legal-assistant answers about a conveyancing matter.\n"
+        "Return one concise, accurate final answer. Prefer points supported by agreement between agents.\n"
+        "If they disagree, note the uncertainty briefly and choose the more grounded statement.\n\n"
+        f"Question:\n{question}\n\n"
+        "Candidate answers:\n"
+        + "\n".join(candidate_blocks)
+    )
+    if summary_provider == "anthropic":
+        try:
+            import anthropic
+
+            client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY"))
+            resp = client.messages.create(
+                model=summary_model,
+                max_tokens=1024,
+                system="You produce polished final answers from grounded agent outputs.",
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return "\n".join(block.text for block in resp.content if hasattr(block, "text")).strip()
+        except Exception:
+            pass
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        resp = client.chat.completions.create(
+            model=summary_model,
+            max_tokens=1024,
+            messages=[
+                {"role": "system", "content": "You produce polished final answers from grounded agent outputs."},
+                {"role": "user", "content": prompt},
+            ],
+        )
+        return (resp.choices[0].message.content or "").strip()
+    except Exception:
+        pass
+    best = max(candidates, key=lambda entry: len(entry["result"].get("citations") or []))
+    return str(best["result"].get("answer") or "")
+
+
+def _merge_citations(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    seen: set[tuple[str | None, int | None, str]] = set()
+    for result in results:
+        for citation in result.get("citations") or []:
+            if not isinstance(citation, dict):
+                continue
+            key = (
+                citation.get("file"),
+                citation.get("page"),
+                str(citation.get("quote") or "")[:120],
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(citation)
+            if len(merged) >= 6:
+                return merged
+    return merged
+
+
+def _merge_proposed_patches(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for result in results:
+        for patch in result.get("proposed_patches") or []:
+            if not isinstance(patch, dict):
+                continue
+            key = (str(patch.get("question_id") or ""), str(patch.get("new_value") or ""))
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(patch)
+    return merged
+
+
+def _merge_reasoning_steps(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    for entry in candidates:
+        agent_label = f"{entry['config']['provider']}:{entry['config']['model']}"
+        for step in entry["result"].get("reasoning_steps") or []:
+            if not isinstance(step, dict):
+                continue
+            merged.append(
+                {
+                    "tool": f"{agent_label} -> {step.get('tool')}",
+                    "input": step.get("input") or {},
+                    "summary": step.get("summary") or "",
+                }
+            )
+            if len(merged) >= 12:
+                return merged
+    return merged
+
+
+def _persist_chat_summary(target_dir: Path, question: str, answer: str) -> None:
+    try:
+        from triconvey_agent.brain_f.agent import _load_chat_state, _save_chat_state
+
+        state = _load_chat_state(target_dir)
+        _save_chat_state(target_dir, state, question, answer)
+    except Exception:
+        return
 
 
 def _ask_openai_fallback(
@@ -424,14 +820,38 @@ def _tokenize_question(text: str) -> set[str]:
     return {token for token in re.findall(r"[a-z0-9]+", text.lower()) if len(token) > 2}
 
 
+def _filename_hint_score(question: str, filename: str) -> float:
+    q = (question or "").lower()
+    name = (filename or "").lower()
+    if not q or not name:
+        return 0.0
+    score = 0.0
+    stem = name.rsplit(".", 1)[0]
+    if name in q or stem in q:
+        score += 8.0
+    filename_tokens = _tokenize_question(stem.replace("_", " ").replace("-", " "))
+    overlap = len(filename_tokens & _tokenize_question(q))
+    score += overlap * 1.5
+    if "state revenue" in q and ("state revenue" in name or "land tax" in name):
+        score += 6.0
+    if "land tax" in q and "land tax" in name:
+        score += 6.0
+    if "water" in q and "water" in name:
+        score += 4.0
+    if "council" in q and ("council" in name or "land information" in name):
+        score += 4.0
+    return score
+
+
 def _rank_corpus_chunks(question: str, chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     q_tokens = _tokenize_question(question)
     query_embedding = _embed_query(question)
     scored: list[tuple[float, dict[str, Any]]] = []
     for chunk in chunks:
         text = str(chunk.get("text") or "")
+        filename = str(chunk.get("file") or "")
         overlap = len(q_tokens & _tokenize_question(text))
-        score = float(overlap)
+        score = float(overlap + _filename_hint_score(question, filename))
         if question.lower() in text.lower():
             score += 3.0
         embedding = chunk.get("embedding")
@@ -878,6 +1298,12 @@ def _background_brain_f_build(
             return
         _build_brain_f_assets(target_dir, deferred=False, include_memory=False)
     finally:
+        print("  [Brain F] Background warmup finished")
+        key = str(target_dir.resolve())
+        with _BRAIN_F_BUILD_LOCK:
+            current = _BRAIN_F_BUILD_EVENTS.get(key)
+            if current is done:
+                _BRAIN_F_BUILD_EVENTS.pop(key, None)
         done.set()
 
 
@@ -942,6 +1368,7 @@ def _build_brain_f_assets(target_dir: Path, *, deferred: bool, include_memory: b
         if not corpus_manifest_path.exists():
             print(f"  [Brain F] Building {prefix.lower()} document corpus...")
             _write_document_corpus(doc_paths, target_dir)
+            print(f"  [Brain F] {prefix} document corpus complete")
     except Exception as exc:
         print(f"  [WARN] {prefix} document corpus build failed: {exc}")
 
@@ -958,5 +1385,6 @@ def _build_brain_f_assets(target_dir: Path, *, deferred: bool, include_memory: b
                 target_dir,
                 progress_callback=lambda message: print(f"  [Brain F] {message}"),
             )
+            print(f"  [Brain F] {prefix} document memory complete")
     except Exception as exc:
         print(f"  [WARN] {prefix} document memory build failed: {exc}")

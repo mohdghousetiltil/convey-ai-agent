@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import multiprocessing
 import os
@@ -21,6 +22,16 @@ def build_document_corpus(
     progress_callback=None,
     cache_only: bool = False,
 ) -> None:
+    if _existing_corpus_is_current(doc_paths, target_dir):
+        if progress_callback is not None:
+            progress_callback("Using existing document corpus")
+        return
+
+    if _restore_shared_corpus(doc_paths, target_dir):
+        if progress_callback is not None:
+            progress_callback("Using shared document corpus")
+        return
+
     shard_count = _desired_shard_count(len(doc_paths))
     shards = split_doc_paths(doc_paths, shard_count=shard_count)
     all_results: list[list[dict[str, Any]]] = []
@@ -39,7 +50,11 @@ def build_document_corpus(
         )
         all_results.extend(shard_results)
 
-    write_document_corpus(all_results, target_dir)
+    if progress_callback is not None:
+        progress_callback("Finalising document corpus...")
+    chunk_count = write_document_corpus(all_results, target_dir, doc_paths=doc_paths)
+    if progress_callback is not None:
+        progress_callback(f"Document corpus ready ({chunk_count} chunk(s))")
 
 
 def split_doc_paths(doc_paths: list[Path], *, shard_count: int) -> list[list[Path]]:
@@ -76,9 +91,15 @@ def build_document_corpus_shard(
         )
 
 
-def write_document_corpus(results: list[list[dict[str, Any]]], target_dir: Path) -> None:
+def write_document_corpus(
+    results: list[list[dict[str, Any]]],
+    target_dir: Path,
+    *,
+    doc_paths: list[Path],
+) -> int:
     runtime = ensure_runtime_dirs()
-    corpus_dir = runtime.temp_corpus_dir / target_dir.name
+    signature = _doc_paths_signature(doc_paths)
+    corpus_dir = _shared_corpus_dir(runtime.temp_corpus_dir, signature)
     if corpus_dir.exists():
         _remove_tree(corpus_dir)
     corpus_dir.mkdir(parents=True, exist_ok=True)
@@ -102,19 +123,16 @@ def write_document_corpus(results: list[list[dict[str, Any]]], target_dir: Path)
     corpus_text_path = corpus_dir / "document_corpus.txt"
     corpus_index_path = corpus_dir / "document_corpus_index.json"
     corpus_text_path.write_text("\n".join(lines).strip(), encoding="utf-8")
-    corpus_index_path.write_text(json.dumps(index, indent=2, ensure_ascii=False), encoding="utf-8")
-    (target_dir / "document_corpus_manifest.json").write_text(
-        json.dumps(
-            {
-                "corpus_path": str(corpus_text_path),
-                "index_path": str(corpus_index_path),
-                "expires_after_hours": 24,
-                "precomputed_embeddings": precomputed_embeddings,
-            },
-            indent=2,
-        ),
-        encoding="utf-8",
+    corpus_index_path.write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    _write_corpus_manifest(
+        target_dir,
+        corpus_path=corpus_text_path,
+        index_path=corpus_index_path,
+        precomputed_embeddings=precomputed_embeddings,
+        source_signature=signature,
+        document_count=len(doc_paths),
     )
+    return len(index)
 
 
 def build_corpus_entries_for_pdf(
@@ -215,8 +233,8 @@ def _chunk_page_text(filename: str, page_number: int, page_text: str) -> list[di
     sentences = _split_sentences(page_text)
     if not sentences:
         return []
-    max_tokens = 220
-    overlap_tokens = 50
+    max_tokens = max(180, int(os.getenv("CONVEY_BRAIN_F_CHUNK_TOKENS", "320")))
+    overlap_tokens = max(30, int(os.getenv("CONVEY_BRAIN_F_CHUNK_OVERLAP_TOKENS", "80")))
     chunks: list[dict[str, Any]] = []
     current: list[str] = []
     current_tokens = 0
@@ -249,7 +267,7 @@ def _chunk_page_text(filename: str, page_number: int, page_text: str) -> list[di
                 "chunk_id": f"{filename}:{page_number}:{chunk_index}",
                 "file": filename,
                 "page": page_number,
-                "text": text,
+                "text": f"Document: {filename}\nPage: {page_number}\n{text}",
                 "token_count": current_tokens,
             }
         )
@@ -333,6 +351,95 @@ def _desired_shard_count(doc_count: int) -> int:
     return 4
 
 
+def _existing_corpus_is_current(doc_paths: list[Path], target_dir: Path) -> bool:
+    manifest_path = target_dir / "document_corpus_manifest.json"
+    if not manifest_path.exists():
+        return False
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+
+    corpus_path = Path(str(manifest.get("corpus_path") or ""))
+    index_path = Path(str(manifest.get("index_path") or ""))
+    if not corpus_path.exists() or not index_path.exists():
+        return False
+
+    expected_signature = _doc_paths_signature(doc_paths)
+    return str(manifest.get("source_signature") or "") == expected_signature
+
+
+def _restore_shared_corpus(doc_paths: list[Path], target_dir: Path) -> bool:
+    runtime = ensure_runtime_dirs()
+    signature = _doc_paths_signature(doc_paths)
+    corpus_dir = _shared_corpus_dir(runtime.temp_corpus_dir, signature)
+    corpus_path = corpus_dir / "document_corpus.txt"
+    index_path = corpus_dir / "document_corpus_index.json"
+    if not corpus_path.exists() or not index_path.exists():
+        return False
+    _write_corpus_manifest(
+        target_dir,
+        corpus_path=corpus_path,
+        index_path=index_path,
+        precomputed_embeddings=False,
+        source_signature=signature,
+        document_count=len(doc_paths),
+    )
+    return True
+
+
+def _doc_paths_signature(doc_paths: list[Path]) -> str:
+    digest = hashlib.sha256()
+    for path in sorted(doc_paths, key=lambda item: item.name.lower()):
+        try:
+            stat = path.stat()
+        except OSError:
+            continue
+        digest.update(path.name.lower().encode("utf-8", errors="ignore"))
+        digest.update(str(int(stat.st_size)).encode("ascii"))
+        digest.update(str(int(stat.st_mtime_ns)).encode("ascii"))
+    return digest.hexdigest()
+
+
+def _uploaded_pdf_paths(target_dir: Path) -> list[Path]:
+    uploads_dir = target_dir / "uploads"
+    if not uploads_dir.exists():
+        return []
+    return sorted(
+        path for path in uploads_dir.iterdir()
+        if path.is_file() and path.suffix.lower() == ".pdf"
+    )
+
+
+def _shared_corpus_dir(temp_corpus_dir: Path, source_signature: str) -> Path:
+    return temp_corpus_dir / "_shared" / source_signature
+
+
+def _write_corpus_manifest(
+    target_dir: Path,
+    *,
+    corpus_path: Path,
+    index_path: Path,
+    precomputed_embeddings: bool,
+    source_signature: str,
+    document_count: int,
+) -> None:
+    (target_dir / "document_corpus_manifest.json").write_text(
+        json.dumps(
+            {
+                "corpus_path": str(corpus_path),
+                "index_path": str(index_path),
+                "expires_after_hours": 24,
+                "precomputed_embeddings": precomputed_embeddings,
+                "source_signature": source_signature,
+                "document_count": document_count,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
 def _build_corpus_entries_worker(doc_path: str, cache_only: bool, queue) -> None:
     path = Path(doc_path)
     entries, status = _build_corpus_entries_for_pdf_direct(path, cache_only=cache_only)
@@ -354,8 +461,8 @@ def _build_corpus_entries_for_pdf_direct(
 
 
 def _pdf_timeout_seconds() -> float:
-    raw = os.getenv("CONVEY_BRAIN_F_PDF_TIMEOUT_SECONDS", "15")
+    raw = os.getenv("CONVEY_BRAIN_F_PDF_TIMEOUT_SECONDS", "8")
     try:
         return max(0.0, float(raw))
     except ValueError:
-        return 15.0
+        return 8.0

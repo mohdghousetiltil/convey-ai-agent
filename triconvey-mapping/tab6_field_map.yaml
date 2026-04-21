@@ -1,0 +1,140 @@
+tab_name: Sec. 32 (6)
+scan_date: '2026-04-22T00:23:57.484798'
+total_fields: 6
+fields:
+  field_are_contained_in_the_attached_building_e:
+    index: 0
+    control_type: CheckBox
+    auto_id: ''
+    name: 'Are as follows:'
+    class_name: CheckBox
+    nearby_label: Are contained in the attached building energy efficiency certificate
+    position:
+      left: 604
+      top: 260
+      right: 706
+      bottom: 279
+      width: 102
+      height: 19
+    is_enabled: true
+    is_text_input_field: false
+    extraction_key: UNMAPPED
+    required: false
+    source_document: UNMAPPED
+    selectors:
+      strategy_1_auto_id: ''
+      strategy_2_name: 'Are as follows:'
+      strategy_3_label_proximity: Are contained in the attached building energy efficiency
+        certificate
+      strategy_4_field_index: 0
+    example_value: 'Are as follows:'
+    default_checked: false
+  'field_are_as_follows:':
+    index: 1
+    control_type: Edit
+    auto_id: ''
+    name: ''
+    class_name: TextBox
+    nearby_label: 'Are as follows:'
+    position:
+      left: 604
+      top: 283
+      right: 1315
+      bottom: 345
+      width: 711
+      height: 62
+    is_enabled: true
+    is_text_input_field: false
+    extraction_key: UNMAPPED
+    required: false
+    source_document: UNMAPPED
+    selectors:
+      strategy_1_auto_id: ''
+      strategy_2_name: ''
+      strategy_3_label_proximity: 'Are as follows:'
+      strategy_4_field_index: 1
+    example_value: Is attached
+  field_11_disclosure_of_energy_information:
+    index: 2
+    control_type: CheckBox
+    auto_id: ''
+    name: Are contained in the attached building energy efficiency certificate
+    class_name: CheckBox
+    nearby_label: 11. Disclosure of Energy Information
+    position:
+      left: 604
+      top: 237
+      right: 981
+      bottom: 256
+      width: 377
+      height: 19
+    is_enabled: true
+    is_text_input_field: false
+    extraction_key: UNMAPPED
+    required: false
+    source_document: UNMAPPED
+    selectors:
+      strategy_1_auto_id: ''
+      strategy_2_name: Are contained in the attached building energy efficiency certificate
+      strategy_3_label_proximity: 11. Disclosure of Energy Information
+      strategy_4_field_index: 2
+    example_value: Are contained in the attached building energy efficiency certificate
+    default_checked: false
+  field_12_due_diligence_checklist:
+    index: 4
+    control_type: Text
+    auto_id: ''
+    name: Is attached
+    class_name: TextBlock
+    nearby_label: 12. Due Diligence Checklist
+    position:
+      left: 604
+      top: 393
+      right: 662
+      bottom: 409
+      width: 58
+      height: 16
+    is_enabled: true
+    is_text_input_field: true
+    extraction_key: UNMAPPED
+    required: false
+    source_document: UNMAPPED
+    selectors:
+      strategy_1_auto_id: ''
+      strategy_2_name: Is attached
+      strategy_3_label_proximity: 12. Due Diligence Checklist
+      strategy_4_field_index: 4
+    example_value: Is attached
+  field_13_attachments:
+    index: 5
+    control_type: Edit
+    auto_id: ''
+    name: ''
+    class_name: TextBox
+    nearby_label: 13. Attachments
+    position:
+      left: 604
+      top: 451
+      right: 1315
+      bottom: 754
+      width: 711
+      height: 303
+    is_enabled: true
+    is_text_input_field: false
+    extraction_key: UNMAPPED
+    required: false
+    source_document: UNMAPPED
+    selectors:
+      strategy_1_auto_id: ''
+      strategy_2_name: ''
+      strategy_3_label_proximity: 13. Attachments
+      strategy_4_field_index: 5
+    example_value: '- Due Diligence Checklist- Register Search Statement Volume 10688
+      Folio 989 dated 13/03/2026- Plan of Subdivision 502358G dated 13/03/2026- Covenant
+      1489008 dated 13/03/2026- Owners Corporation Basic Report dated 13/03/2026-
+      Owners Corporation Certificate dated 16/04/2026- Brimbank City Council Building
+      Approval Certificate dated 18/03/2026- Brimbank City Council Land Information
+      Certificate dated 23/03/2026- Greater Western Water Encumbrance Certificate
+      dated 19/03/2026- State Revenue Office Land Tax Certificate dated 25/03/2026-
+      Detailed Property Report dated 16/04/2026- Vic Roads Certificate dated 13/03/2026-
+      EPA Certificate dated 13/03/2026'

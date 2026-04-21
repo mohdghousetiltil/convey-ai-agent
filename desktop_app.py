@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import socket
+import subprocess
 import sys
 import threading
 import time
@@ -13,7 +14,7 @@ import webview
 
 
 def _setup_desktop_database() -> None:
-    """Set up SQLite database for desktop (frozen .exe) builds.
+    r"""Set up SQLite database for desktop (frozen .exe) builds.
 
     - Creates %LOCALAPPDATA%\TriConveyAgent\ if it doesn't exist
     - Sets CONVEY_DATABASE_URL to use SQLite if frozen and not already set
@@ -102,19 +103,28 @@ def _load_env() -> None:
         from dotenv import load_dotenv
 
         if getattr(sys, "frozen", False):
-            # Frozen .exe: look for .env next to the executable
-            exe_dir = os.path.dirname(sys.executable)
-            env_path = os.path.join(exe_dir, ".env")
-            if os.path.isfile(env_path):
-                load_dotenv(env_path)
-                return
-            # Also check user data dir
+            # Installed desktop builds keep durable settings in %LOCALAPPDATA%
+            # so updates to Program Files do not wipe API keys or config.
             local_app_data = os.environ.get("LOCALAPPDATA", "")
             if local_app_data:
                 env_path = os.path.join(local_app_data, "TriConveyAgent", ".env")
                 if os.path.isfile(env_path):
                     load_dotenv(env_path)
                     return
+            # Fallback for older portable builds that kept .env next to the exe.
+            exe_dir = os.path.dirname(sys.executable)
+            env_path = os.path.join(exe_dir, ".env")
+            if os.path.isfile(env_path):
+                if local_app_data:
+                    migrated_path = os.path.join(local_app_data, "TriConveyAgent", ".env")
+                    try:
+                        Path(migrated_path).parent.mkdir(parents=True, exist_ok=True)
+                        if not os.path.isfile(migrated_path):
+                            Path(migrated_path).write_text(Path(env_path).read_text(encoding="utf-8"), encoding="utf-8")
+                    except Exception:
+                        pass
+                load_dotenv(env_path)
+                return
         # Dev mode: load from project root (default dotenv behaviour)
         load_dotenv()
     except ImportError:
@@ -157,6 +167,26 @@ class _DesktopApi:
         """
         import webbrowser
         webbrowser.open(url)
+
+    def launch_installer(self, installer_path: str) -> bool:
+        """Start an Inno Setup installer and let it replace the app in place."""
+        path = Path(installer_path)
+        if not path.is_file():
+            raise FileNotFoundError(f"Installer not found: {installer_path}")
+
+        args = [
+            str(path),
+            "/SP-",
+            "/CLOSEAPPLICATIONS",
+            "/FORCECLOSEAPPLICATIONS",
+        ]
+        subprocess.Popen(args, close_fds=True)
+        return True
+
+    def close_app(self) -> None:
+        windows = getattr(webview, "windows", [])
+        if windows:
+            windows[0].destroy()
 
 
 def _wait_for_server(host: str, port: int, timeout: float = 30.0) -> None:
