@@ -37,9 +37,14 @@ CREATE TABLE IF NOT EXISTS users (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_login_at   TIMESTAMPTZ,
+    oauth_provider  TEXT,
+    oauth_subject   TEXT,
     CONSTRAINT uq_users_client_email UNIQUE(client_id, email)
 );
 CREATE INDEX IF NOT EXISTS ix_users_client_id ON users(client_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_users_oauth
+    ON users(oauth_provider, oauth_subject)
+    WHERE oauth_provider IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS sessions (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
