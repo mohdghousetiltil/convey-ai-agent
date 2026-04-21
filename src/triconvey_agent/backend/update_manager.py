@@ -11,7 +11,7 @@ from triconvey_agent.app_meta import APP_EXECUTABLE_NAME, APP_NAME, DEFAULT_UPDA
 from triconvey_agent.backend.runtime import AppRuntimePaths, ensure_runtime_dirs, get_runtime_paths
 
 GITHUB_API_BASE = "https://api.github.com"
-INSTALLER_NAME_HINTS = ("setup", "installer", "triConveyagent".lower())
+INSTALLER_NAME_HINTS = ("setup", "installer", "triconveyagent", "conveyagent")
 
 
 def _normalize_repo(repo: str | None) -> str:
@@ -175,7 +175,7 @@ def download_update_installer(
 
     updates_dir = runtime.local_app_dir / "updates"
     updates_dir.mkdir(parents=True, exist_ok=True)
-    target = updates_dir / f"TriConveyAgent-Setup-{latest_version}.exe"
+    target = updates_dir / f"ConveyAgent-Setup-{latest_version}.exe"
     temp_target = target.with_suffix(".download")
 
     with httpx.stream("GET", download_url, follow_redirects=True, timeout=timeout_seconds, headers=_headers()) as response:

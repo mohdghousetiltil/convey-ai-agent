@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { AppInfoPayload, UpdateStatusPayload } from "@/lib/api";
+import { AppInfoPayload, CloudSyncStatusPayload, UpdateStatusPayload } from "@/lib/api";
 
 const OPENAI_MODELS = [
   { id: "gpt-4.1", label: "GPT-4.1", badge: "Latest" },
@@ -51,6 +51,7 @@ interface SettingsForm {
   updateRepository: string;
   includePrereleaseUpdates: boolean;
   autoCheckForUpdates: boolean;
+  cloudSyncEnabled: boolean;
 }
 
 interface SettingsScreenProps {
@@ -59,11 +60,14 @@ interface SettingsScreenProps {
   onSaveSettings: (settings: SettingsForm) => Promise<void> | void;
   appInfo: AppInfoPayload | null;
   updateStatus: UpdateStatusPayload | null;
+  cloudSyncStatus: CloudSyncStatusPayload | null;
   updateMessage: string;
   isCheckingUpdates: boolean;
   isInstallingUpdate: boolean;
   onCheckForUpdates: () => void;
   onInstallUpdate: () => void;
+  onBrowseTriconveyPath: () => void;
+  onOpenLocalDataDir: () => void;
 }
 
 export function SettingsScreen({
@@ -72,11 +76,14 @@ export function SettingsScreen({
   onSaveSettings,
   appInfo,
   updateStatus,
+  cloudSyncStatus,
   updateMessage,
   isCheckingUpdates,
   isInstallingUpdate,
   onCheckForUpdates,
   onInstallUpdate,
+  onBrowseTriconveyPath,
+  onOpenLocalDataDir,
 }: SettingsScreenProps) {
   const [form, setForm] = React.useState<SettingsForm>({
     anthropicApiKey: "",
@@ -198,12 +205,18 @@ export function SettingsScreen({
                     <FolderOpen className="h-4 w-4 text-emerald-600" />
                     Triconvey executable path
                   </label>
-                  <Input
-                    value={form.triconveyPath}
-                    onChange={(e) => setForm((prev) => ({ ...prev, triconveyPath: e.target.value }))}
-                    placeholder="C:\Program Files\TriConvey\TriConvey.exe"
-                    className="h-11 border-slate-200"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={form.triconveyPath}
+                      onChange={(e) => setForm((prev) => ({ ...prev, triconveyPath: e.target.value }))}
+                      placeholder="C:\Program Files\TriConvey\TriConvey.exe"
+                      className="h-11 border-slate-200"
+                    />
+                    <Button type="button" variant="outline" className="h-11 rounded-xl border-slate-200" onClick={onBrowseTriconveyPath}>
+                      Browse
+                    </Button>
+                  </div>
+                  <p className="text-xs text-slate-400">Clients can set this directly here after installing the app. No manual project-file edits are needed.</p>
                 </div>
               </CardContent>
             </Card>
@@ -343,7 +356,7 @@ export function SettingsScreen({
                     <Shield className="h-4 w-4 text-emerald-600" />
                     Security
                   </div>
-                  <p className="mt-2 text-sm text-slate-500">API keys stay local to this desktop setup.</p>
+                  <p className="mt-2 text-sm text-slate-500">API keys stay local to this desktop setup unless you choose to move them to a managed cloud backend later.</p>
                 </div>
                 <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
@@ -358,6 +371,28 @@ export function SettingsScreen({
                     Update channel
                   </div>
                   <p className="mt-2 text-sm text-slate-500">GitHub Releases for this app are managed internally and are not editable here.</p>
+                </div>
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 md:col-span-2">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <Shield className="h-4 w-4 text-sky-600" />
+                    Cloud sync
+                  </div>
+                  <p className="mt-2 text-sm text-slate-500">{cloudSyncStatus?.detail || "Cloud sync has not been checked yet."}</p>
+                  <p className="mt-2 text-xs text-slate-400">
+                    {cloudSyncStatus?.connected
+                      ? `Connected for ${cloudSyncStatus.client_slug || "this client"}`
+                      : "The app will try to connect automatically after sign-in."}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 md:col-span-2">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <FolderOpen className="h-4 w-4 text-slate-600" />
+                    Installed app storage
+                  </div>
+                  <p className="mt-2 text-sm text-slate-500">Convey Agent stores durable settings in `%LOCALAPPDATA%\\TriConveyAgent` so updates do not wipe API keys, settings, or the local database.</p>
+                  <Button type="button" variant="outline" className="mt-3 h-10 rounded-xl border-slate-200" onClick={onOpenLocalDataDir}>
+                    Open local app-data folder
+                  </Button>
                 </div>
                 <label className="flex items-center gap-3 md:col-span-2">
                   <input

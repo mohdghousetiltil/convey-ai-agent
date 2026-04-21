@@ -7,6 +7,7 @@ Mounted under `/api/auth` by the main app.
 from __future__ import annotations
 
 from datetime import timedelta
+import httpx
 from typing import Any  # noqa: F401 — used in response annotations
 from pathlib import Path
 from datetime import datetime, UTC
@@ -16,6 +17,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from triconvey_agent.app_meta import DEFAULT_CLOUD_BACKEND_URL
 from triconvey_agent.auth.deps import AuthContext, require_admin, require_auth
 from triconvey_agent.auth.oauth import (
     OAuthUserInfo,
@@ -136,6 +138,20 @@ class SelfRegisterRequest(BaseModel):
     company_name: str = Field(..., min_length=1, description="Firm or company name used to create or resolve the workspace.")
     password: str = Field(..., min_length=8)
     activation_key: str = Field(default="", description="Firm's license/activation key. Omit for single-tenant desktop installs.")
+
+
+class IssueTokenRequest(BaseModel):
+    client_slug: str = Field(..., min_length=1)
+    api_key: str = Field(..., min_length=1)
+
+
+class IssueTokenResponse(BaseModel):
+    token: str
+    expires_in: int
+
+
+class RemoteLoginRequest(BaseModel):
+    remote_access_token: str = Field(..., min_length=1)
 
 
 # ---------------------------------------------------------------------------
@@ -350,6 +366,115 @@ async def self_register(
             client_id=str(client.id),
             client_slug=client.slug,
             client_name=client.name,
+        ),
+    )
+
+
+@router.post("/issue-token", response_model=IssueTokenResponse)
+async def issue_sync_token(
+    body: IssueTokenRequest,
+    session: AsyncSession = Depends(get_session),
+) -> IssueTokenResponse:
+    """Issue a sync JWT for desktop clients posting to /api/sync/ingest.
+
+    The per-client secret is stored in clients.policy_json.sync_api_key_hash.
+    For bootstrap/legacy deployments, plaintext clients.policy_json.sync_api_key
+    is also accepted and compared after hashing.
+    """
+    client = await ClientRepo.get_by_slug(session, body.client_slug.strip())
+    if client is None or not client.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials")
+
+    policy = client.policy_json or {}
+    stored_hash = str(policy.get("sync_api_key_hash") or "").strip()
+    legacy_plain = str(policy.get("sync_api_key") or "").strip()
+    if not stored_hash and legacy_plain:
+        stored_hash = hash_token(legacy_plain)
+    if not stored_hash and client.license_key:
+        stored_hash = hash_token(client.license_key)
+
+    if not stored_hash or stored_hash != hash_token(body.api_key):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials")
+
+    ttl = timedelta(hours=24)
+    sync_user_id = uuid4()
+    token, _ = create_access_token(
+        user_id=sync_user_id,
+        client_id=client.id,
+        role="sync_client",
+        ttl=ttl,
+    )
+    return IssueTokenResponse(token=token, expires_in=int(ttl.total_seconds()))
+
+
+@router.post("/remote-login", response_model=LoginResponse)
+async def remote_login(
+    body: RemoteLoginRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+) -> LoginResponse:
+    """Validate a Railway auth token, then create a local desktop session."""
+    remote_whoami_url = f"{DEFAULT_CLOUD_BACKEND_URL}/api/auth/whoami"
+    try:
+        async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
+            response = await client.get(
+                remote_whoami_url,
+                headers={"Authorization": f"Bearer {body.remote_access_token}"},
+            )
+            response.raise_for_status()
+            remote_user = response.json()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Remote login could not be validated: {exc}",
+        ) from exc
+
+    client_slug = str(remote_user.get("client_slug") or "").strip()
+    client_name = str(remote_user.get("client_name") or client_slug or "Convey Client").strip()
+    email = str(remote_user.get("email") or "").strip().lower()
+    name = str(remote_user.get("name") or email or "User").strip()
+    role = str(remote_user.get("role") or "reviewer").strip()
+    remote_user_id = str(remote_user.get("user_id") or email).strip()
+
+    if not client_slug or not email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Remote login response was incomplete.")
+
+    local_client = await ClientRepo.get_by_slug(session, client_slug)
+    if local_client is None:
+        local_client = await ClientRepo.ensure_local(
+            session,
+            slug=client_slug,
+            name=client_name,
+        )
+
+    local_user = await UserRepo.upsert_oauth_user(
+        session,
+        client_id=local_client.id,
+        oauth_provider="railway",
+        oauth_subject=remote_user_id,
+        email=email,
+        name=name,
+        default_role=role if role in {"admin", "reviewer", "viewer"} else "reviewer",
+    )
+    if role in {"admin", "reviewer", "viewer"} and local_user.role != role:
+        local_user.role = role
+        local_user.updated_at = datetime.now(UTC)
+        await session.flush()
+
+    token = await _mint_session(session, request=request, user=local_user, client=local_client)
+    await UserRepo.mark_login(session, local_user.id)
+
+    return LoginResponse(
+        access_token=token,
+        expires_in_seconds=JWT_TTL_MINUTES * 60,
+        user=WhoAmI(
+            user_id=str(local_user.id),
+            email=local_user.email,
+            name=local_user.name,
+            role=local_user.role,
+            client_id=str(local_client.id),
+            client_slug=local_client.slug,
+            client_name=local_client.name,
         ),
     )
 

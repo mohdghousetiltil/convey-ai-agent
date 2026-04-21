@@ -14,11 +14,14 @@ import {
   applyAnswerPatches,
   AnswerUpdatePayload,
   AutofillJobPayload,
+  bootstrapCloudSync,
   cancelAutofillJob,
   checkForUpdates,
+  CloudSyncStatusPayload,
   continueAutofillJob,
   downloadUpdateInstaller,
   getAppInfo,
+  getCloudSyncStatus,
   getSettings,
   getAutofillJob,
   getRun,
@@ -45,6 +48,7 @@ type LocalSettingsForm = {
   updateRepository: string;
   includePrereleaseUpdates: boolean;
   autoCheckForUpdates: boolean;
+  cloudSyncEnabled: boolean;
 };
 
 type DesktopBridge = {
@@ -52,6 +56,8 @@ type DesktopBridge = {
     api?: {
       launch_installer?: (installerPath: string) => Promise<boolean> | boolean;
       close_app?: () => void;
+      pick_triconvey_executable?: () => Promise<string | null> | string | null;
+      open_local_data_dir?: () => Promise<boolean> | boolean;
     };
   };
 };
@@ -105,7 +111,7 @@ function UpdateBanner({
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Update Available</p>
-          <h3 className="mt-1 text-lg font-bold text-slate-900">TriConvey Agent {update.latest_version ?? "latest"}</h3>
+          <h3 className="mt-1 text-lg font-bold text-slate-900">Convey Agent {update.latest_version ?? "latest"}</h3>
           <p className="mt-1 text-sm text-slate-600">
             You are on {update.current_version}. A newer installer is ready to download and replace this app.
           </p>
@@ -145,6 +151,7 @@ function FirstRunSetupModal({
   onChange,
   onSave,
   onLater,
+  onBrowseTriconveyPath,
 }: {
   open: boolean;
   settings: LocalSettingsForm;
@@ -152,6 +159,7 @@ function FirstRunSetupModal({
   onChange: (next: LocalSettingsForm) => void;
   onSave: () => void;
   onLater: () => void;
+  onBrowseTriconveyPath: () => void;
 }) {
   if (!open) return null;
 
@@ -264,12 +272,22 @@ function FirstRunSetupModal({
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Convey executable path</label>
-            <input
-              value={settings.triconveyPath}
-              onChange={(e) => onChange({ ...settings, triconveyPath: e.target.value })}
-              placeholder="C:\\Program Files\\TriConvey\\TriConvey.exe"
-              className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
-            />
+            <div className="flex gap-2">
+              <input
+                value={settings.triconveyPath}
+                onChange={(e) => onChange({ ...settings, triconveyPath: e.target.value })}
+                placeholder="C:\\Program Files\\TriConvey\\TriConvey.exe"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
+              />
+              <button
+                type="button"
+                onClick={onBrowseTriconveyPath}
+                className="rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                Browse
+              </button>
+            </div>
+            <p className="text-xs text-slate-400">No `.env` editing needed. Convey Agent saves this setup for the installed desktop app.</p>
           </div>
         </div>
 
@@ -326,6 +344,7 @@ function AppContent() {
     updateRepository: "",
     includePrereleaseUpdates: false,
     autoCheckForUpdates: true,
+    cloudSyncEnabled: true,
   });
   const [view, setView] = useState<ViewState>("upload");
   const [run, setRun] = useState<ReviewRunPayload | null>(null);
@@ -346,6 +365,7 @@ function AppContent() {
   const [installingUpdate, setInstallingUpdate] = useState(false);
   const [updateError, setUpdateError] = useState("");
   const [dismissedUpdateVersion, setDismissedUpdateVersion] = useState<string | null>(null);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<CloudSyncStatusPayload | null>(null);
 
   // Fetch settings once the user is authenticated
   useEffect(() => {
@@ -353,6 +373,7 @@ function AppContent() {
       setSettingsLoaded(false);
       setShowSetupModal(false);
       setAppInfo(null);
+      setCloudSyncStatus(null);
       return;
     }
     void (async () => {
@@ -362,7 +383,7 @@ function AppContent() {
         try {
           setAppInfo(await getAppInfo());
         } catch {
-          setAppInfo({ name: "TriConvey Agent", publisher: "TriConvey Agent", version: "0.1.0" });
+          setAppInfo({ name: "Convey Agent", publisher: "Convey Agent", version: "0.1.0" });
         }
         const seen = localStorage.getItem(firstRunKey(user.user_id)) === "true";
         const dismissed = sessionStorage.getItem(sessionDismissKey(user.user_id)) === "true";
@@ -384,6 +405,38 @@ function AppContent() {
     }
     void handleCheckForUpdates(false);
   }, [settingsLoaded, user, settings.autoCheckForUpdates, checkingUpdates]);
+
+  useEffect(() => {
+    if (!settingsLoaded || !user) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const status = await bootstrapCloudSync();
+        if (!cancelled) {
+          setCloudSyncStatus(status);
+        }
+      } catch {
+        try {
+          const status = await getCloudSyncStatus();
+          if (!cancelled) {
+            setCloudSyncStatus(status);
+          }
+        } catch {
+          if (!cancelled) {
+            setCloudSyncStatus(null);
+          }
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [settingsLoaded, user]);
 
   useEffect(() => {
     if (!updateStatus?.latest_version) {
@@ -683,6 +736,37 @@ function AppContent() {
     setView("main");
   };
 
+  const handleBrowseTriconveyPath = async () => {
+    const bridge = window as unknown as DesktopBridge;
+    const pickExecutable = bridge.pywebview?.api?.pick_triconvey_executable;
+    if (!pickExecutable) {
+      setUpdateError("Desktop path browsing is only available in the installed Windows app.");
+      return;
+    }
+    try {
+      const selected = await Promise.resolve(pickExecutable());
+      if (selected) {
+        setSettings((current) => ({ ...current, triconveyPath: selected }));
+      }
+    } catch (error) {
+      setUpdateError(error instanceof Error ? error.message : "Could not browse for the Convey executable.");
+    }
+  };
+
+  const handleOpenLocalDataDir = async () => {
+    const bridge = window as unknown as DesktopBridge;
+    const openLocalDataDir = bridge.pywebview?.api?.open_local_data_dir;
+    if (!openLocalDataDir) {
+      setUpdateError("Open local data folder is only available in the installed Windows app.");
+      return;
+    }
+    try {
+      await Promise.resolve(openLocalDataDir());
+    } catch (error) {
+      setUpdateError(error instanceof Error ? error.message : "Could not open the local app-data folder.");
+    }
+  };
+
   const handleCheckForUpdates = async (manual = true) => {
     if (checkingUpdates) return;
     setCheckingUpdates(true);
@@ -782,6 +866,7 @@ function AppContent() {
             onChange={setSettings}
             onSave={handleSaveSetupModal}
             onLater={handleLaterSetup}
+            onBrowseTriconveyPath={() => void handleBrowseTriconveyPath()}
           />
           {showUpdateBanner && updateStatus ? (
             <UpdateBanner
@@ -824,6 +909,7 @@ function AppContent() {
                 onChange={setSettings}
                 onSave={handleSaveSetupModal}
                 onLater={handleLaterSetup}
+                onBrowseTriconveyPath={() => void handleBrowseTriconveyPath()}
               />
               {showUpdateBanner && updateStatus ? (
                 <UpdateBanner
@@ -850,6 +936,7 @@ function AppContent() {
               onChange={setSettings}
               onSave={handleSaveSetupModal}
               onLater={handleLaterSetup}
+              onBrowseTriconveyPath={() => void handleBrowseTriconveyPath()}
             />
             {showUpdateBanner && updateStatus ? (
               <UpdateBanner
@@ -909,6 +996,7 @@ function AppContent() {
             onChange={setSettings}
             onSave={handleSaveSetupModal}
             onLater={handleLaterSetup}
+            onBrowseTriconveyPath={() => void handleBrowseTriconveyPath()}
           />
           {showUpdateBanner && updateStatus ? (
             <UpdateBanner
@@ -929,11 +1017,14 @@ function AppContent() {
           onSaveSettings={handleSaveSettings}
           appInfo={appInfo}
           updateStatus={updateStatus}
+          cloudSyncStatus={cloudSyncStatus}
           updateMessage={updateError}
           isCheckingUpdates={checkingUpdates}
           isInstallingUpdate={installingUpdate}
           onCheckForUpdates={() => void handleCheckForUpdates(true)}
           onInstallUpdate={() => void handleDownloadAndInstallUpdate()}
+          onBrowseTriconveyPath={() => void handleBrowseTriconveyPath()}
+          onOpenLocalDataDir={() => void handleOpenLocalDataDir()}
         />
       );
     case "profile":

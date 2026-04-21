@@ -1,11 +1,11 @@
 #ifndef MyAppName
-  #define MyAppName "TriConvey Agent"
+  #define MyAppName "Convey Agent"
 #endif
 #ifndef MyAppVersion
   #define MyAppVersion "0.1.0"
 #endif
 #ifndef MyAppPublisher
-  #define MyAppPublisher "TriConvey Agent"
+  #define MyAppPublisher "Convey Agent"
 #endif
 #ifndef MyAppExeName
   #define MyAppExeName "TriConveyAgent.exe"
@@ -24,9 +24,9 @@ AppPublisherURL={#MyAppPublisherURL}
 AppSupportURL={#MyAppPublisherURL}
 AppUpdatesURL={#MyAppPublisherURL}
 DefaultDirName={autopf}\TriConveyAgent
-DefaultGroupName=TriConvey Agent
+DefaultGroupName=Convey Agent
 DisableProgramGroupPage=yes
-OutputBaseFilename=TriConveyAgent-Setup-{#MyAppVersion}
+OutputBaseFilename=ConveyAgent-Setup-{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -60,8 +60,8 @@ Source: "..\.env.example"; DestDir: "{app}"; DestName: ".env.example"; Flags: ig
 Name: "{localappdata}\TriConveyAgent"
 
 [Icons]
-Name: "{group}\TriConvey Agent"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\TriConvey Agent"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{group}\Convey Agent"; Filename: "{app}\{#MyAppExeName}"
+Name: "{autodesktop}\Convey Agent"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Launch TriConvey Agent"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Launch Convey Agent"; Flags: nowait postinstall skipifsilent

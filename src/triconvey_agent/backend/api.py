@@ -15,6 +15,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
+import httpx
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,11 +24,24 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from triconvey_agent.app_meta import APP_NAME, APP_PUBLISHER, get_app_version
+from triconvey_agent.app_meta import (
+    APP_NAME,
+    APP_PUBLISHER,
+    DEFAULT_CLOUD_BACKEND_URL,
+    DEFAULT_CLOUD_SYNC_URL,
+    get_app_version,
+)
 from triconvey_agent.auth.deps import AuthContext, require_auth
 from triconvey_agent.backend.auth_api import router as auth_router
+from triconvey_agent.backend.sync_api import router as sync_router
 from triconvey_agent.backend.runtime import ensure_runtime_dirs, get_runtime_paths
-from triconvey_agent.backend.settings import apply_local_settings_env, load_local_settings, save_local_settings
+from triconvey_agent.backend.settings import (
+    apply_local_settings_env,
+    load_local_settings,
+    load_runtime_env_values,
+    save_local_settings,
+    save_runtime_env_values,
+)
 from triconvey_agent.backend.update_manager import check_for_updates, download_update_installer
 from triconvey_agent.backend.service import (
     ask_run_question,
@@ -125,6 +139,7 @@ class LocalSettingsPayload(BaseModel):
     updateRepository: str = ""
     includePrereleaseUpdates: bool = False
     autoCheckForUpdates: bool = True
+    cloudSyncEnabled: bool = True
 
 
 class UpdateCheckRequest(BaseModel):
@@ -137,7 +152,55 @@ class UpdateInstallRequest(BaseModel):
     update_repository: str | None = None
 
 
+class CloudSyncStatusPayload(BaseModel):
+    enabled: bool = True
+    connected: bool = False
+    configured: bool = False
+    cloud_sync_url: str = DEFAULT_CLOUD_SYNC_URL
+    client_slug: str | None = None
+    worker_running: bool = False
+    pending_sync_events: int | None = None
+    last_synced_at: str | None = None
+    detail: str = ""
+
+
 _sync_worker_ref: dict[str, SyncWorker | None] = {"worker": None}
+
+
+async def _ensure_sync_worker_running(client_id: _uuid.UUID) -> bool:
+    worker = _sync_worker_ref.get("worker")
+    if worker is not None:
+        return True
+    started = await start_sync_worker(client_id)
+    _sync_worker_ref["worker"] = started
+    return started is not None
+
+
+async def _stop_sync_worker() -> None:
+    worker = _sync_worker_ref.get("worker")
+    if worker is not None:
+        await worker.stop()
+        _sync_worker_ref["worker"] = None
+
+
+async def _cloud_sync_status_for_client(
+    session: AsyncSession,
+    client: Any,
+) -> dict[str, Any]:
+    env_values = load_runtime_env_values()
+    configured = bool(env_values.get("CONVEY_CLOUD_SYNC_TOKEN")) and bool(env_values.get("CONVEY_CLOUD_SYNC_URL"))
+    pending_sync = await SyncQueueRepo.pending_count(session, client.id)
+    return {
+        "enabled": True,
+        "connected": configured and (_sync_worker_ref.get("worker") is not None),
+        "configured": configured,
+        "cloud_sync_url": env_values.get("CONVEY_CLOUD_SYNC_URL") or DEFAULT_CLOUD_SYNC_URL,
+        "client_slug": client.slug,
+        "worker_running": _sync_worker_ref.get("worker") is not None,
+        "pending_sync_events": pending_sync,
+        "last_synced_at": client.last_synced_at.isoformat() if client.last_synced_at else None,
+        "detail": "Cloud sync connected." if configured else "Cloud sync is not connected yet.",
+    }
 
 
 @asynccontextmanager
@@ -189,6 +252,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(auth_router)
+app.include_router(sync_router)
 
 _ui_dist_dir = get_runtime_paths().ui_dist_dir
 _autofill_jobs: dict[str, AutofillJobRecord] = {}
@@ -213,6 +277,25 @@ def _triconvey_import_debug(event: str, **fields: Any) -> None:
             fh.write(" | ".join(parts) + "\n")
     except Exception:
         pass
+
+
+@app.get("/api/app/runtime-debug")
+def get_runtime_debug() -> dict[str, Any]:
+    runtime = ensure_runtime_dirs()
+    env_values = load_runtime_env_values()
+    return {
+        "frozen": bool(getattr(os, "frozen", False) or getattr(__import__("sys"), "frozen", False)),
+        "runtime_env_file": str(runtime.env_file),
+        "runtime_env_exists": runtime.env_file.exists(),
+        "program_files_env_exists": Path(os.path.dirname(__import__("sys").executable) if getattr(__import__("sys"), "frozen", False) else ".").joinpath(".env").exists(),
+        "oauth": {
+            "microsoft_client_id_loaded": bool(env_values.get("MICROSOFT_CLIENT_ID") or os.getenv("MICROSOFT_CLIENT_ID")),
+            "microsoft_client_secret_loaded": bool(env_values.get("MICROSOFT_CLIENT_SECRET") or os.getenv("MICROSOFT_CLIENT_SECRET")),
+            "microsoft_tenant_id_loaded": bool(env_values.get("MICROSOFT_TENANT_ID") or os.getenv("MICROSOFT_TENANT_ID")),
+            "google_client_id_loaded": bool(env_values.get("GOOGLE_CLIENT_ID") or os.getenv("GOOGLE_CLIENT_ID")),
+            "google_client_secret_loaded": bool(env_values.get("GOOGLE_CLIENT_SECRET") or os.getenv("GOOGLE_CLIENT_SECRET")),
+        },
+    }
 
 
 @app.get("/api/health")
@@ -273,6 +356,72 @@ def get_app_info(ctx: AuthContext = Depends(require_auth)) -> dict[str, Any]:
         "publisher": APP_PUBLISHER,
         "version": get_app_version(),
     }
+
+
+@app.get("/api/cloud-sync/status", response_model=CloudSyncStatusPayload)
+async def get_cloud_sync_status(
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> CloudSyncStatusPayload:
+    return CloudSyncStatusPayload(**await _cloud_sync_status_for_client(session, ctx.client))
+
+
+@app.post("/api/cloud-sync/bootstrap", response_model=CloudSyncStatusPayload)
+async def bootstrap_cloud_sync(
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> CloudSyncStatusPayload:
+    settings = load_local_settings(user_id=str(ctx.user.id))
+    current_status = await _cloud_sync_status_for_client(session, ctx.client)
+    if current_status["configured"] and current_status["worker_running"]:
+        return CloudSyncStatusPayload(**current_status)
+    if current_status["configured"] and not current_status["worker_running"]:
+        await _ensure_sync_worker_running(ctx.client.id)
+        return CloudSyncStatusPayload(**await _cloud_sync_status_for_client(session, ctx.client))
+
+    if not bool(settings.get("cloudSyncEnabled", True)):
+        await _stop_sync_worker()
+        save_runtime_env_values({"CONVEY_CLOUD_SYNC_TOKEN": ""})
+        status_payload = await _cloud_sync_status_for_client(session, ctx.client)
+        status_payload["detail"] = "Cloud sync is disabled for this desktop install."
+        return CloudSyncStatusPayload(**status_payload)
+
+    activation_key = (ctx.client.license_key or "").strip()
+    if not activation_key:
+        status_payload = await _cloud_sync_status_for_client(session, ctx.client)
+        status_payload["detail"] = "No activation key is available for automatic cloud sync bootstrap."
+        return CloudSyncStatusPayload(**status_payload)
+
+    issue_token_url = f"{DEFAULT_CLOUD_BACKEND_URL}/api/auth/issue-token"
+    try:
+        async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
+            response = await client.post(
+                issue_token_url,
+                json={"client_slug": ctx.client.slug, "api_key": activation_key},
+            )
+            response.raise_for_status()
+            payload = response.json()
+        token = str(payload.get("token") or "").strip()
+        if not token:
+            raise ValueError("Cloud sync token was not returned by the Railway backend.")
+    except Exception as exc:
+        status_payload = await _cloud_sync_status_for_client(session, ctx.client)
+        status_payload["detail"] = f"Could not connect cloud sync: {exc}"
+        return CloudSyncStatusPayload(**status_payload)
+
+    save_runtime_env_values(
+        {
+            "CONVEY_CLOUD_SYNC_URL": DEFAULT_CLOUD_SYNC_URL,
+            "CONVEY_CLOUD_SYNC_TOKEN": token,
+            "CONVEY_CLIENT_SLUG": ctx.client.slug,
+        }
+    )
+    apply_local_settings_env()
+    await _ensure_sync_worker_running(ctx.client.id)
+
+    status_payload = await _cloud_sync_status_for_client(session, ctx.client)
+    status_payload["detail"] = "Cloud sync connected."
+    return CloudSyncStatusPayload(**status_payload)
 
 
 @app.post("/api/app/update/check")

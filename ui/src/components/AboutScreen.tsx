@@ -60,7 +60,7 @@ export function AboutScreen({
   onInstallUpdate,
 }: AboutScreenProps) {
   const version = appInfo?.version || "0.1.0";
-  const publisher = appInfo?.publisher || "TriConvey Agent";
+  const publisher = appInfo?.publisher || "Convey Agent";
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">

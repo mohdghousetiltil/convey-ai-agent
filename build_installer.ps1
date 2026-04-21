@@ -78,7 +78,7 @@ $publisher = if ($env:TRICONVEY_APP_PUBLISHER) { $env:TRICONVEY_APP_PUBLISHER } 
 $publisherUrl = if ($env:TRICONVEY_APP_PUBLISHER_URL) { $env:TRICONVEY_APP_PUBLISHER_URL } else { "https://github.com" }
 
 Write-Host ""
-Write-Host "=== Building TriConvey Agent Installer ===" -ForegroundColor Cyan
+Write-Host "=== Building Convey Agent Installer ===" -ForegroundColor Cyan
 Write-Host "  Version: $projectVersion"
 Write-Host ""
 
@@ -103,9 +103,9 @@ if ($LASTEXITCODE -ne 0) {
   throw "Installer build failed with exit code $LASTEXITCODE"
 }
 
-$installerPath = Join-Path $installerOutDir "TriConveyAgent-Setup-$projectVersion.exe"
+$installerPath = Join-Path $installerOutDir "ConveyAgent-Setup-$projectVersion.exe"
 if (-not (Test-Path $installerPath)) {
-  $installerPath = Get-ChildItem -Path $installerOutDir -Filter "TriConveyAgent-Setup-*.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1 | ForEach-Object { $_.FullName }
+  $installerPath = Get-ChildItem -Path $installerOutDir -Filter "ConveyAgent-Setup-*.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1 | ForEach-Object { $_.FullName }
 }
 if (-not $installerPath) {
   throw "Installer build finished but no installer executable was found in $installerOutDir"

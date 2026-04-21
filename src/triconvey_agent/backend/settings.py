@@ -20,6 +20,7 @@ DEFAULT_LOCAL_SETTINGS = {
     "updateRepository": DEFAULT_UPDATE_REPOSITORY,
     "includePrereleaseUpdates": False,
     "autoCheckForUpdates": True,
+    "cloudSyncEnabled": True,
 }
 
 
@@ -65,6 +66,29 @@ def apply_local_settings_env(paths: AppRuntimePaths | None = None) -> None:
     if anthropic_key:
         os.environ["ANTHROPIC_API_KEY"] = anthropic_key
 
+    cloud_sync_url = env_values.get("CONVEY_CLOUD_SYNC_URL", "").strip()
+    if cloud_sync_url:
+        os.environ["CONVEY_CLOUD_SYNC_URL"] = cloud_sync_url
+
+    cloud_sync_token = env_values.get("CONVEY_CLOUD_SYNC_TOKEN", "").strip()
+    if cloud_sync_token:
+        os.environ["CONVEY_CLOUD_SYNC_TOKEN"] = cloud_sync_token
+
+    client_slug = env_values.get("CONVEY_CLIENT_SLUG", "").strip()
+    if client_slug:
+        os.environ["CONVEY_CLIENT_SLUG"] = client_slug
+
+    for key in (
+        "MICROSOFT_CLIENT_ID",
+        "MICROSOFT_CLIENT_SECRET",
+        "MICROSOFT_TENANT_ID",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+    ):
+        value = env_values.get(key, "").strip()
+        if value:
+            os.environ[key] = value
+
 
 def load_local_settings(paths: AppRuntimePaths | None = None, user_id: str | None = None) -> dict[str, Any]:
     runtime = ensure_runtime_dirs(paths or get_runtime_paths())
@@ -83,6 +107,7 @@ def load_local_settings(paths: AppRuntimePaths | None = None, user_id: str | Non
                 payload["updateRepository"] = DEFAULT_UPDATE_REPOSITORY
                 payload["includePrereleaseUpdates"] = bool(raw.get("includePrereleaseUpdates", payload["includePrereleaseUpdates"]))
                 payload["autoCheckForUpdates"] = bool(raw.get("autoCheckForUpdates", payload["autoCheckForUpdates"]))
+                payload["cloudSyncEnabled"] = bool(raw.get("cloudSyncEnabled", payload["cloudSyncEnabled"]))
                 preferred = raw.get("preferredAutofillFields")
                 if isinstance(preferred, list):
                     payload["preferredAutofillFields"] = [str(item) for item in preferred if str(item).strip()]
@@ -136,6 +161,7 @@ def save_local_settings(
         "updateRepository": DEFAULT_UPDATE_REPOSITORY,
         "includePrereleaseUpdates": bool(settings.get("includePrereleaseUpdates", current.get("includePrereleaseUpdates", DEFAULT_LOCAL_SETTINGS["includePrereleaseUpdates"]))),
         "autoCheckForUpdates": bool(settings.get("autoCheckForUpdates", current.get("autoCheckForUpdates", DEFAULT_LOCAL_SETTINGS["autoCheckForUpdates"]))),
+        "cloudSyncEnabled": bool(settings.get("cloudSyncEnabled", current.get("cloudSyncEnabled", DEFAULT_LOCAL_SETTINGS["cloudSyncEnabled"]))),
         "preferredAutofillFields": [
             str(item)
             for item in (settings.get("preferredAutofillFields") or current.get("preferredAutofillFields") or [])
@@ -158,6 +184,7 @@ def save_local_settings(
                 "updateRepository": merged["updateRepository"],
                 "includePrereleaseUpdates": merged["includePrereleaseUpdates"],
                 "autoCheckForUpdates": merged["autoCheckForUpdates"],
+                "cloudSyncEnabled": merged["cloudSyncEnabled"],
                 "preferredAutofillFields": raw_settings.get("preferredAutofillFields", []),
                 "preferredAutofillFieldsByUser": per_user,
             },
@@ -165,13 +192,10 @@ def save_local_settings(
         ),
         encoding="utf-8",
     )
-    _write_env_file(
-        runtime.env_file,
-        {
-            "OPENAI_API_KEY": merged["openAiApiKey"],
-            "ANTHROPIC_API_KEY": merged["anthropicApiKey"],
-        },
-    )
+    env_values = _parse_env_file(runtime.env_file)
+    env_values["OPENAI_API_KEY"] = merged["openAiApiKey"]
+    env_values["ANTHROPIC_API_KEY"] = merged["anthropicApiKey"]
+    _write_env_file(runtime.env_file, env_values)
 
     if merged["openAiApiKey"]:
         os.environ["OPENAI_API_KEY"] = merged["openAiApiKey"]
@@ -184,3 +208,26 @@ def save_local_settings(
         os.environ.pop("ANTHROPIC_API_KEY", None)
 
     return merged
+
+
+def load_runtime_env_values(paths: AppRuntimePaths | None = None) -> dict[str, str]:
+    runtime = ensure_runtime_dirs(paths or get_runtime_paths())
+    return _parse_env_file(runtime.env_file)
+
+
+def save_runtime_env_values(
+    values: dict[str, str | None],
+    paths: AppRuntimePaths | None = None,
+) -> dict[str, str]:
+    runtime = ensure_runtime_dirs(paths or get_runtime_paths())
+    existing = _parse_env_file(runtime.env_file)
+    for key, value in values.items():
+        text = str(value or "").strip()
+        if text:
+            existing[key] = text
+            os.environ[key] = text
+        else:
+            existing.pop(key, None)
+            os.environ.pop(key, None)
+    _write_env_file(runtime.env_file, existing)
+    return existing

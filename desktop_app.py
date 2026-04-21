@@ -168,6 +168,38 @@ class _DesktopApi:
         import webbrowser
         webbrowser.open(url)
 
+    def _window(self):
+        windows = getattr(webview, "windows", [])
+        return windows[0] if windows else None
+
+    def pick_triconvey_executable(self) -> str | None:
+        """Let non-technical users browse to the Convey desktop executable."""
+        window = self._window()
+        if window is None:
+            return None
+
+        chosen = window.create_file_dialog(
+            webview.OPEN_DIALOG,
+            allow_multiple=False,
+            file_types=("Executable files (*.exe)", "All files (*.*)"),
+        )
+        if not chosen:
+            return None
+        if isinstance(chosen, (list, tuple)):
+            return str(chosen[0]) if chosen else None
+        return str(chosen)
+
+    def open_local_data_dir(self) -> bool:
+        """Open the durable local app-data folder used by the installed app."""
+        from triconvey_agent.backend.runtime import ensure_runtime_dirs, get_runtime_paths
+
+        runtime = ensure_runtime_dirs(get_runtime_paths())
+        target = runtime.local_app_dir
+        if not target.exists():
+            return False
+        subprocess.Popen(["explorer.exe", str(target)], close_fds=True)
+        return True
+
     def launch_installer(self, installer_path: str) -> bool:
         """Start an Inno Setup installer and let it replace the app in place."""
         path = Path(installer_path)

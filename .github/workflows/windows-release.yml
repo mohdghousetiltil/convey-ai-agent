@@ -10,7 +10,7 @@ jobs:
   build-release:
     runs-on: windows-latest
     env:
-      TRICONVEY_APP_PUBLISHER: ${{ vars.TRICONVEY_APP_PUBLISHER || 'TriConvey Agent' }}
+      TRICONVEY_APP_PUBLISHER: ${{ vars.TRICONVEY_APP_PUBLISHER || 'Convey Agent' }}
       TRICONVEY_APP_PUBLISHER_URL: ${{ vars.TRICONVEY_APP_PUBLISHER_URL || format('https://github.com/{0}', github.repository) }}
     steps:
       - name: Checkout

@@ -131,3 +131,20 @@ async def require_admin(ctx: AuthContext = Depends(require_auth)) -> AuthContext
 async def require_client(ctx: AuthContext = Depends(require_auth)) -> Client:
     """Shortcut when a route only cares about the tenant, not the user."""
     return ctx.client
+
+
+async def require_api_token(
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    token = _extract_bearer(authorization)
+    try:
+        claims = verify_token(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
+
+    if claims.get("role") != "sync_client":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Sync token required.",
+        )
+    return claims

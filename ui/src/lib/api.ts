@@ -185,12 +185,25 @@ export interface LocalSettingsPayload {
   updateRepository: string;
   includePrereleaseUpdates: boolean;
   autoCheckForUpdates: boolean;
+  cloudSyncEnabled: boolean;
 }
 
 export interface AppInfoPayload {
   name: string;
   publisher: string;
   version: string;
+}
+
+export interface CloudSyncStatusPayload {
+  enabled: boolean;
+  connected: boolean;
+  configured: boolean;
+  cloud_sync_url: string;
+  client_slug?: string | null;
+  worker_running: boolean;
+  pending_sync_events?: number | null;
+  last_synced_at?: string | null;
+  detail: string;
 }
 
 export interface UpdateStatusPayload {
@@ -257,7 +270,27 @@ function resolveApiBase(): string {
 }
 
 export const API_BASE = resolveApiBase();
+const REMOTE_AUTH_BASE = ((import.meta.env.VITE_REMOTE_AUTH_BASE_URL as string | undefined) ?? "https://convey-ai-agent-production.up.railway.app/api").replace(/\/$/, "");
 const OAUTH_PENDING_KEY = "convey_pending_oauth";
+
+async function remoteAuthRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetch(`${REMOTE_AUTH_BASE}${path}`, init);
+  if (!response.ok) {
+    let message = response.statusText;
+    try {
+      const payload = await response.json();
+      message = (payload as Record<string, string>).detail ?? (payload as Record<string, string>).message ?? message;
+    } catch {
+      try {
+        message = await response.text();
+      } catch {
+        // keep default
+      }
+    }
+    throw new Error(message || "Remote auth request failed.");
+  }
+  return response.json() as Promise<T>;
+}
 
 function getStorage(): Storage | null {
   if (typeof window === "undefined") return null;
@@ -449,7 +482,7 @@ export async function whoami(): Promise<AuthUser> {
 }
 
 export async function getOAuthProviders(): Promise<OAuthProviders> {
-  return apiRequest<OAuthProviders>("/auth/oauth/providers");
+  return remoteAuthRequest<OAuthProviders>("/auth/oauth/providers");
 }
 
 async function getOAuthStart(
@@ -462,7 +495,7 @@ async function getOAuthStart(
     params.set("opener_origin", window.location.origin);
   }
   const suffix = params.toString() ? `?${params.toString()}` : "";
-  return apiRequest<{ auth_url: string; provider: string; poll_key: string }>(
+  return remoteAuthRequest<{ auth_url: string; provider: string; poll_key: string }>(
     `/auth/oauth/${provider}/start${suffix}`,
   );
 }
@@ -471,7 +504,7 @@ async function pollOAuthResult(
   provider: "google" | "microsoft",
   pollKey: string,
 ): Promise<LoginPayload | null> {
-  const result = await apiRequest<{ ready: boolean; token?: string; user?: AuthUser }>(
+  const result = await remoteAuthRequest<{ ready: boolean; token?: string; user?: AuthUser }>(
     `/auth/oauth/${provider}/poll?key=${encodeURIComponent(pollKey)}`,
   );
   if (!result.ready || !result.token || !result.user) return null;
@@ -481,6 +514,16 @@ async function pollOAuthResult(
     expires_in_seconds: 3600,
     user: result.user,
   };
+}
+
+async function acceptRemoteLogin(remoteAccessToken: string): Promise<LoginPayload> {
+  const payload = await apiRequest<LoginPayload>("/auth/remote-login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ remote_access_token: remoteAccessToken }),
+  });
+  saveAuth(payload.access_token, payload.user);
+  return payload;
 }
 
 async function waitForAuthReady(payload: LoginPayload): Promise<boolean> {
@@ -530,11 +573,11 @@ export async function resumePendingOAuthLogin(): Promise<LoginPayload | null> {
       }
     }
     if (!payload) return null;
-    const ready = await waitForAuthReady(payload);
+    const localPayload = await acceptRemoteLogin(payload.access_token);
+    const ready = await waitForAuthReady(localPayload);
     if (!ready) return null;
-    saveAuth(payload.access_token, payload.user);
     clearPendingOAuth();
-    return payload;
+    return localPayload;
   } catch {
     return null;
   }
@@ -566,7 +609,6 @@ export function loginWithOAuth(provider: "google" | "microsoft"): Promise<LoginP
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("message", onMessage);
       try { popup?.close(); } catch { /* ignore */ }
-      saveAuth(payload.access_token, payload.user);
       resolve(payload);
     }
 
@@ -601,9 +643,10 @@ export function loginWithOAuth(provider: "google" | "microsoft"): Promise<LoginP
           user: payload.user,
         });
         void (async () => {
-          const ready = await waitForAuthReady(payload);
+          const localPayload = await acceptRemoteLogin(payload.access_token);
+          const ready = await waitForAuthReady(localPayload);
           if (ready) {
-            settle(payload);
+            settle(localPayload);
           } else {
             fail(new Error("Login timed out. Please try again."));
           }
@@ -630,9 +673,10 @@ export function loginWithOAuth(provider: "google" | "microsoft"): Promise<LoginP
             token: payload.access_token,
             user: payload.user,
           });
-          const ready = await waitForAuthReady(payload);
+          const localPayload = await acceptRemoteLogin(payload.access_token);
+          const ready = await waitForAuthReady(localPayload);
           if (ready) {
-            settle(payload);
+            settle(localPayload);
           }
         }
       } catch {
@@ -855,6 +899,16 @@ export async function saveSettings(settings: LocalSettingsPayload): Promise<Loca
 
 export async function getAppInfo(): Promise<AppInfoPayload> {
   return apiRequest<AppInfoPayload>("/app/info");
+}
+
+export async function getCloudSyncStatus(): Promise<CloudSyncStatusPayload> {
+  return apiRequest<CloudSyncStatusPayload>("/cloud-sync/status");
+}
+
+export async function bootstrapCloudSync(): Promise<CloudSyncStatusPayload> {
+  return apiRequest<CloudSyncStatusPayload>("/cloud-sync/bootstrap", {
+    method: "POST",
+  });
 }
 
 export async function checkForUpdates(options?: {

@@ -14,7 +14,7 @@ def test_select_installer_asset_prefers_setup_executable():
             "browser_download_url": "https://example.com/portable.exe",
         },
         {
-            "name": "TriConveyAgent-Setup-0.2.0.exe",
+            "name": "ConveyAgent-Setup-0.2.0.exe",
             "browser_download_url": "https://example.com/setup.exe",
         },
     ]
@@ -22,4 +22,4 @@ def test_select_installer_asset_prefers_setup_executable():
     chosen = select_installer_asset(assets)
 
     assert chosen is not None
-    assert chosen["name"] == "TriConveyAgent-Setup-0.2.0.exe"
+    assert chosen["name"] == "ConveyAgent-Setup-0.2.0.exe"

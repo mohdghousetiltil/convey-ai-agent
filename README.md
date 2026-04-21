@@ -1,6 +1,6 @@
-# TriConvey Agent
+# Convey Agent
 
-TriConvey Agent is a Windows desktop app for Section 32 review, AI-assisted document analysis, and TriConvey autofill.
+Convey Agent is a Windows desktop app for Section 32 review, AI-assisted document analysis, and TriConvey autofill.
 
 ## Windows Desktop Model
 
@@ -10,6 +10,22 @@ The packaged app is a local desktop install:
 - the app starts its own local backend on the client machine
 - durable data lives in `%LOCALAPPDATA%\TriConveyAgent`
 - updates replace the installed app without wiping `.env`, settings, or the local database
+
+What clients do:
+
+- download `ConveyAgent-Setup-<version>.exe`
+- double-click it
+- click through setup
+- sign in and finish setup inside the app
+
+What clients do not need to do:
+
+- install Python
+- install Node.js or npm packages
+- clone the repository
+- create a virtual environment
+- run `pip install`
+- edit `.env` by hand
 
 Durable client data:
 
@@ -50,7 +66,7 @@ Install [Inno Setup 6](https://jrsoftware.org/isinfo.php) on the build machine, 
 This builds a versioned installer:
 
 ```text
-dist\installer\TriConveyAgent-Setup-<version>.exe
+dist\installer\ConveyAgent-Setup-<version>.exe
 ```
 
 The installer:
@@ -62,13 +78,20 @@ The installer:
 - closes the running app during update when needed
 - keeps `%LOCALAPPDATA%\TriConveyAgent` untouched
 
+On first sign-in, the app can collect setup values directly in the UI:
+
+- OpenAI API key
+- Anthropic API key
+- preferred AI provider and model
+- TriConvey executable path
+
+That means you can ship one installer to clients and let them finish setup from Settings instead of asking them to edit files.
+
 ## Auto-Update Flow
 
 The desktop app can check GitHub Releases and notify clients when a new installer is available.
 
-Required setting:
-
-- `GitHub update repository`: `owner/repo`
+The release repository is managed internally in the app build.
 
 Optional settings:
 
@@ -129,6 +152,8 @@ Installed builds should keep API keys in:
 ```text
 %LOCALAPPDATA%\TriConveyAgent\.env
 ```
+
+The app writes these values for the installed desktop app automatically. Clients should not need to edit this file manually.
 
 Example:
 
