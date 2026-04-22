@@ -91,8 +91,8 @@ try:
         _expanded = os.path.expandvars(_candidate)
         if os.path.exists(_expanded):
             pytesseract.pytesseract.tesseract_cmd = _expanded
+            _ocr_available = True
             break
-    _ocr_available = True
 except ImportError:
     pass
 
@@ -2478,11 +2478,11 @@ class TriConveyAgent:
     # ------------------------------------------------------------------
 
     def open_property_details(self) -> bool:
-        if self.matter_window is None:
-            self._log("Opening Property Details skipped because no matter window is open.")
+        window = self.matter_window or self.main_window
+        if window is None:
+            self._log("Opening Property Details skipped — no TriConvey window is available.")
             return False
         self._log("Opening Property Details ...")
-        window = self.matter_window or self.main_window
         _ensure_focus(window)
         self._normalize_matter_window(window)
         self._interruptible_sleep(1)
@@ -3139,6 +3139,12 @@ def execute_action_plan(
     review_gate_callback  : callable(list[FormAction]) -> bool.
     output_dir            : Base output directory for execution artifacts.
     """
+    log.info(
+        "execute_action_plan: client=%r matter_search=%r dry_run=%s "
+        "pywinauto=%s ocr=%s",
+        client_name, matter_search, dry_run, _pywinauto_available, _ocr_available,
+    )
+
     if not dry_run and not _pywinauto_available:
         raise RuntimeError(
             "pywinauto is not installed.\n"
@@ -3267,12 +3273,11 @@ def execute_action_plan(
                         message="Property Details is not open yet. Please open it in Convey, then press Continue.",
                     )
             elif not property_window_ready and not agent.open_property_details():
-                err = "Could not open Property Details."
                 diagnostics.capture_screenshot("property_details_open_failure")
-                for a in auto_actions:
-                    report.results.append(ActionResult(action=a, status="failed", error=err))
-                _finalise(report)
-                raise RuntimeError(err)
+                raise ManualInterventionRequired(
+                    action="open_property_details",
+                    message="Could not open Property Details automatically. Please open it in TriConvey, then press Continue.",
+                )
         except ManualInterventionRequired:
             diagnostics.capture_screenshot("property_details_manual_intervention")
             _finalise(report)

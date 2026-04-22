@@ -523,7 +523,6 @@ function AppContent() {
       localStorage.setItem(firstRunKey(user.user_id), "true");
       sessionStorage.removeItem(sessionDismissKey(user.user_id));
     }
-    setShowSetupModal(false);
     setView("main");
   };
 

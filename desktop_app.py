@@ -1,16 +1,125 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import socket
 import subprocess
 import sys
 import threading
 import time
+from datetime import datetime
 from pathlib import Path
 
 import uvicorn
 import webview
+
+
+# ---------------------------------------------------------------------------
+# Debug file logging
+# ---------------------------------------------------------------------------
+
+class _TeeStream:
+    """Write to both the original stream and a log file simultaneously."""
+
+    def __init__(self, original, log_file):
+        self._original = original
+        self._log_file = log_file
+
+    def write(self, data: str) -> int:
+        try:
+            self._original.write(data)
+            self._original.flush()
+        except Exception:
+            pass
+        try:
+            self._log_file.write(data)
+            self._log_file.flush()
+        except Exception:
+            pass
+        return len(data)
+
+    def flush(self) -> None:
+        try:
+            self._original.flush()
+        except Exception:
+            pass
+        try:
+            self._log_file.flush()
+        except Exception:
+            pass
+
+    def fileno(self):
+        return self._original.fileno()
+
+    def isatty(self) -> bool:
+        return False
+
+
+def _setup_debug_logging() -> Path | None:
+    """Set up file-based debug logging to ~/Downloads/ConveyAgent-debug-*.log.
+
+    Captures ALL Python logging output (DEBUG+), stdout, and stderr so the
+    full picture of what the app is doing is in one readable file.
+    Returns the log file path, or None if it could not be created.
+    """
+    try:
+        downloads = Path.home() / "Downloads"
+        downloads.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        log_path = downloads / f"ConveyAgent-debug-{timestamp}.log"
+        log_file = open(log_path, "w", encoding="utf-8", buffering=1)  # line-buffered
+
+        # Header
+        log_file.write(f"=== Convey Agent Debug Log ===\n")
+        log_file.write(f"Started : {datetime.now().isoformat()}\n")
+        log_file.write(f"Python  : {sys.version}\n")
+        log_file.write(f"Frozen  : {getattr(sys, 'frozen', False)}\n")
+        log_file.write(f"Exe     : {sys.executable}\n")
+        log_file.write("=" * 60 + "\n\n")
+
+        # Python logging — capture everything at DEBUG level
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.DEBUG)
+
+        file_handler = logging.FileHandler(log_path, mode="a", encoding="utf-8", delay=False)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(
+            logging.Formatter(
+                fmt="%(asctime)s %(levelname)-8s %(name)s: %(message)s",
+                datefmt="%H:%M:%S",
+            )
+        )
+        root_logger.addHandler(file_handler)
+
+        # Silence extremely verbose internal loggers that produce thousands of
+        # lines per request and obscure the app-level logs we actually care about.
+        for _noisy in (
+            "aiosqlite",
+            "sqlalchemy.engine",
+            "sqlalchemy.pool",
+            "sqlalchemy.dialects",
+            "sqlalchemy.orm",
+            "asyncio",
+            "urllib3",
+            "httpcore",
+            "httpx",
+            "multiprocessing",
+            "uvicorn.access",   # HTTP access log kept at INFO via uvicorn itself
+        ):
+            logging.getLogger(_noisy).setLevel(logging.WARNING)
+
+        # Tee stdout and stderr so print() and traceback output also land in the file
+        sys.stdout = _TeeStream(sys.__stdout__, log_file)
+        sys.stderr = _TeeStream(sys.__stderr__, log_file)
+
+        return log_path
+    except Exception as exc:
+        try:
+            print(f"Warning: could not set up debug logging: {exc}", file=sys.__stderr__)
+        except Exception:
+            pass
+        return None
 
 
 def _setup_desktop_database() -> None:
@@ -307,7 +416,7 @@ def _run_server(host: str, port: int) -> None:
         host=host,
         port=port,
         reload=False,
-        log_level="warning",
+        log_level="info",
     )
 
 
@@ -366,6 +475,10 @@ def _run_ipv6_relay(ipv4_port: int) -> None:
 
 
 def main() -> None:
+    debug_log_path = _setup_debug_logging()
+    if debug_log_path:
+        print(f"[ConveyAgent] Debug log: {debug_log_path}")
+
     _setup_desktop_database()
     _load_env()
     _ensure_desktop_secrets()
@@ -408,4 +521,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # freeze_support() MUST be called before anything else in frozen PyInstaller
+    # builds that use multiprocessing. Without it, every spawned worker process
+    # re-runs main() instead of acting as a worker, creating duplicate windows
+    # and log files. This is a no-op in dev mode.
+    import multiprocessing
+    multiprocessing.freeze_support()
     main()
