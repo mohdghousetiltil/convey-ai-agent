@@ -137,6 +137,8 @@ def check_for_updates(
         with httpx.Client(timeout=timeout_seconds, follow_redirects=True, headers=_headers()) as client:
             if include_prerelease:
                 response = client.get(f"{GITHUB_API_BASE}/repos/{repo}/releases")
+                if response.status_code == 403:
+                    return payload
                 response.raise_for_status()
                 releases = list(response.json() or [])
                 release = next((item for item in releases if not item.get("draft")), None)
@@ -145,6 +147,8 @@ def check_for_updates(
                     return payload
             else:
                 response = client.get(f"{GITHUB_API_BASE}/repos/{repo}/releases/latest")
+                if response.status_code == 403:
+                    return payload
                 response.raise_for_status()
                 release = response.json()
     except Exception as exc:

@@ -53,7 +53,8 @@
       "Bash(npm run *)",
       "Bash(.venv/Scripts/python -m PyInstaller --noconfirm desktop_app.spec)",
       "PowerShell(Stop-Process -Name \"TriConveyAgent\" -Force -ErrorAction SilentlyContinue)",
-      "Bash(python -c \"import psutil; print\\('ok'\\)\")"
+      "Bash(python -c \"import psutil; print\\('ok'\\)\")",
+      "Bash(.venv/Scripts/python.exe -m PyInstaller --noconfirm desktop_app.spec)"
     ]
   }
 }

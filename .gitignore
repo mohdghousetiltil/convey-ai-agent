@@ -12,7 +12,6 @@ pytest-cache-files-*/
 output/execution_artifacts/
 output/ui_runs/
 build/
-dist/
 ui/node_modules/
 ui/dist/
 

@@ -6,10 +6,10 @@
  * component state atomically.
  */
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { AuthUser, StoredAuth } from "./auth";
-import { clearAuth, loadAuth } from "./auth";
-import { AUTH_LOGOUT_EVENT, login as apiLogin, loginWithOAuth, logout as apiLogout, register as apiRegister, resumePendingOAuthLogin } from "./api";
+import { clearAuth, loadAuth, saveAuth } from "./auth";
+import { AUTH_LOGOUT_EVENT, loadPersistedAuthState, login as apiLogin, loginWithOAuth, logout as apiLogout, register as apiRegister, resumePendingOAuthLogin } from "./api";
 import type { LoginPayload } from "./api";
 
 // ---------------------------------------------------------------------------
@@ -39,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const oauthResumeInFlight = useRef(false);
 
   // On mount: restore from localStorage.
   useEffect(() => {
@@ -52,6 +53,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setToken(stored.token);
           setIsLoading(false);
         }
+        return;
+      }
+
+      const persisted = await loadPersistedAuthState();
+      if (persisted && !cancelled) {
+        saveAuth(persisted.access_token, persisted.user);
+        setUser(persisted.user);
+        setToken(persisted.access_token);
+        setIsLoading(false);
         return;
       }
 
@@ -79,12 +89,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     async function checkPendingOAuth() {
-      if (cancelled) return;
-      const resumed = await resumePendingOAuthLogin();
-      if (!cancelled && resumed) {
-        setUser(resumed.user);
-        setToken(resumed.access_token);
-        setIsLoading(false);
+      if (cancelled || oauthResumeInFlight.current) return;
+      oauthResumeInFlight.current = true;
+      try {
+        const resumed = await resumePendingOAuthLogin();
+        if (!cancelled && resumed) {
+          setUser(resumed.user);
+          setToken(resumed.access_token);
+          setIsLoading(false);
+        }
+      } finally {
+        oauthResumeInFlight.current = false;
       }
     }
 

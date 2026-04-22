@@ -7,6 +7,7 @@
  */
 
 const STORAGE_KEY = "convey_auth";
+export const DEFAULT_AUTH_LIFETIME_SECONDS = 30 * 24 * 60 * 60;
 
 export interface StoredAuth {
   token: string;
@@ -46,7 +47,10 @@ export function loadAuth(): StoredAuth | null {
 export function saveAuth(token: string, user: AuthUser): void {
   const claims = decodeJwtPayload(token);
   const expClaim = claims?.exp;
-  const expiresAt = typeof expClaim === "number" ? expClaim : Math.floor(Date.now() / 1000) + 3600;
+  const expiresAt =
+    typeof expClaim === "number"
+      ? expClaim
+      : Math.floor(Date.now() / 1000) + DEFAULT_AUTH_LIFETIME_SECONDS;
   const stored: StoredAuth = { token, user, expiresAt };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
 }

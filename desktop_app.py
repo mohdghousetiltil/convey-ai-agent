@@ -70,9 +70,30 @@ async def _bootstrap_schema() -> None:
         engine = get_engine()
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            await _apply_desktop_schema_migrations(conn)
         print("Database schema bootstrapped.", file=sys.stderr)
     except Exception as e:
         print(f"Could not bootstrap schema: {e}", file=sys.stderr)
+
+
+async def _apply_desktop_schema_migrations(conn) -> None:
+    """Apply additive schema fixes for long-lived installed SQLite databases."""
+    if getattr(conn.dialect, "name", "") != "sqlite":
+        return
+
+    result = await conn.exec_driver_sql("PRAGMA table_info(users)")
+    user_columns = {str(row[1]) for row in result.fetchall()}
+
+    if "oauth_provider" not in user_columns:
+        await conn.exec_driver_sql("ALTER TABLE users ADD COLUMN oauth_provider TEXT")
+    if "oauth_subject" not in user_columns:
+        await conn.exec_driver_sql("ALTER TABLE users ADD COLUMN oauth_subject TEXT")
+
+    await conn.exec_driver_sql(
+        "CREATE UNIQUE INDEX IF NOT EXISTS uq_users_oauth "
+        "ON users(oauth_provider, oauth_subject) "
+        "WHERE oauth_provider IS NOT NULL"
+    )
 
 
 def _check_dependencies() -> None:
@@ -95,6 +116,54 @@ def _check_dependencies() -> None:
             )
         except Exception:
             pass
+
+
+def _ensure_desktop_secrets() -> None:
+    """Auto-generate CONVEY_JWT_SECRET on first frozen install if not already set.
+
+    The secret is persisted to %LOCALAPPDATA%\\TriConveyAgent\\.env so it
+    survives app updates and restarts. Generating it here (after _load_env)
+    ensures it is in os.environ before uvicorn imports security.py, which
+    reads the secret at module import time.
+    """
+    if not getattr(sys, "frozen", False):
+        return
+    if os.environ.get("CONVEY_JWT_SECRET"):
+        return
+
+    local_app_data = os.environ.get("LOCALAPPDATA", "")
+    if not local_app_data:
+        return
+
+    app_dir = Path(local_app_data) / "TriConveyAgent"
+    app_dir.mkdir(parents=True, exist_ok=True)
+    env_path = app_dir / ".env"
+
+    # Parse any values already in the file (OPENAI_API_KEY etc.)
+    env_values: dict[str, str] = {}
+    if env_path.exists():
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            env_values[key.strip()] = value.strip().strip('"').strip("'")
+
+    # If it was in the file but load_dotenv missed it, just export it.
+    if env_values.get("CONVEY_JWT_SECRET"):
+        os.environ["CONVEY_JWT_SECRET"] = env_values["CONVEY_JWT_SECRET"]
+        return
+
+    # First run: generate a fresh secret and persist it.
+    import secrets as _secrets
+    env_values["CONVEY_JWT_SECRET"] = _secrets.token_urlsafe(32)
+    lines = [f'{k}="{v}"' for k, v in env_values.items() if v]
+    env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    try:
+        os.chmod(str(env_path), 0o600)
+    except OSError:
+        pass
+    os.environ["CONVEY_JWT_SECRET"] = env_values["CONVEY_JWT_SECRET"]
 
 
 def _load_env() -> None:
@@ -299,6 +368,7 @@ def _run_ipv6_relay(ipv4_port: int) -> None:
 def main() -> None:
     _setup_desktop_database()
     _load_env()
+    _ensure_desktop_secrets()
     _check_dependencies()
 
     host = "127.0.0.1"
@@ -331,7 +401,10 @@ def main() -> None:
         height=940,
         text_select=True,
     )
-    webview.start()
+    # Persist WebView2 user data (localStorage, cookies) so login survives app restarts.
+    local_app_data = os.environ.get("LOCALAPPDATA", "")
+    _webview_data_dir = str(Path(local_app_data) / "TriConveyAgent" / "webview_data") if local_app_data else None
+    webview.start(storage_path=_webview_data_dir)
 
 
 if __name__ == "__main__":

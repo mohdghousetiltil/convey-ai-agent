@@ -59,7 +59,7 @@ export function AboutScreen({
   onCheckForUpdates,
   onInstallUpdate,
 }: AboutScreenProps) {
-  const version = appInfo?.version || "0.1.0";
+  const version = appInfo?.version || "0.0.1";
   const publisher = appInfo?.publisher || "Convey Agent";
 
   return (
@@ -97,10 +97,6 @@ export function AboutScreen({
                     <p className="font-semibold text-slate-700">Publisher</p>
                     <p className="text-slate-500">{publisher}</p>
                   </div>
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">
-                    <p className="font-semibold text-slate-700">Update channel</p>
-                    <p className="text-slate-500">Managed GitHub Releases</p>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -130,7 +126,6 @@ export function AboutScreen({
                   <Download className="mr-2 h-4 w-4" />
                   {isInstallingUpdate ? "Preparing installer..." : "Download and install"}
                 </Button>
-                {updateMessage ? <p className="text-sm text-slate-500">{updateMessage}</p> : null}
               </CardContent>
             </Card>
           </aside>
@@ -182,7 +177,6 @@ export function AboutScreen({
                   </div>
                 </div>
 
-                {updateStatus?.error ? <p className="text-sm font-medium text-rose-600">{updateStatus.error}</p> : null}
               </CardContent>
             </Card>
 

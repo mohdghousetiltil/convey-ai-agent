@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { AppInfoPayload, CloudSyncStatusPayload, UpdateStatusPayload } from "@/lib/api";
+import { AppInfoPayload, UpdateStatusPayload } from "@/lib/api";
 
 const OPENAI_MODELS = [
   { id: "gpt-4.1", label: "GPT-4.1", badge: "Latest" },
@@ -60,8 +60,6 @@ interface SettingsScreenProps {
   onSaveSettings: (settings: SettingsForm) => Promise<void> | void;
   appInfo: AppInfoPayload | null;
   updateStatus: UpdateStatusPayload | null;
-  cloudSyncStatus: CloudSyncStatusPayload | null;
-  updateMessage: string;
   isCheckingUpdates: boolean;
   isInstallingUpdate: boolean;
   onCheckForUpdates: () => void;
@@ -76,8 +74,6 @@ export function SettingsScreen({
   onSaveSettings,
   appInfo,
   updateStatus,
-  cloudSyncStatus,
-  updateMessage,
   isCheckingUpdates,
   isInstallingUpdate,
   onCheckForUpdates,
@@ -163,7 +159,7 @@ export function SettingsScreen({
                 </div>
                 <div className="rounded-xl bg-slate-50 px-3 py-2">
                   <p className="font-semibold text-slate-700">App version</p>
-                  <p className="text-slate-500">{appInfo?.version ?? "0.1.0"}</p>
+                  <p className="text-slate-500">{appInfo?.version ?? "0.0.1"}</p>
                 </div>
               </div>
             </CardContent>
@@ -367,25 +363,6 @@ export function SettingsScreen({
                 </div>
                 <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 md:col-span-2">
                   <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                    <Bell className="h-4 w-4 text-blue-600" />
-                    Update channel
-                  </div>
-                  <p className="mt-2 text-sm text-slate-500">GitHub Releases for this app are managed internally and are not editable here.</p>
-                </div>
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 md:col-span-2">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                    <Shield className="h-4 w-4 text-sky-600" />
-                    Cloud sync
-                  </div>
-                  <p className="mt-2 text-sm text-slate-500">{cloudSyncStatus?.detail || "Cloud sync has not been checked yet."}</p>
-                  <p className="mt-2 text-xs text-slate-400">
-                    {cloudSyncStatus?.connected
-                      ? `Connected for ${cloudSyncStatus.client_slug || "this client"}`
-                      : "The app will try to connect automatically after sign-in."}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 md:col-span-2">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                     <FolderOpen className="h-4 w-4 text-slate-600" />
                     Installed app storage
                   </div>
@@ -456,8 +433,6 @@ export function SettingsScreen({
                       Open release page
                     </a>
                   ) : null}
-                  {updateMessage ? <p className="mt-3 text-sm font-medium text-slate-600">{updateMessage}</p> : null}
-                  {updateStatus?.error ? <p className="mt-2 text-sm font-medium text-rose-600">{updateStatus.error}</p> : null}
                 </div>
               </CardContent>
             </Card>

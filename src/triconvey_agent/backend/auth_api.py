@@ -6,6 +6,8 @@ Mounted under `/api/auth` by the main app.
 
 from __future__ import annotations
 
+import json
+import uuid
 from datetime import timedelta
 import httpx
 from typing import Any  # noqa: F401 — used in response annotations
@@ -35,6 +37,7 @@ from triconvey_agent.auth.security import (
     create_access_token,
     hash_password,
     hash_token,
+    verify_token,
     verify_password,
 )
 from triconvey_agent.db.repositories import (
@@ -63,6 +66,31 @@ def _auth_debug(event: str, **fields: Any) -> None:
             parts.append(f"{key}={text}")
         with log_file.open("a", encoding="utf-8") as fh:
             fh.write(" | ".join(parts) + "\n")
+    except Exception:
+        pass
+
+
+def _auth_state_file() -> Path:
+    paths = ensure_runtime_dirs(get_runtime_paths())
+    return paths.local_app_dir / "auth_state.json"
+
+
+def _persist_auth_state(*, token: str, user: "WhoAmI", expires_in_seconds: int) -> None:
+    expires_at = int(datetime.now(UTC).timestamp()) + max(0, int(expires_in_seconds))
+    payload = {
+        "access_token": token,
+        "expires_at": expires_at,
+        "user": user.model_dump(mode="json"),
+    }
+    _auth_state_file().write_text(
+        json.dumps(payload, ensure_ascii=True, indent=2),
+        encoding="utf-8",
+    )
+
+
+def _clear_auth_state() -> None:
+    try:
+        _auth_state_file().unlink(missing_ok=True)
     except Exception:
         pass
 
@@ -154,6 +182,12 @@ class RemoteLoginRequest(BaseModel):
     remote_access_token: str = Field(..., min_length=1)
 
 
+class PersistedAuthState(BaseModel):
+    access_token: str
+    expires_at: int
+    user: "WhoAmI"
+
+
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
@@ -202,7 +236,7 @@ async def login(
         ip_address=request.client.host if request.client else None,
     )
 
-    return LoginResponse(
+    response = LoginResponse(
         access_token=token,
         expires_in_seconds=JWT_TTL_MINUTES * 60,
         user=WhoAmI(
@@ -215,6 +249,68 @@ async def login(
             client_name=client.name,
         ),
     )
+    _persist_auth_state(
+        token=response.access_token,
+        user=response.user,
+        expires_in_seconds=response.expires_in_seconds,
+    )
+    return response
+
+
+@router.get("/state", response_model=PersistedAuthState | None)
+async def get_persisted_auth_state(
+    session: AsyncSession = Depends(get_session),
+) -> PersistedAuthState | None:
+    path = _auth_state_file()
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        token = str(payload.get("access_token") or "").strip()
+        expires_at = int(payload.get("expires_at") or 0)
+        if not token or expires_at <= int(datetime.now(UTC).timestamp()):
+            _clear_auth_state()
+            return None
+        claims = verify_token(token)
+        row = await SessionRepo.get_by_hash(session, hash_token(token))
+        if row is None:
+            _clear_auth_state()
+            return None
+        client = await ClientRepo.get_by_id(session, uuid.UUID(claims["cid"]))
+        user = await UserRepo.get_by_id(session, uuid.UUID(claims["sub"]))
+        if user is None or client is None or not user.is_active or not client.is_active:
+            _clear_auth_state()
+            return None
+        return PersistedAuthState(
+            access_token=token,
+            expires_at=expires_at,
+            user=WhoAmI(
+                user_id=str(user.id),
+                email=user.email,
+                name=user.name,
+                role=user.role,
+                client_id=str(client.id),
+                client_slug=client.slug,
+                client_name=client.name,
+            ),
+        )
+    except Exception:
+        _clear_auth_state()
+        return None
+
+
+@router.post("/state", status_code=status.HTTP_204_NO_CONTENT)
+async def save_persisted_auth_state(body: PersistedAuthState) -> None:
+    _persist_auth_state(
+        token=body.access_token,
+        user=body.user,
+        expires_in_seconds=max(0, body.expires_at - int(datetime.now(UTC).timestamp())),
+    )
+
+
+@router.delete("/state", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_persisted_auth_state() -> None:
+    _clear_auth_state()
 
 
 @router.post("/logout")
@@ -223,6 +319,7 @@ async def logout(
     session: AsyncSession = Depends(get_session),
 ) -> dict[str, bool]:
     await SessionRepo.revoke(session, ctx.token_hash)
+    _clear_auth_state()
     await AuditRepo.record(
         session,
         client_id=ctx.client.id,
@@ -355,7 +452,7 @@ async def self_register(
         ip_address=request.client.host if request.client else None,
         user_agent=request.headers.get("user-agent"),
     )
-    return LoginResponse(
+    response = LoginResponse(
         access_token=token,
         expires_in_seconds=JWT_TTL_MINUTES * 60,
         user=WhoAmI(
@@ -368,6 +465,12 @@ async def self_register(
             client_name=client.name,
         ),
     )
+    _persist_auth_state(
+        token=response.access_token,
+        user=response.user,
+        expires_in_seconds=response.expires_in_seconds,
+    )
+    return response
 
 
 @router.post("/issue-token", response_model=IssueTokenResponse)
@@ -414,6 +517,7 @@ async def remote_login(
     session: AsyncSession = Depends(get_session),
 ) -> LoginResponse:
     """Validate a Railway auth token, then create a local desktop session."""
+    _auth_debug("remote_login_start")
     remote_whoami_url = f"{DEFAULT_CLOUD_BACKEND_URL}/api/auth/whoami"
     try:
         async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
@@ -424,6 +528,7 @@ async def remote_login(
             response.raise_for_status()
             remote_user = response.json()
     except Exception as exc:
+        _auth_debug("remote_login_remote_whoami_error", error=str(exc))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Remote login could not be validated: {exc}",
@@ -437,34 +542,54 @@ async def remote_login(
     remote_user_id = str(remote_user.get("user_id") or email).strip()
 
     if not client_slug or not email:
+        _auth_debug("remote_login_incomplete_remote_user", remote_user=str(remote_user))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Remote login response was incomplete.")
 
-    local_client = await ClientRepo.get_by_slug(session, client_slug)
-    if local_client is None:
-        local_client = await ClientRepo.ensure_local(
+    try:
+        local_client = await ClientRepo.get_by_slug(session, client_slug)
+        if local_client is None:
+            local_client = await ClientRepo.ensure_local(
+                session,
+                slug=client_slug,
+                name=client_name,
+            )
+
+        local_user = await UserRepo.upsert_oauth_user(
             session,
-            slug=client_slug,
-            name=client_name,
+            client_id=local_client.id,
+            oauth_provider="railway",
+            oauth_subject=remote_user_id,
+            email=email,
+            name=name,
+            default_role=role if role in {"admin", "reviewer", "viewer"} else "reviewer",
         )
+        if role in {"admin", "reviewer", "viewer"} and local_user.role != role:
+            local_user.role = role
+            local_user.updated_at = datetime.now(UTC)
+            await session.flush()
 
-    local_user = await UserRepo.upsert_oauth_user(
-        session,
-        client_id=local_client.id,
-        oauth_provider="railway",
-        oauth_subject=remote_user_id,
-        email=email,
-        name=name,
-        default_role=role if role in {"admin", "reviewer", "viewer"} else "reviewer",
-    )
-    if role in {"admin", "reviewer", "viewer"} and local_user.role != role:
-        local_user.role = role
-        local_user.updated_at = datetime.now(UTC)
-        await session.flush()
+        token = await _mint_session(session, request=request, user=local_user, client=local_client)
+        await UserRepo.mark_login(session, local_user.id)
+        await session.commit()
+        _auth_debug(
+            "remote_login_commit_ok",
+            email=local_user.email,
+            client_slug=local_client.slug,
+        )
+    except Exception as exc:
+        await session.rollback()
+        _auth_debug(
+            "remote_login_local_error",
+            email=email,
+            client_slug=client_slug,
+            error=str(exc),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not finalize local sign-in.",
+        ) from exc
 
-    token = await _mint_session(session, request=request, user=local_user, client=local_client)
-    await UserRepo.mark_login(session, local_user.id)
-
-    return LoginResponse(
+    response = LoginResponse(
         access_token=token,
         expires_in_seconds=JWT_TTL_MINUTES * 60,
         user=WhoAmI(
@@ -477,6 +602,12 @@ async def remote_login(
             client_name=local_client.name,
         ),
     )
+    _persist_auth_state(
+        token=response.access_token,
+        user=response.user,
+        expires_in_seconds=response.expires_in_seconds,
+    )
+    return response
 
 
 # ---------------------------------------------------------------------------

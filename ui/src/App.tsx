@@ -14,14 +14,12 @@ import {
   applyAnswerPatches,
   AnswerUpdatePayload,
   AutofillJobPayload,
-  bootstrapCloudSync,
   cancelAutofillJob,
   checkForUpdates,
   CloudSyncStatusPayload,
   continueAutofillJob,
   downloadUpdateInstaller,
   getAppInfo,
-  getCloudSyncStatus,
   getSettings,
   getAutofillJob,
   getRun,
@@ -83,15 +81,6 @@ function clearPersistedWorkflowState(userId: string) {
   localStorage.removeItem(activeAutofillJobKey(userId));
 }
 
-function isSettingsConfigured(settings: LocalSettingsForm): boolean {
-  const hasProviderKey =
-    settings.aiProvider === "hybrid"
-      ? Boolean(settings.openAiApiKey?.trim()) && Boolean(settings.anthropicApiKey?.trim())
-      : settings.aiProvider === "anthropic"
-        ? Boolean(settings.anthropicApiKey?.trim())
-        : Boolean(settings.openAiApiKey?.trim());
-  return Boolean(settings.defaultModelName?.trim()) && hasProviderKey && Boolean(settings.triconveyPath?.trim());
-}
 
 function UpdateBanner({
   update,
@@ -144,172 +133,6 @@ function UpdateBanner({
   );
 }
 
-function FirstRunSetupModal({
-  open,
-  settings,
-  saving,
-  onChange,
-  onSave,
-  onLater,
-  onBrowseTriconveyPath,
-}: {
-  open: boolean;
-  settings: LocalSettingsForm;
-  saving: boolean;
-  onChange: (next: LocalSettingsForm) => void;
-  onSave: () => void;
-  onLater: () => void;
-  onBrowseTriconveyPath: () => void;
-}) {
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 px-4">
-      <div className="w-full max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
-        <div className="border-b border-slate-100 px-6 py-5">
-          <h2 className="text-xl font-bold text-slate-900">Finish your desktop setup</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Save your AI provider, API key, default model, and Convey path so uploads, chat, and autofill work smoothly on this machine.
-          </p>
-        </div>
-
-        <div className="grid gap-6 px-6 py-6 md:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Language</label>
-            <select
-              value={settings.language}
-              onChange={(e) => onChange({ ...settings, language: e.target.value })}
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            >
-              <option value="English">English</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">AI Provider</label>
-            <select
-              value={settings.aiProvider}
-              onChange={(e) =>
-                onChange({
-                  ...settings,
-                  aiProvider: e.target.value as "openai" | "anthropic" | "hybrid",
-                  defaultModelName:
-                    e.target.value === "anthropic"
-                      ? "claude-sonnet-4-6"
-                      : e.target.value === "hybrid"
-                        ? "claude-sonnet-4-6"
-                        : "gpt-4.1-mini",
-                })
-              }
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            >
-              <option value="openai">OpenAI</option>
-              <option value="anthropic">Anthropic</option>
-              <option value="hybrid">OpenAI + Claude</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">AI mode</label>
-            <select
-              value={settings.aiMode}
-              onChange={(e) =>
-                onChange({
-                  ...settings,
-                  aiMode: e.target.value as "cost_efficient" | "all_time_best" | "turbo",
-                })
-              }
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            >
-              <option value="cost_efficient">Cost efficient</option>
-              <option value="all_time_best">All time best</option>
-              <option value="turbo">Turbo</option>
-            </select>
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              {settings.aiProvider === "anthropic" ? "Anthropic API key" : "OpenAI API key"}
-            </label>
-            <input
-              type="password"
-              value={settings.aiProvider === "anthropic" ? settings.anthropicApiKey : settings.openAiApiKey}
-              onChange={(e) =>
-                onChange({
-                  ...settings,
-                  ...(settings.aiProvider === "anthropic"
-                    ? { anthropicApiKey: e.target.value }
-                    : { openAiApiKey: e.target.value }),
-                })
-              }
-              placeholder={settings.aiProvider === "anthropic" ? "sk-ant-..." : "sk-..."}
-              className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
-            />
-          </div>
-
-          {settings.aiProvider === "hybrid" ? (
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Anthropic API key</label>
-              <input
-                type="password"
-                value={settings.anthropicApiKey}
-                onChange={(e) => onChange({ ...settings, anthropicApiKey: e.target.value })}
-                placeholder="sk-ant-..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
-              />
-            </div>
-          ) : null}
-
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Default model</label>
-            <input
-              value={settings.defaultModelName}
-              onChange={(e) => onChange({ ...settings, defaultModelName: e.target.value })}
-              placeholder={settings.aiProvider === "anthropic" ? "claude-sonnet-4-6" : "gpt-4.1-mini"}
-              className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Convey executable path</label>
-            <div className="flex gap-2">
-              <input
-                value={settings.triconveyPath}
-                onChange={(e) => onChange({ ...settings, triconveyPath: e.target.value })}
-                placeholder="C:\\Program Files\\TriConvey\\TriConvey.exe"
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary"
-              />
-              <button
-                type="button"
-                onClick={onBrowseTriconveyPath}
-                className="rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-              >
-                Browse
-              </button>
-            </div>
-            <p className="text-xs text-slate-400">No `.env` editing needed. Convey Agent saves this setup for the installed desktop app.</p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4">
-          <button
-            onClick={onLater}
-            className="text-sm font-semibold text-slate-500 transition-colors hover:text-slate-700"
-          >
-            Later
-          </button>
-          <button
-            onClick={onSave}
-            disabled={saving}
-            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:shadow-none"
-          >
-            {saving ? "Saving..." : "Save and continue"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Root — wraps the whole app in AuthProvider so every descendant can useAuth()
@@ -357,8 +180,6 @@ function AppContent() {
   const [autofilling, setAutofilling] = useState(false);
   const [autofillJob, setAutofillJob] = useState<AutofillJobPayload | null>(null);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
-  const [showSetupModal, setShowSetupModal] = useState(false);
-  const [setupSaving, setSetupSaving] = useState(false);
   const [appInfo, setAppInfo] = useState<AppInfoPayload | null>(null);
   const [updateStatus, setUpdateStatus] = useState<UpdateStatusPayload | null>(null);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
@@ -371,7 +192,6 @@ function AppContent() {
   useEffect(() => {
     if (!user) {
       setSettingsLoaded(false);
-      setShowSetupModal(false);
       setAppInfo(null);
       setCloudSyncStatus(null);
       return;
@@ -383,60 +203,16 @@ function AppContent() {
         try {
           setAppInfo(await getAppInfo());
         } catch {
-          setAppInfo({ name: "Convey Agent", publisher: "Convey Agent", version: "0.1.0" });
+          setAppInfo({ name: "Convey Agent", publisher: "Convey Agent", version: "0.0.1" });
         }
-        const seen = localStorage.getItem(firstRunKey(user.user_id)) === "true";
-        const dismissed = sessionStorage.getItem(sessionDismissKey(user.user_id)) === "true";
-        setShowSetupModal((!seen || !isSettingsConfigured(nextSettings)) && !dismissed);
       } catch {
         // Keep defaults if backend settings are not available yet.
-        const seen = localStorage.getItem(firstRunKey(user.user_id)) === "true";
-        const dismissed = sessionStorage.getItem(sessionDismissKey(user.user_id)) === "true";
-        setShowSetupModal((!seen || !isSettingsConfigured(settings)) && !dismissed);
       } finally {
         setSettingsLoaded(true);
       }
     })();
   }, [user]);
 
-  useEffect(() => {
-    if (!settingsLoaded || !user || !settings.autoCheckForUpdates || checkingUpdates) {
-      return;
-    }
-    void handleCheckForUpdates(false);
-  }, [settingsLoaded, user, settings.autoCheckForUpdates, checkingUpdates]);
-
-  useEffect(() => {
-    if (!settingsLoaded || !user) {
-      return;
-    }
-
-    let cancelled = false;
-
-    void (async () => {
-      try {
-        const status = await bootstrapCloudSync();
-        if (!cancelled) {
-          setCloudSyncStatus(status);
-        }
-      } catch {
-        try {
-          const status = await getCloudSyncStatus();
-          if (!cancelled) {
-            setCloudSyncStatus(status);
-          }
-        } catch {
-          if (!cancelled) {
-            setCloudSyncStatus(null);
-          }
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [settingsLoaded, user]);
 
   useEffect(() => {
     if (!updateStatus?.latest_version) {
@@ -551,10 +327,16 @@ function AppContent() {
           setAutofillJob(null);
         } else if (nextJob.status === "cancelled") {
           if (nextJob.result) setRun(nextJob.result);
-          setUploadError("Autofill was cancelled.");
-          setView("main");
-          setAutofilling(false);
-          setAutofillJob(null);
+          setLoadingKind("autofill");
+          setLoadingMessage("Autofill is being aborted, cancelling...");
+          setView("loading");
+          window.setTimeout(() => {
+            setUploadError("Autofill was cancelled.");
+            setView("main");
+            setAutofilling(false);
+            setAutofillJob(null);
+            setLoadingKind(null);
+          }, 900);
         } else if (nextJob.status === "awaiting_user") {
           setLoadingMessage(
             nextJob.manual_action?.message ||
@@ -632,7 +414,7 @@ function AppContent() {
     try {
       const nextRun = await saveAnswers(run.manifest.run_id, updates);
       setRun(nextRun);
-    } finally {
+      } finally {
       setSaving(false);
     }
   };
@@ -664,9 +446,18 @@ function AppContent() {
   const handleCancelAutofill = async () => {
     if (!autofillJob) return;
     try {
+      setLoadingKind("autofill");
+      setLoadingMessage("Autofill is being aborted, cancelling...");
+      setView("loading");
       const job = await cancelAutofillJob(autofillJob.job_id);
       setAutofillJob(job);
-      setLoadingMessage("Cancelling Convey autofill...");
+      window.setTimeout(() => {
+        setUploadError("Autofill was cancelled.");
+        setView("main");
+        setAutofilling(false);
+        setAutofillJob(null);
+        setLoadingKind(null);
+      }, 900);
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : "Could not cancel autofill.");
       setLoadingKind(null);
@@ -780,17 +571,11 @@ function AppContent() {
       });
       setUpdateStatus(next);
       if (manual) {
-        if (next.error) {
-          setUpdateError(next.error);
-        } else if (!next.update_available) {
-          setUpdateError("You already have the latest version.");
-        } else {
-          setUpdateError("");
-        }
+        setUpdateError("");
       }
     } catch (error) {
       if (manual) {
-        setUpdateError(error instanceof Error ? error.message : "Could not check for updates.");
+        setUpdateError("");
       }
     } finally {
       setCheckingUpdates(false);
@@ -824,30 +609,7 @@ function AppContent() {
     }
   };
 
-  const handleSaveSetupModal = async () => {
-    if (!user || setupSaving) return;
-    setSetupSaving(true);
-    try {
-      const saved = await saveSettings(settings);
-      setSettings(saved);
-      localStorage.setItem(firstRunKey(user.user_id), "true");
-      sessionStorage.removeItem(sessionDismissKey(user.user_id));
-      setShowSetupModal(false);
-    } finally {
-      setSetupSaving(false);
-    }
-  };
-
-  const handleLaterSetup = () => {
-    if (user) {
-      sessionStorage.setItem(sessionDismissKey(user.user_id), "true");
-    }
-    setShowSetupModal(false);
-  };
-
-  const showUpdateBanner =
-    Boolean(updateStatus?.update_available) &&
-    updateStatus?.latest_version !== dismissedUpdateVersion;
+  const showUpdateBanner = false;
 
   // ── View routing ─────────────────────────────────────────────────────────────
 
@@ -859,24 +621,6 @@ function AppContent() {
             onUploadComplete={handleUploadComplete}
             errorMessage={uploadError}
           />
-          <FirstRunSetupModal
-            open={settingsLoaded && showSetupModal}
-            settings={settings}
-            saving={setupSaving}
-            onChange={setSettings}
-            onSave={handleSaveSetupModal}
-            onLater={handleLaterSetup}
-            onBrowseTriconveyPath={() => void handleBrowseTriconveyPath()}
-          />
-          {showUpdateBanner && updateStatus ? (
-            <UpdateBanner
-              update={updateStatus}
-              busy={installingUpdate}
-              error={updateError}
-              onDismiss={() => setDismissedUpdateVersion(updateStatus.latest_version ?? null)}
-              onInstall={() => void handleDownloadAndInstallUpdate()}
-            />
-          ) : null}
         </>
       );
     case "loading":
@@ -902,24 +646,6 @@ function AppContent() {
                 onDismissError={() => setUploadError("")}
                 updateStatus={updateStatus}
               />
-              <FirstRunSetupModal
-                open={settingsLoaded && showSetupModal}
-                settings={settings}
-                saving={setupSaving}
-                onChange={setSettings}
-                onSave={handleSaveSetupModal}
-                onLater={handleLaterSetup}
-                onBrowseTriconveyPath={() => void handleBrowseTriconveyPath()}
-              />
-              {showUpdateBanner && updateStatus ? (
-                <UpdateBanner
-                  update={updateStatus}
-                  busy={installingUpdate}
-                  error={updateError}
-                  onDismiss={() => setDismissedUpdateVersion(updateStatus.latest_version ?? null)}
-                  onInstall={() => void handleDownloadAndInstallUpdate()}
-                />
-              ) : null}
             </>
           );
         }
@@ -928,15 +654,6 @@ function AppContent() {
             <UploadScreen
               onUploadComplete={handleUploadComplete}
               errorMessage={uploadError}
-            />
-            <FirstRunSetupModal
-              open={settingsLoaded && showSetupModal}
-              settings={settings}
-              saving={setupSaving}
-              onChange={setSettings}
-              onSave={handleSaveSetupModal}
-              onLater={handleLaterSetup}
-              onBrowseTriconveyPath={() => void handleBrowseTriconveyPath()}
             />
             {showUpdateBanner && updateStatus ? (
               <UpdateBanner
@@ -963,10 +680,12 @@ function AppContent() {
     case "main":
       if (!run) {
         return (
-          <UploadScreen
-            onUploadComplete={handleUploadComplete}
-            errorMessage="No review run is loaded yet."
-          />
+          <>
+            <UploadScreen
+              onUploadComplete={handleUploadComplete}
+              errorMessage="No review run is loaded yet."
+            />
+          </>
         );
       }
       return (
@@ -989,24 +708,6 @@ function AppContent() {
             onDismissError={() => setUploadError("")}
             updateStatus={updateStatus}
           />
-          <FirstRunSetupModal
-            open={settingsLoaded && showSetupModal}
-            settings={settings}
-            saving={setupSaving}
-            onChange={setSettings}
-            onSave={handleSaveSetupModal}
-            onLater={handleLaterSetup}
-            onBrowseTriconveyPath={() => void handleBrowseTriconveyPath()}
-          />
-          {showUpdateBanner && updateStatus ? (
-            <UpdateBanner
-              update={updateStatus}
-              busy={installingUpdate}
-              error={updateError}
-              onDismiss={() => setDismissedUpdateVersion(updateStatus.latest_version ?? null)}
-              onInstall={() => void handleDownloadAndInstallUpdate()}
-            />
-          ) : null}
         </>
       );
     case "settings":
@@ -1017,8 +718,6 @@ function AppContent() {
           onSaveSettings={handleSaveSettings}
           appInfo={appInfo}
           updateStatus={updateStatus}
-          cloudSyncStatus={cloudSyncStatus}
-          updateMessage={updateError}
           isCheckingUpdates={checkingUpdates}
           isInstallingUpdate={installingUpdate}
           onCheckForUpdates={() => void handleCheckForUpdates(true)}

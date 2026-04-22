@@ -6,7 +6,7 @@
  * dispatched so the AuthContext can redirect to login.
  */
 
-import { clearAuth, getClientSlug, getToken, saveAuth } from "./auth";
+import { clearAuth, DEFAULT_AUTH_LIFETIME_SECONDS, getClientSlug, getToken, saveAuth } from "./auth";
 import type { AuthUser } from "./auth";
 
 // ---------------------------------------------------------------------------
@@ -248,6 +248,12 @@ export interface OAuthProviders {
   microsoft: { configured: boolean };
 }
 
+export interface PersistedAuthState {
+  access_token: string;
+  expires_at: number;
+  user: AuthUser;
+}
+
 interface PendingOAuthLogin {
   provider: "google" | "microsoft";
   pollKey: string;
@@ -473,6 +479,11 @@ export async function logout(): Promise<void> {
   try {
     await apiRequest("/auth/logout", { method: "POST" });
   } finally {
+    try {
+      await fetch(`${API_BASE}/auth/state`, { method: "DELETE" });
+    } catch {
+      // Best-effort cleanup for local desktop auth restore state.
+    }
     clearAuth();
   }
 }
@@ -511,7 +522,7 @@ async function pollOAuthResult(
   return {
     access_token: result.token,
     token_type: "bearer",
-    expires_in_seconds: 3600,
+    expires_in_seconds: DEFAULT_AUTH_LIFETIME_SECONDS,
     user: result.user,
   };
 }
@@ -559,7 +570,7 @@ export async function resumePendingOAuthLogin(): Promise<LoginPayload | null> {
       payload = {
         access_token: pending.token,
         token_type: "bearer",
-        expires_in_seconds: 3600,
+        expires_in_seconds: DEFAULT_AUTH_LIFETIME_SECONDS,
         user: pending.user,
       };
     } else {
@@ -578,6 +589,18 @@ export async function resumePendingOAuthLogin(): Promise<LoginPayload | null> {
     if (!ready) return null;
     clearPendingOAuth();
     return localPayload;
+  } catch {
+    return null;
+  }
+}
+
+export async function loadPersistedAuthState(): Promise<PersistedAuthState | null> {
+  try {
+    const response = await fetch(`${API_BASE}/auth/state`);
+    if (!response.ok) {
+      return null;
+    }
+    return (await response.json()) as PersistedAuthState | null;
   } catch {
     return null;
   }
@@ -632,7 +655,7 @@ export function loginWithOAuth(provider: "google" | "microsoft"): Promise<LoginP
         const payload: LoginPayload = {
           access_token: data.token,
           token_type: "bearer",
-          expires_in_seconds: 3600,
+          expires_in_seconds: DEFAULT_AUTH_LIFETIME_SECONDS,
           user: data.user,
         };
         savePendingOAuth({

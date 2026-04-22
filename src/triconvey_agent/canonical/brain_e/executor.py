@@ -3219,6 +3219,8 @@ def execute_action_plan(
             _finalise(report)
             raise RuntimeError(err)
 
+        property_window_ready = False
+
         if client_name and not resume_from_property_details:
             if callable(cancel_requested) and cancel_requested():
                 diagnostics.log_event("execution_cancelled", stage="before_matter_search")
@@ -3237,7 +3239,25 @@ def execute_action_plan(
                 diagnostics.capture_screenshot("matter_manual_intervention")
                 _finalise(report)
                 raise
-            time.sleep(2)
+            property_window_ready = False
+            for attempt in range(5):
+                agent._interruptible_sleep(2)
+                if callable(cancel_requested) and cancel_requested():
+                    diagnostics.log_event("execution_cancelled", stage="waiting_for_property_details_after_matter_open")
+                    _finalise(report)
+                    report.metrics["cancelled"] = True
+                    return report
+                if agent._wait_property_window(timeout=1):
+                    property_window_ready = True
+                    diagnostics.log_event(
+                        "property_details_visible_after_matter_open",
+                        attempt=attempt + 1,
+                    )
+                    break
+                diagnostics.log_event(
+                    "property_details_not_visible_after_matter_open",
+                    attempt=attempt + 1,
+                )
 
         try:
             if resume_from_property_details:
@@ -3246,7 +3266,7 @@ def execute_action_plan(
                         action="open_property_details",
                         message="Property Details is not open yet. Please open it in Convey, then press Continue.",
                     )
-            elif not agent.open_property_details():
+            elif not property_window_ready and not agent.open_property_details():
                 err = "Could not open Property Details."
                 diagnostics.capture_screenshot("property_details_open_failure")
                 for a in auto_actions:

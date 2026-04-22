@@ -7,6 +7,7 @@ load_dotenv()
 import logging
 import json
 import os
+import subprocess
 import shutil
 import threading
 import uuid as _uuid
@@ -280,6 +281,40 @@ def _triconvey_import_debug(event: str, **fields: Any) -> None:
             fh.write(" | ".join(parts) + "\n")
     except Exception:
         pass
+
+
+def _force_stop_triconvey() -> bool:
+    """Best-effort hard stop for TriConvey when the user cancels autofill."""
+    stopped = False
+    try:
+        import psutil
+
+        for proc in psutil.process_iter(["pid", "name"]):
+            name = (proc.info.get("name") or "").lower()
+            if "triconvey" not in name:
+                continue
+            try:
+                proc.kill()
+                stopped = True
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    if stopped:
+        return True
+
+    try:
+        completed = subprocess.run(
+            ["taskkill", "/F", "/IM", "TriConvey.exe", "/T"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        return completed.returncode == 0
+    except Exception:
+        return False
 
 
 @app.get("/api/app/runtime-debug")
@@ -582,6 +617,25 @@ async def create_run(
     )
 
     convey_running = check_triconvey_running_passive()
+    convey_launch_attempted = False
+    convey_launch_ok: bool | None = None
+    if resolved_triconvey_exe and not convey_running:
+        convey_launch_attempted = True
+        try:
+            convey_launch_ok = ensure_local_convey_running(triconvey_exe=resolved_triconvey_exe)
+            convey_running = convey_running or bool(convey_launch_ok)
+            _triconvey_import_debug(
+                "create_run_launch_triconvey",
+                triconvey_exe=resolved_triconvey_exe,
+                launched=convey_launch_ok,
+            )
+        except Exception as exc:
+            convey_launch_ok = False
+            _triconvey_import_debug(
+                "create_run_launch_triconvey_error",
+                triconvey_exe=resolved_triconvey_exe,
+                error=exc,
+            )
 
     # Run the sync-heavy pipeline in a thread pool (keeps event loop free).
     try:
@@ -612,8 +666,8 @@ async def create_run(
     if warm_started:
         LOG.info("Brain F background warmup started for run %s", run_uuid)
 
-    payload["convey_launch_attempted"] = False
-    payload["convey_launch_ok"] = None
+    payload["convey_launch_attempted"] = convey_launch_attempted
+    payload["convey_launch_ok"] = convey_launch_ok
     payload["convey_running"] = convey_running
     payload["brain_f_warming"] = warm_started
     return payload
@@ -931,8 +985,11 @@ async def cancel_autofill_job(
         if record.status in {"completed", "failed", "cancelled"}:
             return record.model_dump(mode="json")
         cancel_event.set()
-        record.status = "cancelling"
+        record.status = "cancelled"
+        record.completed_at = _utc_now()
+        record.error = "Autofill cancelled by user."
         _autofill_jobs[job_id] = record
+    _force_stop_triconvey()
     return record.model_dump(mode="json")
 
 
