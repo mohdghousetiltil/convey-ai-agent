@@ -2,13 +2,13 @@
   #define MyAppName "Convey Agent"
 #endif
 #ifndef MyAppVersion
-#define MyAppVersion "0.0.1"
+#define MyAppVersion "0.0.125"
 #endif
 #ifndef MyAppPublisher
   #define MyAppPublisher "Convey Agent"
 #endif
 #ifndef MyAppExeName
-  #define MyAppExeName "TriConveyAgent.exe"
+  #define MyAppExeName "ConveyAgent.exe"
 #endif
 #ifndef MyAppPublisherURL
   #define MyAppPublisherURL "https://github.com"
@@ -23,7 +23,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppPublisherURL}
 AppSupportURL={#MyAppPublisherURL}
 AppUpdatesURL={#MyAppPublisherURL}
-DefaultDirName={autopf}\TriConveyAgent
+DefaultDirName={autopf}\ConveyAgent
 DefaultGroupName=Convey Agent
 DisableProgramGroupPage=yes
 OutputBaseFilename=ConveyAgent-Setup-{#MyAppVersion}
@@ -42,8 +42,8 @@ VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} Installer
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
-#ifexist "..\installer\TriConveyAgent.ico"
-SetupIconFile=..\installer\TriConveyAgent.ico
+#ifexist "..\public\favicon.ico"
+SetupIconFile=..\public\favicon.ico
 #endif
 
 [Languages]
@@ -53,7 +53,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional shortcuts:"; Flags: unchecked
 
 [Files]
-Source: "..\dist\TriConveyAgent.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\ConveyAgent.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\.env.example"; DestDir: "{app}"; DestName: ".env.example"; Flags: ignoreversion
 
 [Dirs]

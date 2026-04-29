@@ -2,10 +2,26 @@ import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Upload, FileText, X, ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
+import { Header } from "./Header";
 
 interface UploadPageProps {
+  onBack?: () => void;
+  userInitials?: string;
+  onProfile?: () => void;
+  onSettings?: () => void;
+  onPolicy?: () => void;
+  onAbout?: () => void;
+  onLogout?: () => void;
   onUploadComplete: (files: File[]) => void | Promise<void>;
+  onResolveTriconveyReference?: (payloadText: string) => Promise<{ resolved: Array<{ name: string; path: string }>; display_name: string; subtitle: string }>;
   errorMessage?: string;
+}
+
+interface UploadListItem {
+  file: File;
+  displayName?: string;
+  subtitle?: string;
+  resolving?: boolean;
 }
 
 function stableDropStamp(content: string): number {
@@ -69,41 +85,113 @@ function extractDroppedFilePaths(files: File[]): string[] {
   return Array.from(paths);
 }
 
-function parseDroppedReferenceText(rawPlain: string, rawUriList = "", rawHtml = ""): { localPaths?: string[]; matterPayload?: string } | null {
-  const matterPayload = rawPlain.trim().includes("\"MatterId\"") ? rawPlain.trim() : undefined;
+function parseDroppedReferenceText(
+  rawPlain: string,
+  rawUriList = "",
+  rawHtml = "",
+): { localPaths?: string[]; matterPayload?: string } | null {
+  const matterPayload = rawPlain.trim().includes('"MatterId"') ? rawPlain.trim() : undefined;
   const localPaths = extractLocalPaths(rawPlain, rawUriList, rawHtml);
-
   if (!matterPayload && localPaths.length === 0) return null;
-  return {
-    matterPayload,
-    localPaths: localPaths.length ? localPaths : undefined,
-  };
+  return { matterPayload, localPaths: localPaths.length ? localPaths : undefined };
 }
 
-export function UploadScreen({ onUploadComplete, errorMessage }: UploadPageProps) {
-  const [files, setFiles] = useState<File[]>([]);
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+export function UploadScreen({
+  onBack,
+  userInitials,
+  onProfile,
+  onSettings,
+  onPolicy,
+  onAbout,
+  onLogout,
+  onUploadComplete,
+  onResolveTriconveyReference,
+  errorMessage,
+}: UploadPageProps) {
+  const [files, setFiles] = useState<UploadListItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isSupportedUpload = (file: File) => {
     const name = file.name.toLowerCase();
-    return (
-      file.type === "application/pdf" ||
-      name.endsWith(".pdf") ||
-      isTriconveyReferenceName(name)
-    );
+    return file.type === "application/pdf" || name.endsWith(".pdf") || isTriconveyReferenceName(name);
   };
 
-  const appendFiles = (nextFiles: File[]) => {
-    setFiles((prev) => {
-      const seen = new Set(prev.map((file) => `${file.name}:${file.size}:${file.lastModified}`));
-      return [...prev, ...nextFiles.filter((file) => !seen.has(`${file.name}:${file.size}:${file.lastModified}`))];
+  const appendFiles = async (nextFiles: File[]) => {
+    const nextItems = nextFiles.map((file): UploadListItem => {
+      if (!isTriconveyReferenceName(file.name) || !onResolveTriconveyReference) {
+        return { file };
+      }
+      return {
+        file,
+        displayName: "TriConvey drop reference",
+        subtitle: "PDFs loading...",
+        resolving: true,
+      };
     });
+    setFiles((prev) => {
+      const seen = new Set(prev.map((item) => `${item.file.name}:${item.file.size}:${item.file.lastModified}`));
+      return [...prev, ...nextItems.filter((item) => !seen.has(`${item.file.name}:${item.file.size}:${item.file.lastModified}`))];
+    });
+
+    if (!onResolveTriconveyReference) {
+      return;
+    }
+
+    await Promise.all(
+      nextFiles.map(async (file) => {
+        if (!isTriconveyReferenceName(file.name)) {
+          return;
+        }
+
+        const key = `${file.name}:${file.size}:${file.lastModified}`;
+        const payloadText = await file.text();
+        let nextState: UploadListItem = {
+          file,
+          displayName: "TriConvey drop reference",
+          subtitle: "No local PDFs resolved yet - try downloading",
+          resolving: false,
+        };
+
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          try {
+            const resolved = await onResolveTriconveyReference(payloadText);
+            const resolvedNames = resolved.resolved.map((item) => item.name).filter(Boolean);
+            if (resolvedNames.length) {
+              nextState = {
+                file,
+                displayName: resolvedNames.join(", "),
+                subtitle: `${resolvedNames.length} TriConvey PDF${resolvedNames.length === 1 ? "" : "s"}`,
+                resolving: false,
+              };
+              break;
+            }
+          } catch {
+            // Keep retrying briefly while Smokeball/TriConvey finishes materialising PDFs.
+          }
+          if (attempt < 2) {
+            await delay(attempt === 0 ? 1000 : 1200);
+          }
+        }
+
+        setFiles((prev) =>
+          prev.map((item) =>
+            `${item.file.name}:${item.file.size}:${item.file.lastModified}` === key
+              ? { ...item, ...nextState }
+              : item,
+          ),
+        );
+      }),
+    );
   };
 
   const handleFiles = (fileList: FileList | null) => {
     if (!fileList) return;
-    appendFiles(Array.from(fileList).filter(isSupportedUpload));
+    void appendFiles(Array.from(fileList).filter(isSupportedUpload));
   };
 
   const handleDrop = async (e: React.DragEvent) => {
@@ -115,38 +203,28 @@ export function UploadScreen({ onUploadComplete, errorMessage }: UploadPageProps
     const parsed = parseDroppedReferenceText(plainText, uriList, htmlText);
     const droppedFiles = Array.from(e.dataTransfer.files ?? []).filter(isSupportedUpload);
     const droppedFilePaths = extractDroppedFilePaths(droppedFiles);
-    const droppedPdfFiles = droppedFiles.filter((file) => !isTriconveyReferenceName(file.name));
-
+    const droppedPdfFiles = droppedFiles.filter((f) => !isTriconveyReferenceName(f.name));
     const hasOnlyTriconveyRefs =
-      droppedFiles.length > 0 &&
-      droppedFiles.every((file) => isTriconveyReferenceName(file.name));
+      droppedFiles.length > 0 && droppedFiles.every((f) => isTriconveyReferenceName(f.name));
 
-    // In the desktop app, dropped File objects can carry a native `path`
-    // property. Prefer those concrete local paths over matter metadata so we
-    // import the exact cached PDF TriConvey just downloaded.
     if (droppedFilePaths.length) {
-      appendFiles([makeReferenceFile(JSON.stringify({ LocalPaths: droppedFilePaths }, null, 2))]);
+      void appendFiles([makeReferenceFile(JSON.stringify({ LocalPaths: droppedFilePaths }, null, 2))]);
       return;
     }
-
-    // Next preference: explicit paths from drag text. Browsers often expose the
-    // dropped `.smokeball.tmp` items as virtual files that cannot actually be
-    // uploaded, which causes fetch to fail before the backend sees `/api/runs`.
     if (parsed?.localPaths?.length) {
-      appendFiles([makeReferenceFile(JSON.stringify({ LocalPaths: parsed.localPaths }, null, 2))]);
+      void appendFiles([makeReferenceFile(JSON.stringify({ LocalPaths: parsed.localPaths }, null, 2))]);
       return;
     }
     if (droppedPdfFiles.length > 0) {
-      appendFiles(droppedPdfFiles);
+      void appendFiles(droppedPdfFiles);
       return;
     }
     if (parsed?.matterPayload) {
-      appendFiles([makeReferenceFile(parsed.matterPayload)]);
+      void appendFiles([makeReferenceFile(parsed.matterPayload)]);
       return;
     }
-
     if (droppedFiles.length > 0 && !hasOnlyTriconveyRefs) {
-      appendFiles(droppedFiles);
+      void appendFiles(droppedFiles);
     }
   };
 
@@ -155,113 +233,137 @@ export function UploadScreen({ onUploadComplete, errorMessage }: UploadPageProps
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-2xl space-y-8"
-      >
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-serif italic tracking-tight text-slate-900">Convey Agent</h1>
-          <p className="text-slate-500 text-[1.05rem]">Upload Section 32 source documents to begin extraction and review</p>
-        </div>
+    <div className="flex min-h-screen flex-col bg-background font-sans">
+      <Header
+        onBack={onBack}
+        userInitials={userInitials}
+        onProfile={onProfile}
+        onSettings={onSettings}
+        onPolicy={onPolicy}
+        onLogout={onLogout}
+      />
 
-        <div
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={handleDrop}
-          className={`
-            relative border-2 border-dashed rounded-2xl p-12 transition-all duration-200 flex flex-col items-center justify-center gap-4 bg-white
-            ${isDragging ? 'border-primary bg-primary/5 scale-[1.01]' : 'border-slate-200 hover:border-slate-300'}
-          `}
+      <div className="flex flex-1 items-center justify-center p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-2xl space-y-8"
         >
-          <input 
-            type="file" 
-            ref={fileInputRef}
-            className="hidden" 
-            multiple 
-            onChange={(e) => handleFiles(e.target.files)}
-            accept=".pdf,.json,.tmp"
-          />
-          <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-primary">
-            <Upload className="w-8 h-8" />
+          <div className="space-y-2 text-center">
+            <h1 className="font-serif text-4xl italic tracking-tight text-foreground">Convey Agent</h1>
+            <p className="text-[1.05rem] text-muted-foreground">
+              Upload Section 32 source documents to begin extraction and review
+            </p>
           </div>
-          <div className="text-center">
-            <p className="text-[1.1rem] font-semibold text-slate-700">Drag and drop files here</p>
-            <p className="text-slate-400 text-sm mt-1">PDFs or TriConvey folder drops, ready for canonical extraction and Convey autofill</p>
-          </div>
-          <Button 
-            variant="outline" 
-            className="mt-2 border-slate-200 font-semibold"
-            onClick={() => fileInputRef.current?.click()}
+
+          <div
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            className={[
+              "relative flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed bg-card p-16 transition-all duration-200",
+              isDragging ? "scale-[1.01] border-primary bg-primary/5" : "border-border hover:border-primary/40",
+            ].join(" ")}
           >
-            Browse Files
-          </Button>
-        </div>
-
-        {errorMessage ? (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {errorMessage}
-          </div>
-        ) : null}
-
-        <div className="pt-2">
-          <Button 
-            disabled={files.length === 0}
-            onClick={() => onUploadComplete(files)}
-            className="w-full h-14 text-[1.05rem] font-bold bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:shadow-none"
-          >
-            Start Review
-            <ArrowRight className="ml-2 w-5 h-5" />
-          </Button>
-        </div>
-
-        <AnimatePresence>
-          {files.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-3"
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              multiple
+              onChange={(e) => handleFiles(e.target.files)}
+              accept=".pdf,.json,.tmp"
+            />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted text-primary">
+              <Upload className="h-8 w-8" />
+            </div>
+            <div className="text-center">
+              <p className="text-[1.1rem] font-semibold text-foreground">Drag and drop files here</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                PDFs or TriConvey folder drops, ready for canonical extraction and Convey autofill
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              className="mt-2 border-border font-semibold"
+              onClick={() => fileInputRef.current?.click()}
             >
-              <div className="flex items-center justify-between px-1">
-                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Ready for analysis ({files.length})</h3>
-                <button onClick={() => setFiles([])} className="text-xs font-semibold text-slate-400 hover:text-destructive transition-colors">Clear all</button>
-              </div>
-              <div className="grid gap-2">
-                {files.map((file, i) => (
-                  <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl shadow-sm group"
+              Browse Files
+            </Button>
+          </div>
+
+          {errorMessage ? (
+            <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {errorMessage}
+            </div>
+          ) : null}
+
+          <div className="pt-2">
+            <Button
+              disabled={files.length === 0}
+              onClick={() => onUploadComplete(files.map((item) => item.file))}
+              className="h-14 w-full rounded-xl bg-primary text-[1.05rem] font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 disabled:opacity-50 disabled:shadow-none"
+            >
+              Start Review
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
+
+          <AnimatePresence>
+            {files.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-3"
+              >
+                <div className="flex items-center justify-between px-1">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                    Ready for analysis ({files.length})
+                  </h3>
+                  <button
+                    onClick={() => setFiles([])}
+                    className="text-xs font-semibold text-muted-foreground transition-colors hover:text-destructive"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                        <FileText className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-700 truncate max-w-[300px]">{file.name}</p>
-                        <p className="text-xs text-slate-400">
-                          {file.name.toLowerCase().endsWith(".pdf")
-                            ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
-                            : "TriConvey reference"}
-                        </p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => removeFile(i)}
-                      className="p-2 hover:bg-slate-50 rounded-lg text-slate-300 hover:text-destructive transition-all"
+                    Clear all
+                  </button>
+                </div>
+                <div className="grid gap-2">
+                  {files.map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="group flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm"
                     >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                          <FileText className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="max-w-[300px] truncate text-sm font-semibold text-foreground">
+                            {item.displayName || item.file.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.file.name.toLowerCase().endsWith(".pdf")
+                              ? `${(item.file.size / 1024 / 1024).toFixed(2)} MB`
+                              : (item.subtitle || "TriConvey reference")}
+                        </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeFile(i)}
+                        className="rounded-lg p-2 text-muted-foreground/50 transition-all hover:bg-accent hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
     </div>
   );
 }

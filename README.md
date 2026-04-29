@@ -1,6 +1,6 @@
 # Convey Agent
 # Download Here
-https://github.com/mohdghousetiltil/convey-ai-agent/releases/download/v0.1.0/ConveyAgent-Setup-0.1.0.exe
+https://github.com/mohdghousetiltil/convey-ai-agent/releases/download/v0.0.1/ConveyAgent-Setup-0.0.1.exe
 
 Convey Agent is a Windows desktop app for Section 32 review, AI-assisted document analysis, and TriConvey autofill.
 

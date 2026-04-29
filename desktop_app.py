@@ -57,17 +57,24 @@ class _TeeStream:
 
 
 def _setup_debug_logging() -> Path | None:
-    """Set up file-based debug logging to ~/Downloads/ConveyAgent-debug-*.log.
+    """Set up file-based debug logging to %LOCALAPPDATA%/TriConveyAgent/temp/ConveyAgent-debug-*.log.
 
     Captures ALL Python logging output (DEBUG+), stdout, and stderr so the
     full picture of what the app is doing is in one readable file.
     Returns the log file path, or None if it could not be created.
     """
     try:
-        downloads = Path.home() / "Downloads"
-        downloads.mkdir(parents=True, exist_ok=True)
+        local_app_data = os.environ.get("LOCALAPPDATA", "")
+        if local_app_data:
+            log_dir = Path(local_app_data) / "TriConveyAgent" / "temp"
+        else:
+            # Fallback for non-Windows or unusual setups
+            import tempfile
+            log_dir = Path(tempfile.gettempdir()) / "TriConveyAgent"
+
+        log_dir.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        log_path = downloads / f"ConveyAgent-debug-{timestamp}.log"
+        log_path = log_dir / f"ConveyAgent-debug-{timestamp}.log"
         log_file = open(log_path, "w", encoding="utf-8", buffering=1)  # line-buffered
 
         # Header
@@ -105,7 +112,9 @@ def _setup_debug_logging() -> Path | None:
             "httpcore",
             "httpx",
             "multiprocessing",
-            "uvicorn.access",   # HTTP access log kept at INFO via uvicorn itself
+            "uvicorn.access",           # HTTP access log kept at INFO via uvicorn itself
+            "python_multipart",         # multipart file-upload byte-level noise
+            "python_multipart.multipart",
         ):
             logging.getLogger(_noisy).setLevel(logging.WARNING)
 
@@ -193,10 +202,18 @@ async def _apply_desktop_schema_migrations(conn) -> None:
     result = await conn.exec_driver_sql("PRAGMA table_info(users)")
     user_columns = {str(row[1]) for row in result.fetchall()}
 
+    result = await conn.exec_driver_sql("PRAGMA table_info(runs)")
+    run_columns = {str(row[1]) for row in result.fetchall()}
+
     if "oauth_provider" not in user_columns:
         await conn.exec_driver_sql("ALTER TABLE users ADD COLUMN oauth_provider TEXT")
     if "oauth_subject" not in user_columns:
         await conn.exec_driver_sql("ALTER TABLE users ADD COLUMN oauth_subject TEXT")
+
+    if "progress_pct" not in run_columns:
+        await conn.exec_driver_sql("ALTER TABLE runs ADD COLUMN progress_pct FLOAT NOT NULL DEFAULT 0.0")
+    if "progress_status" not in run_columns:
+        await conn.exec_driver_sql("ALTER TABLE runs ADD COLUMN progress_status TEXT")
 
     await conn.exec_driver_sql(
         "CREATE UNIQUE INDEX IF NOT EXISTS uq_users_oauth "

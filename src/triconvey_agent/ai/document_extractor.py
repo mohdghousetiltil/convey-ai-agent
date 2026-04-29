@@ -137,8 +137,8 @@ Return ONLY this JSON (no markdown fences, no explanation):
 }}"""
 
 _RATES_CERT_PROMPT = """\
-You are extracting structured data from a Victorian rates, water, or \
-authority certificate / enquiry document.
+You are extracting structured data from a Victorian rates, water, owners corporation, \
+or authority certificate / enquiry document.
 
 SOURCE DOCUMENT TEXT (verbatim):
 ---
@@ -154,8 +154,15 @@ Extract every field listed below. For each field:
 ANTI-HALLUCINATION RULES:
 1. Return null if not in the document.
 2. "quote" must be verbatim from the text above.
-3. annual_amount: the total annual charge (include currency symbol if present, e.g. "$1,234.56").
+3. annual_amount: the total annual charge (include currency symbol, e.g. "$1,234.56").
 4. certificate_date: date as it appears in the document (dd/mm/yyyy preferred).
+5. authority_name for OC documents: extract the FULL registered name of the Owners \
+Corporation entity. This is NOT "Owners Corporation 1" — look for a proper trading or \
+registered name (e.g. "MBCM (Ballarat) Owners Corporation", "Highpoint Owners Corporation"). \
+If a plan of subdivision number is present (e.g. PS723695D, LP1234) include it in the value \
+as: "<Name> (Plan <PlanNo>)". If only a plan number is found and no named entity, use \
+"Owners Corporation (Plan <PlanNo>)". Only fall back to "Owners Corporation <N>" if \
+absolutely no other name or plan reference exists anywhere in the document.
 
 Return ONLY this JSON (no markdown fences, no explanation):
 {{

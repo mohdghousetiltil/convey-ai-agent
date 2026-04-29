@@ -379,7 +379,7 @@ FIELD_MAP: dict[str, list[FieldBinding]] = {
         FieldBinding(
             tab_name="Sec. 32 (6)", control_type="Edit",
             match_label="13. Attachments",
-            match_top=451,
+            match_top=424,
             action="set_text", value_adapter="str",
         )
     ],

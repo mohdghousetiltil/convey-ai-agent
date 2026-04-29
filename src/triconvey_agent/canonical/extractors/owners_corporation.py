@@ -67,11 +67,22 @@ _OC_NAMED_RE = re.compile(
     r"([A-Z][A-Za-z]+(?:\s+[A-Za-z]+){0,4})\s+Owners?\s+Corporation\b",
 )
 
+# Plan of subdivision reference: PS723695D, LP1234, CP12345, RP1234A etc.
+_PLAN_NUMBER_RE = re.compile(
+    r"\b((?:PS|LP|CP|RP|SP|STA|REG)\s*\d{4,7}[A-Z]?)\b",
+    re.IGNORECASE,
+)
+
 # ---------------------------------------------------------------------------
 # Annual amount patterns (checked first — highest confidence)
 # ---------------------------------------------------------------------------
 
 _ANNUAL_PATTERNS = [
+    # "The current fees ... are $X payable annually"
+    re.compile(
+        rf"((?:current\s+)?fees?[^\n$]{{0,120}}are\s+({_CURRENCY_PATTERN})[^\n$]{{0,40}}payable\s+annually)",
+        re.IGNORECASE,
+    ),
     # "Annual levy $X", "Annual fee $X", "Annual contribution $X"
     re.compile(
         rf"(annual(?:ly)?\s+(?:fees?|levies|levy|amount|contribution|charge)[^\n$]{{0,60}}({_CURRENCY_PATTERN}))",
@@ -235,35 +246,72 @@ def _period_multiplier(text: str) -> int:
 
 
 def _extract_oc_name(doc: Document, text: str) -> list[Fact]:
-    """Extract the specific OC name — numbered OC preferred over generic."""
-    # "OWNERS CORPORATION 1" / "Owners Corporation No. 2"
-    m = _OC_NUMBERED_RE.search(text)
-    if m:
-        name = f"Owners Corporation {m.group(1)}"
-        return [
-            _make_fact(
-                doc, P.RATES_OC_AUTHORITY_NAME, name, m.group(0),
-                confidence=0.92,
-                notes="OC number from document",
-            )
-        ]
-    # Named OC (not a government department)
-    m = _OC_NAMED_RE.search(text)
-    if m:
-        name = " ".join(m.group(0).split())
+    """Extract the most descriptive OC name available.
+
+    Priority (highest → lowest):
+      1. Named OC body  — "ACME Owners Corporation"       (0.90)
+      2. Numbered + plan — "Owners Corporation 1 (PS723695D)"  (0.92)
+      3. Numbered only  — "Owners Corporation 1"           (0.85)
+      4. Plan only      — "Owners Corporation (PS723695D)"  (0.80)
+      5. Generic fallback — "Owners Corporation"            (0.75)
+    """
+    # --- 1. Named OC (e.g. "Acme Owners Corporation") ---
+    m_named = _OC_NAMED_RE.search(text)
+    if m_named:
+        name = " ".join(m_named.group(0).split())
         return [
             _make_fact(
                 doc, P.RATES_OC_AUTHORITY_NAME, name, name,
-                confidence=0.85,
-                notes="OC name from document text",
+                confidence=0.90,
+                notes="Named OC body from document text",
             )
         ]
+
+    # --- 2 & 3. Numbered OC, optionally enriched with plan number ---
+    m_num = _OC_NUMBERED_RE.search(text)
+    # Look for plan number anywhere in the document (filename + body)
+    haystack = f"{doc.filename or ''}\n{text}"
+    m_plan = _PLAN_NUMBER_RE.search(haystack)
+    plan_ref = m_plan.group(1).upper().replace(" ", "") if m_plan else None
+
+    if m_num and plan_ref:
+        name = f"Owners Corporation {m_num.group(1)} (Plan {plan_ref})"
+        return [
+            _make_fact(
+                doc, P.RATES_OC_AUTHORITY_NAME, name, m_num.group(0),
+                confidence=0.92,
+                notes=f"OC number + plan reference {plan_ref} from document",
+            )
+        ]
+    if m_num:
+        name = f"Owners Corporation {m_num.group(1)}"
+        return [
+            _make_fact(
+                doc, P.RATES_OC_AUTHORITY_NAME, name, m_num.group(0),
+                confidence=0.85,
+                notes="OC number from document (no plan ref found)",
+            )
+        ]
+
+    # --- 4. Plan number only ---
+    if plan_ref:
+        name = f"Owners Corporation (Plan {plan_ref})"
+        return [
+            _make_fact(
+                doc, P.RATES_OC_AUTHORITY_NAME, name,
+                f"Plan {plan_ref}",
+                confidence=0.80,
+                notes=f"OC inferred from plan reference {plan_ref}",
+            )
+        ]
+
+    # --- 5. Generic fallback ---
     return [
         _make_fact(
             doc, P.RATES_OC_AUTHORITY_NAME, "Owners Corporation",
             "Owners Corporation document detected",
             confidence=0.75,
-            notes="Generic fallback — no specific OC name found in document",
+            notes="Generic fallback — no specific OC name or plan ref found",
         )
     ]
 

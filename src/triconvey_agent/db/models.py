@@ -143,6 +143,7 @@ class Run(Base):
     __tablename__ = "runs"
     __table_args__ = (
         Index("ix_runs_client_status", "client_id", "status"),
+        Index("ix_runs_user_id", "user_id"),
         Index("ix_runs_matter_id", "matter_id"),
         Index("ix_runs_is_synced", "is_synced"),
     )
@@ -150,6 +151,7 @@ class Run(Base):
     id:               Mapped[uuid.UUID]       = mapped_column(_UUID, primary_key=True)
     matter_id:        Mapped[uuid.UUID | None] = mapped_column(_UUID, ForeignKey("matters.id"), nullable=True)
     client_id:        Mapped[uuid.UUID]       = mapped_column(_UUID, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
+    user_id:          Mapped[uuid.UUID | None] = mapped_column(_UUID, ForeignKey("users.id"), nullable=True)
     status:           Mapped[str]             = mapped_column(Text, nullable=False, default="pending")
     use_ai_review:    Mapped[bool]            = mapped_column(Boolean, nullable=False, default=False)
     model:            Mapped[str]             = mapped_column(Text, nullable=False, default="gpt-4.1-mini")
@@ -165,6 +167,8 @@ class Run(Base):
     is_synced:        Mapped[bool]            = mapped_column(Boolean, nullable=False, default=False)
     synced_at:        Mapped[datetime | None] = _ts_optional()
     local_only:       Mapped[bool]            = mapped_column(Boolean, nullable=False, default=False)
+    progress_pct:     Mapped[float]           = mapped_column(Float, nullable=False, default=0.0)
+    progress_status:  Mapped[str | None]      = mapped_column(Text, nullable=True)
 
 
 class Document(Base):

@@ -5,6 +5,26 @@ You are a Victorian conveyancing expert assistant inside the TriConvey platform.
 You help conveyancers understand Section 32 (Vendor's Statement) documents and
 authority certificates for a specific property transaction.
 
+## Authority display format — MANDATORY
+
+When listing any outgoing authority (council, water, state revenue, land tax, owners corporation),
+you MUST use this EXACT format — always the full legal name, never a shortened version:
+
+  Council:              {{Full Council Name}} - Annually
+  Water authority:      {{Full Water Authority Name}} - Annually
+  State revenue:        State Revenue Office - Land Tax
+  Land tax:             State Revenue Office - Land Tax   (same line, use amount separately)
+  Owners corporation:   Owners Corporation Insurance – Annually, {{OC Name if known}}
+
+Examples (correct):
+  Merri-bek City Council - Annually
+  Yarra Valley Water - Annually
+  State Revenue Office - Land Tax
+  Owners Corporation Insurance – Annually, OC Plan No. SP12345
+
+NEVER shorten to just "Merri-bek", "Yarra Valley", or "SRO". Always use the full
+official name as it appears in the authority certificate or the document corpus below.
+
 ## Source hierarchy — ALWAYS follow this order
 
 1. **Authority certificates** (council rates cert, water authority cert, OC cert, planning cert)
@@ -151,6 +171,7 @@ def build_system_prompt(
     conflict_snapshot: str = "",
     conversation_summary: str = "",
     specialist_block: str = "",
+    corpus_block: str = "",
 ) -> str:
     base = SYSTEM_PROMPT.format(
         fact_snapshot=fact_snapshot or "No pre-loaded facts available.",
@@ -158,6 +179,9 @@ def build_system_prompt(
         conversation_summary=conversation_summary or "No prior conversation summary available.",
         specialist_block=specialist_block or "General conveyancing copilot mode.",
     )
+    # Structured document corpus injected first — highest-priority context
+    if corpus_block:
+        base = corpus_block + "\n\n" + base
     if mode == "quick":
         base += _QUICK_ADDON
     elif mode == "standard":

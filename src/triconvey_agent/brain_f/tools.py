@@ -8,6 +8,12 @@ Tool catalogue:
   compare_facts        — compare the same fact path across two specific documents
   run_review_checklist — generate a whole-matter Section 32 checklist
   propose_answer_patch — queue a correction to an answer (user-approved)
+
+  -- Feature 3: agentic reasoning tools (from agent_tools.py) --
+  run_pipeline         — trigger / advise on pipeline re-processing
+  query_facts          — natural-language fact search
+  check_sec32_coverage — Sec 32 field coverage report
+  search_memory        — vector memory lookup
 """
 from __future__ import annotations
 
@@ -16,13 +22,24 @@ import math
 from typing import Any
 
 from triconvey_agent.canonical.facts.store import FactStoreImpl
+from triconvey_agent.brain_f.agent_tools import (
+    AGENT_TOOL_DEFINITIONS,
+    handle_run_pipeline,
+    handle_query_facts,
+    handle_check_sec32_coverage,
+    handle_search_memory_tool,
+)
 
 
 # ---------------------------------------------------------------------------
 # Anthropic tool schema definitions
 # ---------------------------------------------------------------------------
 
-TOOL_DEFINITIONS: list[dict[str, Any]] = [
+# ---------------------------------------------------------------------------
+# Combined tool list: existing tools + Feature-3 agentic tools
+# ---------------------------------------------------------------------------
+
+_BASE_TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
         "name": "get_facts",
         "description": (
@@ -160,6 +177,36 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         },
     },
 ]
+
+_RAG_TOOL_DEFINITION: list[dict[str, Any]] = [
+    {
+        "name": "search_rag",
+        "description": (
+            "Semantic search over all document text using the RAG index. "
+            "Returns the most relevant passages from across all uploaded documents. "
+            "Use this when get_facts returns nothing useful, or when you need verbatim "
+            "text from the documents to support an answer. "
+            "Prefer this over search_documents for accuracy — it uses embeddings when available."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Natural language query, e.g. 'building permit number and date' or 'bushfire prone area'.",
+                },
+                "top_k": {
+                    "type": "integer",
+                    "description": "Number of passages to return (default 6, max 12).",
+                },
+            },
+            "required": ["query"],
+        },
+    },
+]
+
+# Public TOOL_DEFINITIONS merges base tools + Feature-3 agentic tools + RAG
+TOOL_DEFINITIONS: list[dict[str, Any]] = _BASE_TOOL_DEFINITIONS + AGENT_TOOL_DEFINITIONS + _RAG_TOOL_DEFINITION
 
 
 # ---------------------------------------------------------------------------
@@ -427,9 +474,12 @@ def dispatch_tool(
     memory: dict[str, Any],
     corpus_chunks: list[dict[str, Any]],
     pending_patches: list[dict[str, Any]],
+    run_dir: Any | None = None,
+    vector_memories: list[dict[str, Any]] | None = None,
 ) -> str:
     """Route a tool call to the correct handler and return JSON string."""
     try:
+        # ── Existing tools ────────────────────────────────────────────────
         if tool_name == "get_facts":
             result = handle_get_facts(store, tool_input.get("path_prefix", ""))
         elif tool_name == "get_conflicts":
@@ -458,12 +508,50 @@ def dispatch_tool(
                 new_value=tool_input.get("new_value", ""),
                 reason=tool_input.get("reason", ""),
             )
+        # ── Feature-3 agentic tools ───────────────────────────────────────
+        elif tool_name == "run_pipeline":
+            result = handle_run_pipeline(
+                document_paths=tool_input.get("document_paths", []),
+                run_dir=run_dir,
+            )
+        elif tool_name == "query_facts":
+            result = handle_query_facts(
+                question=tool_input.get("question", ""),
+                store=store,
+            )
+        elif tool_name == "check_sec32_coverage":
+            result = handle_check_sec32_coverage(store)
+        elif tool_name == "search_memory":
+            result = handle_search_memory_tool(
+                query=tool_input.get("query", ""),
+                limit=int(tool_input.get("limit", 5)),
+                vector_memories=vector_memories,
+            )
+        elif tool_name == "search_rag":
+            result = _handle_search_rag(
+                query=tool_input.get("query", ""),
+                top_k=min(int(tool_input.get("top_k", 6)), 12),
+                run_dir=run_dir,
+            )
         else:
             result = {"error": f"Unknown tool: {tool_name}"}
     except Exception as exc:
         result = {"error": f"Tool '{tool_name}' raised {type(exc).__name__}: {exc}"}
 
     return json.dumps(result, default=str)
+
+
+def _handle_search_rag(query: str, top_k: int, run_dir: Any) -> dict[str, Any]:
+    """RAG semantic search using the pre-built embedding index."""
+    if not run_dir:
+        return {"results": [], "note": "No run directory available for RAG search."}
+    from pathlib import Path
+    try:
+        from triconvey_agent.corpus.rag import retrieve
+        results = retrieve(query, Path(run_dir), top_k=top_k)
+        return {"results": results, "count": len(results)}
+    except Exception as exc:
+        return {"results": [], "error": str(exc)}
 
 
 def _tokenize(text: str) -> set[str]:

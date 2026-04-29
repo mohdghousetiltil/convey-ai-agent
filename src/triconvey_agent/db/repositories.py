@@ -17,7 +17,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any, Iterable
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from triconvey_agent.db.models import (
@@ -401,7 +401,7 @@ class MatterRepo:
         volume_folio: str | None = None,
         **kwargs: Any,
     ) -> Matter:
-        """Find-or-create matter by `(client_id, matter_ref)`.
+        """Find-or-create matter by reference or stable property identifiers.
 
         Always updates `updated_at` + any provided fields on existing row.
         """
@@ -413,6 +413,32 @@ class MatterRepo:
                 )
             )
             existing = q.scalar_one_or_none()
+
+        if existing is None and volume_folio and property_address:
+            q = await session.execute(
+                select(Matter).where(
+                    Matter.client_id == client_id,
+                    Matter.volume_folio == volume_folio,
+                    Matter.property_address == property_address,
+                )
+            )
+            existing = q.scalar_one_or_none()
+
+        if existing is None and (volume_folio or property_address):
+            filters = []
+            if volume_folio:
+                filters.append(Matter.volume_folio == volume_folio)
+            if property_address:
+                filters.append(Matter.property_address == property_address)
+            q = await session.execute(
+                select(Matter).where(
+                    Matter.client_id == client_id,
+                    or_(*filters),
+                )
+            )
+            # Use first() — OR-filter can match multiple rows if data was
+            # imported more than once; pick the most-recently-updated row.
+            existing = q.scalars().first()
 
         if existing is None:
             matter = Matter(
@@ -461,6 +487,7 @@ class RunRepo:
         *,
         client_id: uuid.UUID,
         run_id: uuid.UUID,
+        user_id: uuid.UUID | None = None,
         matter_id: uuid.UUID | None = None,
         model: str = "gpt-4.1-mini",
         use_ai_review: bool = False,
@@ -468,10 +495,13 @@ class RunRepo:
         run = Run(
             id=run_id,
             client_id=client_id,
+            user_id=user_id,
             matter_id=matter_id,
             model=model,
             use_ai_review=use_ai_review,
             status="pending",
+            progress_pct=0.0,
+            progress_status="Starting...",
         )
         session.add(run)
         await session.flush()
@@ -481,17 +511,26 @@ class RunRepo:
             entity_type="run",
             entity_id=run.id,
             operation="INSERT",
-            payload={"status": run.status, "model": model},
+            payload={
+                "status": run.status,
+                "model": model,
+                "use_ai_review": use_ai_review,
+                "user_id": str(user_id) if user_id else None,
+                "matter_id": str(matter_id) if matter_id else None,
+                "local_only": bool(run.local_only),
+                "created_at": run.created_at.isoformat() if run.created_at else None,
+            },
         )
         return run
 
     @staticmethod
     async def get(
-        session: AsyncSession, *, client_id: uuid.UUID, run_id: uuid.UUID
+        session: AsyncSession, *, client_id: uuid.UUID, run_id: uuid.UUID, user_id: uuid.UUID | None = None
     ) -> Run | None:
-        q = await session.execute(
-            select(Run).where(Run.id == run_id, Run.client_id == client_id)
-        )
+        stmt = select(Run).where(Run.id == run_id, Run.client_id == client_id)
+        if user_id is not None:
+            stmt = stmt.where(Run.user_id == user_id)
+        q = await session.execute(stmt)
         return q.scalar_one_or_none()
 
     @staticmethod
@@ -514,6 +553,47 @@ class RunRepo:
         return list(q.scalars().all())
 
     @staticmethod
+    async def list_recent_with_matter(
+        session: AsyncSession,
+        *,
+        client_id: uuid.UUID,
+        user_id: uuid.UUID | None = None,
+        limit: int = 10,
+    ) -> list[tuple[Run, Matter | None]]:
+        stmt = (
+            select(Run, Matter)
+            .outerjoin(Matter, Matter.id == Run.matter_id)
+            .where(Run.client_id == client_id)
+            .order_by(Run.created_at.desc())
+            .limit(limit)
+        )
+        if user_id is not None:
+            stmt = stmt.where(Run.user_id == user_id)
+        q = await session.execute(stmt)
+        return [(row[0], row[1]) for row in q.all()]
+
+    @staticmethod
+    async def attach_matter(
+        session: AsyncSession,
+        *,
+        client_id: uuid.UUID,
+        run_id: uuid.UUID,
+        matter_id: uuid.UUID,
+    ) -> None:
+        values: dict[str, Any] = {"matter_id": matter_id, "updated_at": _now()}
+        await session.execute(
+            update(Run).where(Run.id == run_id, Run.client_id == client_id).values(**values)
+        )
+        await _enqueue_sync(
+            session,
+            client_id=client_id,
+            entity_type="run",
+            entity_id=run_id,
+            operation="UPDATE",
+            payload={k: _json_safe(v) for k, v in values.items()},
+        )
+
+    @staticmethod
     async def update_status(
         session: AsyncSession,
         *,
@@ -526,6 +606,8 @@ class RunRepo:
         summary_text: str | None = None,
         document_count: int | None = None,
         total_facts: int | None = None,
+        progress_pct: float | None = None,
+        progress_status: str | None = None,
     ) -> None:
         values: dict[str, Any] = {"status": status, "updated_at": _now()}
         if error_message is not None:
@@ -540,6 +622,10 @@ class RunRepo:
             values["document_count"] = document_count
         if total_facts is not None:
             values["total_facts"] = total_facts
+        if progress_pct is not None:
+            values["progress_pct"] = progress_pct
+        if progress_status is not None:
+            values["progress_status"] = progress_status
 
         await session.execute(
             update(Run).where(Run.id == run_id, Run.client_id == client_id).values(**values)

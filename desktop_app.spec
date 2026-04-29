@@ -8,7 +8,9 @@ icon_path = os.environ.get("TRICONVEY_APP_ICON") or None
 version_file = os.environ.get("TRICONVEY_VERSION_FILE") or None
 
 datas = [
+    (str(project_root / "pyproject.toml"), "."),
     (str(project_root / "ui" / "dist"), "ui/dist"),
+    (str(project_root / "public"), "public"),
     (str(project_root / "triconvey-mapping"), "triconvey-mapping"),
     (str(project_root / "src" / "triconvey_agent" / "canonical" / "questions" / "registry.yaml"),
      "triconvey_agent/canonical/questions"),
@@ -132,7 +134,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name="TriConveyAgent",
+    name="ConveyAgent",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

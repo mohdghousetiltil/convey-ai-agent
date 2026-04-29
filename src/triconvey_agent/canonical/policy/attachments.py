@@ -114,6 +114,28 @@ def _strip_plan_prefix(plan_number: str, prefix: str) -> str:
     return plan_number
 
 
+def _normalize_plan_num_key(num: str) -> str:
+    """Normalize a plan number for deduplication.
+
+    Strips known letter prefixes and leading zeros so that
+    'LP009777' and '009777' both produce '9777' and are
+    treated as duplicates. The LP-prefixed display form wins
+    when both variants are present.
+    """
+    s = str(num).strip().upper()
+    for prefix in ("PS", "PC", "LP", "TP", "RP", "SP", "AL"):
+        if s.startswith(prefix):
+            rest = s[len(prefix):]
+            try:
+                return f"_{prefix}{int(rest)}"
+            except ValueError:
+                return s
+    try:
+        return f"_{int(s)}"
+    except ValueError:
+        return s
+
+
 def _source_file(fact: Fact) -> str:
     return fact.sources[0].file if fact.sources else ""
 
@@ -214,8 +236,14 @@ def _title_entries(store) -> list[str]:
 
 
 def _plan_entries(store) -> list[str]:
-    """Build Plan of Subdivision and Plan of Consolidation lines."""
+    """Build Plan of Subdivision and Plan of Consolidation lines.
+
+    Title-derived entries (which carry the full LP/PS prefix) are processed
+    first so that bare-number duplicates from DOCS_PLAN_OF_SUBDIVISION are
+    suppressed via the normalized dedup key.
+    """
     lines: list[str] = []
+    # Keyed by _normalize_plan_num_key so 'LP009777' and '009777' collide.
     seen: set[str] = set()
 
     def _is_attachment_plan_source(fact: Fact) -> bool:
@@ -226,28 +254,9 @@ def _plan_entries(store) -> list[str]:
             return False
         return True
 
-    # Plan of Subdivision
-    ps_facts = _get_all_facts(store, P.DOCS_PLAN_OF_SUBDIVISION)
-    for f in ps_facts:
-        if not _is_attachment_plan_source(f):
-            continue
-        try:
-            info = json.loads(str(f.value))
-            num = info.get("number", _REVIEW_PLACEHOLDER)
-            date = info.get("date", _REVIEW_PLACEHOLDER)
-            key = num
-            if key not in seen:
-                seen.add(key)
-                lines.append(
-                    f"- Plan of Subdivision {_strip_plan_prefix(str(num), 'PS')} dated {date}"
-                )
-        except (json.JSONDecodeError, TypeError):
-            pass
-
-    # Also check title.plan_type + title.plan_number for PS entries not from copy-of-plan
+    # ── 1. Title-derived plan entries (processed FIRST so prefixed form wins) ──
     plan_type_facts = _get_all_facts(store, "title.plan_type")
     plan_num_facts = _get_all_facts(store, "title.plan_number")
-    # Match by source file
     file_to_plan_type: dict[str, str] = {
         f.sources[0].file: str(f.value) for f in plan_type_facts if f.sources
     }
@@ -260,44 +269,59 @@ def _plan_entries(store) -> list[str]:
         plan_num = file_to_plan_num.get(src_file, "")
         if not plan_num:
             continue
-        # Normalise plan type to 2-3 letter prefix
         plan_type_u = plan_type.strip().upper()
         if "SUBDIVISION" in plan_type_u:
             plan_type_u = "PS"
         elif "CONSOLIDATION" in plan_type_u:
             plan_type_u = "PC"
         elif "LICENSED" in plan_type_u or plan_type_u == "LP":
-            # LP (Licensed Plan) = old-style equivalent of Plan of Subdivision
             plan_type_u = "LP"
         elif "TITLE PLAN" in plan_type_u or plan_type_u == "TP":
             plan_type_u = "TP"
 
-        # Build full plan number (preserve any existing letter prefix)
         if re.match(r"^(PS|PC|LP|TP|RP|SP|AL)\d", plan_num, re.IGNORECASE):
             full = plan_num.upper()
         elif plan_type_u in ("PS", "PC", "LP", "TP", "RP", "SP", "AL"):
             full = f"{plan_type_u}{plan_num}"
         else:
-            continue  # Unknown plan type — skip
+            continue
 
+        dedup_key = _normalize_plan_num_key(full)
         date = _clean_date(file_to_date.get(src_file, _REVIEW_PLACEHOLDER))
 
-        if plan_type_u == "PS" and full not in seen:
-            seen.add(full)
+        if plan_type_u == "PS" and dedup_key not in seen:
+            seen.add(dedup_key)
             lines.append(
                 f"- Plan of Subdivision {_strip_plan_prefix(full, 'PS')} dated {date}"
             )
-        elif plan_type_u in ("LP", "TP") and full not in seen:
-            # LP / TP: display as "Plan of Subdivision LP009777 dated ..." (keep prefix)
-            seen.add(full)
+        elif plan_type_u in ("LP", "TP") and dedup_key not in seen:
+            seen.add(dedup_key)
             lines.append(f"- Plan of Subdivision {full} dated {date}")
-        elif plan_type_u == "PC" and full not in seen:
-            seen.add(full)
+        elif plan_type_u == "PC" and dedup_key not in seen:
+            seen.add(dedup_key)
             lines.append(
                 f"- Plan of Consolidation {_strip_plan_prefix(full, 'PC')} dated {date}"
             )
 
-    # Plan of Consolidation
+    # ── 2. DOCS_PLAN_OF_SUBDIVISION — skip if already seen via title facts ──
+    ps_facts = _get_all_facts(store, P.DOCS_PLAN_OF_SUBDIVISION)
+    for f in ps_facts:
+        if not _is_attachment_plan_source(f):
+            continue
+        try:
+            info = json.loads(str(f.value))
+            num = info.get("number", _REVIEW_PLACEHOLDER)
+            date = info.get("date", _REVIEW_PLACEHOLDER)
+            dedup_key = _normalize_plan_num_key(str(num))
+            if dedup_key not in seen:
+                seen.add(dedup_key)
+                lines.append(
+                    f"- Plan of Subdivision {_strip_plan_prefix(str(num), 'PS')} dated {date}"
+                )
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    # ── 3. Plan of Consolidation ──
     pc_facts = _get_all_facts(store, P.DOCS_PLAN_OF_CONSOLIDATION)
     for f in pc_facts:
         if not _is_attachment_plan_source(f):
@@ -306,9 +330,9 @@ def _plan_entries(store) -> list[str]:
             info = json.loads(str(f.value))
             num = info.get("number", _REVIEW_PLACEHOLDER)
             date = info.get("date", _REVIEW_PLACEHOLDER)
-            key = num
-            if key not in seen:
-                seen.add(key)
+            dedup_key = _normalize_plan_num_key(str(num))
+            if dedup_key not in seen:
+                seen.add(dedup_key)
                 lines.append(
                     f"- Plan of Consolidation {_strip_plan_prefix(str(num), 'PC')} dated {date}"
                 )

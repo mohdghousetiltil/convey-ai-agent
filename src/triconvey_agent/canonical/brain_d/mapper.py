@@ -11,7 +11,11 @@ from typing import Any
 import yaml
 
 from triconvey_agent.canonical.brain_d.field_map import FIELD_MAP, FieldBinding
-from triconvey_agent.normalizers.display_names import normalize_council_display_name
+from triconvey_agent.normalizers.display_names import (
+    normalize_council_display_name,
+    normalize_water_authority_display_name,
+    WATER_AUTHORITY_DISPLAY_NAME_MAP,
+)
 from triconvey_agent.canonical.schemas import (
     AnswerObject,
     AnswerStrategy,
@@ -71,10 +75,63 @@ def _normalize_payload(question_id: str, payload: Any) -> Any:
         return None
     if question_id in {
         "sec32_1.1_outgoing_1_authority",
+        "sec32_1.1_outgoing_2_authority",
+        "sec32_1.1_outgoing_3_authority",
+        "sec32_1.1_outgoing_4_authority",
         "sec32_3.4_responsible_authority",
     }:
-        return normalize_council_display_name(str(payload))
+        name = str(payload)
+        # Water authorities take priority — check before applying council suffix logic.
+        if name.strip().lower() in WATER_AUTHORITY_DISPLAY_NAME_MAP:
+            return normalize_water_authority_display_name(name)
+        return normalize_council_display_name(name)
     return payload
+
+
+def _source_kind(answer: AnswerObject, question_id: str) -> str:
+    if question_id.startswith("policy_"):
+        return "policy_default"
+    if answer.answer_strategy == AnswerStrategy.POLICY_DEFAULT:
+        return "policy_default"
+    if answer.answer_strategy == AnswerStrategy.GROUNDED_AI:
+        return "grounded_ai"
+    facts = answer.facts_used or []
+    if any("policy_computed" in fact or "policy_attachments" in fact for fact in facts):
+        return "computed_policy"
+    if facts:
+        return "extracted_fact"
+    return "unknown"
+
+
+def _intent_category(binding: FieldBinding, question_id: str, source_kind: str) -> str:
+    if binding.action == "skip":
+        return "skip"
+    if binding.action == "select_dropdown":
+        return "selection"
+    if binding.action == "set_checkbox" and source_kind == "policy_default":
+        return "policy_tick"
+    if source_kind == "computed_policy":
+        return "derived_entry"
+    if binding.action == "set_text" and source_kind == "policy_default":
+        return "derived_entry"
+    return "exact_entry"
+
+
+def _intent_summary(question_id: str, answer: AnswerObject, binding: FieldBinding, payload: Any, source_kind: str) -> str:
+    label = answer.question_label or question_id
+    if binding.action == "set_checkbox" and source_kind == "policy_default":
+        return f"Firm policy requires ticking '{label}'."
+    if source_kind == "computed_policy":
+        return f"Computed policy output is being entered for '{label}'."
+    if binding.action == "select_dropdown":
+        return f"Choosing the mapped option for '{label}'."
+    if binding.action == "set_text":
+        if source_kind == "policy_default":
+            return f"Standard firm wording is being entered for '{label}'."
+        return f"Entering the extracted value for '{label}': {payload!s}"
+    if binding.action == "set_checkbox":
+        return f"Applying the extracted true/false result for '{label}'."
+    return f"Handling '{label}'."
 
 
 # ---------------------------------------------------------------------------

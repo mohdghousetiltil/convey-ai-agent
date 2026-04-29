@@ -55,11 +55,17 @@ export interface ReviewRunPayload {
     client_name?: string;
     total_facts?: number;
   };
+  status?: "pending" | "running" | "completed" | "failed";
+  progress_pct?: number;
+  progress_status?: string;
+  error_message?: string;
   client_name: string;
   matter: {
     client_name: string;
     volume_folio: string;
     property_address: string;
+    matter_ref?: string | null;
+    matter_id?: string | null;
   };
   run_dir: string;
   corpus_path?: string;
@@ -102,6 +108,21 @@ export interface ReviewRunPayload {
   };
   action_plan: Record<string, unknown>;
   execution_report: Record<string, unknown>;
+}
+
+export interface RecentRunPayload {
+  run_id: string;
+  status: string;
+  created_at?: string | null;
+  completed_at?: string | null;
+  time_taken_seconds?: number | null;
+  client_name: string;
+  volume_folio: string;
+  property_address: string;
+  matter_id?: string | null;
+  matter_ref?: string | null;
+  summary_text?: string | null;
+  local_only?: boolean;
 }
 
 export interface ChatCitation {
@@ -168,6 +189,23 @@ export interface AutofillJobPayload {
   } | null;
 }
 
+export interface AutofillActivityEvent {
+  index: number;
+  ts?: string | null;
+  kind: string;
+  summary: string;
+  payload: Record<string, unknown>;
+}
+
+export interface AutofillActivityPayload {
+  job_id: string;
+  status: AutofillJobPayload["status"];
+  cursor: number;
+  events: AutofillActivityEvent[];
+  latest_screenshot_url?: string | null;
+  latest_screenshot_name?: string | null;
+}
+
 export interface AnswerUpdatePayload {
   value: ReviewFieldValue;
   needs_review?: boolean;
@@ -186,6 +224,7 @@ export interface LocalSettingsPayload {
   includePrereleaseUpdates: boolean;
   autoCheckForUpdates: boolean;
   cloudSyncEnabled: boolean;
+  theme: "light" | "dark" | "auto";
 }
 
 export interface AppInfoPayload {
@@ -402,17 +441,11 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
 
     let message = "Session expired. Please log in again.";
     try {
-      const payload = await response.json();
-      message =
-        (payload as Record<string, string>).detail ??
-        (payload as Record<string, string>).message ??
-        message;
+      const raw = await response.text();
+      const payload = raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+      message = (payload?.detail as string) ?? (payload?.message as string) ?? raw ?? message;
     } catch {
-      try {
-        message = (await response.text()) || message;
-      } catch {
-        // keep default
-      }
+      // keep default
     }
 
     if (shouldForceLogout) {
@@ -426,10 +459,11 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!response.ok) {
     let message = response.statusText;
     try {
-      const payload = await response.json();
-      message = (payload as Record<string, string>).detail ?? (payload as Record<string, string>).message ?? message;
+      const raw = await response.text();
+      const payload = raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+      message = (payload?.detail as string) ?? (payload?.message as string) ?? raw ?? message;
     } catch {
-      message = await response.text();
+      // keep statusText
     }
     throw new Error(message || "Request failed.");
   }
@@ -438,7 +472,41 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
     clearPendingOAuth();
   }
 
-  return response.json() as Promise<T>;
+  const raw = await response.text();
+  if (!raw) return null as T;
+  return JSON.parse(raw) as T;
+}
+
+async function apiRequestBlob(path: string, init: RequestInit = {}): Promise<{ blob: Blob; filename?: string }> {
+  const token = getToken();
+  const headers = new Headers(init.headers ?? {});
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  let response = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  if (response.status === 401) {
+    const isLoginAttempt = path === "/auth/login";
+    const shouldForceLogout = !isLoginAttempt && Boolean(token);
+    if (shouldForceLogout) {
+      clearAuth();
+      window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT));
+    }
+    throw new Error("Session expired. Please log in again.");
+  }
+  if (!response.ok) {
+    let message = response.statusText;
+    try {
+      const raw = await response.text();
+      const payload = raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+      message = (payload?.detail as string) ?? (payload?.message as string) ?? raw ?? message;
+    } catch {
+      // keep statusText
+    }
+    throw new Error(message || "Request failed.");
+  }
+  const blob = await response.blob();
+  const disposition = response.headers.get("content-disposition") || "";
+  const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i);
+  const filename = match?.[1] ? decodeURIComponent(match[1]) : match?.[2] || undefined;
+  return { blob, filename };
 }
 
 // ---------------------------------------------------------------------------
@@ -789,18 +857,27 @@ export function loginWithOAuth(provider: "google" | "microsoft"): Promise<LoginP
 
 export async function createRun(
   files: File[],
-  options?: { useAiReview?: boolean; model?: string; triconveyExe?: string | null },
+  options?: { useAiReview?: boolean; model?: string; triconveyExe?: string | null; reanalyseRunId?: string },
 ): Promise<ReviewRunPayload> {
   const body = new FormData();
   for (const file of files) body.append("files", file);
   body.append("use_ai_review", String(options?.useAiReview ?? false));
   body.append("model", options?.model ?? "gpt-4.1-mini");
   if (options?.triconveyExe) body.append("triconvey_exe", options.triconveyExe);
+  if (options?.reanalyseRunId) body.append("reanalyse_run_id", options.reanalyseRunId);
   return apiRequest<ReviewRunPayload>("/runs", { method: "POST", body });
 }
 
 export async function getRun(runId: string): Promise<ReviewRunPayload> {
   return apiRequest<ReviewRunPayload>(`/runs/${runId}`);
+}
+
+export async function getRecentRuns(limit = 10): Promise<RecentRunPayload[]> {
+  return apiRequest<RecentRunPayload[]>(`/runs/recent?limit=${encodeURIComponent(String(limit))}`);
+}
+
+export async function getAllRuns(): Promise<RecentRunPayload[]> {
+  return apiRequest<RecentRunPayload[]>(`/runs/recent?limit=1000`);
 }
 
 export async function saveAnswers(
@@ -856,6 +933,10 @@ export async function continueAutofillJob(jobId: string): Promise<AutofillJobPay
   return apiRequest<AutofillJobPayload>(`/autofill-jobs/${jobId}/continue`, { method: "POST" });
 }
 
+export async function getAutofillActivity(jobId: string, cursor = 0): Promise<AutofillActivityPayload> {
+  return apiRequest<AutofillActivityPayload>(`/autofill-jobs/${jobId}/activity?cursor=${cursor}`);
+}
+
 export async function askRunQuestion(
   runId: string,
   question: string,
@@ -884,12 +965,112 @@ export async function askRunQuestion(
 export async function uploadChatFiles(
   runId: string,
   files: File[],
-): Promise<{ uploaded: string[]; message: string }> {
+): Promise<{ uploaded: string[]; message: string; corpus_extraction_started?: boolean }> {
   const body = new FormData();
   for (const file of files) body.append("files", file);
-  return apiRequest<{ uploaded: string[]; message: string }>(`/runs/${runId}/chat-files`, {
+  return apiRequest<{ uploaded: string[]; message: string; corpus_extraction_started?: boolean }>(`/runs/${runId}/chat-files`, {
     method: "POST",
     body,
+  });
+}
+
+export async function reprocessRun(runId: string): Promise<unknown> {
+  return apiRequest(`/runs/${runId}/reprocess`, { method: "POST" });
+}
+
+export interface CorpusPendingEntry {
+  document_id: string;
+  filename: string;
+  document_type: string;
+  page_count: number;
+  pages_processed: number;
+  highlights: string[];
+}
+
+export interface CorpusState {
+  matter_id: string;
+  run_id: string;
+  document_count: number;
+  pending_count: number;
+  documents: unknown[];
+  pending: CorpusPendingEntry[];
+  updated_at: string;
+  context_preview: string;
+}
+
+export async function getRunCorpus(runId: string): Promise<CorpusState> {
+  return apiRequest<CorpusState>(`/runs/${runId}/corpus`);
+}
+
+export async function confirmCorpusEntry(
+  runId: string,
+  documentId: string,
+): Promise<{ confirmed: boolean; document_id: string; filename: string; message: string }> {
+  return apiRequest(`/runs/${runId}/corpus/confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ document_id: documentId }),
+  });
+}
+
+export interface DocumentValidation {
+  is_valid: boolean;
+  is_suspicious: boolean;
+  confidence: number;
+  reason: string;
+  document_type_guess: string;
+  warning_message?: string | null;
+}
+
+export interface ProposedDocumentChange {
+  question_id: string;
+  question_label: string;
+  current_value: unknown;
+  proposed_value: unknown;
+  confidence: number;
+  source: string;
+  ui_section: string;
+}
+
+export interface ProcessDocumentResult {
+  document_id: string;
+  filename: string;
+  doc_path: string | null;
+  validation: DocumentValidation;
+  corpus_entry: unknown | null;
+  proposed_changes: ProposedDocumentChange[];
+  error?: string;
+  already_exists?: boolean;
+  message?: string;
+}
+
+export async function processNewChatDocument(
+  runId: string,
+  file: File,
+): Promise<ProcessDocumentResult> {
+  const body = new FormData();
+  body.append("file", file);
+  body.append("filename", file.name);
+  return apiRequest<ProcessDocumentResult>(`/runs/${runId}/chat-documents/process`, {
+    method: "POST",
+    body,
+  });
+}
+
+export async function applyDocumentChanges(
+  runId: string,
+  payload: {
+    document_id: string;
+    doc_path: string;
+    corpus_entry: unknown | null;
+    approved_change_ids: string[];
+    all_changes: ProposedDocumentChange[];
+  },
+): Promise<{ ok: boolean; applied_changes: string[]; corpus_confirmed: boolean }> {
+  return apiRequest(`/runs/${runId}/chat-documents/apply`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
 }
 
@@ -901,6 +1082,16 @@ export async function applyAnswerPatches(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ patches }),
+  });
+}
+
+export async function resolveTriconveyReference(
+  payloadText: string,
+): Promise<{ resolved: Array<{ name: string; path: string }>; display_name: string; subtitle: string }> {
+  return apiRequest(`/triconvey/resolve-reference`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ payload_text: payloadText }),
   });
 }
 
@@ -961,3 +1152,62 @@ export async function downloadUpdateInstaller(options?: {
     }),
   });
 }
+
+export async function downloadBrainELogs(runId: string): Promise<void> {
+  const { blob, filename } = await apiRequestBlob(`/runs/${runId}/brain-e-logs`, {
+    method: "GET",
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename || `brain_e_logs_${runId}.zip`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ── Smokeball direct-push ─────────────────────────────────────────────────────
+
+export interface SmokeballPushResult {
+  matter_id: string;
+  success: boolean;
+  method: string | null;
+  fields_pushed: number;
+  warning: string | null;
+  error: string | null;
+}
+
+export interface SmokeballMatter {
+  id: string;
+  matterNumber: string;
+  description: string;
+  matterType?: { name: string } | null;
+  clients?: { name: { firstName: string; lastName: string } }[];
+  status?: string;
+  matterSettlementDate?: string | null;
+}
+
+/**
+ * Push Section 32 conveyancing fields directly into Smokeball/TriConvey.
+ * triConvey.exe must be running and logged in.
+ */
+export async function pushS32ToSmokeball(
+  matterNumber: string,
+  answers: Record<string, unknown>
+): Promise<SmokeballPushResult> {
+  return apiRequest<SmokeballPushResult>("/smokeball/push-s32", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ matter_number: matterNumber, answers }),
+  });
+}
+
+/**
+ * List all Smokeball matters visible to the logged-in triConvey user.
+ * triConvey.exe must be running and logged in.
+ */
+export async function listSmokeballMatters(): Promise<SmokeballMatter[]> {
+  return apiRequest<SmokeballMatter[]>("/smokeball/matters");
+}
+

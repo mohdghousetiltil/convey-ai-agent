@@ -177,7 +177,8 @@ export interface LocalSettingsPayload {
   language: string;
   openAiApiKey: string;
   anthropicApiKey: string;
-  aiProvider: "openai" | "anthropic" | "hybrid";
+  googleApiKey: string;               // Feature 1: Google Gemini
+  aiProvider: "openai" | "anthropic" | "google" | "hybrid";
   aiMode: "cost_efficient" | "all_time_best" | "turbo";
   defaultModelName: string;
   triconveyPath: string;
@@ -185,6 +186,34 @@ export interface LocalSettingsPayload {
   updateRepository: string;
   includePrereleaseUpdates: boolean;
   autoCheckForUpdates: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Feature 2: Vector memory types
+// ---------------------------------------------------------------------------
+
+export interface MemoryRecord {
+  id: string;
+  session_id: string;
+  content: string;
+  created_at: string;
+  similarity?: number;
+}
+
+export interface MemorySavePayload {
+  session_id: string;
+  content: string;
+  embedding: number[];
+}
+
+export interface MemorySearchPayload {
+  query_embedding: number[];
+  limit?: number;
+}
+
+export interface MemorySearchResult {
+  results: MemoryRecord[];
+  count: number;
 }
 
 export interface AppInfoPayload {
@@ -798,6 +827,7 @@ export async function askRunQuestion(
     mode?: "quick" | "standard" | "thorough";
     aiMode?: "cost_efficient" | "all_time_best" | "turbo";
     signal?: AbortSignal;
+    sessionId?: string;              // Feature 4: vector memory session
   },
 ): Promise<ChatAnswerPayload> {
   return apiRequest<ChatAnswerPayload>(`/runs/${runId}/chat`, {
@@ -810,19 +840,81 @@ export async function askRunQuestion(
       history: options?.history ?? [],
       mode: options?.mode ?? "standard",
       aiMode: options?.aiMode ?? null,
+      session_id: options?.sessionId ?? null,  // Feature 4
     }),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Feature 2: Vector memory API helpers
+// ---------------------------------------------------------------------------
+
+export async function saveMemory(payload: MemorySavePayload): Promise<{ saved: boolean }> {
+  return apiRequest<{ saved: boolean }>("/memory", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function searchMemory(payload: MemorySearchPayload): Promise<MemorySearchResult> {
+  return apiRequest<MemorySearchResult>("/memory/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function cleanupExpiredMemory(): Promise<{ deleted: number }> {
+  return apiRequest<{ deleted: number }>("/memory/expired", {
+    method: "DELETE",
   });
 }
 
 export async function uploadChatFiles(
   runId: string,
   files: File[],
-): Promise<{ uploaded: string[]; message: string }> {
+): Promise<{ uploaded: string[]; message: string; corpus_extraction_started?: boolean }> {
   const body = new FormData();
   for (const file of files) body.append("files", file);
-  return apiRequest<{ uploaded: string[]; message: string }>(`/runs/${runId}/chat-files`, {
+  return apiRequest<{ uploaded: string[]; message: string; corpus_extraction_started?: boolean }>(`/runs/${runId}/chat-files`, {
     method: "POST",
     body,
+  });
+}
+
+export interface CorpusPendingEntry {
+  document_id: string;
+  filename: string;
+  document_type: string;
+  page_count: number;
+  pages_processed: number;
+  highlights: string[];
+}
+
+export interface CorpusState {
+  matter_id: string;
+  run_id: string;
+  document_count: number;
+  pending_count: number;
+  documents: unknown[];
+  pending: CorpusPendingEntry[];
+  updated_at: string;
+  context_preview: string;
+}
+
+export async function getRunCorpus(runId: string): Promise<CorpusState> {
+  return apiRequest<CorpusState>(`/runs/${runId}/corpus`);
+}
+
+export async function confirmCorpusEntry(
+  runId: string,
+  documentId: string,
+): Promise<{ confirmed: boolean; document_id: string; filename: string; message: string }> {
+  return apiRequest(`/runs/${runId}/corpus/confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ document_id: documentId }),
   });
 }
 

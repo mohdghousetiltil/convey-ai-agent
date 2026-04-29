@@ -66,6 +66,31 @@ Permits, certificates of final inspection, notices and orders in the preceding 1
         self.assertIsNotNone(permit_checked)
         self.assertTrue(permit_checked.value)
         self.assertIsNotNone(permit_text)
-        self.assertIn("Building Permit No. 7632364376422 issued on 11/10/2019", str(permit_text.value))
+        self.assertIn("Building Permit No. issued 11/10/2019 for Construction of a Shed.", str(permit_text.value))
         self.assertIsNotNone(attachments)
         self.assertIn("- Building Permit No. 7632364376422 dated 11/10/2019", str(attachments.value))
+
+    def test_policy_uses_simplified_ballarat_permit_wording(self):
+        text = """
+Building Permit 10 Year Search
+Application No. (if applicable) Description (if applicable)
+BPA/2019/2050/P Construction of Dwelling, Attached Garage, Portico & Alfresco
+Private Permit 30 October 2019
+Occupancy Permit 18 May 2020
+"""
+        store = FactStoreImpl()
+        store.add_many(extract_building_approval_facts(_doc("VIC_ Enquiry - Ballarat_ Building Approval.pdf", text)))
+
+        run_policy_pass(store)
+
+        permit_text, _ = store.get(POLICY_TAB3_BUILDING_PERMITS_TEXT)
+        self.assertIsNotNone(permit_text)
+        value = str(permit_text.value)
+        self.assertIn(
+            "Building Permit No. issued 30/10/2019 for Construction of Dwelling, Attached Garage, Portico & Alfresco.",
+            value,
+        )
+        self.assertIn(
+            "Occupancy Permit No. issued 18/05/2020 and are attached herewith for further information.",
+            value,
+        )

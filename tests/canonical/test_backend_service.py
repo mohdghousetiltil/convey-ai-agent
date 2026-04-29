@@ -5,14 +5,18 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from triconvey_agent.backend.service import (
+    _apply_preferred_autofill_filter,
+    _apply_ai_review_overrides,
     _choose_bushfire_fact,
     _autofill_is_active,
+    _coerce_ai_review_confidence,
+    _coerce_review_value,
     _normalize_brain_f_mode,
     _suppress_owners_corporation_outgoing,
     _suppress_zero_outgoings,
     set_autofill_activity,
 )
-from triconvey_agent.canonical.schemas import AnswerObject
+from triconvey_agent.canonical.schemas import AnswerObject, FormAction, FormActionPlan
 from triconvey_agent.canonical.facts.store import FactStoreImpl
 from triconvey_agent.canonical.schemas import Fact, Source
 
@@ -141,6 +145,101 @@ class TestBrainFWarmupCoordination(unittest.TestCase):
         self.assertEqual(_normalize_brain_f_mode("Basic"), "quick")
         self.assertEqual(_normalize_brain_f_mode("Normal"), "standard")
         self.assertEqual(_normalize_brain_f_mode("Deep"), "deep")
+
+
+class TestPreferredAutofillFilter(unittest.TestCase):
+    def test_always_keeps_sec32_6_final_items(self):
+        plan = FormActionPlan(
+            actions=[
+                FormAction(
+                    question_id="sec32_8_electricity_not_connected",
+                    field_id="Sec. 32 (4)::CheckBox::Electricity supply::t720l-1875",
+                    action="set_checkbox",
+                    payload=False,
+                    expected_after=False,
+                ),
+                FormAction(
+                    question_id="policy_6_attachments",
+                    field_id="Sec. 32 (6)::Edit::13. Attachments::t424l-1870",
+                    action="set_text",
+                    payload="- Due Diligence Checklist",
+                    expected_after="- Due Diligence Checklist",
+                ),
+            ],
+            review_gate_required=False,
+        )
+
+        filtered = _apply_preferred_autofill_filter(plan, ["sec32_8_electricity_not_connected"])
+
+        by_question = {action.question_id: action for action in filtered.actions}
+        self.assertEqual(by_question["sec32_8_electricity_not_connected"].action, "set_checkbox")
+        self.assertEqual(by_question["policy_6_attachments"].action, "set_text")
+
+
+class TestAiReviewOverlay(unittest.TestCase):
+    def test_accepts_qualitative_confidence_labels(self):
+        self.assertEqual(_coerce_ai_review_confidence("high"), 0.9)
+        self.assertEqual(_coerce_ai_review_confidence("medium"), 0.7)
+        self.assertEqual(_coerce_ai_review_confidence("low"), 0.4)
+        self.assertEqual(_coerce_ai_review_confidence("nonsense"), 0.0)
+
+    def test_applies_verified_ai_review_change_as_overlay(self):
+        question = type("Q", (), {"id": "rates.owners_corporation.annual_amount", "expected_type": "string"})()
+        answer = AnswerObject(
+            question_id="rates.owners_corporation.annual_amount",
+            question_label="Owners corporation annual amount",
+            value="$400.00",
+            confidence=0.91,
+            needs_review=False,
+        )
+        result = _apply_ai_review_overrides(
+            {"rates.owners_corporation.annual_amount": answer},
+            {"rates.owners_corporation.annual_amount": question},
+            {
+                "rates.owners_corporation.annual_amount": {
+                    "status": "suggest_change",
+                    "suggested_value": "$425.00",
+                    "confidence": "high",
+                    "quote_verified": True,
+                    "reason": "Certificate states the annual fee is $425.00.",
+                    "source_file": "Owners Corporation Certificate.pdf",
+                }
+            },
+        )
+        updated = result["rates.owners_corporation.annual_amount"]
+        self.assertEqual(updated.value, "$425.00")
+        self.assertEqual(updated.presentation_hints["answer_origin"], "ai_review")
+        self.assertEqual(updated.presentation_hints["authoritative_value"], "$400.00")
+        self.assertEqual(updated.presentation_hints["field_id"], "rates.owners_corporation.annual_amount")
+
+    def test_skips_unverified_ai_review_change(self):
+        question = type("Q", (), {"id": "sec32_3.4_planning_scheme", "expected_type": "string"})()
+        answer = AnswerObject(
+            question_id="sec32_3.4_planning_scheme",
+            question_label="Planning scheme",
+            value="Brimbank",
+            confidence=0.95,
+            needs_review=False,
+        )
+        result = _apply_ai_review_overrides(
+            {"sec32_3.4_planning_scheme": answer},
+            {"sec32_3.4_planning_scheme": question},
+            {
+                "sec32_3.4_planning_scheme": {
+                    "status": "suggest_change",
+                    "suggested_value": "Melton",
+                    "confidence": 0.99,
+                    "quote_verified": False,
+                }
+            },
+        )
+        self.assertEqual(result["sec32_3.4_planning_scheme"].value, "Brimbank")
+
+    def test_coerces_boolean_review_values(self):
+        question = type("Q", (), {"id": "sec32_oc_inactive", "expected_type": "bool"})()
+        self.assertTrue(_coerce_review_value(question, "yes"))
+        self.assertFalse(_coerce_review_value(question, "no"))
+
 
 
 if __name__ == "__main__":

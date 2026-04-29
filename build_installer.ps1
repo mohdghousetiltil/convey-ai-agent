@@ -2,8 +2,8 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$desktopExe = Join-Path $projectRoot "dist\TriConveyAgent.exe"
-$issFile = Join-Path $projectRoot "installer\TriConveyAgent.iss"
+$desktopExe = Join-Path $projectRoot "dist\ConveyAgent.exe"
+$issFile = Join-Path $projectRoot "installer\ConveyAgent.iss"
 $installerOutDir = Join-Path $projectRoot "dist\installer"
 
 function Get-ProjectVersion {

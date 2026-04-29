@@ -80,7 +80,7 @@ def test_non_executable_brain_d_questions_are_skipped_from_plan():
     assert plan.actions == []
 
 
-def test_due_diligence_field_is_written_to_action_plan():
+def test_due_diligence_field_is_read_only_in_action_plan():
     answers = {
         "policy_6_due_diligence": AnswerObject(
             question_id="policy_6_due_diligence",
@@ -92,12 +92,29 @@ def test_due_diligence_field_is_written_to_action_plan():
 
     plan = build_action_plan(answers, YAML_DIR)
 
+    assert plan.actions == []
+
+
+def test_attachments_field_is_written_to_sec32_6_action_plan():
+    answers = {
+        "policy_6_attachments": AnswerObject(
+            question_id="policy_6_attachments",
+            question_label="13. Attachments",
+            value="- Due Diligence Checklist\n- Register Search Statement",
+            confidence=0.9,
+        ),
+    }
+
+    plan = build_action_plan(answers, YAML_DIR)
+
     assert len(plan.actions) == 1
     action = plan.actions[0]
-    assert action.question_id == "policy_6_due_diligence"
+    assert action.question_id == "policy_6_attachments"
     assert action.action == "set_text"
-    assert action.payload == "Is attached"
-    assert action.field_id == "Sec. 32 (6)::Edit::Are as follows:::t256l-1870"
+    assert action.payload == "- Due Diligence Checklist\n- Register Search Statement"
+    assert action.expected_after == "- Due Diligence Checklist\n- Register Search Statement"
+    assert action.needs_review_first is False
+    assert action.field_id == "Sec. 32 (6)::Edit::13. Attachments::t424l-1870"
 
 
 def test_planning_certificate_checkbox_is_kept_checked_in_action_plan():
@@ -142,3 +159,48 @@ def test_control_cache_reuses_descendants_until_invalidated():
     third = executor._descendants_cached(window, "Edit")
     assert third != first
     assert window.calls == 2
+
+
+def test_click_tab_falls_back_to_sec32_strip_segment(monkeypatch):
+    class DummyRect:
+        left = 100
+        top = 40
+
+        def width(self):
+            return 600
+
+        def height(self):
+            return 30
+
+    class DummyStrip:
+        def rectangle(self):
+            return DummyRect()
+
+    clicks: list[tuple[int, int]] = []
+
+    monkeypatch.setattr(executor, "_ensure_focus", lambda _window: None)
+    monkeypatch.setattr(executor, "_find_sec32_tab_strip", lambda _window: DummyStrip())
+    monkeypatch.setattr(executor, "_descendants_cached", lambda *_args, **_kwargs: [])
+    monkeypatch.setattr(
+        executor,
+        "_pw_mouse",
+        type("Mouse", (), {"click": staticmethod(lambda **kwargs: clicks.append(kwargs["coords"]))}),
+        raising=False,
+    )
+
+    class DummyChild:
+        def exists(self, timeout=None):
+            return False
+
+    class DummyWindow:
+        def child_window(self, **kwargs):
+            return DummyChild()
+
+    assert executor._click_tab(DummyWindow(), "Sec. 32 (4)") is True
+    assert clicks == [(450, 56)]
+
+
+def test_expected_matches_actual_normalizes_multiline_text():
+    expected = "- Due Diligence Checklist\r\n- Register Search Statement"
+    actual = "- Due Diligence Checklist\n- Register Search Statement"
+    assert executor._expected_matches_actual(expected, actual) is True

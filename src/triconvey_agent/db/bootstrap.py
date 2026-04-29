@@ -44,6 +44,19 @@ def _load_schema_sql() -> str:
         return candidate.read_text(encoding="utf-8")
 
 
+def _load_migration_sql_files() -> list[tuple[str, str]]:
+    migration_dir = Path(__file__).parent / "migrations"
+    if not migration_dir.exists():
+        return []
+    items: list[tuple[str, str]] = []
+    for path in sorted(migration_dir.glob("*.sql")):
+        try:
+            items.append((path.name, path.read_text(encoding="utf-8")))
+        except Exception:
+            continue
+    return items
+
+
 async def apply_schema() -> None:
     sql = _load_schema_sql()
     engine = get_engine()
@@ -57,17 +70,36 @@ async def apply_schema() -> None:
     LOG.info("Schema applied.")
 
 
+async def apply_runtime_migrations() -> None:
+    engine = get_engine()
+    migrations = _load_migration_sql_files()
+    if not migrations:
+        return
+    for name, sql in migrations:
+        try:
+            async with engine.begin() as conn:
+                for statement in _split_sql(sql):
+                    if not statement.strip():
+                        continue
+                    await conn.execute(text(statement))
+            LOG.info("Applied migration %s", name)
+        except Exception as exc:
+            LOG.warning("Skipping migration %s (not supported in this environment): %s", name, exc)
+
+
 def _split_sql(sql: str) -> list[str]:
     parts: list[str] = []
     buf: list[str] = []
+    in_dollar_quote = False
     for line in sql.splitlines():
-        # Remove inline `-- ...` comments before checking statement endings.
-        line_no_comment = line.split("--", 1)[0]
+        line_no_comment = line if in_dollar_quote else line.split("--", 1)[0]
         stripped = line_no_comment.strip()
-        if stripped.startswith("--") or not stripped:
+        if not in_dollar_quote and (stripped.startswith("--") or not stripped):
             continue
         buf.append(line_no_comment.rstrip())
-        if stripped.endswith(";"):
+        # Toggle dollar-quote state for each $$ token on the line.
+        in_dollar_quote = (line_no_comment.count("$$") % 2 == 1) ^ in_dollar_quote
+        if not in_dollar_quote and stripped.endswith(";"):
             parts.append("\n".join(buf))
             buf = []
     if buf:

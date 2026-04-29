@@ -1,20 +1,31 @@
 import React from "react";
-import { motion } from "motion/react";
-import { ChevronDown, ChevronLeft, ChevronRight, Sparkles, Star } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { ChevronDown, ChevronRight, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Header } from "./Header";
 
 interface SettingsForm {
   language: string;
   openAiApiKey: string;
   anthropicApiKey: string;
-  aiProvider: "openai" | "anthropic";
+  aiProvider: "openai" | "anthropic" | "hybrid";
+  aiMode?: "cost_efficient" | "all_time_best" | "turbo";
   defaultModelName: string;
   triconveyPath: string;
   preferredAutofillFields: string[];
+  updateRepository?: string;
+  includePrereleaseUpdates?: boolean;
+  autoCheckForUpdates?: boolean;
+  cloudSyncEnabled?: boolean;
 }
 
 interface ClientPolicyScreenProps {
   onBack: () => void;
+  userInitials?: string;
+  onProfile?: () => void;
+  onSettings?: () => void;
+  onAbout?: () => void;
+  onLogout?: () => void;
   settings: SettingsForm;
   onSaveSettings: (settings: SettingsForm) => Promise<void> | void;
 }
@@ -231,6 +242,17 @@ const SECTIONS: PreferenceSection[] = [
   },
 ];
 
+/** All autofill targets — used as the app-wide default (all fields starred). */
+export const DEFAULT_PREFERRED_FIELDS: string[] = Array.from(
+  new Set(
+    SECTIONS.flatMap((s) =>
+      s.nodes
+        .filter((n): n is PreferenceItem => n.kind === "item")
+        .flatMap((n) => n.targets),
+    ),
+  ),
+);
+
 function mergeTargets(existing: string[], next: string[]) {
   return Array.from(new Set([...existing, ...next]));
 }
@@ -240,8 +262,19 @@ function removeTargets(existing: string[], next: string[]) {
   return existing.filter((item) => !removal.has(item));
 }
 
-export function ClientPolicyScreen({ onBack, settings, onSaveSettings }: ClientPolicyScreenProps) {
-  const [selectedTargets, setSelectedTargets] = React.useState<string[]>(settings.preferredAutofillFields || []);
+export function ClientPolicyScreen({
+  onBack,
+  userInitials,
+  onProfile,
+  onSettings,
+  onAbout,
+  onLogout,
+  settings,
+  onSaveSettings,
+}: ClientPolicyScreenProps) {
+  const [selectedTargets, setSelectedTargets] = React.useState<string[]>(
+    settings.preferredAutofillFields?.length ? settings.preferredAutofillFields : DEFAULT_PREFERRED_FIELDS,
+  );
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>(
     Object.fromEntries(SECTIONS.map((section) => [section.id, false])),
   );
@@ -250,7 +283,9 @@ export function ClientPolicyScreen({ onBack, settings, onSaveSettings }: ClientP
   const [saveError, setSaveError] = React.useState("");
 
   React.useEffect(() => {
-    setSelectedTargets(settings.preferredAutofillFields || []);
+    setSelectedTargets(
+      settings.preferredAutofillFields?.length ? settings.preferredAutofillFields : DEFAULT_PREFERRED_FIELDS,
+    );
   }, [settings.preferredAutofillFields]);
 
   const items = React.useMemo(
@@ -289,158 +324,217 @@ export function ClientPolicyScreen({ onBack, settings, onSaveSettings }: ClientP
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
-      <header className="sticky top-0 z-50 flex h-16 items-center border-b bg-white px-6">
-        <div
-          onClick={onBack}
-          className="mr-4 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-muted transition-colors hover:bg-slate-200"
-        >
-          <ChevronLeft className="h-4 w-4 stroke-[2.5] text-foreground" />
-        </div>
-        <div>
-          <h1 className="text-lg font-bold">Custom Policy</h1>
-          <p className="text-xs text-slate-400">Choose exactly which starred fields Convey should auto-fill.</p>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background font-sans">
+      <Header
+        onBack={onBack}
+        userInitials={userInitials}
+        onProfile={onProfile}
+        onSettings={onSettings}
+        onLogout={onLogout}
+      />
 
-      <main className="mx-auto max-w-6xl space-y-6 p-6">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <button
-              onClick={() => setStarredOpen((value) => !value)}
-              className="flex w-full items-center justify-between px-6 py-5 text-left transition-colors hover:bg-slate-50"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
-                  <Star className="h-5 w-5 fill-current" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">Starred for Autofill</h2>
-                  <p className="text-sm text-slate-500">
-                    Only these selected questions will be filled in Convey. Unstarred fields will be skipped.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-700">
-                  {starredItems.length} selected
-                </span>
-                {starredOpen ? <ChevronDown className="h-5 w-5 text-slate-400" /> : <ChevronRight className="h-5 w-5 text-slate-400" />}
-              </div>
-            </button>
-            {starredOpen ? (
-              <div className="border-t border-slate-100 px-6 py-5">
-                {starredItems.length ? (
-                  <div className="flex flex-wrap gap-2">
-                    {starredItems.map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => toggleItem(item)}
-                        className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100"
-                      >
-                        <Star className="h-3.5 w-3.5 fill-current" />
-                        {item.label}
-                      </button>
-                    ))}
+      <main className="mx-auto max-w-5xl px-6 py-10">
+        <div className="mb-10 flex flex-col gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-foreground">Custom Policy</h1>
+          <p className="text-base text-muted-foreground">Configure how Agent auto-fills your Section 32 documents in Convey.</p>
+        </div>
+
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+          {/* Starred Summary Section */}
+          <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card shadow-xl shadow-black/10">
+            <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: `radial-gradient(circle at 1px 1px, #000 1px, transparent 0)`, backgroundSize: '24px 24px' }} />
+            <div className="relative">
+              <button
+                onClick={() => setStarredOpen((value) => !value)}
+                className="flex w-full items-center justify-between px-8 py-7 text-left transition-colors hover:bg-accent/50"
+              >
+                <div className="flex items-center gap-5">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 shadow-inner">
+                    <Star className="h-6 w-6 fill-current" />
                   </div>
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-                    No starred items yet. Star the golden questions below, and they will appear here automatically.
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">Starred for Autofill</h2>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {starredItems.length === 0 ? "No fields selected" : `${starredItems.length} fields will be auto-filled`}
+                    </p>
                   </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  {starredOpen ? <ChevronDown className="h-5 w-5 text-muted-foreground" /> : <ChevronRight className="h-5 w-5 text-muted-foreground" />}
+                </div>
+              </button>
+
+              <AnimatePresence>
+                {starredOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden border-t border-border"
+                  >
+                    <div className="px-8 py-7">
+                      {starredItems.length ? (
+                        <div className="flex flex-wrap gap-2.5">
+                          {starredItems.map((item) => (
+                            <button
+                              key={item.id}
+                              onClick={() => toggleItem(item)}
+                              className="group flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/50 px-4 py-2 text-sm font-bold text-amber-800 transition-all hover:bg-amber-100 hover:scale-[1.02] active:scale-[0.98]"
+                            >
+                              <Star className="h-3.5 w-3.5 fill-current" />
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-3xl border-2 border-dashed border-border bg-muted/30 px-8 py-10 text-center">
+                          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-sm">
+                            <Star className="h-5 w-5" />
+                          </div>
+                          <p className="text-sm font-bold text-foreground">Your preferences are empty</p>
+                          <p className="mt-1 text-xs text-muted-foreground">Star questions below to automate your Convey workflow.</p>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
                 )}
-              </div>
-            ) : null}
+              </AnimatePresence>
+            </div>
           </section>
 
-          <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 px-6 py-5">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">Choose your preference</h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Headings are shown in bold for structure. Star the actual questions you want Brain E to fill inside Convey.
-                  </p>
-                </div>
-              </div>
+          {/* Preference Selection */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 px-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Configure Rules</h2>
             </div>
 
-            <div className="divide-y divide-slate-100">
+            <div className="grid gap-4">
               {SECTIONS.map((section) => {
                 const open = expandedSections[section.id];
+                const selectableCount = section.nodes.filter((node) => node.kind === "item").length;
+                const activeCount = section.nodes.filter((node) => node.kind === "item" && node.targets.every(t => selectedTargets.includes(t))).length;
+
                 return (
-                  <div key={section.id}>
+                  <div key={section.id} className="overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-sm transition-all hover:shadow-md">
                     <button
                       onClick={() => toggleSection(section.id)}
-                      className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50"
+                      className="flex w-full items-center justify-between px-6 py-5 text-left transition-colors hover:bg-accent/50"
                     >
-                      <div>
-                        <h3 className="text-base font-bold text-slate-900">{section.title}</h3>
-                        <p className="mt-0.5 text-xs text-slate-400">
-                          {section.nodes.filter((node) => node.kind === "item").length} selectable question(s)
-                        </p>
+                      <div className="flex items-center gap-4">
+                        <div className={[
+                          "flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold transition-colors",
+                          activeCount > 0 ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                        ].join(" ")}>
+                          {section.title.split('.')[0]}
+                        </div>
+                        <div>
+                          <h3 className="text-base font-bold text-foreground">{section.title.replace(/^\d+\.\s*/, '')}</h3>
+                          <p className="mt-0.5 text-xs font-semibold text-muted-foreground">
+                            {activeCount} / {selectableCount} selected
+                          </p>
+                        </div>
                       </div>
-                      {open ? <ChevronDown className="h-5 w-5 text-slate-400" /> : <ChevronRight className="h-5 w-5 text-slate-400" />}
+                      <div className="flex items-center gap-3">
+                        {activeCount > 0 && (
+                          <div className="h-2 w-2 rounded-full bg-primary" />
+                        )}
+                        {open ? <ChevronDown className="h-5 w-5 text-muted-foreground" /> : <ChevronRight className="h-5 w-5 text-muted-foreground" />}
+                      </div>
                     </button>
 
-                    {open ? (
-                      <div className="space-y-2 px-6 pb-5">
-                        {section.nodes.map((node) => {
-                          if (node.kind === "heading") {
-                            return (
-                              <div key={node.id} className="pt-3 text-sm font-bold text-slate-900">
-                                {node.label}
-                              </div>
-                            );
-                          }
+                    <AnimatePresence>
+                      {open && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden border-t border-border"
+                        >
+                          <div className="space-y-2 px-6 py-6 bg-muted/20">
+                            {section.nodes.map((node) => {
+                              if (node.kind === "heading") {
+                                return (
+                                  <div key={node.id} className="mb-2 pt-4 first:pt-0 text-[0.7rem] font-black uppercase tracking-widest text-muted-foreground">
+                                    {node.label}
+                                  </div>
+                                );
+                              }
 
-                          const active = node.targets.every((target) => selectedTargets.includes(target));
-                          return (
-                            <button
-                              key={node.id}
-                              onClick={() => toggleItem(node)}
-                              className={[
-                                "flex w-full items-start gap-3 rounded-2xl border px-4 py-3 text-left transition-all",
-                                active
-                                  ? "border-amber-200 bg-amber-50 shadow-sm"
-                                  : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
-                              ].join(" ")}
-                            >
-                              <span
-                                className={[
-                                  "mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border",
-                                  active
-                                    ? "border-amber-300 bg-amber-100 text-amber-700"
-                                    : "border-slate-200 bg-slate-50 text-slate-300",
-                                ].join(" ")}
-                              >
-                                <Star className={["h-3.5 w-3.5", active ? "fill-current" : ""].join(" ")} />
-                              </span>
-                              <div className="flex-1">
-                                <div className="text-sm font-semibold text-slate-700">{node.label}</div>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : null}
+                              const active = node.targets.every((target) => selectedTargets.includes(target));
+                              return (
+                                <button
+                                  key={node.id}
+                                  onClick={() => toggleItem(node)}
+                                  className={[
+                                    "flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition-all group",
+                                    active
+                                      ? "border-amber-200 bg-white shadow-md shadow-amber-500/5 ring-1 ring-amber-100"
+                                      : "border-border bg-card/50 hover:border-primary/30 hover:bg-card",
+                                  ].join(" ")}
+                                >
+                                  <div
+                                    className={[
+                                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.8rem] border transition-all",
+                                      active
+                                        ? "border-amber-200 bg-amber-50 text-amber-600"
+                                        : "border-border bg-card text-muted-foreground/50 group-hover:border-primary/30",
+                                    ].join(" ")}
+                                  >
+                                    <Star className={["h-4 w-4", active ? "fill-current" : ""].join(" ")} />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className={[
+                                      "text-[0.85rem] font-bold transition-colors",
+                                      active ? "text-foreground" : "text-muted-foreground"
+                                    ].join(" ")}>
+                                      {node.label}
+                                    </div>
+                                    <div className="mt-0.5 text-[0.7rem] font-medium text-muted-foreground">
+                                      {node.targets.length} target field{node.targets.length !== 1 ? 's' : ''}
+                                    </div>
+                                  </div>
+                                  {active && (
+                                    <div className="h-2 w-2 rounded-full bg-amber-400" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 );
               })}
             </div>
-          </section>
+          </div>
 
-          <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
-            <div className="space-y-1">
-              <p className="text-sm text-slate-500">
-                Save your starred preferences to make Brain E auto-fill only those selected questions in Convey.
+          {/* Floating Action Buttons */}
+          <div className="fixed bottom-10 right-10 z-50 flex items-center gap-4">
+            {saveError ? (
+              <p className="mr-4 rounded-xl bg-destructive/10 px-4 py-2 text-xs font-bold text-destructive shadow-sm border border-destructive/20">
+                {saveError}
               </p>
-              {saveError ? <p className="text-sm font-medium text-rose-600">{saveError}</p> : null}
-            </div>
-            <Button className="rounded-xl px-6 py-2.5 font-bold" onClick={() => void handleSave()} disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save Preferences"}
+            ) : null}
+            <Button
+              variant="outline"
+              className="rounded-2xl h-12 px-6 border-border bg-card/80 backdrop-blur-sm font-bold text-foreground shadow-lg hover:bg-card transition-all"
+              onClick={onBack}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="rounded-2xl h-12 px-8 bg-foreground text-background font-bold shadow-xl shadow-black/20 active:scale-[0.98] transition-all"
+              onClick={() => void handleSave()}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                  Saving...
+                </div>
+              ) : "Save Preferences"}
             </Button>
           </div>
         </motion.div>

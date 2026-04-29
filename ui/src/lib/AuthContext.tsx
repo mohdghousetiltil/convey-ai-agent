@@ -40,6 +40,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const oauthResumeInFlight = useRef(false);
+  const applyLoginPayload = useCallback((payload: LoginPayload) => {
+    saveAuth(payload.access_token, payload.user);
+    setUser(payload.user);
+    setToken(payload.access_token);
+    setIsLoading(false);
+  }, []);
 
   // On mount: restore from localStorage.
   useEffect(() => {
@@ -58,17 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const persisted = await loadPersistedAuthState();
       if (persisted && !cancelled) {
-        saveAuth(persisted.access_token, persisted.user);
-        setUser(persisted.user);
-        setToken(persisted.access_token);
-        setIsLoading(false);
+        applyLoginPayload(persisted);
         return;
       }
 
       const resumed = await resumePendingOAuthLogin();
       if (!cancelled && resumed) {
-        setUser(resumed.user);
-        setToken(resumed.access_token);
+        applyLoginPayload(resumed);
       }
 
       if (!cancelled) {
@@ -79,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [applyLoginPayload]);
 
   // Desktop OAuth recovery: while the app is sitting on the login screen,
   // keep checking whether an external-browser OAuth flow has completed.
@@ -92,11 +94,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (cancelled || oauthResumeInFlight.current) return;
       oauthResumeInFlight.current = true;
       try {
+        const persisted = await loadPersistedAuthState();
+        if (!cancelled && persisted) {
+          applyLoginPayload(persisted);
+          return;
+        }
+
         const resumed = await resumePendingOAuthLogin();
         if (!cancelled && resumed) {
-          setUser(resumed.user);
-          setToken(resumed.access_token);
-          setIsLoading(false);
+          applyLoginPayload(resumed);
         }
       } finally {
         oauthResumeInFlight.current = false;
@@ -112,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [user]);
+  }, [applyLoginPayload, user]);
 
   // Listen for global 401 events (fired by apiRequest when the server rejects the token).
   useEffect(() => {
@@ -127,27 +133,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(
     async (email: string, password: string, clientSlug = ""): Promise<void> => {
       const payload: LoginPayload = await apiLogin(email, password, clientSlug);
-      setUser(payload.user);
-      setToken(payload.access_token);
+      applyLoginPayload(payload);
     },
-    [],
+    [applyLoginPayload],
   );
 
   const register = useCallback(
     async (name: string, companyName: string, email: string, password: string, activationKey: string): Promise<void> => {
       const payload: LoginPayload = await apiRegister(name, companyName, email, password, activationKey);
-      setUser(payload.user);
-      setToken(payload.access_token);
+      applyLoginPayload(payload);
     },
-    [],
+    [applyLoginPayload],
   );
 
   const loginOAuth = useCallback(async (provider: "google" | "microsoft"): Promise<void> => {
     const payload: LoginPayload | null = await loginWithOAuth(provider);
     if (!payload) return;
-    setUser(payload.user);
-    setToken(payload.access_token);
-  }, []);
+    applyLoginPayload(payload);
+  }, [applyLoginPayload]);
 
   const logout = useCallback(async (): Promise<void> => {
     try {

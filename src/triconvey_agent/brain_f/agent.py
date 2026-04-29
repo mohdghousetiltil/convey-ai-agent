@@ -1,4 +1,4 @@
-"""Brain F — agentic copilot using Anthropic or OpenAI tool use.
+"""Brain F — agentic copilot using Anthropic, OpenAI, or Google tool use.
 
 Modes:
   quick     — 2 tool rounds max, no critic loop
@@ -39,7 +39,7 @@ _HIGH_STAKES_RE = re.compile(r"\$[\d,]+\.\d{2}|liable|must\s+comply|illegal|pena
 
 
 class BrainFAgent:
-    """Multi-stage agentic Q&A copilot. Supports OpenAI and Anthropic."""
+    """Multi-stage agentic Q&A copilot. Supports OpenAI, Anthropic, and Google."""
 
     def __init__(
         self,
@@ -50,6 +50,7 @@ class BrainFAgent:
         provider: str = "openai",
         corpus_chunks: list[dict[str, Any]] | None = None,
         persist_chat: bool = True,
+        session_id: str | None = None,
     ) -> None:
         self._store = store
         self._run_dir = run_dir
@@ -60,11 +61,23 @@ class BrainFAgent:
         self._memory: dict[str, Any] = load_document_memory(run_dir)
         self._fact_snapshot = _build_fact_snapshot(store)
         self._conflict_snapshot = _build_conflict_snapshot(store)
+        self._structured_corpus_block = _load_structured_corpus_block(run_dir)
         self._chat_state = _load_chat_state(run_dir)
         self._question_registry = load_question_registry()
+        # Feature 4: session identifier for vector memory scoping
+        self._session_id = session_id or _new_session_id()
 
         if self._provider == "anthropic":
             self._client = _make_anthropic_client()
+        elif self._provider == "google":
+            # Google uses MultiModelClient; fall back gracefully on import error
+            try:
+                from triconvey_agent.ai.multi_client import MultiModelClient
+                self._client = MultiModelClient(provider="google", model=self._model)
+            except Exception as exc:
+                LOG.warning("Google client init failed: %s — falling back to OpenAI", exc)
+                self._provider = "openai"
+                self._client = _make_openai_client()
         else:
             self._client = _make_openai_client()
 
@@ -73,11 +86,28 @@ class BrainFAgent:
         question: str,
         history: list[dict[str, Any]] | None = None,
         mode: str = "standard",
+        vector_memories: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
+        """
+        Answer a question using the agentic loop.
+
+        Args:
+            question:        The user's question.
+            history:         Explicit conversation history (UI-provided turns).
+            mode:            "quick" | "standard" | "thorough"
+            vector_memories: Pre-fetched vector memory entries to inject as
+                             system context (Feature 4).  The caller is
+                             responsible for retrieving these asynchronously
+                             before calling ask().
+        """
         pending_patches: list[dict[str, Any]] = []
         reasoning_steps: list[dict[str, Any]] = []
         memory_block = format_memory_for_prompt(self._memory)
         specialist_block = _build_specialist_block(question)
+
+        # Feature 4: prepend vector memory context to the system prompt
+        vector_context_block = _format_vector_memories(vector_memories or [])
+
         system = build_system_prompt(
             mode=mode,
             memory_block=memory_block,
@@ -85,14 +115,29 @@ class BrainFAgent:
             conflict_snapshot=self._conflict_snapshot,
             conversation_summary=self._chat_state.get("summary", ""),
             specialist_block=specialist_block,
+            corpus_block=self._structured_corpus_block,
         )
+        if vector_context_block:
+            system = vector_context_block + "\n\n" + system
+
         max_rounds = _MODE_MAX_ROUNDS.get(mode, 6)
         merged_history = _merge_history(self._chat_state.get("turns", []), history or [])
 
         if self._provider == "anthropic":
-            result = self._ask_anthropic(question, merged_history, system, pending_patches, reasoning_steps, max_rounds)
+            result = self._ask_anthropic(
+                question, merged_history, system, pending_patches, reasoning_steps, max_rounds,
+                vector_memories=vector_memories or [],
+            )
+        elif self._provider == "google":
+            result = self._ask_google(
+                question, merged_history, system, pending_patches, reasoning_steps, max_rounds,
+                vector_memories=vector_memories or [],
+            )
         else:
-            result = self._ask_openai(question, merged_history, system, pending_patches, reasoning_steps, max_rounds)
+            result = self._ask_openai(
+                question, merged_history, system, pending_patches, reasoning_steps, max_rounds,
+                vector_memories=vector_memories or [],
+            )
 
         # Critic loop — thorough mode only (standard mode trusts the pre-loaded fact snapshot)
         critic_applied = False
@@ -105,6 +150,7 @@ class BrainFAgent:
         result["critic_applied"] = critic_applied
         result["field_answers"] = []  # field suggestions disabled — AI derives from corpus, not draft answers
         result["reasoning_steps"] = reasoning_steps
+        result["session_id"] = self._session_id  # Feature 4
         if self._persist_chat:
             _save_chat_state(self._run_dir, self._chat_state, question, result["answer"])
         return result
@@ -113,14 +159,17 @@ class BrainFAgent:
     # Anthropic agentic loop                                               #
     # ------------------------------------------------------------------ #
 
-    def _ask_anthropic(self, question, history, system, pending_patches, reasoning_steps, max_rounds):
+    def _ask_anthropic(
+        self, question, history, system, pending_patches, reasoning_steps, max_rounds,
+        vector_memories=None,
+    ):
         messages = _build_messages(history, question)
         tool_calls_made = 0
 
         for _ in range(max_rounds):
             response = self._client.messages.create(
                 model=self._model,
-                max_tokens=1024,  # tool-call rounds only need a brief decision
+                max_tokens=1024,
                 system=system,
                 tools=TOOL_DEFINITIONS,
                 messages=messages,
@@ -140,6 +189,7 @@ class BrainFAgent:
                     block.name, block.input,
                     store=self._store, memory=self._memory,
                     corpus_chunks=self._corpus_chunks, pending_patches=pending_patches,
+                    run_dir=self._run_dir, vector_memories=vector_memories,
                 )
                 reasoning_steps.append(_summarize_tool_step(block.name, block.input, result_json))
                 tool_results.append({
@@ -165,7 +215,10 @@ class BrainFAgent:
     # OpenAI agentic loop                                                  #
     # ------------------------------------------------------------------ #
 
-    def _ask_openai(self, question, history, system, pending_patches, reasoning_steps, max_rounds):
+    def _ask_openai(
+        self, question, history, system, pending_patches, reasoning_steps, max_rounds,
+        vector_memories=None,
+    ):
         openai_tools = [_to_openai_tool(t) for t in TOOL_DEFINITIONS]
         messages: list[dict[str, Any]] = [{"role": "system", "content": system}]
         for turn in history:
@@ -180,7 +233,7 @@ class BrainFAgent:
         for _ in range(max_rounds):
             response = self._client.chat.completions.create(
                 model=self._model,
-                max_tokens=1024,  # tool-call rounds only need a brief decision
+                max_tokens=1024,
                 tools=openai_tools,
                 tool_choice="auto",
                 messages=messages,
@@ -200,6 +253,7 @@ class BrainFAgent:
                     tc.function.name, tool_input,
                     store=self._store, memory=self._memory,
                     corpus_chunks=self._corpus_chunks, pending_patches=pending_patches,
+                    run_dir=self._run_dir, vector_memories=vector_memories,
                 )
                 reasoning_steps.append(_summarize_tool_step(tc.function.name, tool_input, result_json))
                 messages.append({"role": "tool", "tool_call_id": tc.id, "content": result_json})
@@ -212,6 +266,68 @@ class BrainFAgent:
 
         answer = (msg.content or "").strip()
         return _build_result(question, answer, pending_patches, self._corpus_chunks, self._store, tool_calls_made, reasoning_steps)
+
+    # ------------------------------------------------------------------ #
+    # Google Gemini agentic loop (Feature 1 + 3)                          #
+    # ------------------------------------------------------------------ #
+
+    def _ask_google(
+        self, question, history, system, pending_patches, reasoning_steps, max_rounds,
+        vector_memories=None,
+    ):
+        """Agentic loop for Google Gemini via MultiModelClient."""
+        from triconvey_agent.ai.multi_client import MultiModelClient
+
+        messages: list[dict[str, Any]] = []
+        for turn in history:
+            role = turn.get("role", "user")
+            content = turn.get("content", "")
+            if role in ("user", "assistant") and content:
+                messages.append({"role": role, "content": str(content)})
+        messages.append({"role": "user", "content": question})
+
+        tool_calls_made = 0
+        last_answer = ""
+
+        for _ in range(max_rounds):
+            resp = self._client.chat(
+                messages,
+                system=system,
+                tools=TOOL_DEFINITIONS,
+                max_tokens=1024,
+            )
+
+            if resp.stop_reason == "end_turn" or not resp.tool_calls:
+                last_answer = resp.content
+                break
+
+            # Execute tool calls
+            for tc in resp.tool_calls:
+                tool_calls_made += 1
+                result_json = dispatch_tool(
+                    tc.name, tc.arguments,
+                    store=self._store, memory=self._memory,
+                    corpus_chunks=self._corpus_chunks, pending_patches=pending_patches,
+                    run_dir=self._run_dir, vector_memories=vector_memories,
+                )
+                reasoning_steps.append(_summarize_tool_step(tc.name, tc.arguments, result_json))
+                # Append tool result as a user message (Google doesn't have a native tool_result role)
+                messages.append({
+                    "role": "user",
+                    "content": f"[Tool '{tc.name}' result]: {result_json}",
+                })
+            if resp.content:
+                messages.append({"role": "assistant", "content": resp.content})
+        else:
+            # Max rounds exhausted
+            messages.append({"role": "user", "content": "Please give a final answer now."})
+            final_resp = self._client.chat(messages, system=system, max_tokens=1024)
+            last_answer = final_resp.content
+
+        return _build_result(
+            question, last_answer, pending_patches,
+            self._corpus_chunks, self._store, tool_calls_made, reasoning_steps,
+        )
 
     # ------------------------------------------------------------------ #
     # Critic loop                                                          #
@@ -268,6 +384,12 @@ def _make_openai_client():
     if not api_key:
         raise ValueError("OPENAI_API_KEY is not set. Add it in Settings.")
     return OpenAI(api_key=api_key)
+
+
+def _new_session_id() -> str:
+    """Generate a new UUID session identifier."""
+    import uuid
+    return str(uuid.uuid4())
 
 
 # ------------------------------------------------------------------ #
@@ -529,6 +651,20 @@ def _infer_field_answers(question: str, store: FactStoreImpl, registry: dict[str
     return resolved
 
 
+def _format_vector_memories(memories: list[dict[str, Any]]) -> str:
+    """Render pre-fetched vector memories as a system-prompt block (Feature 4)."""
+    if not memories:
+        return ""
+    lines = ["## Relevant past conversation context (from vector memory):"]
+    for i, mem in enumerate(memories[:5], 1):
+        content = str(mem.get("content") or "").strip()[:400]
+        sim = mem.get("similarity")
+        sim_note = f" [similarity: {sim:.2f}]" if sim is not None else ""
+        lines.append(f"\n### Memory {i}{sim_note}")
+        lines.append(content)
+    return "\n".join(lines)
+
+
 def _rank_chunks_for_citations(query: str, chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     q_tokens = set(re.findall(r"[a-z0-9]+", (query or "").lower()))
     scored: list[tuple[int, dict[str, Any]]] = []
@@ -539,3 +675,22 @@ def _rank_chunks_for_citations(query: str, chunks: list[dict[str, Any]]) -> list
             scored.append((overlap, chunk))
     scored.sort(key=lambda item: item[0], reverse=True)
     return [chunk for _, chunk in scored]
+
+
+def _load_structured_corpus_block(run_dir: Path) -> str:
+    """Load the structured matter corpus and format it for the system prompt.
+
+    Returns an empty string if no corpus exists yet (corpus is optional —
+    Brain F works without it but answers are richer when it exists).
+    """
+    corpus_file = run_dir / "corpus.json"
+    if not corpus_file.exists():
+        return ""
+    try:
+        from triconvey_agent.corpus.builder import build_corpus_context
+        from triconvey_agent.corpus.schema import MatterCorpus
+        corpus = MatterCorpus.load(str(corpus_file))
+        return build_corpus_context(corpus)
+    except Exception as exc:
+        LOG.warning("Could not load structured corpus from %s: %s", corpus_file, exc)
+        return ""

@@ -9,6 +9,7 @@
 -- ============================================================================
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;  -- gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS vector;    -- pgvector (Feature: vector memory)
 
 -- ---------- CLIENTS & USERS ------------------------------------------------
 
@@ -94,6 +95,7 @@ CREATE TABLE IF NOT EXISTS runs (
     id              UUID PRIMARY KEY,
     matter_id       UUID REFERENCES matters(id),
     client_id       UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    user_id         UUID REFERENCES users(id),
     status          TEXT NOT NULL DEFAULT 'pending',
     use_ai_review   BOOLEAN NOT NULL DEFAULT FALSE,
     model           TEXT NOT NULL DEFAULT 'gpt-4.1-mini',
@@ -108,9 +110,12 @@ CREATE TABLE IF NOT EXISTS runs (
     form_template_id UUID REFERENCES form_templates(id),
     is_synced       BOOLEAN NOT NULL DEFAULT FALSE,
     synced_at       TIMESTAMPTZ,
-    local_only      BOOLEAN NOT NULL DEFAULT FALSE
+    local_only      BOOLEAN NOT NULL DEFAULT FALSE,
+    progress_pct    FLOAT NOT NULL DEFAULT 0.0,
+    progress_status TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_runs_client_status ON runs(client_id, status);
+CREATE INDEX IF NOT EXISTS ix_runs_user_id ON runs(user_id);
 CREATE INDEX IF NOT EXISTS ix_runs_matter_id ON runs(matter_id);
 CREATE INDEX IF NOT EXISTS ix_runs_is_synced ON runs(is_synced);
 
@@ -423,3 +428,23 @@ CREATE TABLE IF NOT EXISTS client_settings (
     CONSTRAINT uq_client_settings_key UNIQUE(client_id, setting_key)
 );
 CREATE INDEX IF NOT EXISTS ix_client_settings_sync ON client_settings(client_id, is_synced);
+
+-- ---------- VECTOR MEMORY (Feature: pgvector 20-day TTL) -----------------
+-- Requires: CREATE EXTENSION IF NOT EXISTS vector;  (see top of file)
+
+CREATE TABLE IF NOT EXISTS memories (
+    id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     TEXT         NOT NULL,
+    session_id  TEXT         NOT NULL,
+    content     TEXT         NOT NULL,
+    embedding   vector(1536) NOT NULL,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    expires_at  TIMESTAMPTZ  NOT NULL   -- created_at + 20 days
+);
+
+CREATE INDEX IF NOT EXISTS ix_memories_user_id    ON memories(user_id);
+CREATE INDEX IF NOT EXISTS ix_memories_expires_at ON memories(expires_at);
+
+-- IVFFlat index for cosine ANN search (build after loading data if table is large)
+-- CREATE INDEX ix_memories_embedding_cosine
+--     ON memories USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);

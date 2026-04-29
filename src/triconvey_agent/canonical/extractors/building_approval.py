@@ -20,7 +20,7 @@ _DATE_DMY_WORD = re.compile(
 )
 _DATE_DMY_SLASH = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{4})\b")
 _BALLARAT_BLOCK_RE = re.compile(
-    r"(?P<number>[A-Z0-9/\-]+)\s+(?P<description>.+?)\s+Private Permit\s+(?P<permit_date>\d{1,2}\s+[A-Za-z]+\s+\d{4})"
+    r"(?P<number>[A-Z]{2,}(?:/[A-Z0-9\-]+)+)\s+(?P<description>.+?)\s+Private Permit\s+(?P<permit_date>\d{1,2}\s+[A-Za-z]+\s+\d{4})"
     r"(?:\s+Occupancy Permit\s+(?P<occupancy_date>\d{1,2}\s+[A-Za-z]+\s+\d{4}))?",
     re.IGNORECASE | re.DOTALL,
 )
@@ -30,6 +30,15 @@ _INDIGO_ROW_RE = re.compile(
 )
 _COUNCIL_NAME_RE = re.compile(
     r"(?m)^\s*((?:City of|Shire of)?\s*[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*\s+(?:City Council|Shire Council|Council))\s*$"
+)
+_FORM2_PERMIT_NO_RE = re.compile(
+    r"(?im)^\s*building\s+permit\s*$\s*(?P<number>[A-Z]{1,4}[-\s]?[A-Z]?\s*\d{3,}(?:/[0-9A-Z]+)+)\s*$"
+)
+_FORM2_ISSUE_DATE_RE = re.compile(
+    r"(?i)date\s+of\s+issue\s+of\s+permit:\s*(?P<date>\d{1,2}\s+[A-Za-z]+\s+\d{4})"
+)
+_FORM2_NATURE_RE = re.compile(
+    r"(?is)nature\s+of\s+building\s+work\s*(?P<desc>.+?)(?:\n\s*\*|$)"
 )
 
 _MONTHS = {
@@ -177,6 +186,40 @@ def _indigo_records(text: str) -> list[dict[str, str | bool | None]]:
     return records
 
 
+def _form2_record(text: str) -> dict[str, str | bool | None] | None:
+    """Parse common VIC FORM 2 Building Permit layouts.
+
+    Many council-issued permits follow a "FORM 2 ... BUILDING PERMIT" template
+    and do not contain the tabular layouts our council-specific regexes handle.
+    """
+    number_match = _FORM2_PERMIT_NO_RE.search(text)
+    date_match = _FORM2_ISSUE_DATE_RE.search(text)
+    if not number_match and not date_match:
+        return None
+
+    number = (number_match.group("number") if number_match else "").strip()
+    issue_date = _normalize_date(date_match.group("date") if date_match else "")
+    nature_match = _FORM2_NATURE_RE.search(text)
+    description = _normalize_description(nature_match.group("desc")) if nature_match else ""
+
+    quote_parts = []
+    if number:
+        quote_parts.append(number)
+    if date_match:
+        quote_parts.append(date_match.group(0).strip())
+    if not quote_parts and number_match:
+        quote_parts.append(number_match.group(0).strip())
+    quote = " | ".join(quote_parts) if quote_parts else (number or issue_date or "Building permit")
+
+    return {
+        "kind": "building_permit",
+        "number": number,
+        "issue_date": issue_date or "",
+        "description": description,
+        "quote": quote,
+    }
+
+
 def extract_building_approval_facts(doc: Document) -> list[Fact]:
     text = _doc_text(doc)
     if not text:
@@ -198,6 +241,10 @@ def extract_building_approval_facts(doc: Document) -> list[Fact]:
     records = _ballarat_records(text)
     if not records:
         records = _indigo_records(text)
+    if not records:
+        form2 = _form2_record(text)
+        if form2 and (form2.get("number") or form2.get("issue_date") or form2.get("description")):
+            records = [form2]
 
     recent_records = 0
     for index, record in enumerate(records):

@@ -108,18 +108,26 @@ async def ingest_sync_batch(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Sync disabled for this client.")
 
     conflicts: list[SyncConflictDetail] = []
+    applied_any = False
 
     for event in req.events:
         try:
-            maybe_conflict = await _apply_event(session, client_id, event)
+            async with session.begin_nested():
+                maybe_conflict = await _apply_event(session, client_id, event)
         except Exception as exc:
             LOG.exception("Failed to apply sync event %s", event.sync_queue_id)
             maybe_conflict = _conflict(event.sync_queue_id, {"error": str(exc)})
         if maybe_conflict is not None:
             conflicts.append(maybe_conflict)
+            continue
+        applied_any = True
 
     if conflicts:
-        await session.rollback()
+        if applied_any:
+            client.last_synced_at = datetime.now(UTC)
+            await session.commit()
+        else:
+            await session.rollback()
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
             content=SyncBatchResponse(ok=False, conflicts=conflicts).model_dump(mode="json"),
@@ -166,6 +174,7 @@ async def _apply_run_event(
         row = Run(
             id=run_id,
             client_id=client_id,
+            user_id=_parse_optional_uuid(payload.get("user_id")),
             matter_id=_parse_optional_uuid(payload.get("matter_id")),
             status=str(payload.get("status") or "pending"),
             model=str(payload.get("model") or "gpt-4.1-mini"),
@@ -188,6 +197,7 @@ async def _apply_run_event(
                 row = Run(
                     id=run_id,
                     client_id=client_id,
+                    user_id=_parse_optional_uuid(payload.get("user_id")),
                     matter_id=_parse_optional_uuid(payload.get("matter_id")),
                     status=str(payload.get("status") or "pending"),
                     model=str(payload.get("model") or "gpt-4.1-mini"),
@@ -209,6 +219,8 @@ async def _apply_run_event(
                 setattr(existing, key, payload[key])
         if "use_ai_review" in payload:
             existing.use_ai_review = bool(payload["use_ai_review"])
+        if "user_id" in payload:
+            existing.user_id = _parse_optional_uuid(payload.get("user_id"))
         if "matter_id" in payload:
             existing.matter_id = _parse_optional_uuid(payload.get("matter_id"))
         if "completed_at" in payload:

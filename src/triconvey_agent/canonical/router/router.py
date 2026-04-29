@@ -378,7 +378,18 @@ def _ai_answer_from_candidates(
     review_threshold: float,
 ) -> tuple[object | None, float, bool, list[str], list[Source], dict]:
     prompt = _build_grounded_ai_prompt(question, facts)
-    response = ai_client.complete(prompt)
+    try:
+        response = ai_client.complete(prompt)
+    except Exception as exc:
+        evidence = _evidence_from(facts)
+        return (
+            None,
+            0.0,
+            True,
+            [f"grounded_ai failed: {exc}"],
+            evidence,
+            {"ai_error": str(exc)},
+        )
     parsed = _extract_json_object(response.raw_text)
     evidence = _evidence_from(facts)
     if parsed is None:

@@ -4,12 +4,18 @@ from __future__ import annotations
 from dotenv import load_dotenv
 load_dotenv()
 
+import asyncio
 import logging
+from functools import partial
+import base64
 import json
 import os
+import re
 import subprocess
 import shutil
 import threading
+import tempfile
+import zipfile
 import uuid as _uuid
 from datetime import datetime, timedelta, UTC
 from contextlib import asynccontextmanager
@@ -18,12 +24,13 @@ from typing import Any
 from uuid import uuid4
 import httpx
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.background import BackgroundTask
 
 from triconvey_agent.app_meta import (
     APP_NAME,
@@ -44,16 +51,22 @@ from triconvey_agent.backend.settings import (
     save_runtime_env_values,
 )
 from triconvey_agent.backend.update_manager import check_for_updates, download_update_installer
+from triconvey_agent.db.bootstrap import apply_runtime_migrations
 from triconvey_agent.backend.service import (
     ask_run_question,
     autofill_run,
     build_review_run,
     check_triconvey_running_passive,
+    confirm_corpus_document,
     ensure_local_convey_running,
+    extract_corpus_entry_async,
+    get_corpus_state,
     load_run_payload,
     save_review_answers,
     set_autofill_activity,
     warm_brain_f_assets_async,
+    process_chat_document,
+    apply_chat_document_changes,
 )
 from triconvey_agent.brain_f.cache import prime_cached_pdf_analysis
 from triconvey_agent.ingest.pdf_loader import load_pdf_document
@@ -61,10 +74,11 @@ from triconvey_agent.canonical.questions.loader import load_question_registry
 from triconvey_agent.db.repositories import (
     AnswerRepo,
     ClientRepo,
+    MatterRepo,
     RunRepo,
     SyncQueueRepo,
 )
-from triconvey_agent.db.session import dispose_engine, get_session
+from triconvey_agent.db.session import dispose_engine, ensure_runtime_schema, get_session
 from triconvey_agent.sync.worker import SyncWorker, start_sync_worker
 
 LOG = logging.getLogger(__name__)
@@ -99,10 +113,42 @@ class AutofillJobRecord(BaseModel):
     manual_action: dict[str, Any] | None = None
 
 
+class AutofillActivityEvent(BaseModel):
+    index: int
+    ts: str | None = None
+    kind: str
+    summary: str
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class AutofillActivityPayload(BaseModel):
+    job_id: str
+    status: str
+    cursor: int
+    events: list[AutofillActivityEvent] = Field(default_factory=list)
+    latest_screenshot_url: str | None = None
+    latest_screenshot_name: str | None = None
+
+
 class CreateRunResult(BaseModel):
     run: dict[str, Any]
     convey_launch_attempted: bool = False
     convey_launch_ok: bool | None = None
+
+
+class RecentRunSummary(BaseModel):
+    run_id: str
+    status: str
+    created_at: str | None = None
+    completed_at: str | None = None
+    time_taken_seconds: float | None = None
+    client_name: str = ""
+    volume_folio: str = ""
+    property_address: str = ""
+    matter_id: str | None = None
+    matter_ref: str | None = None
+    summary_text: str | None = None
+    local_only: bool = False
 
 
 class ChatMessage(BaseModel):
@@ -115,7 +161,8 @@ class ChatRequest(BaseModel):
     model: str | None = None          # if None, uses saved defaultModelName
     history: list[ChatMessage] = Field(default_factory=list)
     mode: str = "standard"            # "quick" | "standard" | "thorough"
-    aiMode: str | None = None
+    session_id: str | None = None     # Feature 4: vector memory session scoping
+    aiMode: str | None = None         # e.g. "cost_efficient" | "quality"
 
 
 class AnswerPatch(BaseModel):
@@ -127,13 +174,16 @@ class AnswerPatch(BaseModel):
 class ApplyPatchRequest(BaseModel):
     patches: list[AnswerPatch]
 
+class ResolveTriconveyReferenceRequest(BaseModel):
+    payload_text: str = ""
+
 
 class LocalSettingsPayload(BaseModel):
     language: str = "English"
     openAiApiKey: str = ""
     anthropicApiKey: str = ""
-    aiProvider: str = "openai"          # "openai" | "anthropic" | "hybrid"
-    aiMode: str = "cost_efficient"      # "cost_efficient" | "all_time_best" | "turbo"
+    googleApiKey: str = ""              # Feature 1: Google Gemini
+    aiProvider: str = "openai"          # "openai" | "anthropic" | "google" | "hybrid"
     defaultModelName: str = "gpt-4.1-mini"
     triconveyPath: str = ""
     preferredAutofillFields: list[str] = Field(default_factory=list)
@@ -177,6 +227,16 @@ async def _ensure_sync_worker_running(client_id: _uuid.UUID) -> bool:
     return started is not None
 
 
+async def _nudge_sync_worker() -> None:
+    worker = _sync_worker_ref.get("worker")
+    if worker is None:
+        return
+    try:
+        await worker.nudge()
+    except Exception:
+        LOG.debug("Could not nudge sync worker for immediate drain.", exc_info=True)
+
+
 async def _stop_sync_worker() -> None:
     worker = _sync_worker_ref.get("worker")
     if worker is not None:
@@ -208,11 +268,37 @@ async def _cloud_sync_status_for_client(
 async def _lifespan(app: FastAPI):
     """Start the cloud sync worker on boot; shut it down cleanly."""
     apply_local_settings_env()
+    try:
+        await apply_runtime_migrations()
+    except Exception as exc:
+        LOG.exception("Failed to apply runtime migrations: %s", exc)
+    try:
+        import sys as _sys
+        from triconvey_agent.backend.settings import load_local_settings as _load_local_settings
+
+        auto_launch = os.getenv("CONVEY_AUTO_LAUNCH_TRICONVEY_ON_START", "").strip().lower()
+        should_auto_launch = getattr(_sys, "frozen", False) or auto_launch in {"1", "true", "yes", "on"}
+        if should_auto_launch:
+            settings = _load_local_settings()
+            triconvey_exe = str(settings.get("triconveyPath") or "").strip() or None
+            if triconvey_exe and not check_triconvey_running_passive():
+                def _launch() -> None:
+                    try:
+                        ok = ensure_local_convey_running(triconvey_exe=triconvey_exe)
+                        _triconvey_import_debug("startup_launch_triconvey", triconvey_exe=triconvey_exe, launched=ok)
+                    except Exception as exc:  # pragma: no cover
+                        _triconvey_import_debug("startup_launch_triconvey_error", triconvey_exe=triconvey_exe, error=exc)
+
+                threading.Thread(target=_launch, daemon=True).start()
+    except Exception:
+        pass
+
     client_slug = os.getenv("CONVEY_CLIENT_SLUG", "").strip()
     if client_slug:
         # Resolve the local client_id for the sync worker.
         from triconvey_agent.db.session import get_session_factory
 
+        await ensure_runtime_schema()
         factory = get_session_factory()
         try:
             async with factory() as session:
@@ -264,8 +350,11 @@ _autofill_cancel_events: dict[str, threading.Event] = {}
 _autofill_job_context: dict[str, dict[str, Any]] = {}
 _autofill_lock = threading.Lock()
 apply_local_settings_env()
-if _ui_dist_dir.exists():
+if _ui_dist_dir.exists() and (_ui_dist_dir / "assets").exists():
     app.mount("/assets", StaticFiles(directory=str(_ui_dist_dir / "assets")), name="ui-assets")
+_public_dir = get_runtime_paths().bundle_root / "public"
+if _public_dir.exists():
+    app.mount("/public", StaticFiles(directory=str(_public_dir)), name="public-assets")
 
 
 def _triconvey_import_debug(event: str, **fields: Any) -> None:
@@ -384,6 +473,75 @@ def post_settings(
     ctx: AuthContext = Depends(require_auth),
 ) -> dict[str, Any]:
     return save_local_settings(body.model_dump(mode="json"), user_id=str(ctx.user.id))
+
+
+# ---------------------------------------------------------------------------
+# Feature 2: Vector memory endpoints
+# ---------------------------------------------------------------------------
+
+
+class MemorySaveRequest(BaseModel):
+    session_id: str
+    content: str
+    embedding: list[float]
+
+
+class MemorySearchRequest(BaseModel):
+    query_embedding: list[float]
+    limit: int = 5
+
+
+@app.post("/api/memory")
+async def save_memory_endpoint(
+    body: MemorySaveRequest,
+    ctx: AuthContext = Depends(require_auth),
+) -> dict[str, Any]:
+    """Persist a memory record to the vector store."""
+    try:
+        from triconvey_agent.memory.vector_store import save_memory as _save_memory
+        ok = await _save_memory(
+            user_id=str(ctx.user.id),
+            session_id=body.session_id,
+            content=body.content,
+            embedding=body.embedding,
+        )
+        return {"saved": ok}
+    except Exception as exc:
+        LOG.warning("/api/memory POST failed: %s", exc)
+        return {"saved": False, "error": str(exc)}
+
+
+@app.post("/api/memory/search")
+async def search_memory_endpoint(
+    body: MemorySearchRequest,
+    ctx: AuthContext = Depends(require_auth),
+) -> dict[str, Any]:
+    """Search vector memory by embedding similarity."""
+    try:
+        from triconvey_agent.memory.vector_store import search_memory as _search_memory
+        results = await _search_memory(
+            user_id=str(ctx.user.id),
+            query_embedding=body.query_embedding,
+            limit=min(body.limit, 20),
+        )
+        return {"results": results, "count": len(results)}
+    except Exception as exc:
+        LOG.warning("/api/memory/search POST failed: %s", exc)
+        return {"results": [], "count": 0, "error": str(exc)}
+
+
+@app.delete("/api/memory/expired")
+async def cleanup_expired_memory(
+    ctx: AuthContext = Depends(require_auth),
+) -> dict[str, Any]:
+    """Hard-delete all memory rows past their 20-day TTL."""
+    try:
+        from triconvey_agent.memory.vector_store import cleanup_expired as _cleanup_expired
+        deleted = await _cleanup_expired()
+        return {"deleted": deleted}
+    except Exception as exc:
+        LOG.warning("/api/memory/expired DELETE failed: %s", exc)
+        return {"deleted": 0, "error": str(exc)}
 
 
 @app.get("/api/app/info")
@@ -519,11 +677,12 @@ def ui_index() -> FileResponse:
 
 
 @app.post("/api/runs")
-async def create_run(
-    files: list[UploadFile] = File(...),
+async def create_run(background_tasks: BackgroundTasks, 
+    files: list[UploadFile] = File(default=[]),
     use_ai_review: bool = Form(False),
     model: str = Form("gpt-4.1-mini"),
     triconvey_exe: str | None = Form(None),
+    reanalyse_run_id: str | None = Form(None),
     ctx: AuthContext = Depends(require_auth),
     session: AsyncSession = Depends(get_session),
 ) -> dict[str, Any]:
@@ -531,6 +690,73 @@ async def create_run(
     import asyncio
     import uuid as _uuid
     from functools import partial
+
+    # Re-analysis mode: reuse an existing run's uploaded documents.
+    if reanalyse_run_id:
+        runtime = ensure_runtime_dirs()
+        source_dir = runtime.ui_runs_dir / reanalyse_run_id
+        if not source_dir.exists():
+            raise HTTPException(status_code=404, detail=f"Run {reanalyse_run_id} not found.")
+        # Collect PDFs from uploads/ and root of source run dir.
+        source_uploads = source_dir / "uploads"
+        saved_paths: list[Path] = []
+        for search_dir in (source_uploads, source_dir):
+            if search_dir.exists():
+                saved_paths.extend(
+                    p for p in search_dir.glob("*.pdf") if p.is_file()
+                )
+        if not saved_paths:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Run {reanalyse_run_id} has no cached documents to re-analyse.",
+            )
+        run_uuid = _uuid.uuid4()
+        target_dir = runtime.ui_runs_dir / str(run_uuid)
+        new_uploads_dir = target_dir / "uploads"
+        new_uploads_dir.mkdir(parents=True, exist_ok=True)
+        # Copy source PDFs into new run dir.
+        copied_paths: list[Path] = []
+        for p in saved_paths:
+            dest = new_uploads_dir / p.name
+            shutil.copy2(p, dest)
+            copied_paths.append(dest)
+        # Also copy any new files uploaded alongside the re-analysis request.
+        if files:
+            extra, _ = await _persist_uploaded_files(new_uploads_dir, files)
+            copied_paths.extend(extra)
+        saved_settings = load_local_settings(user_id=str(ctx.user.id))
+        resolved_model = model or saved_settings["defaultModelName"]
+        run_row = await RunRepo.create(
+            session,
+            client_id=ctx.client.id,
+            run_id=run_uuid,
+            user_id=ctx.user.id,
+            model=resolved_model,
+            use_ai_review=use_ai_review,
+        )
+        await session.commit()
+        try:
+            loop = asyncio.get_event_loop()
+            pipeline_fn = partial(
+                build_review_run,
+                copied_paths,
+                run_dir=target_dir,
+                use_ai_review=use_ai_review,
+                model=resolved_model,
+            )
+            payload: dict[str, Any] = await loop.run_in_executor(None, pipeline_fn)
+        except Exception as exc:
+            await RunRepo.update_status(
+                session,
+                client_id=ctx.client.id,
+                run_id=run_uuid,
+                status="failed",
+                error_message=str(exc),
+            )
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+        await _persist_run_to_db(session, payload, client_id=ctx.client.id, run_uuid=run_uuid)
+        await _nudge_sync_worker()
+        return payload
 
     if not files:
         raise HTTPException(status_code=400, detail="At least one PDF is required.")
@@ -547,19 +773,14 @@ async def create_run(
     uploads_dir = target_dir / "uploads"
     uploads_dir.mkdir(parents=True, exist_ok=True)
 
-    saved_paths: list[Path] = []
-    reference_uploads: list[Path] = []
-    for upload in files:
-        if not upload.filename:
-            continue
-        destination = uploads_dir / _safe_filename(upload.filename)
-        with destination.open("wb") as output_stream:
-            shutil.copyfileobj(upload.file, output_stream)
-        if destination.suffix.lower() == ".pdf":
-            saved_paths.append(destination)
-        elif _looks_like_triconvey_reference(destination):
-            reference_uploads.append(destination)
-        await upload.close()
+    try:
+        saved_paths, reference_uploads = await _persist_uploaded_files(uploads_dir, files)
+    except Exception as exc:
+        _triconvey_import_debug("reference_resolution_exception", error=exc)
+        raise HTTPException(
+            status_code=400,
+            detail=f"TriConvey import failed while resolving cached files: {exc}",
+        ) from exc
 
     _triconvey_import_debug(
         "create_run_saved_uploads",
@@ -567,29 +788,6 @@ async def create_run(
         reference_count=len(reference_uploads),
         reference_names=[p.name for p in reference_uploads],
     )
-
-    deduped_reference_uploads = _dedupe_paths(reference_uploads)
-    if len(deduped_reference_uploads) != len(reference_uploads):
-        _triconvey_import_debug(
-            "create_run_deduped_references",
-            original_count=len(reference_uploads),
-            deduped_count=len(deduped_reference_uploads),
-        )
-
-    resolved_reference_pdfs: list[Path] = []
-    try:
-        for reference_path in deduped_reference_uploads:
-            resolved_reference_pdfs.extend(_resolve_triconvey_reference_upload(reference_path))
-    except Exception as exc:
-        _triconvey_import_debug("reference_resolution_exception", error=exc)
-        raise HTTPException(
-            status_code=400,
-            detail=f"TriConvey import failed while resolving cached files: {exc}",
-        ) from exc
-    for resolved_pdf in _dedupe_paths(resolved_reference_pdfs):
-        copied = _copy_into_uploads(resolved_pdf, uploads_dir)
-        if copied not in saved_paths:
-            saved_paths.append(copied)
 
     if not saved_paths:
         if reference_uploads:
@@ -612,65 +810,168 @@ async def create_run(
         session,
         client_id=ctx.client.id,
         run_id=run_uuid,
+        user_id=ctx.user.id,
         model=resolved_model,
         use_ai_review=use_ai_review,
     )
+    await session.commit()
 
-    convey_running = check_triconvey_running_passive()
     convey_launch_attempted = False
     convey_launch_ok: bool | None = None
-    if resolved_triconvey_exe and not convey_running:
-        convey_launch_attempted = True
-        try:
-            convey_launch_ok = ensure_local_convey_running(triconvey_exe=resolved_triconvey_exe)
-            convey_running = convey_running or bool(convey_launch_ok)
-            _triconvey_import_debug(
-                "create_run_launch_triconvey",
-                triconvey_exe=resolved_triconvey_exe,
-                launched=convey_launch_ok,
-            )
-        except Exception as exc:
-            convey_launch_ok = False
-            _triconvey_import_debug(
-                "create_run_launch_triconvey_error",
-                triconvey_exe=resolved_triconvey_exe,
-                error=exc,
-            )
 
-    # Run the sync-heavy pipeline in a thread pool (keeps event loop free).
+    # Run the sync-heavy pipeline in a background task.
+    # We create a wrapper that handles the executor and DB persistence.
+    loop = asyncio.get_event_loop()
+    background_tasks.add_task(
+        _run_analysis_pipeline_background,
+        loop=loop,
+        client_id=ctx.client.id,
+        run_uuid=run_uuid,
+        saved_paths=saved_paths,
+        target_dir=target_dir,
+        use_ai_review=use_ai_review,
+        resolved_model=resolved_model,
+    )
+
+    return {
+        "run_id": str(run_uuid),
+        "status": "pending",
+        "progress_pct": 0.0,
+        "progress_status": "Starting...",
+    }
+
+
+async def _run_analysis_pipeline_background(
+    loop: asyncio.AbstractEventLoop,
+    client_id: _uuid.UUID,
+    run_uuid: _uuid.UUID,
+    saved_paths: list[Path],
+    target_dir: Path,
+    use_ai_review: bool,
+    resolved_model: str,
+):
+    """Background worker that orchestrates the analysis pipeline and DB updates."""
+    from triconvey_agent.db.session import get_session_factory
+
+    factory = get_session_factory()
+
+    def progress_callback(pct: float, status: str):
+        # Fire-and-forget DB update for progress.
+        asyncio.run_coroutine_threadsafe(
+            _update_run_progress_async(factory, client_id, run_uuid, pct, status),
+            loop
+        )
+
     try:
-        loop = asyncio.get_event_loop()
+        # 1) Execute the pipeline in the thread pool.
         pipeline_fn = partial(
             build_review_run,
             saved_paths,
             run_dir=target_dir,
             use_ai_review=use_ai_review,
             model=resolved_model,
+            progress_callback=progress_callback,
         )
         payload: dict[str, Any] = await loop.run_in_executor(None, pipeline_fn)
         LOG.info("Pipeline complete for run %s; starting DB persistence", run_uuid)
+
+        # 2) Persist to DB.
+        async with factory() as session:
+            await _persist_run_to_db(session, payload, client_id=client_id, run_uuid=run_uuid)
+            await session.commit()
+
+        LOG.info("DB persistence complete for run %s", run_uuid)
+        await _nudge_sync_worker()
+        warm_brain_f_assets_async(target_dir)
+
     except Exception as exc:
+        LOG.exception("Background analysis pipeline failed for run %s", run_uuid)
+        async with factory() as session:
+            await session.rollback()
+            await RunRepo.update_status(
+                session,
+                client_id=client_id,
+                run_id=run_uuid,
+                status="failed",
+                error_message=str(exc),
+            )
+            await session.commit()
+
+
+async def _update_run_progress_async(
+    factory: Any,
+    client_id: _uuid.UUID,
+    run_uuid: _uuid.UUID,
+    pct: float,
+    status: str
+):
+    async with factory() as session:
         await RunRepo.update_status(
             session,
-            client_id=ctx.client.id,
+            client_id=client_id,
             run_id=run_uuid,
-            status="failed",
-            error_message=str(exc),
+            status="running",
+            progress_pct=pct,
+            progress_status=status
         )
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        await session.commit()
 
-    # Persist pipeline output to DB (non-blocking, runs in same async context).
-    await _persist_run_to_db(session, payload, client_id=ctx.client.id, run_uuid=run_uuid)
-    LOG.info("DB persistence complete for run %s", run_uuid)
-    warm_started = warm_brain_f_assets_async(target_dir)
-    if warm_started:
-        LOG.info("Brain F background warmup started for run %s", run_uuid)
 
-    payload["convey_launch_attempted"] = convey_launch_attempted
-    payload["convey_launch_ok"] = convey_launch_ok
-    payload["convey_running"] = convey_running
-    payload["brain_f_warming"] = warm_started
-    return payload
+@app.get("/api/runs/recent", response_model=list[RecentRunSummary])
+async def get_recent_runs(
+    limit: int = 10,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> list[RecentRunSummary]:
+    rows = await RunRepo.list_recent_with_matter(
+        session,
+        client_id=ctx.client.id,
+        user_id=ctx.user.id,
+        limit=max(1, min(limit, 25)),
+    )
+
+    summaries: list[RecentRunSummary] = []
+    for run, matter in rows:
+        client_name = ""
+        volume_folio = matter.volume_folio if matter else ""
+        property_address = matter.property_address if matter else ""
+
+        try:
+            payload = load_run_payload(_resolve_run_dir(str(run.id)))
+            client_name = str(
+                payload.get("matter", {}).get("client_name")
+                or payload.get("client_name")
+                or ""
+            ).strip()
+            if not volume_folio:
+                volume_folio = str(payload.get("matter", {}).get("volume_folio") or "").strip()
+            if not property_address:
+                property_address = str(payload.get("matter", {}).get("property_address") or "").strip()
+        except Exception:
+            pass
+
+        summaries.append(
+            RecentRunSummary(
+                run_id=str(run.id),
+                status=run.status,
+                created_at=run.created_at.isoformat() if run.created_at else None,
+                completed_at=run.completed_at.isoformat() if run.completed_at else None,
+                time_taken_seconds=(
+                    max((run.completed_at - run.created_at).total_seconds(), 0.0)
+                    if run.created_at and run.completed_at
+                    else None
+                ),
+                client_name=client_name,
+                volume_folio=volume_folio or "",
+                property_address=property_address or "",
+                matter_id=str(matter.id) if matter else None,
+                matter_ref=matter.matter_ref if matter else None,
+                summary_text=run.summary_text,
+                local_only=bool(run.local_only),
+            )
+        )
+
+    return summaries
 
 
 @app.get("/api/runs/{run_id}")
@@ -682,15 +983,39 @@ async def get_run(
     import uuid as _uuid
 
     # Verify ownership via DB if run_id is a valid UUID.
+    run_row = None
     try:
         run_uuid = _uuid.UUID(run_id)
-        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid)
-        if run is None:
+        run_row = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid, user_id=ctx.user.id)
+        if run_row is None:
             raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
     except ValueError:
         pass  # legacy string run_id — skip DB ownership check
+
+    if run_row and run_row.status in {"pending", "running"}:
+        return {
+            "run_id": str(run_row.id),
+            "status": run_row.status,
+            "progress_pct": run_row.progress_pct or 0.0,
+            "progress_status": run_row.progress_status or "Processing...",
+            "error_message": run_row.error_message,
+        }
+    if run_row and run_row.status == "failed":
+        return {
+            "run_id": str(run_row.id),
+            "status": run_row.status,
+            "progress_pct": run_row.progress_pct or 0.0,
+            "progress_status": run_row.progress_status or "Failed",
+            "error_message": run_row.error_message,
+        }
+
     run_dir = _resolve_run_dir(run_id)
-    return load_run_payload(run_dir)
+    payload = load_run_payload(run_dir)
+    if run_row:
+        payload["status"] = "completed" if run_row.status in {"complete", "completed"} else run_row.status
+        payload["progress_pct"] = 100.0
+        payload["progress_status"] = "Complete"
+    return payload
 
 
 @app.post("/api/runs/{run_id}/answers")
@@ -717,7 +1042,7 @@ async def save_answers(
         run_uuid = None  # legacy string run_id; DB path is skipped
 
     if run_uuid is not None:
-        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid)
+        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid, user_id=ctx.user.id)
         if run is None:
             raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found for this client.")
         for question_id, payload in updates.items():
@@ -730,6 +1055,7 @@ async def save_answers(
                 new_value=payload.get("value"),
                 needs_review=payload.get("needs_review"),
             )
+        await _nudge_sync_worker()
 
     # 2) Mirror to file-based storage so the existing autofill pipeline keeps working.
     return save_review_answers(run_dir, updates)
@@ -744,19 +1070,20 @@ async def chat_about_run(
 ) -> dict[str, Any]:
     """Ask a question about a run.
 
-    Brain F (Anthropic agentic) is used when ANTHROPIC_API_KEY is set.
-    Falls back to OpenAI token-ranked retrieval otherwise.
+    Brain F (Anthropic/OpenAI/Google agentic) answers using extracted facts,
+    document corpus, and (Feature 4) vector memory context.
 
     Returns:
         answer            — prose answer
         citations         — [{file, page, quote}, ...]
-        proposed_patches  — [{question_id, new_value, reason, status}, ...] (Brain F only)
-        tool_calls_made   — int (Brain F only)
-        confidence_note   — str | null (Brain F only)
+        proposed_patches  — [{question_id, new_value, reason, status}, ...]
+        tool_calls_made   — int
+        confidence_note   — str | null
+        session_id        — UUID for this chat session
     """
     try:
         run_uuid = _uuid.UUID(run_id)
-        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid)
+        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid, user_id=ctx.user.id)
         if run is None:
             raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
     except ValueError:
@@ -767,7 +1094,25 @@ async def chat_about_run(
         saved_settings = load_local_settings(user_id=str(ctx.user.id))
         history = [{"role": m.role, "content": m.content} for m in (body.history or [])]
         model = body.model or saved_settings.get("defaultModelName", "gpt-4.1-mini")
-        return ask_run_question(
+        user_id = str(ctx.user.id)
+        session_id = body.session_id or str(uuid4())
+
+        # ── Feature 4: retrieve vector memory context ──────────────────
+        vector_memories: list[dict] = []
+        try:
+            from triconvey_agent.ai.multi_client import MultiModelClient
+            from triconvey_agent.memory.vector_store import search_memory as _search_memory
+
+            mc = MultiModelClient(
+                provider=saved_settings.get("aiProvider", "openai"),
+                model=model,
+            )
+            query_embedding = mc.embed(body.question)
+            vector_memories = await _search_memory(user_id, query_embedding, limit=5)
+        except Exception as _mem_exc:
+            LOG.debug("Vector memory retrieval skipped: %s", _mem_exc)
+
+        result = ask_run_question(
             run_dir,
             question=body.question,
             model=model,
@@ -775,9 +1120,34 @@ async def chat_about_run(
             ai_provider=saved_settings.get("aiProvider", "openai"),
             ai_mode=body.aiMode or saved_settings.get("aiMode", "cost_efficient"),
             mode=body.mode or "standard",
+            session_id=session_id,
+            vector_memories=vector_memories,
         )
+
+        # ── Feature 4: save this exchange to vector memory ─────────────
+        try:
+            from triconvey_agent.ai.multi_client import MultiModelClient
+            from triconvey_agent.memory.vector_store import save_memory as _save_memory
+
+            exchange_text = f"Q: {body.question}\nA: {result.get('answer', '')}"
+            mc2 = MultiModelClient(
+                provider=saved_settings.get("aiProvider", "openai"),
+                model=model,
+            )
+            exchange_embedding = mc2.embed(exchange_text)
+            await _save_memory(user_id, session_id, exchange_text, exchange_embedding)
+        except Exception as _save_exc:
+            LOG.debug("Vector memory save skipped: %s", _save_exc)
+
+        result["session_id"] = session_id
+        return result
+
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        msg = str(exc)
+        # "No AI agent could complete the question" means API keys or quota issue — surface cleanly
+        if "No AI agent could complete" in msg:
+            raise HTTPException(status_code=503, detail=msg) from exc
+        raise HTTPException(status_code=400, detail=msg) from exc
     except Exception as exc:  # pragma: no cover - surfaced to UI
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -791,7 +1161,7 @@ async def upload_chat_files(
 ) -> dict[str, Any]:
     try:
         run_uuid = _uuid.UUID(run_id)
-        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid)
+        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid, user_id=ctx.user.id)
         if run is None:
             raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
     except ValueError:
@@ -800,24 +1170,32 @@ async def upload_chat_files(
     run_dir = _resolve_run_dir(run_id)
     uploads_dir = run_dir / "uploads"
     uploads_dir.mkdir(parents=True, exist_ok=True)
-    saved_files: list[str] = []
+    try:
+        saved_paths, reference_uploads = await _persist_uploaded_files(uploads_dir, files)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"TriConvey import failed while resolving cached files: {exc}",
+        ) from exc
 
-    for upload in files:
-        if not upload.filename:
-            continue
-        destination = uploads_dir / _safe_filename(upload.filename)
-        with destination.open("wb") as output_stream:
-            shutil.copyfileobj(upload.file, output_stream)
-        await upload.close()
-        if destination.suffix.lower() == ".pdf":
-            saved_files.append(destination.name)
-            try:
-                document = load_pdf_document(destination)
-                prime_cached_pdf_analysis(destination, document)
-            except Exception:
-                pass
+    saved_files: list[str] = []
+    for destination in saved_paths:
+        saved_files.append(destination.name)
+        try:
+            document = load_pdf_document(destination)
+            prime_cached_pdf_analysis(destination, document)
+        except Exception:
+            pass
 
     if not saved_files:
+        if reference_uploads:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "TriConvey drop detected, but no accessible PDFs were found from the provided Smokeball paths. "
+                    "Open each document in TriConvey first so Smokeball caches it locally, then drag the files again."
+                ),
+            )
         raise HTTPException(status_code=400, detail="No valid PDF files were uploaded.")
 
     for path in (
@@ -829,9 +1207,315 @@ async def upload_chat_files(
         except OSError:
             pass
 
+    # For new chat documents, use the incremental processor (single-doc, not full re-run).
+    # Each file gets its own processing job. Results are returned to the UI as pending.
+    saved_settings = load_local_settings(user_id=str(ctx.user.id))
+    corpus_model = saved_settings.get("defaultModelName") or "gpt-4.1-mini"
+    matter_id = str(run.matter_id) if run.matter_id else run_id
+
+    pending_doc_ids = []
+    for dest in saved_paths:
+        doc_id = str(uuid4())
+        pending_doc_ids.append({"document_id": doc_id, "filename": dest.name})
+        extract_corpus_entry_async(
+            run_dir=run_dir,
+            document_path=dest,
+            document_id=doc_id,
+            matter_id=matter_id,
+            run_id=run_id,
+            model=corpus_model,
+        )
+
     warm_brain_f_assets_async(run_dir)
 
-    return {"uploaded": saved_files, "message": f"Uploaded {len(saved_files)} file(s) to Brain F."}
+    return {
+        "uploaded": saved_files,
+        "message": f"Uploaded {len(saved_files)} file(s). Processing — confirm new information in the chat.",
+        "corpus_extraction_started": len(saved_files) > 0,
+        "pending_documents": pending_doc_ids,
+    }
+
+
+@app.post("/api/runs/{run_id}/reprocess")
+async def reprocess_run(
+    run_id: str,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Re-run the full extraction pipeline on an existing run (original + chat-uploaded docs).
+
+    Called automatically after chat file uploads so new documents are fully
+    extracted and their facts merged into the answers.json for the run.
+    """
+    import asyncio
+    from functools import partial
+
+    try:
+        run_uuid = _uuid.UUID(run_id)
+        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid, user_id=ctx.user.id)
+        if run is None:
+            raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+
+    run_dir = _resolve_run_dir(run_id)
+    uploads_dir = run_dir / "uploads"
+
+    # Collect all PDFs from both the run root and uploads subdir
+    doc_paths: list[Path] = []
+    for search_dir in (uploads_dir, run_dir):
+        if search_dir.exists():
+            doc_paths.extend(p for p in search_dir.glob("*.pdf") if p.is_file())
+    # Deduplicate by name (uploads/ takes priority)
+    seen: set[str] = set()
+    unique_paths: list[Path] = []
+    for p in doc_paths:
+        if p.name not in seen:
+            seen.add(p.name)
+            unique_paths.append(p)
+
+    if not unique_paths:
+        raise HTTPException(status_code=400, detail="No documents found to reprocess.")
+
+    saved_settings = load_local_settings(user_id=str(ctx.user.id))
+    model = run.model or saved_settings.get("defaultModelName", "gpt-4.1-mini")
+    use_ai_review = bool(run.use_ai_review)
+
+    try:
+        loop = asyncio.get_event_loop()
+        pipeline_fn = partial(
+            build_review_run,
+            unique_paths,
+            run_dir=run_dir,
+            use_ai_review=use_ai_review,
+            model=model,
+        )
+        payload: dict[str, Any] = await loop.run_in_executor(None, pipeline_fn)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Reprocess failed: {exc}") from exc
+
+    await _persist_run_to_db(session, payload, client_id=ctx.client.id, run_uuid=run_uuid)
+    # Bust Brain F caches so the next chat uses fresh facts
+    for cache_file in (
+        run_dir / "document_corpus_manifest.json",
+        run_dir / "document_memory.json",
+    ):
+        try:
+            cache_file.unlink(missing_ok=True)
+        except OSError:
+            pass
+    warm_brain_f_assets_async(run_dir)
+    return payload
+
+
+# ---------------------------------------------------------------------------
+# Incremental single-document processing endpoints
+# ---------------------------------------------------------------------------
+
+
+class ProcessDocumentRequest(BaseModel):
+    filename: str
+    model: str | None = None
+
+
+class ApplyDocumentChangesRequest(BaseModel):
+    document_id: str
+    doc_path: str                               # path on disk (returned by upload)
+    corpus_entry: dict[str, Any] | None = None
+    approved_change_ids: list[str] = []
+    all_changes: list[dict[str, Any]] = []
+
+
+@app.post("/api/runs/{run_id}/chat-documents/process")
+async def process_chat_document_endpoint(
+    run_id: str,
+    filename: str = Form(...),
+    file: UploadFile = File(...),
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Upload and incrementally process a single new document.
+
+    1. Saves the file
+    2. Validates relevance (warns if suspicious)
+    3. Extracts facts + corpus entry from this doc only
+    4. Returns proposed answer changes for user approval
+
+    The caller (Chatbot UI) shows the validation result and proposed changes
+    before the user approves or rejects.
+    """
+    try:
+        run_uuid = _uuid.UUID(run_id)
+        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid, user_id=ctx.user.id)
+        if run is None:
+            raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+
+    run_dir = _resolve_run_dir(run_id)
+    uploads_dir = run_dir / "uploads"
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save the uploaded file
+    safe_name = Path(file.filename or filename).name
+    dest_path = uploads_dir / safe_name
+    try:
+        content = await file.read()
+        dest_path.write_bytes(content)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Could not save file: {exc}")
+
+    saved_settings = load_local_settings(user_id=str(ctx.user.id))
+    model = saved_settings.get("defaultModelName") or "gpt-4.1-mini"
+    matter_id = str(run.matter_id) if run.matter_id else run_id
+
+    # If this is a TriConvey reference file, resolve it to the actual PDF(s)
+    if _looks_like_triconvey_reference(dest_path):
+        resolved_pdfs = _resolve_triconvey_reference_upload(dest_path)
+        # Copy resolved PDFs into uploads and clean up the reference file
+        dest_path.unlink(missing_ok=True)
+        if not resolved_pdfs:
+            return {
+                "error": "TriConvey reference resolved to no accessible PDFs. Open the document in TriConvey first so it is cached locally.",
+                "doc_path": None,
+                "proposed_changes": [],
+                "corpus_entry": None,
+            }
+        dest_path = _copy_into_uploads(resolved_pdfs[0], uploads_dir)
+
+    # Check for duplicate: if this file is already in the uploads, warn the user
+    existing_uploads = {p.name for p in uploads_dir.iterdir() if p.is_file() and p != dest_path and p.suffix.lower() == ".pdf"}
+    if dest_path.name in existing_uploads or any(
+        p.stem == dest_path.stem for p in uploads_dir.iterdir()
+        if p.is_file() and p != dest_path and p.suffix.lower() == ".pdf"
+    ):
+        return {
+            "already_exists": True,
+            "filename": dest_path.name,
+            "doc_path": str(dest_path),
+            "proposed_changes": [],
+            "corpus_entry": None,
+            "message": f"'{dest_path.name}' is already part of this matter. Do you want to re-process it with the latest version?",
+        }
+
+    # Run incremental processing (synchronous — returns in ~10-20 seconds)
+    loop = asyncio.get_event_loop()
+    from functools import partial
+    try:
+        result = await loop.run_in_executor(
+            None,
+            partial(process_chat_document, run_dir, dest_path, model, matter_id, run_id),
+        )
+    except Exception as exc:
+        LOG.exception("process_chat_document failed for %s", dest_path.name)
+        return {
+            "error": str(exc),
+            "doc_path": str(dest_path),
+            "proposed_changes": [],
+            "corpus_entry": None,
+        }
+    result["doc_path"] = str(dest_path)
+    return result
+
+
+@app.post("/api/runs/{run_id}/chat-documents/apply")
+async def apply_chat_document_changes_endpoint(
+    run_id: str,
+    body: ApplyDocumentChangesRequest,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Apply user-approved answer changes from an incremental document processing result."""
+    try:
+        run_uuid = _uuid.UUID(run_id)
+        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid, user_id=ctx.user.id)
+        if run is None:
+            raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+
+    run_dir = _resolve_run_dir(run_id)
+    matter_id = str(run.matter_id) if run.matter_id else run_id
+
+    result = apply_chat_document_changes(
+        run_dir=run_dir,
+        document_id=body.document_id,
+        doc_path=body.doc_path,
+        corpus_entry_dict=body.corpus_entry,
+        approved_change_ids=body.approved_change_ids,
+        all_changes=body.all_changes,
+        matter_id=matter_id,
+        run_id=run_id,
+    )
+
+    # Bust Brain F caches so the next chat uses the updated corpus
+    for cache_file in (run_dir / "document_corpus_manifest.json", run_dir / "document_memory.json"):
+        try:
+            cache_file.unlink(missing_ok=True)
+        except OSError:
+            pass
+    warm_brain_f_assets_async(run_dir)
+
+    return {"ok": True, **result}
+
+
+# ---------------------------------------------------------------------------
+# Corpus endpoints
+# ---------------------------------------------------------------------------
+
+
+class CorpusConfirmRequest(BaseModel):
+    document_id: str
+
+
+@app.get("/api/runs/{run_id}/corpus")
+async def get_run_corpus(
+    run_id: str,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Return the structured document corpus for a run (confirmed + pending)."""
+    try:
+        run_uuid = _uuid.UUID(run_id)
+        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid, user_id=ctx.user.id)
+        if run is None:
+            raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+
+    run_dir = _resolve_run_dir(run_id)
+    matter_id = str(run.matter_id) if run.matter_id else run_id
+    return get_corpus_state(run_dir, matter_id=matter_id, run_id=run_id)
+
+
+@app.post("/api/runs/{run_id}/corpus/confirm")
+async def confirm_corpus_entry(
+    run_id: str,
+    body: CorpusConfirmRequest,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Confirm a pending corpus entry — user has reviewed and approved the extracted information."""
+    try:
+        run_uuid = _uuid.UUID(run_id)
+        run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid, user_id=ctx.user.id)
+        if run is None:
+            raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+
+    run_dir = _resolve_run_dir(run_id)
+    matter_id = str(run.matter_id) if run.matter_id else run_id
+    confirmed = confirm_corpus_document(run_dir, body.document_id, matter_id=matter_id, run_id=run_id)
+    if confirmed is None:
+        raise HTTPException(status_code=404, detail=f"No pending corpus entry for document '{body.document_id}'.")
+
+    return {
+        "confirmed": True,
+        "document_id": body.document_id,
+        "filename": confirmed.get("filename"),
+        "message": f"Document corpus updated with information from {confirmed.get('filename', 'document')}.",
+    }
 
 
 @app.post("/api/runs/{run_id}/apply-patches")
@@ -859,8 +1543,57 @@ def apply_answer_patches(run_id: str, body: ApplyPatchRequest) -> dict[str, Any]
         return save_review_answers(run_dir, updates)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/triconvey/resolve-reference")
+async def resolve_triconvey_reference(
+    body: ResolveTriconveyReferenceRequest,
+    ctx: AuthContext = Depends(require_auth),
+) -> dict[str, Any]:
+    """Resolve TriConvey/Smokeball drag payload to concrete local PDFs.
+
+    Used by the UI to display real PDF filenames for drag-and-drop references
+    before the user starts a full extraction run.
+    """
+    del ctx  # auth gate only
+    raw = (body.payload_text or "").strip()
+    if not raw:
+        raise HTTPException(status_code=400, detail="payload_text is required.")
+    try:
+        payload = json.loads(raw)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Payload must be a JSON object.")
+
+    _triconvey_import_debug(
+        "ui_resolve_reference_start",
+        keys=list(payload.keys()),
+        matter_id=str(payload.get("MatterId") or ""),
+        file_ids=payload.get("Files") if isinstance(payload.get("Files"), list) else [],
+    )
+
+    try:
+        resolved_paths = _resolve_triconvey_reference_payload(payload)
+    except Exception as exc:
+        _triconvey_import_debug("ui_resolve_reference_error", error=exc)
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    resolved = [{"name": path.name, "path": str(path)} for path in resolved_paths]
+    display_name = resolved[0]["name"] if resolved else ""
+    subtitle = f"Resolved {len(resolved)} PDF(s)" if resolved else "No local PDFs resolved yet"
+
+    _triconvey_import_debug(
+        "ui_resolve_reference_done",
+        resolved_count=len(resolved),
+        resolved_names=[item["name"] for item in resolved],
+    )
+
+    return {
+        "resolved": resolved,
+        "display_name": display_name,
+        "subtitle": subtitle,
+    }
 
 
 @app.post("/api/runs/{run_id}/autofill")
@@ -972,6 +1705,112 @@ async def get_autofill_job(
     return record.model_dump(mode="json")
 
 
+@app.get("/api/autofill-jobs/{job_id}/activity")
+async def get_autofill_job_activity(
+    job_id: str,
+    cursor: int = 0,
+    ctx: AuthContext = Depends(require_auth),
+) -> dict[str, Any]:
+    with _autofill_lock:
+        record = _autofill_jobs.get(job_id)
+        context = _autofill_job_context.get(job_id)
+    if record is None or context is None:
+        raise HTTPException(status_code=404, detail=f"Autofill job '{job_id}' was not found.")
+
+    run_dir = Path(context["run_dir"])
+    live = _load_live_execution_session(run_dir)
+    event_log_path = Path(live["event_log_path"]) if live.get("event_log_path") else None
+    screenshots_dir = Path(live["screenshots_dir"]) if live.get("screenshots_dir") else None
+
+    events: list[dict[str, Any]] = []
+    next_cursor = cursor
+    if event_log_path is not None:
+        events, next_cursor = _read_autofill_events(event_log_path, max(cursor, 0))
+
+    latest_screenshot_name = None
+    latest_screenshot_url = None
+    if screenshots_dir is not None and screenshots_dir.exists():
+        latest = max(
+            (path for path in screenshots_dir.glob("*.png") if path.is_file()),
+            default=None,
+            key=lambda item: item.stat().st_mtime,
+        )
+        if latest is not None:
+            latest_screenshot_name = latest.name
+            latest_screenshot_url = f"/api/autofill-jobs/{job_id}/latest-screenshot"
+
+    payload = AutofillActivityPayload(
+        job_id=job_id,
+        status=record.status,
+        cursor=next_cursor,
+        events=[AutofillActivityEvent.model_validate(item) for item in events],
+        latest_screenshot_url=latest_screenshot_url,
+        latest_screenshot_name=latest_screenshot_name,
+    )
+    return payload.model_dump(mode="json")
+
+
+@app.get("/api/autofill-jobs/{job_id}/latest-screenshot")
+async def get_autofill_job_latest_screenshot(
+    job_id: str,
+    ctx: AuthContext = Depends(require_auth),
+):
+    with _autofill_lock:
+        context = _autofill_job_context.get(job_id)
+    if context is None:
+        raise HTTPException(status_code=404, detail=f"Autofill job '{job_id}' was not found.")
+
+    run_dir = Path(context["run_dir"])
+    live = _load_live_execution_session(run_dir)
+    screenshots_dir = Path(live["screenshots_dir"]) if live.get("screenshots_dir") else None
+    if screenshots_dir is None or not screenshots_dir.exists():
+        raise HTTPException(status_code=404, detail="No screenshots are available yet.")
+
+    latest = max(
+        (path for path in screenshots_dir.glob("*.png") if path.is_file()),
+        default=None,
+        key=lambda item: item.stat().st_mtime,
+    )
+    if latest is None:
+        raise HTTPException(status_code=404, detail="No screenshots are available yet.")
+    return FileResponse(latest, media_type="image/png", filename=latest.name)
+
+
+@app.get("/api/runs/{run_id}/brain-e-logs")
+async def export_brain_e_logs(
+    run_id: str,
+    ctx: AuthContext = Depends(require_auth),
+):
+    run_dir = _resolve_run_dir(run_id)
+    members = _brain_e_export_members(run_dir)
+    if not members:
+        raise HTTPException(status_code=404, detail="No Brain E logs are available for this run yet.")
+
+    runtime = ensure_runtime_dirs()
+    export_dir = runtime.temp_dir / "brain_e_exports"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = export_dir / f"brain_e_logs_{run_id}.zip"
+    if export_path.exists():
+        try:
+            export_path.unlink()
+        except Exception:
+            pass
+
+    with zipfile.ZipFile(export_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for source, arcname in members:
+            try:
+                archive.write(source, arcname)
+            except Exception:
+                continue
+
+    return FileResponse(
+        export_path,
+        media_type="application/zip",
+        filename=export_path.name,
+        background=BackgroundTask(lambda path=export_path: path.unlink(missing_ok=True)),
+    )
+
+
 @app.post("/api/autofill-jobs/{job_id}/cancel")
 async def cancel_autofill_job(
     job_id: str,
@@ -989,7 +1828,9 @@ async def cancel_autofill_job(
         record.completed_at = _utc_now()
         record.error = "Autofill cancelled by user."
         _autofill_jobs[job_id] = record
-    _force_stop_triconvey()
+    # Do NOT force-stop TriConvey — the user may have that matter open and
+    # wants to continue working in it. The cancel_event signals the background
+    # thread to abort its next interruptible_sleep/action loop gracefully.
     return record.model_dump(mode="json")
 
 
@@ -1030,6 +1871,101 @@ async def continue_autofill_job(
     return record.model_dump(mode="json")
 
 
+# ── Smokeball direct-push endpoint ───────────────────────────────────────────
+
+def _smokeball_debug(event: str, **fields: Any) -> None:
+    """Append a structured line to smokeball_push_debug.log."""
+    try:
+        runtime = ensure_runtime_dirs()
+        log_file = runtime.local_app_dir / "smokeball_push_debug.log"
+        timestamp = datetime.now(UTC).isoformat()
+        parts = [f"ts={timestamp}", f"event={event}"]
+        for key, value in fields.items():
+            text = str(value).replace("\n", " ").replace("\r", " ")[:500]
+            parts.append(f"{key}={text}")
+        with log_file.open("a", encoding="utf-8") as fh:
+            fh.write(" | ".join(parts) + "\n")
+    except Exception:
+        pass
+
+
+class SmokeballPushRequest(BaseModel):
+    matter_number: str
+    answers: dict[str, Any] = Field(default_factory=dict)
+
+
+@app.post("/api/smokeball/push-s32")
+async def push_s32_to_smokeball(
+    body: SmokeballPushRequest,
+    ctx: AuthContext = Depends(require_auth),
+) -> dict[str, Any]:
+    """Push Section 32 conveyancing fields directly into Smokeball/TriConvey."""
+    # Apply client policy filter — only push fields that are starred in custom policy.
+    _settings = load_local_settings(user_id=str(ctx.user.id))
+    _preferred = {str(f).strip() for f in (_settings.get("preferredAutofillFields") or []) if str(f).strip()}
+    if _preferred:
+        body.answers = {k: v for k, v in body.answers.items() if k in _preferred}
+
+    _smokeball_debug("push_s32_start", matter_number=body.matter_number, answer_keys=list(body.answers.keys()))
+    try:
+        from triconvey_agent.smokeball.client import push_s32_to_matter
+    except ImportError as exc:
+        _smokeball_debug("push_s32_import_error", error=exc)
+        raise HTTPException(status_code=500, detail=f"Smokeball client unavailable: {exc}")
+
+    try:
+        result = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: push_s32_to_matter(body.matter_number, body.answers),
+        )
+        _smokeball_debug("push_s32_result",
+                         success=result.get("success"),
+                         method=result.get("method"),
+                         fields_pushed=result.get("fields_pushed"),
+                         error=result.get("error"),
+                         warning=result.get("warning"))
+    except RuntimeError as exc:
+        _smokeball_debug("push_s32_runtime_error", error=exc)
+        raise HTTPException(status_code=503, detail=str(exc))
+    except Exception as exc:
+        LOG.exception("push_s32_to_smokeball failed")
+        _smokeball_debug("push_s32_exception", error=repr(exc))
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    if not result.get("success"):
+        raise HTTPException(status_code=502, detail=result.get("error", "Push failed"))
+
+    return result
+
+
+@app.get("/api/smokeball/matters")
+async def list_smokeball_matters(
+    ctx: AuthContext = Depends(require_auth),
+) -> list[dict[str, Any]]:
+    """Return all matters from the Smokeball browse-graphql endpoint.
+
+    triConvey.exe MUST be running and logged in.
+    """
+    try:
+        from triconvey_agent.smokeball.client import SmokeballClient
+    except ImportError as exc:
+        raise HTTPException(status_code=500, detail=f"Smokeball client unavailable: {exc}")
+
+    try:
+        def _fetch() -> list[dict]:
+            client = SmokeballClient()
+            return client.list_matters(limit=200)
+
+        matters = await asyncio.get_event_loop().run_in_executor(None, _fetch)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except Exception as exc:
+        LOG.exception("list_smokeball_matters failed")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    return matters
+
+
 def _resolve_run_dir(run_id: str) -> Path:
     runtime = ensure_runtime_dirs()
     run_dir = runtime.ui_runs_dir / run_id
@@ -1050,6 +1986,127 @@ def _new_run_id(base_dir: Path) -> str:
 
 def _safe_filename(name: str) -> str:
     return Path(name).name.replace("/", "_").replace("\\", "_")
+
+
+def _load_live_execution_session(run_dir: Path) -> dict[str, Any]:
+    live_path = run_dir / "execution_artifacts" / "live_session.json"
+    if live_path.exists():
+        try:
+            return json.loads(live_path.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+
+    report_path = run_dir / "execution_report.json"
+    if report_path.exists():
+        try:
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+        return {
+            "diagnostics_dir": report.get("diagnostics_dir"),
+            "event_log_path": report.get("event_log_path"),
+            "debug_log_path": report.get("debug_log_path"),
+            "screenshots_dir": str(Path(report["diagnostics_dir"]) / "screenshots")
+            if report.get("diagnostics_dir")
+            else None,
+        }
+    return {}
+
+
+def _brain_e_export_members(run_dir: Path) -> list[tuple[Path, str]]:
+    members: list[tuple[Path, str]] = []
+    report_path = run_dir / "execution_report.json"
+    if report_path.exists():
+        members.append((report_path, "execution_report.json"))
+
+    live = _load_live_execution_session(run_dir)
+    diagnostics_dir = Path(live["diagnostics_dir"]) if live.get("diagnostics_dir") else None
+    if diagnostics_dir is not None and diagnostics_dir.exists():
+        for candidate_name in ("events.jsonl", "autofill_debug.log", "live_session.json"):
+            candidate = diagnostics_dir / candidate_name
+            if candidate.exists():
+                members.append((candidate, f"execution_artifacts/{candidate_name}"))
+
+    runtime = ensure_runtime_dirs()
+    brain_e_app_dir = runtime.local_app_dir / "brain_e"
+    brain_e_cache_dir = runtime.cache_dir / "brain_e"
+    for candidate, target_name in (
+        (brain_e_cache_dir / "brain_e_debug.jsonl", "brain_e_debug.jsonl"),
+        (brain_e_app_dir / "brain_e_learning.jsonl", "brain_e_learning.jsonl"),
+        (brain_e_app_dir / "brain_e_debug_summary.json", "brain_e_debug_summary.json"),
+        (brain_e_app_dir / "brain_e_debug_summary.txt", "brain_e_debug_summary.txt"),
+        (brain_e_app_dir / "learning_profile.json", "brain_e_learning_profile.json"),
+    ):
+        if candidate.exists():
+            members.append((candidate, target_name))
+    return members
+
+
+def _summarize_autofill_event(kind: str, payload: dict[str, Any]) -> str:
+    if kind == "execution_start":
+        return f"Autofill started for {payload.get('client_name') or 'the current matter'}."
+    if kind == "execution_complete":
+        return "Autofill finished running the action plan."
+    if kind == "execution_cancelled":
+        return f"Autofill was cancelled at {payload.get('stage') or 'an unknown stage'}."
+    if kind == "property_details_already_open_skipping_matter_search":
+        return "Property Details was already open, so matter search was skipped."
+    if kind == "matter_window_already_open_skipping_search":
+        return "The matter window was already open, so search was skipped."
+    if kind == "property_details_visible_after_matter_open":
+        return f"Property Details became visible after opening the matter (attempt {payload.get('attempt')})."
+    if kind == "property_details_not_visible_after_matter_open":
+        return f"Waiting for Property Details to appear (attempt {payload.get('attempt')})."
+    if kind == "action_start":
+        tab = payload.get("tab") or "Unknown tab"
+        action = payload.get("action") or "act"
+        qid = payload.get("question_id") or "field"
+        value = payload.get("payload_preview")
+        suffix = f" -> {value}" if value not in (None, "") else ""
+        return f"{tab}: {action} on {qid}{suffix}"
+    if kind == "action_result":
+        qid = payload.get("question_id") or "field"
+        status = payload.get("status") or "unknown"
+        error = payload.get("error")
+        return f"{qid}: {status}" + (f" ({error})" if error else "")
+    if kind == "locator_resolved":
+        return f"{payload.get('question_id') or 'field'} located via {payload.get('locator_strategy') or 'unknown strategy'}."
+    if kind == "preflight_check":
+        return f"Preflight {payload.get('name')}: {payload.get('status')} ({payload.get('detail')})"
+    if kind == "log":
+        return str(payload.get("message") or "").strip() or "Autofill log updated."
+    if kind == "screenshot_error":
+        return f"Screenshot capture failed for {payload.get('name') or 'step'}."
+    return kind.replace("_", " ")
+
+
+def _read_autofill_events(event_log_path: Path, cursor: int) -> tuple[list[dict[str, Any]], int]:
+    events: list[dict[str, Any]] = []
+    next_cursor = cursor
+    try:
+        with event_log_path.open("r", encoding="utf-8") as fh:
+            for index, line in enumerate(fh):
+                if index < cursor:
+                    continue
+                next_cursor = index + 1
+                try:
+                    payload = json.loads(line)
+                except Exception:
+                    continue
+                kind = str(payload.get("kind") or "log")
+                summary = _summarize_autofill_event(kind, payload)
+                events.append(
+                    {
+                        "index": index,
+                        "ts": payload.get("ts"),
+                        "kind": kind,
+                        "summary": summary,
+                        "payload": payload,
+                    }
+                )
+    except FileNotFoundError:
+        return [], cursor
+    return events, next_cursor
 
 
 def _looks_like_triconvey_reference(path: Path) -> bool:
@@ -1098,8 +2155,9 @@ def _read_triconvey_reference_payload(reference_path: Path) -> dict[str, Any] | 
     if not isinstance(payload, dict):
         _triconvey_import_debug("reference_payload_not_dict", path=reference_path, payload_type=type(payload).__name__)
         return None
-    if isinstance(payload.get("LocalPaths"), list):
-        _triconvey_import_debug("reference_payload_local_paths", count=len(payload.get("LocalPaths", [])))
+    explicit_path_values = _extract_triconvey_explicit_path_values(payload)
+    if explicit_path_values:
+        _triconvey_import_debug("reference_payload_explicit_paths", count=len(explicit_path_values))
         return payload
     if "MatterId" not in payload:
         _triconvey_import_debug("reference_payload_missing_matter", keys=list(payload.keys()))
@@ -1164,6 +2222,19 @@ def _resolve_triconvey_reference_payload(payload: dict[str, Any]) -> list[Path]:
             selected_names=[path.name for path in limited],
         )
         return limited
+
+    file_ids = [str(value or "").strip() for value in payload.get("Files", []) if str(value or "").strip()]
+    if file_ids:
+        _triconvey_import_debug("resolve_payload_try_files2", matter_id=matter_id, file_ids=file_ids)
+        files2_pdfs = _resolve_smokeball_files2_paths(file_ids)
+        if files2_pdfs:
+            result = _limit_candidates(files2_pdfs)
+            _triconvey_import_debug("resolve_payload_files2_hits", matter_id=matter_id, count=len(result), names=[p.name for p in result])
+            LOG.info(
+                "Resolved %d PDF(s) from Smokeball files2 for matter %s: %s",
+                len(result), matter_id, [p.name for p in result],
+            )
+            return result
 
     # --- Primary: %TEMP%\{hex}\{hex}\{hex}\*.pdf (WebView2 download cache) ----
     _hex_dir = _re.compile(r"^[0-9a-f]{5,9}$", _re.I)
@@ -1267,10 +2338,7 @@ def _resolve_triconvey_reference_payload(payload: dict[str, Any]) -> list[Path]:
 
 
 def _resolve_explicit_triconvey_paths(payload: dict[str, Any]) -> list[Path]:
-    explicit_paths = payload.get("LocalPaths")
-    if not isinstance(explicit_paths, list):
-        return []
-
+    explicit_paths = _extract_triconvey_explicit_path_values(payload)
     resolved: list[Path] = []
     seen: set[Path] = set()
     for raw_value in explicit_paths:
@@ -1288,6 +2356,40 @@ def _resolve_explicit_triconvey_paths(payload: dict[str, Any]) -> list[Path]:
         _triconvey_import_debug("explicit_path_hits", count=len(resolved), names=[p.name for p in resolved])
         LOG.info("Resolved %d PDF(s) from explicit TriConvey local paths: %s", len(resolved), [p.name for p in resolved])
     return _dedupe_paths(resolved)
+
+
+def _extract_triconvey_explicit_path_values(payload: dict[str, Any]) -> list[str]:
+    values: list[str] = []
+    seen: set[str] = set()
+
+    def _push(candidate: Any) -> None:
+        if not isinstance(candidate, str):
+            return
+        text = candidate.strip()
+        if not text or text in seen:
+            return
+        seen.add(text)
+        values.append(text)
+
+    def _walk(node: Any) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                normalized_key = re.sub(r"[^a-z0-9]+", "", str(key).lower())
+                if normalized_key in {"localpath", "localpaths", "filepath", "filepaths", "pdfpath", "pdfpaths"}:
+                    if isinstance(value, list):
+                        for item in value:
+                            _push(item)
+                    else:
+                        _push(value)
+                else:
+                    _walk(value)
+            return
+        if isinstance(node, list):
+            for item in node:
+                _walk(item)
+
+    _walk(payload)
+    return values
 
 
 def _normalize_triconvey_local_path(raw_value: str) -> Path | None:
@@ -1319,6 +2421,144 @@ def _dedupe_paths(paths: list[Path]) -> list[Path]:
         seen.add(key)
         unique.append(path)
     return unique
+
+
+def _try_decode_smokeball_folder_name(value: str) -> str | None:
+    try:
+        decoded = base64.b64decode(value)
+        return decoded.decode("utf-8", errors="strict")
+    except Exception:
+        return None
+
+
+def _resolve_smokeball_files2_paths(file_ids: list[str]) -> list[Path]:
+    base_dir = Path(os.getenv("CONVEY_SMOKEBALL_FILES2_DIR", r"C:\Program Files\Smokeball\dataAu\mattermanagement\files2"))
+    if not base_dir.exists() or not base_dir.is_dir():
+        _triconvey_import_debug("smokeball_files2_base_missing", base_dir=base_dir)
+        return []
+
+    _triconvey_import_debug("smokeball_files2_scan_start", base_dir=base_dir, file_ids=file_ids)
+
+    matched_pdfs: list[Path] = []
+    seen_paths: set[str] = set()
+    try:
+        folders = list(base_dir.iterdir())
+    except OSError as exc:
+        _triconvey_import_debug("smokeball_files2_scan_error", base_dir=base_dir, error=exc)
+        return []
+
+    for raw_file_id in file_ids:
+        file_id = str(raw_file_id or "").strip()
+        if not file_id:
+            continue
+        matched_folder: Path | None = None
+        decoded_name: str | None = None
+
+        for folder in folders:
+            if not folder.is_dir():
+                continue
+            decoded = _try_decode_smokeball_folder_name(folder.name)
+            if not decoded:
+                continue
+            if decoded.lower().startswith(file_id.lower()):
+                matched_folder = folder
+                decoded_name = decoded
+                break
+
+        if matched_folder is None:
+            _triconvey_import_debug("smokeball_files2_fileid_miss", file_id=file_id, scanned_folder_count=len(folders))
+            continue
+
+        try:
+            pdfs = sorted(
+                [path for path in matched_folder.iterdir() if path.is_file() and path.suffix.lower() == ".pdf"],
+                key=lambda path: path.stat().st_mtime,
+                reverse=True,
+            )
+        except OSError as exc:
+            _triconvey_import_debug("smokeball_files2_folder_read_error", file_id=file_id, folder=matched_folder, error=exc)
+            continue
+
+        _triconvey_import_debug(
+            "smokeball_files2_fileid_hit",
+            file_id=file_id,
+            folder=matched_folder,
+            decoded_name=decoded_name or "",
+            pdf_count=len(pdfs),
+            pdf_names=[path.name for path in pdfs],
+        )
+
+        for pdf in pdfs:
+            key = str(pdf.resolve()) if pdf.exists() else str(pdf)
+            if key in seen_paths:
+                continue
+            seen_paths.add(key)
+            matched_pdfs.append(pdf)
+
+    _triconvey_import_debug("smokeball_files2_scan_done", matched_pdf_count=len(matched_pdfs), pdf_names=[path.name for path in matched_pdfs])
+    return matched_pdfs
+
+
+async def _persist_uploaded_files(
+    uploads_dir: Path,
+    files: list[UploadFile],
+) -> tuple[list[Path], list[Path]]:
+    saved_paths: list[Path] = []
+    reference_uploads: list[Path] = []
+    _triconvey_import_debug(
+        "persist_uploads_start",
+        uploads_dir=uploads_dir,
+        file_count=len(files),
+        filenames=[getattr(upload, "filename", "") or "<unnamed>" for upload in files],
+    )
+
+    for upload in files:
+        if not upload.filename:
+            _triconvey_import_debug("persist_upload_skipped_empty_name")
+            continue
+        destination = uploads_dir / _safe_filename(upload.filename)
+        with destination.open("wb") as output_stream:
+            shutil.copyfileobj(upload.file, output_stream)
+        try:
+            size = destination.stat().st_size
+        except OSError:
+            size = -1
+        if destination.suffix.lower() == ".pdf":
+            saved_paths.append(destination)
+            _triconvey_import_debug("persist_upload_saved_pdf", source_name=upload.filename, destination=destination, size=size)
+        elif _looks_like_triconvey_reference(destination):
+            reference_uploads.append(destination)
+            _triconvey_import_debug("persist_upload_saved_reference", source_name=upload.filename, destination=destination, size=size)
+        else:
+            _triconvey_import_debug("persist_upload_saved_other", source_name=upload.filename, destination=destination, size=size)
+        await upload.close()
+
+    resolved_reference_pdfs: list[Path] = []
+    for reference_path in _dedupe_paths(reference_uploads):
+        _triconvey_import_debug("persist_upload_resolving_reference", path=reference_path)
+        resolved_reference_pdfs.extend(_resolve_triconvey_reference_upload(reference_path))
+
+    _triconvey_import_debug(
+        "persist_upload_resolved_reference_results",
+        resolved_count=len(resolved_reference_pdfs),
+        resolved_names=[path.name for path in resolved_reference_pdfs],
+    )
+
+    for resolved_pdf in _dedupe_paths(resolved_reference_pdfs):
+        copied = _copy_into_uploads(resolved_pdf, uploads_dir)
+        if copied not in saved_paths:
+            saved_paths.append(copied)
+        _triconvey_import_debug("persist_upload_copied_resolved_pdf", source=resolved_pdf, copied=copied)
+
+    _triconvey_import_debug(
+        "persist_uploads_done",
+        saved_pdf_count=len(saved_paths),
+        reference_count=len(reference_uploads),
+        saved_names=[path.name for path in saved_paths],
+        reference_names=[path.name for path in reference_uploads],
+    )
+
+    return _dedupe_paths(saved_paths), _dedupe_paths(reference_uploads)
 
 
 def _resolve_patch_question_ids(requested_id: str) -> list[str]:
@@ -1377,6 +2617,7 @@ def _run_autofill_job(
         if db_job_id is None:
             return
         async def _inner() -> None:
+            await ensure_runtime_schema()
             factory = get_session_factory()
             async with factory() as s:
                 await AutofillJobRepo.update_status(s, job_id=db_job_id, status=status, **kw)
@@ -1463,6 +2704,7 @@ async def _persist_run_to_db(
         AnswerRepo,
         DocumentRepo,
         FactRepo,
+        MatterRepo,
         RunRepo,
     )
 
@@ -1470,13 +2712,36 @@ async def _persist_run_to_db(
     metrics = payload.get("metrics", {})
     doc_count: int = manifest.get("document_count", 0)
     total_facts: int = manifest.get("total_facts", 0)
+    matter_payload = payload.get("matter", {}) if isinstance(payload.get("matter"), dict) else {}
+
+    matter_ref = str(matter_payload.get("matter_ref") or "").strip() or None
+    volume_folio = str(matter_payload.get("volume_folio") or "").strip() or None
+    property_address = str(matter_payload.get("property_address") or "").strip() or None
+
+    if matter_ref or volume_folio or property_address:
+        matter = await MatterRepo.upsert(
+            session,
+            client_id=client_id,
+            matter_ref=matter_ref,
+            property_address=property_address,
+            volume_folio=volume_folio,
+            status="active",
+        )
+        matter.last_run_id = run_uuid
+        matter.last_run_at = datetime.now(UTC)
+        await RunRepo.attach_matter(
+            session,
+            client_id=client_id,
+            run_id=run_uuid,
+            matter_id=matter.id,
+        )
 
     # 1. Update run row with final status + metrics.
     await RunRepo.update_status(
         session,
         client_id=client_id,
         run_id=run_uuid,
-        status="complete",
+        status="completed",
         completed=True,
         metrics=metrics,
         summary_text=payload.get("summary_text"),

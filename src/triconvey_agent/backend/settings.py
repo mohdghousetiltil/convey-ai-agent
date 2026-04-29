@@ -12,8 +12,8 @@ DEFAULT_LOCAL_SETTINGS = {
     "language": "English",
     "openAiApiKey": "",
     "anthropicApiKey": "",
-    "aiProvider": "openai",          # "openai" | "anthropic" | "hybrid"
-    "aiMode": "cost_efficient",      # "cost_efficient" | "all_time_best" | "turbo"
+    "googleApiKey": "",              # Feature 1: Google Gemini API key
+    "aiProvider": "openai",          # "openai" | "anthropic" | "google" | "hybrid"
     "defaultModelName": "gpt-4.1-mini",
     "triconveyPath": "",
     "preferredAutofillFields": [],
@@ -21,6 +21,7 @@ DEFAULT_LOCAL_SETTINGS = {
     "includePrereleaseUpdates": False,
     "autoCheckForUpdates": True,
     "cloudSyncEnabled": True,
+    "theme": "light",
 }
 
 
@@ -66,6 +67,10 @@ def apply_local_settings_env(paths: AppRuntimePaths | None = None) -> None:
     if anthropic_key:
         os.environ["ANTHROPIC_API_KEY"] = anthropic_key
 
+    google_key = env_values.get("GOOGLE_API_KEY", "").strip()  # Feature 1
+    if google_key:
+        os.environ["GOOGLE_API_KEY"] = google_key
+
     cloud_sync_url = env_values.get("CONVEY_CLOUD_SYNC_URL", "").strip()
     if cloud_sync_url:
         os.environ["CONVEY_CLOUD_SYNC_URL"] = cloud_sync_url
@@ -103,11 +108,11 @@ def load_local_settings(paths: AppRuntimePaths | None = None, user_id: str | Non
                 payload["defaultModelName"] = str(raw.get("defaultModelName") or payload["defaultModelName"])
                 payload["triconveyPath"] = str(raw.get("triconveyPath") or payload["triconveyPath"])
                 payload["aiProvider"] = str(raw.get("aiProvider") or payload["aiProvider"])
-                payload["aiMode"] = str(raw.get("aiMode") or payload["aiMode"])
                 payload["updateRepository"] = DEFAULT_UPDATE_REPOSITORY
                 payload["includePrereleaseUpdates"] = bool(raw.get("includePrereleaseUpdates", payload["includePrereleaseUpdates"]))
                 payload["autoCheckForUpdates"] = bool(raw.get("autoCheckForUpdates", payload["autoCheckForUpdates"]))
                 payload["cloudSyncEnabled"] = bool(raw.get("cloudSyncEnabled", payload["cloudSyncEnabled"]))
+                payload["theme"] = str(raw.get("theme") or payload["theme"])
                 preferred = raw.get("preferredAutofillFields")
                 if isinstance(preferred, list):
                     payload["preferredAutofillFields"] = [str(item) for item in preferred if str(item).strip()]
@@ -126,6 +131,7 @@ def load_local_settings(paths: AppRuntimePaths | None = None, user_id: str | Non
     # Prefer the runtime env file; fall back to os.environ (loaded from project .env)
     payload["openAiApiKey"] = env_values.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY", "")
     payload["anthropicApiKey"] = env_values.get("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY", "")
+    payload["googleApiKey"] = env_values.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY", "")
     return payload
 
 
@@ -154,14 +160,15 @@ def save_local_settings(
         "language": str(settings.get("language") or current["language"] or DEFAULT_LOCAL_SETTINGS["language"]),
         "openAiApiKey": str(settings.get("openAiApiKey") or ""),
         "anthropicApiKey": str(settings.get("anthropicApiKey") or ""),
+        "googleApiKey": str(settings.get("googleApiKey") or ""),  # Feature 1
         "aiProvider": str(settings.get("aiProvider") or current["aiProvider"] or DEFAULT_LOCAL_SETTINGS["aiProvider"]),
-        "aiMode": str(settings.get("aiMode") or current.get("aiMode") or DEFAULT_LOCAL_SETTINGS["aiMode"]),
         "defaultModelName": str(settings.get("defaultModelName") or current["defaultModelName"] or DEFAULT_LOCAL_SETTINGS["defaultModelName"]),
         "triconveyPath": str(settings.get("triconveyPath") or current["triconveyPath"] or ""),
         "updateRepository": DEFAULT_UPDATE_REPOSITORY,
         "includePrereleaseUpdates": bool(settings.get("includePrereleaseUpdates", current.get("includePrereleaseUpdates", DEFAULT_LOCAL_SETTINGS["includePrereleaseUpdates"]))),
         "autoCheckForUpdates": bool(settings.get("autoCheckForUpdates", current.get("autoCheckForUpdates", DEFAULT_LOCAL_SETTINGS["autoCheckForUpdates"]))),
         "cloudSyncEnabled": bool(settings.get("cloudSyncEnabled", current.get("cloudSyncEnabled", DEFAULT_LOCAL_SETTINGS["cloudSyncEnabled"]))),
+        "theme": str(settings.get("theme") or current.get("theme") or DEFAULT_LOCAL_SETTINGS["theme"]),
         "preferredAutofillFields": [
             str(item)
             for item in (settings.get("preferredAutofillFields") or current.get("preferredAutofillFields") or [])
@@ -178,13 +185,14 @@ def save_local_settings(
             {
                 "language": merged["language"],
                 "aiProvider": merged["aiProvider"],
-                "aiMode": merged["aiMode"],
+                # Note: googleApiKey is stored in env file, not settings.json
                 "defaultModelName": merged["defaultModelName"],
                 "triconveyPath": merged["triconveyPath"],
                 "updateRepository": merged["updateRepository"],
                 "includePrereleaseUpdates": merged["includePrereleaseUpdates"],
                 "autoCheckForUpdates": merged["autoCheckForUpdates"],
                 "cloudSyncEnabled": merged["cloudSyncEnabled"],
+                "theme": merged["theme"],
                 "preferredAutofillFields": raw_settings.get("preferredAutofillFields", []),
                 "preferredAutofillFieldsByUser": per_user,
             },
@@ -195,6 +203,7 @@ def save_local_settings(
     env_values = _parse_env_file(runtime.env_file)
     env_values["OPENAI_API_KEY"] = merged["openAiApiKey"]
     env_values["ANTHROPIC_API_KEY"] = merged["anthropicApiKey"]
+    env_values["GOOGLE_API_KEY"] = merged["googleApiKey"]   # Feature 1
     _write_env_file(runtime.env_file, env_values)
 
     if merged["openAiApiKey"]:
@@ -206,6 +215,11 @@ def save_local_settings(
         os.environ["ANTHROPIC_API_KEY"] = merged["anthropicApiKey"]
     else:
         os.environ.pop("ANTHROPIC_API_KEY", None)
+
+    if merged["googleApiKey"]:           # Feature 1
+        os.environ["GOOGLE_API_KEY"] = merged["googleApiKey"]
+    else:
+        os.environ.pop("GOOGLE_API_KEY", None)
 
     return merged
 

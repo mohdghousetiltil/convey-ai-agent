@@ -7,7 +7,10 @@ from __future__ import annotations
 
 import os
 from collections.abc import AsyncGenerator
+import asyncio
 
+from sqlalchemy import text
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -54,6 +57,36 @@ class Base(DeclarativeBase):
 
 _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
+_runtime_schema_ready = False
+_runtime_schema_lock = asyncio.Lock()
+
+
+async def ensure_runtime_schema() -> None:
+    global _runtime_schema_ready
+    if _runtime_schema_ready:
+        return
+    async with _runtime_schema_lock:
+        if _runtime_schema_ready:
+            return
+        engine = get_engine()
+        async with engine.begin() as conn:
+            dialect = make_url(DATABASE_URL).get_backend_name()
+            if dialect == "sqlite":
+                column_rows = await conn.exec_driver_sql("PRAGMA table_info(runs)")
+                column_names = {str(row[1]) for row in column_rows.fetchall()}
+                if "user_id" not in column_names:
+                    await conn.exec_driver_sql("ALTER TABLE runs ADD COLUMN user_id TEXT")
+                await conn.exec_driver_sql(
+                    "CREATE INDEX IF NOT EXISTS ix_runs_user_id ON runs(user_id)"
+                )
+            else:
+                await conn.execute(
+                    text("ALTER TABLE runs ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id)")
+                )
+                await conn.execute(
+                    text("CREATE INDEX IF NOT EXISTS ix_runs_user_id ON runs(user_id)")
+                )
+        _runtime_schema_ready = True
 
 
 def get_engine() -> AsyncEngine:
@@ -93,6 +126,7 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency. Opens a session, commits on success, rolls back on error."""
+    await ensure_runtime_schema()
     factory = get_session_factory()
     async with factory() as session:
         try:

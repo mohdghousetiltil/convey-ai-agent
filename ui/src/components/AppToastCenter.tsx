@@ -21,7 +21,7 @@ const toneStyles: Record<AppToastTone, { shell: string; icon: React.ReactNode }>
     icon: <AlertCircle className="h-5 w-5 text-rose-600" />,
   },
   info: {
-    shell: "border-sky-200 bg-white/95 text-slate-900",
+    shell: "border-sky-200 bg-card/95 text-foreground",
     icon: <Info className="h-5 w-5 text-sky-600" />,
   },
 };
@@ -50,12 +50,12 @@ export function AppToastCenter({ toasts, onDismiss }: AppToastCenterProps) {
                 <div className="mt-0.5 shrink-0">{tone.icon}</div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold">{toast.title}</p>
-                  {toast.message ? <p className="mt-1 text-sm text-slate-600">{toast.message}</p> : null}
+                  {toast.message ? <p className="mt-1 text-sm text-muted-foreground">{toast.message}</p> : null}
                 </div>
                 <button
                   type="button"
                   onClick={() => onDismiss(toast.id)}
-                  className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-white/60 hover:text-slate-700"
+                  className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-card/60 hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
                 </button>

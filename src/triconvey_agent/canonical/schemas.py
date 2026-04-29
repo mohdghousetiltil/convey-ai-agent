@@ -398,6 +398,15 @@ class FormAction(BaseModel):
     source_answer_confidence: float = 0.0
     """Carries the AnswerObject confidence forward for the review gate."""
 
+    intent_category: Literal["navigation", "search", "policy_tick", "exact_entry", "derived_entry", "selection", "skip"] = "exact_entry"
+    """High-level agent intent used for narration and operator visibility."""
+
+    source_kind: Literal["policy_default", "extracted_fact", "computed_policy", "grounded_ai", "unknown"] = "unknown"
+    """Where the agent's instruction came from."""
+
+    intent_summary: str | None = None
+    """Short human-readable explanation of why this field is being handled."""
+
 
 class FormActionPlan(BaseModel):
     """The full UI plan Brain E executes."""
@@ -440,6 +449,10 @@ class ExecutionReport(BaseModel):
     diagnostics_dir: str | None = None
     event_log_path: str | None = None
     debug_log_path: str | None = None
+    brain_e_debug_log_path: str | None = None
+    brain_e_learning_log_path: str | None = None
+    brain_e_learning_summary_path: str | None = None
+    brain_e_learning_profile_path: str | None = None
     session_fingerprint: dict[str, Any] = Field(default_factory=dict)
     preflight_checks: list[dict[str, Any]] = Field(default_factory=list)
     metrics: dict[str, Any] = Field(default_factory=dict)

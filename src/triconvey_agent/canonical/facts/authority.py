@@ -71,7 +71,8 @@ DEFAULT_AUTHORITY_RULES: list[AuthorityRule] = [
             "rule:property_report*",
             "rule:vendor_form*",
         ],
-        on_unresolved="review",
+        on_unresolved="highest_confidence",
+        note="Council cert rarely uploaded; vendor-only conflicts should auto-resolve by confidence.",
     ),
     # Authority NAME — the certificate has the official full name; vendor form
     # may truncate it (e.g. "Yarra Valley" vs "Yarra Valley Water").
@@ -166,7 +167,8 @@ DEFAULT_AUTHORITY_RULES: list[AuthorityRule] = [
             "ai:doc_extractor:building_permit*",
             "rule:vendor_form*",
         ],
-        on_unresolved="review",
+        on_unresolved="highest_confidence",
+        note="No permit doc present → vendor-only conflict; pick highest-confidence vendor answer.",
     ),
     # ---- Insurance ----
     AuthorityRule(
@@ -176,7 +178,8 @@ DEFAULT_AUTHORITY_RULES: list[AuthorityRule] = [
             "ai:doc_extractor:insurance_certificate*",
             "rule:vendor_form*",
         ],
-        on_unresolved="review",
+        on_unresolved="highest_confidence",
+        note="No certificate of currency present → vendor-only conflict; pick highest-confidence vendor answer.",
     ),
     # ---- Property identifiers (overlap with vendor form) ----
     AuthorityRule(
@@ -326,13 +329,27 @@ def resolve_facts(
 
     if on_unresolved == "highest_confidence":
         if rest and (top.confidence - rest[0].confidence) < TIE_BREAK_MARGIN:
-            # Too close to call → escalate
-            conflict.resolution = "review_required"
+            # Confidence too close to call — use source_file as a stable tie-breaker
+            # rather than escalating to review. Both vendor forms are equally valid;
+            # alphabetically-first is a repeatable, deterministic choice.
+            tied_top = [
+                f for f in sorted_by_conf
+                if (sorted_by_conf[0].confidence - f.confidence) < TIE_BREAK_MARGIN
+            ]
+            def _sort_key(f: Fact) -> tuple:
+                first_file = f.sources[0].file if f.sources else ""
+                return (first_file, -f.extracted_at.timestamp())
+
+            winner = sorted(tied_top, key=_sort_key)[0]
+            winner_file = winner.sources[0].file if winner.sources else ""
+            conflict.resolution = "authority_wins"
+            conflict.winning_fact = winner
             conflict.reason = (
                 f"top two facts within {TIE_BREAK_MARGIN} confidence margin "
-                f"({top.confidence:.2f} vs {rest[0].confidence:.2f}) — escalating to review"
+                f"({sorted_by_conf[0].confidence:.2f} vs {rest[0].confidence:.2f}) — "
+                f"resolved by stable source-file tie-break ('{winner_file}' chosen)"
             )
-            return None, conflict
+            return winner, conflict
         conflict.resolution = "authority_wins"
         conflict.winning_fact = top
         conflict.reason = f"highest-confidence fallback ({top.confidence:.2f})"

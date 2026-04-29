@@ -4,10 +4,10 @@ $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $uiDist = Join-Path $projectRoot "ui\dist"
 $uiDistIndex = Join-Path $uiDist "index.html"
-$desktopExe = Join-Path $projectRoot "dist\TriConveyAgent.exe"
+$desktopExe = Join-Path $projectRoot "dist\ConveyAgent.exe"
 $buildCacheDir = Join-Path $projectRoot ".cache\build"
-$versionInfoPath = Join-Path $buildCacheDir "TriConveyAgent.version.txt"
-$iconPath = Join-Path $projectRoot "installer\TriConveyAgent.ico"
+$versionInfoPath = Join-Path $buildCacheDir "ConveyAgent.version.txt"
+$iconPath = Join-Path $projectRoot "public\favicon.ico"
 
 function Get-ProjectVersion {
   $pyprojectPath = Join-Path $projectRoot "pyproject.toml"
@@ -72,11 +72,11 @@ VSVersionInfo(
           '040904B0',
           [
             StringStruct('CompanyName', '$Publisher'),
-            StringStruct('FileDescription', 'TriConvey Agent Desktop App'),
+            StringStruct('FileDescription', 'Convey Agent Desktop App'),
             StringStruct('FileVersion', '$Version'),
-            StringStruct('InternalName', 'TriConveyAgent'),
-            StringStruct('OriginalFilename', 'TriConveyAgent.exe'),
-            StringStruct('ProductName', 'TriConvey Agent'),
+            StringStruct('InternalName', 'ConveyAgent'),
+            StringStruct('OriginalFilename', 'ConveyAgent.exe'),
+            StringStruct('ProductName', 'Convey Agent'),
             StringStruct('ProductVersion', '$Version')
           ]
         )
@@ -135,16 +135,14 @@ $pythonExe = Find-PythonExe
 $projectVersion = Get-ProjectVersion
 $publisher = if ($env:TRICONVEY_APP_PUBLISHER) { $env:TRICONVEY_APP_PUBLISHER } else { "TriConvey Agent" }
 
-if (-not (Test-Path $uiDist) -or -not (Test-Path $uiDistIndex)) {
-  Write-Host "UI bundle not found. Building now..." -ForegroundColor Yellow
-  Push-Location (Join-Path $projectRoot "ui")
-  npm.cmd run build
-  if ($LASTEXITCODE -ne 0) {
-    Pop-Location
-    throw "UI build failed."
-  }
+Write-Host "Building UI bundle..." -ForegroundColor Yellow
+Push-Location (Join-Path $projectRoot "ui")
+npm.cmd run build
+if ($LASTEXITCODE -ne 0) {
   Pop-Location
+  throw "UI build failed."
 }
+Pop-Location
 
 New-Item -ItemType Directory -Force -Path $buildCacheDir | Out-Null
 New-VersionInfoFile -Version $projectVersion -Publisher $publisher -OutputPath $versionInfoPath

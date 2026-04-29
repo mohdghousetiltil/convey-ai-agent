@@ -10,6 +10,7 @@ from pathlib import Path
 from queue import Empty
 from typing import Any
 
+from triconvey_agent.ai.openai_client import openai_runtime_disabled
 from triconvey_agent.backend.runtime import ensure_runtime_dirs
 from triconvey_agent.brain_f.cache import get_cached_pdf_analysis
 from triconvey_agent.schemas.documents import Document
@@ -306,6 +307,8 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 
 def _attach_chunk_embeddings(index: list[dict[str, Any]]) -> None:
+    if openai_runtime_disabled():
+        return
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key or not index:
         return

@@ -356,6 +356,27 @@ class TestStrategyRouting(unittest.TestCase):
         self.assertTrue(ans.needs_review)
         self.assertTrue(any("quote" in reason for reason in ans.review_reasons))
 
+    def test_grounded_ai_provider_failure_degrades_to_review(self):
+        store = FactStoreImpl()
+        store.add(make_fact("insurance.home.company", "RACV", quote="RACV Insurance"))
+        q = Question(
+            id="q",
+            tab="T",
+            label="Insurer",
+            fact_paths=["insurance.home.company"],
+            answer_strategy=AnswerStrategy.GROUNDED_AI,
+            expected_type="string",
+        )
+
+        class FailingAIClient:
+            def complete(self, prompt):
+                raise RuntimeError("quota exceeded")
+
+        ans = answer_question(q, store, ai_client=FailingAIClient())
+        self.assertTrue(ans.needs_review)
+        self.assertIsNone(ans.value)
+        self.assertTrue(any("grounded_ai failed" in reason for reason in ans.review_reasons))
+
     def test_grounded_ai_recovers_deterministic_option_mismatch(self):
         store = FactStoreImpl()
         store.add(make_fact("planning.zone", "GRZ", quote="GRZ"))
@@ -375,6 +396,27 @@ class TestStrategyRouting(unittest.TestCase):
         self.assertEqual(ans.answer_strategy, AnswerStrategy.GROUNDED_AI)
         self.assertFalse(ans.needs_review)
         self.assertEqual(ans.presentation_hints.get("router", {}).get("recovered_from"), "deterministic")
+
+    def test_deterministic_answer_survives_grounded_ai_recovery_failure(self):
+        store = FactStoreImpl()
+        store.add(make_fact("planning.zone", "GRZ"))
+        q = Question(
+            id="sec32_3.4_planning_zone",
+            tab="T",
+            label="Planning zone",
+            fact_paths=["planning.zone"],
+            expected_type="string",
+            options=["GRZ - General Residential Zone", "NRZ - Neighbourhood Residential Zone"],
+        )
+
+        class FailingAIClient:
+            def complete(self, prompt):
+                raise RuntimeError("insufficient_quota")
+
+        ans = answer_question(q, store, ai_client=FailingAIClient())
+        self.assertEqual(ans.value, "GRZ")
+        self.assertTrue(ans.needs_review)
+        self.assertEqual(ans.presentation_hints.get("router", {}).get("grounded_ai_recovery_attempted"), True)
 
     def test_policy_default_without_policy_escalates(self):
         store = FactStoreImpl()

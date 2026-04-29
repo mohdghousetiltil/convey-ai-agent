@@ -20,7 +20,7 @@ export function LoginScreen() {
   const [view, setView] = useState<View>("login");
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 font-sans">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
@@ -29,10 +29,10 @@ export function LoginScreen() {
       >
         {/* Header */}
         <div className="text-center mb-10 space-y-1">
-          <h1 className="text-4xl font-serif italic tracking-tight text-slate-900">
+          <h1 className="text-4xl font-serif italic tracking-tight text-foreground">
             Convey Agent
           </h1>
-          <p className="text-slate-500 text-sm">
+          <p className="text-muted-foreground text-sm">
             {view === "login" ? "Sign in to your account" : "Create your account"}
           </p>
         </div>
@@ -126,16 +126,16 @@ function LoginForm({
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.22 }}
     >
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         {/* OAuth buttons — primary auth for Microsoft */}
         {showOAuth && (
-          <div className="p-6 border-b border-slate-100 space-y-3">
+          <div className="p-6 border-b border-border space-y-3">
             {msConfigured && (
               <button
                 type="button"
                 disabled={!!oauthLoading || loading}
                 onClick={() => handleOAuth("microsoft")}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-border bg-card text-foreground text-sm font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {oauthLoading === "microsoft" ? <Spinner /> : <MicrosoftIcon />}
                 Continue with Microsoft
@@ -146,16 +146,16 @@ function LoginForm({
                 type="button"
                 disabled={!!oauthLoading || loading}
                 onClick={() => handleOAuth("google")}
-                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {oauthLoading === "google" ? <Spinner /> : <GoogleIcon />}
                 Continue with Google
               </button>
             )}
             <div className="flex items-center gap-3 pt-1">
-              <hr className="flex-1 border-slate-100" />
-              <span className="text-xs text-slate-400 shrink-0">or sign in with email</span>
-              <hr className="flex-1 border-slate-100" />
+              <hr className="flex-1 border-border" />
+              <span className="text-xs text-muted-foreground shrink-0">or sign in with email</span>
+              <hr className="flex-1 border-border" />
             </div>
           </div>
         )}
@@ -163,7 +163,7 @@ function LoginForm({
         {/* Email / password form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Email
             </label>
             <input
@@ -174,12 +174,12 @@ function LoginForm({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+              className="w-full rounded-lg border border-border bg-muted px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Password
             </label>
             <div className="relative">
@@ -190,13 +190,13 @@ function LoginForm({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+                className="w-full rounded-lg border border-border bg-muted px-3.5 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
               />
               <button
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -207,7 +207,7 @@ function LoginForm({
             <motion.p
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3.5 py-2.5"
+              className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3.5 py-2.5"
             >
               {error}
             </motion.p>
@@ -225,11 +225,11 @@ function LoginForm({
         </form>
       </div>
 
-      <p className="text-center text-xs text-slate-400 mt-5">
+      <p className="text-center text-xs text-muted-foreground mt-5">
         New to Convey Agent?{" "}
         <button
           onClick={onCreateAccount}
-          className="text-slate-600 font-semibold hover:text-slate-900 transition-colors underline underline-offset-2"
+          className="text-foreground font-semibold hover:text-primary transition-colors underline underline-offset-2"
         >
           Create an account
         </button>
@@ -309,10 +309,10 @@ function RegisterForm({
       exit={{ opacity: 0, x: 20 }}
       transition={{ duration: 0.22 }}
     >
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         {/* Microsoft / Google OAuth — fastest path for corporate accounts */}
         {(msConfigured || googleConfigured) && (
-          <div className="p-6 border-b border-slate-100 space-y-3">
+          <div className="p-6 border-b border-border space-y-3">
             {msConfigured && (
               <button
                 type="button"
@@ -329,28 +329,28 @@ function RegisterForm({
                 type="button"
                 disabled={!!oauthLoading || loading}
                 onClick={() => handleOAuth("google")}
-                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {oauthLoading === "google" ? <Spinner /> : <GoogleIcon />}
                 Create account with Google
               </button>
             )}
             {msConfigured && (
-              <p className="text-[0.68rem] text-slate-400 text-center px-2">
+              <p className="text-[0.68rem] text-muted-foreground text-center px-2">
                 Your Microsoft organisation is automatically detected — no activation key needed.
               </p>
             )}
             <div className="flex items-center gap-3 pt-1">
-              <hr className="flex-1 border-slate-100" />
-              <span className="text-xs text-slate-400 shrink-0">or create with email</span>
-              <hr className="flex-1 border-slate-100" />
+              <hr className="flex-1 border-border" />
+              <span className="text-xs text-muted-foreground shrink-0">or create with email</span>
+              <hr className="flex-1 border-border" />
             </div>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Full name</label>
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wide">Full name</label>
             <input
               ref={nameRef}
               type="text"
@@ -359,12 +359,12 @@ function RegisterForm({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Jane Smith"
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+              className="w-full rounded-lg border border-border bg-muted px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Firm / Company name</label>
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wide">Firm / Company name</label>
             <div className="relative">
               <input
                 type="text"
@@ -373,17 +373,17 @@ function RegisterForm({
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="Acme Conveyancing"
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 pl-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+                className="w-full rounded-lg border border-border bg-muted px-3.5 py-2.5 pl-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
               />
-              <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-muted-foreground">
               We use this as your firm name and create the workspace/client slug from it if needed.
             </p>
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Email</label>
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</label>
             <input
               type="email"
               autoComplete="email"
@@ -391,12 +391,12 @@ function RegisterForm({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@yourfirm.com"
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+              className="w-full rounded-lg border border-border bg-muted px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Password</label>
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wide">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -405,13 +405,13 @@ function RegisterForm({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Min. 8 characters"
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+                className="w-full rounded-lg border border-border bg-muted px-3.5 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
               />
               <button
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -419,7 +419,7 @@ function RegisterForm({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Confirm password</label>
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wide">Confirm password</label>
             <input
               type={showPassword ? "text" : "password"}
               autoComplete="new-password"
@@ -427,12 +427,12 @@ function RegisterForm({
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="Repeat password"
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+              className="w-full rounded-lg border border-border bg-muted px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">Activation key (optional)</label>
+            <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wide">Activation key (optional)</label>
             <div className="relative">
               <input
                 type="text"
@@ -440,9 +440,9 @@ function RegisterForm({
                 value={activationKey}
                 onChange={(e) => setActivationKey(e.target.value)}
                 placeholder="Enter only if your firm gave you one"
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 pl-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition"
+                className="w-full rounded-lg border border-border bg-muted px-3.5 py-2.5 pl-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition"
               />
-              <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             </div>
           </div>
 
@@ -450,7 +450,7 @@ function RegisterForm({
             <motion.p
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3.5 py-2.5"
+              className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3.5 py-2.5"
             >
               {error}
             </motion.p>
@@ -468,11 +468,11 @@ function RegisterForm({
         </form>
       </div>
 
-      <p className="text-center text-xs text-slate-400 mt-5">
+      <p className="text-center text-xs text-muted-foreground mt-5">
         Already have an account?{" "}
         <button
           onClick={onBack}
-          className="text-slate-600 font-semibold hover:text-slate-900 transition-colors underline underline-offset-2"
+          className="text-foreground font-semibold hover:text-primary transition-colors underline underline-offset-2"
         >
           Sign in
         </button>
@@ -488,7 +488,7 @@ function RegisterForm({
 function Spinner({ light = false }: { light?: boolean }) {
   return (
     <svg
-      className={`animate-spin h-4 w-4 ${light ? "text-white" : "text-slate-500"}`}
+      className={`animate-spin h-4 w-4 ${light ? "text-white" : "text-muted-foreground"}`}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"

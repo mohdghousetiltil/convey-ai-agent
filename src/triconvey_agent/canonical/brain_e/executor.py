@@ -55,6 +55,8 @@ from triconvey_agent.canonical.schemas import (
     FormAction,
     FormActionPlan,
 )
+from triconvey_agent.canonical.brain_e.vision import VisionAdvisor
+from triconvey_agent.canonical.brain_e.telemetry import BrainETelemetry
 from triconvey_agent.config import settings
 from triconvey_agent.backend.runtime import ensure_runtime_dirs, prune_old_directories
 
@@ -116,10 +118,10 @@ SEC32_TAB_ORDER = [
     "Sec. 32 (6)",
 ]
 
-TAB_SWITCH_DELAY   = 1.5    # seconds after clicking a tab
-WINDOW_OPEN_DELAY  = 3.0    # seconds after opening matter / property window
-FIELD_SETTLE_DELAY = 0.15   # seconds after each field write
-LAUNCH_POLL        = 2.0    # poll interval while TriConvey loads
+TAB_SWITCH_DELAY   = 0.45   # seconds after clicking a tab
+WINDOW_OPEN_DELAY  = 0.75   # seconds after opening matter / property window
+FIELD_SETTLE_DELAY = 0.05   # seconds after each field write
+LAUNCH_POLL        = 0.5    # poll interval while TriConvey loads
 LAUNCH_TIMEOUT     = 60     # give up after this many seconds
 LOW_CONFIDENCE_REVIEW_THRESHOLD = 0.70
 CRITICAL_CONFIDENCE_REVIEW_THRESHOLD = 0.85
@@ -174,6 +176,7 @@ class _ExecutionDiagnostics:
         self.events_path: Path | None = None
         self.text_log_path: Path | None = None
         self._screenshots_dir: Path | None = None
+        self._output_dir = Path(output_dir) if output_dir is not None else None
         if not self.enabled:
             return
         stamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
@@ -203,6 +206,27 @@ class _ExecutionDiagnostics:
         self._screenshots_dir.mkdir(parents=True, exist_ok=True)
         self.events_path = self.base_dir / "events.jsonl"
         self.text_log_path = self.base_dir / "autofill_debug.log"
+        self._write_live_manifest()
+
+    def _write_live_manifest(self) -> None:
+        if self._output_dir is None or self.base_dir is None:
+            return
+        live_dir = self._output_dir / EXECUTION_ARTIFACTS_DIRNAME
+        live_dir.mkdir(parents=True, exist_ok=True)
+        manifest = {
+            "diagnostics_dir": str(self.base_dir),
+            "event_log_path": str(self.events_path) if self.events_path else None,
+            "debug_log_path": str(self.text_log_path) if self.text_log_path else None,
+            "screenshots_dir": str(self._screenshots_dir) if self._screenshots_dir else None,
+            "updated_at": datetime.utcnow().isoformat(timespec="milliseconds") + "Z",
+        }
+        try:
+            (live_dir / "live_session.json").write_text(
+                json.dumps(manifest, indent=2),
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
 
     def log_event(self, kind: str, **payload: Any) -> None:
         if not self.enabled or self.events_path is None:
@@ -214,6 +238,7 @@ class _ExecutionDiagnostics:
         }
         with self.events_path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(event, default=str) + "\n")
+        self._write_live_manifest()
 
     def log_text(self, message: str) -> None:
         if not self.enabled or self.text_log_path is None:
@@ -221,6 +246,7 @@ class _ExecutionDiagnostics:
         line = f"{datetime.utcnow().isoformat(timespec='milliseconds')}Z {message.rstrip()}\n"
         with self.text_log_path.open("a", encoding="utf-8") as fh:
             fh.write(line)
+        self._write_live_manifest()
 
     def capture_screenshot(self, name: str, *, window=None, all_screens: bool = False) -> str | None:
         if not (self.enabled and _pil_available and self._screenshots_dir is not None):
@@ -240,6 +266,7 @@ class _ExecutionDiagnostics:
             else:
                 img = ImageGrab.grab()
             img.save(target)
+            self._write_live_manifest()
             return str(target)
         except Exception as exc:
             self.log_event("screenshot_error", name=name, error=str(exc))
@@ -382,7 +409,7 @@ def _ensure_focus(window) -> None:
     try:
         if window.has_style(0x20000000):   # WS_MINIMIZE
             window.restore()
-            time.sleep(0.5)
+            time.sleep(0.2)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
             window.set_focus()
@@ -488,8 +515,57 @@ def _find_sec32_tab_strip(window):
     return None
 
 
-def _get_property_form_scroll_point(window) -> tuple[int, int]:
-    """Pick a safe point inside the active tab body, below the tab strip."""
+def _click_sec32_tab_strip_segment(tab_strip, tab_name: str) -> bool:
+    """Fallback: click the expected slot inside the visible Sec. 32 strip.
+
+    TriConvey sometimes renders the Section 32 strip correctly while the
+    individual TabItem accessibility nodes are stale or missing. When that
+    happens, click the approximate segment for the requested tab directly.
+    """
+    try:
+        rect = tab_strip.rectangle()
+    except Exception:
+        return False
+    if rect.width() <= 0 or rect.height() <= 0:
+        return False
+    try:
+        index = SEC32_TAB_ORDER.index(tab_name)
+    except ValueError:
+        return False
+
+    segment_width = max(rect.width() / max(len(SEC32_TAB_ORDER), 1), 1)
+    click_x = int(rect.left + (segment_width * index) + (segment_width / 2))
+    click_y = int(rect.top + max(min(rect.height() * 0.55, rect.height() - 4), 4))
+    try:
+        _pw_mouse.click(button="left", coords=(click_x, click_y))
+        time.sleep(TAB_SWITCH_DELAY)
+        return True
+    except Exception:
+        return False
+
+
+def _get_matter_details_scroll_point(window) -> tuple[int, int]:
+    """Pick a point inside the Matter Details content pane, not the full window."""
+    try:
+        # Prefer the visible content band below the tab strip, which is where
+        # Matter Details rows live. This keeps the wheel event scoped to the pane.
+        for content_rect in window.descendants(control_type="Pane"):
+            try:
+                rect = content_rect.rectangle()
+                if rect.width() < 300 or rect.height() < 200:
+                    continue
+                x = rect.left + int(rect.width() * 0.65)
+                y = rect.top + int(rect.height() * 0.55)
+                tab_strip = _find_sec32_tab_strip(window)
+                if tab_strip:
+                    tr = tab_strip.rectangle()
+                    y = max(y, tr.bottom + 80)
+                return x, min(y, rect.bottom - 80)
+            except Exception:
+                continue
+    except Exception:
+        pass
+
     wr = window.rectangle()
     x = wr.left + int(wr.width() * 0.65)
     y = wr.top + max(260, int(wr.height() * 0.35))
@@ -1327,10 +1403,44 @@ def _read_back(ctrl, action: str) -> Any:
             except Exception:
                 pass
             return None
-        texts = ctrl.texts()
-        return texts[0] if texts else ""
+        try:
+            iface_value = getattr(ctrl, "iface_value", None)
+            if iface_value is not None:
+                current_value = getattr(iface_value, "CurrentValue", None)
+                if isinstance(current_value, str):
+                    return current_value.replace("\r\n", "\n").strip()
+        except Exception:
+            pass
+        for reader_name in ("get_value", "window_text"):
+            try:
+                reader = getattr(ctrl, reader_name, None)
+                if callable(reader):
+                    value = reader()
+                    if isinstance(value, str) and value.strip():
+                        return value.replace("\r\n", "\n").strip()
+            except Exception:
+                continue
+        texts = [str(text) for text in (ctrl.texts() or []) if str(text).strip()]
+        if not texts:
+            return ""
+        if len(texts) == 1:
+            return texts[0]
+        # Multi-line WPF edits may expose one entry per line here.
+        return "\n".join(texts)
     except Exception:
         return None
+
+
+def _normalize_readback_text(value: Any) -> Any:
+    if not isinstance(value, str):
+        return value
+    return value.replace("\r\n", "\n").strip()
+
+
+def _expected_matches_actual(expected: Any, actual: Any) -> bool:
+    expected_norm = _normalize_readback_text(expected)
+    actual_norm = _normalize_readback_text(actual)
+    return expected_norm == actual_norm
 
 
 def _verification_mode_for_action(action: FormAction, locator_strategy: str | None) -> str:
@@ -1365,6 +1475,23 @@ def _click_tab(window, tab_name: str) -> bool:
     _ensure_focus(window)
     time.sleep(0.2)
 
+    tab_strip = _find_sec32_tab_strip(window)
+
+    # Strategy 0: prefer tab items from the Sec. 32 strip itself.
+    if tab_strip is not None:
+        try:
+            for t in _descendants_cached(tab_strip, "TabItem"):
+                try:
+                    n = _sanitize(t.element_info.name or t.window_text() or "")
+                    if n == tab_name:
+                        t.click_input()
+                        time.sleep(TAB_SWITCH_DELAY)
+                        return True
+                except Exception:
+                    continue
+        except Exception:
+            pass
+
     # Strategy 1: direct child_window lookup (exact title match)
     try:
         tab = window.child_window(title=tab_name, control_type="TabItem")
@@ -1388,6 +1515,10 @@ def _click_tab(window, tab_name: str) -> bool:
                 continue
     except Exception:
         pass
+
+    # Strategy 3: the Sec. 32 strip is visible, but UIA tab items are flaky.
+    if tab_strip is not None and _click_sec32_tab_strip_segment(tab_strip, tab_name):
+        return True
 
     log.warning("Tab click failed: %s", tab_name)
     return False
@@ -1458,6 +1589,9 @@ class TriConveyAgent:
         self.matter_window   = None
         self.property_window = None
         self.diagnostics     = diagnostics
+        self.telemetry       = BrainETelemetry(diagnostics.base_dir if diagnostics and diagnostics.base_dir else None)
+        vision_model = os.getenv("CONVEY_BRAIN_E_VISION_MODEL", "gpt-4.1-nano")
+        self.vision = VisionAdvisor(model=vision_model)
         # Offset between YAML scan-time absolute coords and current screen coords.
         # Computed by _calibrate_position_delta() after Property Details opens.
         self._coord_delta: tuple[int, int] = (0, 0)
@@ -1475,6 +1609,8 @@ class TriConveyAgent:
     def _log(self, msg: str) -> None:
         print(f"  {msg}")
         log.info(msg)
+        if self.telemetry.enabled:
+            self.telemetry.log_debug("brain_e", msg)
         if self.diagnostics:
             self.diagnostics.log_text(msg)
             self.diagnostics.log_event("log", message=msg)
@@ -1482,6 +1618,18 @@ class TriConveyAgent:
     def _log_window_event(self, kind: str, window=None, **extra: Any) -> None:
         if self.diagnostics:
             self.diagnostics.log_event(kind, window=_window_fingerprint(window), **extra)
+
+    def _queue_vision(self, screenshot: str | None, *, stage: str, note: str = "", **context: Any) -> None:
+        if not screenshot or not self.vision.enabled:
+            return
+        payload = {"stage": stage, "note": note, **context}
+        self.vision.submit(screenshot, **payload)
+
+    def _vision_recover(self, screenshot: str | None, *, stage: str, note: str = "", **context: Any) -> VisionAdvisor | None:
+        if not screenshot or not self.vision.enabled:
+            return None
+        payload = {"stage": stage, "note": note, **context}
+        return self.vision.analyze_now(screenshot, **payload)
 
     def collect_session_fingerprint(self) -> dict[str, Any]:
         exe_meta = None
@@ -1852,7 +2000,7 @@ class TriConveyAgent:
             typed = False
             if search is not None:
                 search.click_input()
-                time.sleep(0.5)
+                time.sleep(0.2)
                 try:
                     search.set_edit_text(search_text)
                     typed = True
@@ -1867,7 +2015,7 @@ class TriConveyAgent:
                     except Exception:
                         pass
                 if typed:
-                    time.sleep(0.5)
+                    time.sleep(0.2)
                     try:
                         current_text = _sanitize(search.window_text() or getattr(search.element_info, "name", "") or "")
                         self._log(f"  Search box text after set: {current_text!r}")
@@ -1877,7 +2025,7 @@ class TriConveyAgent:
                     search.click_input()
                     time.sleep(0.2)
                     search.type_keys("{ENTER}", with_spaces=False)
-                    self._interruptible_sleep(3)
+                    self._interruptible_sleep(1)
                     self._log("  Search submitted.")
                     return True
                 self._log("  Search box could not be typed into.")
@@ -1895,7 +2043,7 @@ class TriConveyAgent:
                 window.type_keys(search_text, with_spaces=True, set_foreground=False)
                 time.sleep(0.2)
                 window.type_keys("{ENTER}", with_spaces=False, set_foreground=False)
-                self._interruptible_sleep(3)
+                self._interruptible_sleep(1)
                 self._log("  Search submitted via Quick Search fallback.")
                 return True
             except Exception as exc:
@@ -1914,6 +2062,7 @@ class TriConveyAgent:
         retry_label: str,
         click_matters_first: bool = False,
     ) -> bool:
+        started = time.perf_counter()
         if click_matters_first:
             self._log("Navigating to Matters ...")
             try:
@@ -1931,14 +2080,14 @@ class TriConveyAgent:
         for attempt in range(3):
             if attempt:
                 self._log(f"  Retrying OCR result detection ({attempt + 1}/3) ...")
-                self._interruptible_sleep(2)
+                self._interruptible_sleep(0.7)
                 _ensure_focus(window)
                 if click_matters_first:
                     try:
                         tab = window.child_window(auto_id="MainView_Left_Docked_Tab_Matters_TabItem")
                         if tab.exists(timeout=1):
                             tab.click_input()
-                            time.sleep(0.5)
+                            time.sleep(0.2)
                     except Exception:
                         pass
                 self._log("  Re-submitting search to refresh visible results ...")
@@ -1950,9 +2099,49 @@ class TriConveyAgent:
                 search_text=result_match_text or search_text,
             ):
                 if self._connect_to_matter_window(timeout=20):
+                    if self.telemetry.enabled:
+                        self.telemetry.record_stage(
+                            "matter_search",
+                            int((time.perf_counter() - started) * 1000),
+                            reason="matter_opened",
+                            retry_label=retry_label,
+                            search_text=search_text,
+                        )
+                        self.telemetry.log_learning(
+                            "matter_search",
+                            f"{search_text}: matter_opened",
+                            success=True,
+                            retry_label=retry_label,
+                            search_text=search_text,
+                        )
                     return True
+                shot = self.diagnostics.capture_screenshot("matter_open_after_click", window=window) if self.diagnostics else None
+                advice = self._vision_recover(
+                    shot,
+                    stage="matter_open_recover",
+                    note="OCR clicked a row but matter window did not appear.",
+                    search_text=search_text,
+                    retry_label=retry_label,
+                )
+                if advice:
+                    self._log(f"    VISION: {advice.screen_type} -> {advice.next_step} ({advice.confidence:.2f})")
                 self._log(f"  OCR opened a row from {retry_label}, but the matter window was not detected yet.")
                 break
+        if self.telemetry.enabled:
+            self.telemetry.record_stage(
+                "matter_search",
+                int((time.perf_counter() - started) * 1000),
+                reason="not_opened",
+                retry_label=retry_label,
+                search_text=search_text,
+            )
+            self.telemetry.log_learning(
+                "matter_search",
+                f"{search_text}: not_opened",
+                success=False,
+                retry_label=retry_label,
+                search_text=search_text,
+            )
         return False
 
     def _click_first_result_by_ocr(self, window, search_text: str = "") -> bool:
@@ -1966,7 +2155,8 @@ class TriConveyAgent:
         )
         rect = self._get_search_results_rect(window)
         if self.diagnostics:
-            self.diagnostics.capture_screenshot("matter_search_results", window=window)
+            shot = self.diagnostics.capture_screenshot("matter_search_results", window=window)
+            self._queue_vision(shot, stage="matter_search_results", search_text=search_text)
             if "triconvey" not in foreground.lower():
                 self.diagnostics.capture_screenshot("matter_search_results_all_screens", all_screens=True)
         saw_rows = False
@@ -2000,15 +2190,17 @@ class TriConveyAgent:
         if not saw_rows:
             self._log("  No OCR rows found in search results.")
             if self.diagnostics:
-                self.diagnostics.capture_screenshot("matter_search_no_rows_all_screens", all_screens=True)
+                shot = self.diagnostics.capture_screenshot("matter_search_no_rows_all_screens", all_screens=True)
+                self._queue_vision(shot, stage="matter_search_results", note="No OCR rows found", search_text=search_text)
         else:
             self._log("  Could not identify a valid search result row.")
             if self.diagnostics:
-                self.diagnostics.capture_screenshot("matter_search_unmatched_rows_all_screens", all_screens=True)
+                shot = self.diagnostics.capture_screenshot("matter_search_unmatched_rows_all_screens", all_screens=True)
+                self._queue_vision(shot, stage="matter_search_results", note="OCR rows did not match search text", search_text=search_text)
         self._log_grid_debug(window)
         return False
 
-    def _connect_to_matter_window(self, timeout: int = 20) -> bool:
+    def _connect_to_matter_window(self, timeout: int = 10) -> bool:
         self._log("  Looking for matter window ...")
         end = time.time() + timeout
         while time.time() < end:
@@ -2039,7 +2231,7 @@ class TriConveyAgent:
                         pass
                 except Exception:
                     continue
-            time.sleep(0.5)
+            time.sleep(0.2)
         return False
 
     def _get_matter_details_content_rects(self, window) -> list[_SimpleRect]:
@@ -2112,6 +2304,17 @@ class TriConveyAgent:
         self._log("  Matter Details did not report ready state.")
         return False
 
+    def _vision_suggests_scroll_direction(self, screenshot: str | None, *, stage: str, note: str = "", **context: Any) -> str:
+        advice = self._vision_recover(screenshot, stage=stage, note=note, **context)
+        if advice:
+            self._log(f"    VISION: {advice.screen_type} -> {advice.next_step} ({advice.confidence:.2f})")
+            if self._vision_says_scroll_up(advice):
+                return "up"
+            next_step = (advice.next_step or "").strip().lower()
+            if next_step == "scroll_down":
+                return "down"
+        return "down"
+
     def _find_property_details_row_rect(self, window):
         if not (_pil_available and _ocr_available):
             return None
@@ -2172,9 +2375,36 @@ class TriConveyAgent:
         self._log("  Trying Matter Details pane route ...")
         self._normalize_matter_window(window)
         self._wait_for_matter_details_ready(window)
+        initial_direction = "down"
+        if self.diagnostics:
+            shot = self.diagnostics.capture_screenshot("property_details_route_start", window=window)
+            if shot:
+                initial_direction = self._vision_suggests_scroll_direction(
+                    shot,
+                    stage="property_details_route",
+                    note="Matter Details open; choose the fastest scroll direction to find Property Details.",
+                )
+                if self.telemetry.enabled:
+                    self.telemetry.log_learning(
+                        "property_details_navigation",
+                        f"vision selected initial scroll direction {initial_direction}",
+                        success=True,
+                        direction=initial_direction,
+                    )
         row_rect = self._find_property_details_row_rect(window)
         if not row_rect:
+            row_rect = self._scroll_search_property_details_row(window, initial_direction=initial_direction)
+        if not row_rect:
             self._log("  Matter Details pane OCR did not find the Property Details row.")
+            if self.diagnostics:
+                shot = self.diagnostics.capture_screenshot("property_details_row_missing", window=window)
+                advice = self._vision_recover(
+                    shot,
+                    stage="property_details_recover",
+                    note="Matter Details visible but Property Details row not found.",
+                )
+                if advice:
+                    self._log(f"    VISION: {advice.screen_type} -> {advice.next_step} ({advice.confidence:.2f})")
             return False
 
         x = row_rect["left"] + 60
@@ -2183,7 +2413,7 @@ class TriConveyAgent:
 
         try:
             _pw_mouse.click(button="left", coords=(x, y))
-            time.sleep(0.5)
+            time.sleep(0.2)
             if self._wait_property_window(timeout=3):
                 return True
 
@@ -2193,6 +2423,159 @@ class TriConveyAgent:
         except Exception as exc:
             self._log(f"  Matter Details OCR route failed: {exc}")
             return False
+
+    def _scroll_matter_details_content(self, window, *, direction: str, notches: int = 1) -> None:
+        x, y = _get_matter_details_scroll_point(window)
+        wheel_dist = -abs(notches) if direction == "down" else abs(notches)
+        try:
+            _ensure_focus(window)
+            _pw_mouse.scroll(coords=(x, y), wheel_dist=wheel_dist)
+        except Exception:
+            try:
+                window.set_focus()
+                _pw_mouse.scroll(coords=(x, y), wheel_dist=wheel_dist)
+            except Exception:
+                pass
+        time.sleep(0.25)
+        _invalidate_control_cache()
+
+    def _vision_says_scroll_up(self, advice: VisionAdvisor | None) -> bool:
+        if advice is None:
+            return False
+        next_step = (advice.next_step or "").strip().lower()
+        summary = (advice.summary or "").strip().lower()
+        return next_step in {"scroll_up", "recover"} or any(
+            marker in summary
+            for marker in ("bottom", "end", "scroll up", "need to go up", "reverse")
+        )
+
+    def _scroll_search_property_details_row(self, window, *, initial_direction: str = "down"):
+        if not (_pil_available and _ocr_available):
+            return None
+
+        started = time.perf_counter()
+        self._log("  Property Details row not visible — starting scroll search.")
+        switch_to_up = False
+        first_direction = "up" if initial_direction == "up" else "down"
+        second_direction = "down" if first_direction == "up" else "up"
+
+        for direction, max_scrolls, analyze_every in (
+            (first_direction, 2, 1),
+            (second_direction, 4, 1),
+        ):
+            if switch_to_up:
+                break
+            self._log(f"  Scanning Matter Details by scrolling {direction} ...")
+            for scroll_index in range(1, max_scrolls + 1):
+                self._scroll_matter_details_content(window, direction=direction, notches=1)
+                row_rect = self._find_property_details_row_rect(window)
+                if row_rect:
+                    self._log(f"  Property Details row found after {direction} scroll {scroll_index}.")
+                    if self.telemetry.enabled:
+                        self.telemetry.record_stage(
+                            "property_details_scroll",
+                            int((time.perf_counter() - started) * 1000),
+                            reason=f"found_{direction}",
+                        )
+                        self.telemetry.log_learning(
+                            "property_details_navigation",
+                            f"found after {direction} scroll {scroll_index}",
+                            success=True,
+                            direction=direction,
+                            scroll_index=scroll_index,
+                        )
+                    return row_rect
+
+                shot = None
+                if self.diagnostics:
+                    shot = self.diagnostics.capture_screenshot(
+                        f"property_details_scroll_{direction}_{scroll_index}",
+                        window=window,
+                    )
+                if shot:
+                    self._queue_vision(
+                        shot,
+                        stage="property_details_scroll",
+                        note=f"Matter Details scrolled {direction}",
+                        direction=direction,
+                        scroll_index=scroll_index,
+                    )
+
+                if shot:
+                    advice = self._vision_recover(
+                        shot,
+                        stage="property_details_scroll",
+                        note=f"Matter Details scrolled {direction}",
+                        direction=direction,
+                        scroll_index=scroll_index,
+                    )
+                    if advice:
+                        self._log(f"    VISION: {advice.screen_type} -> {advice.next_step} ({advice.confidence:.2f})")
+                        if direction == "down" and self._vision_says_scroll_up(advice):
+                            self._log("  Vision suggests the end of the pane; switching to upward recovery.")
+                            switch_to_up = True
+                            break
+
+        # If Property Details still isn't visible, scroll upward and analyze every step.
+        if not switch_to_up:
+            self._log("  Recovering upward with per-scroll vision checks ...")
+        for scroll_index in range(1, 5):
+            self._scroll_matter_details_content(window, direction="up", notches=1)
+            row_rect = self._find_property_details_row_rect(window)
+            if row_rect:
+                self._log(f"  Property Details row found after upward scroll {scroll_index}.")
+                if self.telemetry.enabled:
+                    self.telemetry.record_stage(
+                        "property_details_scroll",
+                        int((time.perf_counter() - started) * 1000),
+                        reason="found_up",
+                    )
+                    self.telemetry.log_learning(
+                        "property_details_navigation",
+                        f"found after upward scroll {scroll_index}",
+                        success=True,
+                        direction="up",
+                        scroll_index=scroll_index,
+                    )
+                return row_rect
+
+            shot = None
+            if self.diagnostics:
+                shot = self.diagnostics.capture_screenshot(
+                    f"property_details_recover_up_{scroll_index}",
+                    window=window,
+                )
+            if shot:
+                self._queue_vision(
+                    shot,
+                    stage="property_details_recover",
+                    note="Matter Details upward recovery scroll",
+                    direction="up",
+                    scroll_index=scroll_index,
+                )
+                advice = self._vision_recover(
+                    shot,
+                    stage="property_details_recover",
+                    note="Matter Details upward recovery scroll",
+                    direction="up",
+                    scroll_index=scroll_index,
+                )
+                if advice:
+                    self._log(f"    VISION: {advice.screen_type} -> {advice.next_step} ({advice.confidence:.2f})")
+
+        if self.telemetry.enabled:
+            self.telemetry.record_stage(
+                "property_details_scroll",
+                int((time.perf_counter() - started) * 1000),
+                reason="not_found",
+            )
+            self.telemetry.log_learning(
+                "property_details_navigation",
+                "property details row still not visible after scroll search",
+                success=False,
+                direction=initial_direction,
+            )
+        return None
 
     # ------------------------------------------------------------------
     # Coordinate calibration
@@ -2306,7 +2689,7 @@ class TriConveyAgent:
                 self.main_window = self.app.window(title="triConvey")
                 if self.main_window.exists(timeout=2):
                     self._log(f"TriConvey launched ({elapsed:.0f}s).")
-                    self._interruptible_sleep(3)
+                    self._interruptible_sleep(1)
                     return True
             except Exception:
                 if int(elapsed) % 10 == 0:
@@ -2319,18 +2702,81 @@ class TriConveyAgent:
     # Step 2: find and open matter  (v4 strategy)
     # ------------------------------------------------------------------
 
-    def find_and_open_matter(self, search_text: str, client_name: str = "") -> bool:
-        # Already open? Check if a matter window is already showing
+    @staticmethod
+    def _matter_title_matches_client(title: str, client_name: str) -> bool:
+        """Return True if a TriConvey matter window title belongs to this client.
+
+        TriConvey formats matter titles as:
+          "Surname, Firstname - Sale"
+          "Surname, Firstname | Surname2, Firstname2 - Sale"
+          "Surname, Firstname - Sale - Vendor, Name"
+
+        We match by checking whether the last-name or first-name tokens from
+        client_name appear in the normalised title.
+        """
+        if not client_name:
+            return True  # no name to filter on — accept any open matter
+        tl = title.lower()
+        # Must be a matter window
+        if " - sale" not in tl and " - purchase" not in tl:
+            return False
+        # Build name tokens: split on spaces and commas
+        tokens = [t.strip().lower() for t in re.split(r"[\s,]+", client_name) if len(t.strip()) > 1]
+        return any(tok in tl for tok in tokens)
+
+    def _find_open_matter_window(self, client_name: str = "") -> bool:
+        """Scan the desktop for an already-open matter window for this client.
+
+        Checks self.matter_window / self.main_window first, then does a full
+        Desktop scan using the TriConveyScanner strategy (connect by handle).
+        Returns True (and sets self.matter_window) if found.
+        """
+        # 1. Check cached references first
         for win in (self.matter_window, self.main_window):
             if win:
                 try:
-                    title = win.window_text().lower()
-                    if " - sale" in title or " - purchase" in title:
+                    title = win.window_text()
+                    if self._matter_title_matches_client(title, client_name):
                         self.matter_window = win
-                        self._log(f"Matter already open: {win.window_text()}")
+                        self._log(f"Matter already open (cached ref): {title}")
                         return True
                 except Exception:
                     pass
+
+        # 2. Broad desktop scan — mirrors TriConveyScanner.connect() strategy
+        try:
+            desktop = Desktop(backend="uia")
+            for w in desktop.windows():
+                try:
+                    title = w.window_text()
+                    if not self._matter_title_matches_client(title, client_name):
+                        continue
+                    app = Application(backend="uia").connect(handle=w.handle)
+                    win = app.window(handle=w.handle)
+                    # Confirm it has the MatterDetails ribbon (solid TriConvey indicator)
+                    if win.child_window(auto_id="MatterDetailsRibbonTab").exists(timeout=1):
+                        self.app = app
+                        self.matter_window = win
+                        _ensure_triconvey_front(win, maximize=True)
+                        self._log(f"Matter already open (desktop scan): {title}")
+                        return True
+                    # Accept it even without the ribbon if title matches
+                    self.app = app
+                    self.matter_window = win
+                    _ensure_triconvey_front(win, maximize=True)
+                    self._log(f"Matter already open (title match, no ribbon): {title}")
+                    return True
+                except Exception:
+                    continue
+        except Exception as exc:
+            self._log(f"  Desktop scan for open matter: {exc}")
+
+        return False
+
+    def find_and_open_matter(self, search_text: str, client_name: str = "") -> bool:
+        # Fast path: check if the matter is already open on the desktop
+        if self._find_open_matter_window(client_name):
+            return True
 
         window = self.main_window or self.matter_window
         if not window:
@@ -2399,7 +2845,7 @@ class TriConveyAgent:
                     self._log(f"  Found {len(rows)} row(s) — opening first.")
                     _ensure_focus(window)
                     rows[0].double_click_input()
-                    self._interruptible_sleep(3)
+                    self._interruptible_sleep(1)
                     return self._detect_matter(client_name)
 
                 self._log("  Grid visible but no accessible rows were found; skipping blind grid click.")
@@ -2416,7 +2862,7 @@ class TriConveyAgent:
                         self._log(f"  Found ListItem: {(li.window_text() or '')[:60]}")
                         _ensure_focus(window)
                         li.double_click_input()
-                        self._interruptible_sleep(3)
+                        self._interruptible_sleep(1)
                         return self._detect_matter(client_name)
                 except Exception:
                     continue
@@ -2439,7 +2885,7 @@ class TriConveyAgent:
                                 (parent or t).double_click_input()
                             except Exception:
                                 t.double_click_input()
-                            self._interruptible_sleep(3)
+                            self._interruptible_sleep(1)
                             return self._detect_matter(client_name)
                 except Exception:
                     continue
@@ -2455,7 +2901,7 @@ class TriConveyAgent:
         A matter window always has ' - Sale' or ' - Purchase' in its title.
         We pick the first such window that isn't the main triConvey shell.
         """
-        self._interruptible_sleep(2)
+        self._interruptible_sleep(0.7)
 
         for w in Desktop(backend="uia").windows():
             try:
@@ -2524,7 +2970,7 @@ class TriConveyAgent:
                 try:
                     lr = lb.rectangle()
                     _pw_mouse.click(button='left', coords=(lr.left + 10, lr.top + 10))
-                    time.sleep(0.5)
+                    time.sleep(0.2)
                 except Exception:
                     pass
 
@@ -2615,7 +3061,7 @@ class TriConveyAgent:
             message="Please open Property Details from the Matter Details window, then press Continue in Convey Agent.",
         )
 
-    def _wait_property_window(self, timeout: int = 20) -> bool:
+    def _wait_property_window(self, timeout: int = 10) -> bool:
         self._log("  Waiting for Property Details window ...")
         for _ in range(timeout):
             for w in Desktop(backend="uia").windows():
@@ -2625,7 +3071,7 @@ class TriConveyAgent:
                         self.app = Application(backend="uia").connect(handle=w.handle)
                         self.property_window = self.app.window(handle=w.handle)
                         self._log(f"  Property Details: {title}")
-                        self._interruptible_sleep(2)   # let Sec. 32 form render fully
+                        self._interruptible_sleep(0.7)   # let Sec. 32 form render fully
                         return True
                 except Exception:
                     continue
@@ -2791,6 +3237,9 @@ class TriConveyAgent:
                 self._scroll_to_top(window)
                 _warm_control_cache(window)
                 self._calibrate_position_delta(window)
+                if self.diagnostics:
+                    shot = self.diagnostics.capture_screenshot("sec32_tab_1_active", window=window)
+                    self._queue_vision(shot, stage="sec32_tabs", tab=SEC32_TAB_ORDER[0], note="Tab 1 active")
             else:
                 self._log(
                     "  WARNING: Could not switch to Sec. 32 (1) for calibration. "
@@ -2836,6 +3285,9 @@ class TriConveyAgent:
                     else:
                         self._scroll_to_top(window)
                         _warm_control_cache(window)
+                        if self.diagnostics:
+                            shot = self.diagnostics.capture_screenshot(f"{tab_name}_active", window=window)
+                            self._queue_vision(shot, stage="sec32_tabs", tab=tab_name, note="Tab became active")
 
             if tab_name in failed_tabs:
                 results.append(ActionResult(
@@ -2867,10 +3319,36 @@ class TriConveyAgent:
             )
             if shot:
                 artifacts.append(shot)
+                self._queue_vision(
+                    shot,
+                    stage="fill_action",
+                    note=tag,
+                    tab=fid.get("tab"),
+                    question_id=action.question_id,
+                    field_id=action.field_id,
+                    action=action.action,
+                )
 
         def _finish(status: str, *, error: str | None = None,
                     actual_value: Any | None = None) -> ActionResult:
             duration_ms = int((time.perf_counter() - started) * 1000)
+            if self.telemetry.enabled:
+                self.telemetry.record_stage(
+                    "fill_action",
+                    duration_ms,
+                    reason=locator_strategy or action.action,
+                    question_id=action.question_id,
+                    status=status,
+                )
+                self.telemetry.log_learning(
+                    "fill_action",
+                    f"{action.question_id}: {status}",
+                    success=status in {"filled", "verified"},
+                    duration_ms=duration_ms,
+                    locator_strategy=locator_strategy,
+                    verification_mode=verification_mode,
+                    tab=fid.get("tab"),
+                )
             if self.diagnostics:
                 self.diagnostics.log_event(
                     "action_result",
@@ -2921,6 +3399,7 @@ class TriConveyAgent:
                 critical=critical,
                 row_index=row_index,
             )
+            _capture("step")
 
         if action.source_answer_confidence < confidence_threshold:
             msg = (
@@ -2963,7 +3442,7 @@ class TriConveyAgent:
             verification_mode = _verification_mode_for_action(action, locator_strategy)
             if capture_write_artifacts:
                 _capture("after")
-            if action.expected_after is not None and actual != action.expected_after:
+            if action.expected_after is not None and not _expected_matches_actual(action.expected_after, actual):
                 self._log(
                     f"    MISMATCH {short}: "
                     f"expected {action.expected_after!r} got {actual!r}"
@@ -2977,7 +3456,7 @@ class TriConveyAgent:
             return _finish("filled", actual_value=actual)
 
         # ── Standard path: label-based find + position fallback ─────────────
-        MAX_SCROLL_ATTEMPTS = 8
+        MAX_SCROLL_ATTEMPTS = 4
         ctrl, locator_strategy = _find_ctrl_with_strategy(
             window,
             fid,
@@ -3021,6 +3500,23 @@ class TriConveyAgent:
             )
 
         if ctrl is None:
+            shot = None
+            if self.diagnostics:
+                shot = self.diagnostics.capture_screenshot(
+                    f"{fid['tab']}_{action.question_id}_lost",
+                    window=window,
+                )
+            advice = self._vision_recover(
+                shot,
+                stage="fill_recover",
+                note="Control not found after label and position search.",
+                tab=fid.get("tab"),
+                question_id=action.question_id,
+                field_id=action.field_id,
+                action=action.action,
+            )
+            if advice:
+                self._log(f"    VISION: {advice.screen_type} -> {advice.next_step} ({advice.confidence:.2f})")
             pos_str = ""
             if fid["top"] is not None:
                 adj_top  = fid["top"]  + self._coord_delta[0]
@@ -3069,7 +3565,7 @@ class TriConveyAgent:
         actual = _read_back(ctrl, action.action)
         if capture_write_artifacts:
             _capture("after")
-        if action.expected_after is not None and actual != action.expected_after:
+        if action.expected_after is not None and not _expected_matches_actual(action.expected_after, actual):
             self._log(
                 f"    MISMATCH {short}: "
                 f"expected {action.expected_after!r} got {actual!r}"
@@ -3199,6 +3695,7 @@ def execute_action_plan(
 
     agent = TriConveyAgent(triconvey_exe=triconvey_exe, diagnostics=diagnostics)
     setattr(agent, "_cancel_requested", cancel_requested)
+    telemetry = agent.telemetry
     report.session_fingerprint = agent.collect_session_fingerprint()
     report.preflight_checks = agent.run_preflight_checks()
     diagnostics.log_event(
@@ -3227,7 +3724,22 @@ def execute_action_plan(
 
         property_window_ready = False
 
-        if client_name and not resume_from_property_details:
+        # Fast path 1: if Property Details is already open, skip everything.
+        if not resume_from_property_details and agent._wait_property_window(timeout=2):
+            property_window_ready = True
+            diagnostics.log_event("property_details_already_open_skipping_matter_search")
+            agent._log("Property Details already open — skipping matter search.")
+
+        # Fast path 2: if the matter window for this client is already open,
+        # skip the search step and go directly to opening Property Details.
+        matter_already_found = False
+        if not property_window_ready and not resume_from_property_details:
+            if agent._find_open_matter_window(client_name):
+                matter_already_found = True
+                diagnostics.log_event("matter_window_already_open_skipping_search", client=client_name)
+                agent._log("Matter already open — skipping search, opening Property Details.")
+
+        if not property_window_ready and not matter_already_found and client_name and not resume_from_property_details:
             if callable(cancel_requested) and cancel_requested():
                 diagnostics.log_event("execution_cancelled", stage="before_matter_search")
                 _finalise(report)
@@ -3247,7 +3759,7 @@ def execute_action_plan(
                 raise
             property_window_ready = False
             for attempt in range(5):
-                agent._interruptible_sleep(2)
+                agent._interruptible_sleep(0.7)
                 if callable(cancel_requested) and cancel_requested():
                     diagnostics.log_event("execution_cancelled", stage="waiting_for_property_details_after_matter_open")
                     _finalise(report)
@@ -3305,6 +3817,16 @@ def execute_action_plan(
         total_actions=len(auto_actions),
         fill_duration_ms=report.metrics["fill_duration_ms"],
     )
+    if telemetry.enabled:
+        summary = telemetry.finalize(
+            total_duration_ms=report.metrics.get("total_duration_ms"),
+            run_id=Path(output_dir).name if output_dir else None,
+        )
+        report.brain_e_debug_log_path = str(telemetry.debug_log_path) if telemetry.debug_log_path else None
+        report.brain_e_learning_log_path = str(telemetry.learning_log_path) if telemetry.learning_log_path else None
+        report.brain_e_learning_summary_path = str(telemetry.summary_json_path) if telemetry.summary_json_path else None
+        report.brain_e_learning_profile_path = str(telemetry.profile_snapshot_path) if telemetry.profile_snapshot_path else None
+        report.metrics["brain_e_suggestions"] = summary.get("suggestions", [])
     _finalise(report)
     return report
 

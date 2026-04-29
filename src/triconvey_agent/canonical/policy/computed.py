@@ -186,15 +186,13 @@ def _building_permit_rows(store) -> list[dict[str, object]]:  # type: ignore[typ
 
 def _format_building_permit_line(row: dict[str, object]) -> str:
     kind = str(row.get("kind") or "")
-    number = str(row.get("number") or "").strip()
     issue_date = str(row.get("issue_date") or "").strip()
     description = str(row.get("description") or "").strip()
     prefix = "Occupancy Permit" if kind == "occupancy_permit" else "Building Permit"
-    number_part = f" No. {number}" if number else ""
     if kind == "occupancy_permit":
-        return f"{prefix}{number_part} issued {issue_date} and are attached herewith for further information."
+        return f"{prefix} No. issued {issue_date} and are attached herewith for further information."
     description_part = f" for {description}" if description else ""
-    return f"{prefix}{number_part} issued on {issue_date}{description_part}."
+    return f"{prefix} No. issued {issue_date}{description_part}."
 
 
 def _compute_building_permit_disclosure(store) -> list[Fact]:  # type: ignore[type-arg]

@@ -272,15 +272,22 @@ async def get_persisted_auth_state(
             _clear_auth_state()
             return None
         claims = verify_token(token)
-        row = await SessionRepo.get_by_hash(session, hash_token(token))
-        if row is None:
-            _clear_auth_state()
-            return None
         client = await ClientRepo.get_by_id(session, uuid.UUID(claims["cid"]))
         user = await UserRepo.get_by_id(session, uuid.UUID(claims["sub"]))
         if user is None or client is None or not user.is_active or not client.is_active:
             _clear_auth_state()
             return None
+        row = await SessionRepo.get_by_hash(session, hash_token(token))
+        if row is None:
+            # Session row missing (DB was wiped or migrated). Re-create it so
+            # the desktop user stays logged in as long as the JWT is valid.
+            await SessionRepo.create(
+                session,
+                user_id=user.id,
+                token_hash=hash_token(token),
+                ttl=timedelta(minutes=JWT_TTL_MINUTES),
+            )
+            await session.commit()
         return PersistedAuthState(
             access_token=token,
             expires_at=expires_at,

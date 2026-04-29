@@ -31,7 +31,7 @@ from tenacity import AsyncRetrying, RetryError, stop_after_attempt, wait_exponen
 
 from triconvey_agent.db.models import SyncConflict, SyncQueue
 from triconvey_agent.db.repositories import SyncQueueRepo
-from triconvey_agent.db.session import get_session_factory
+from triconvey_agent.db.session import ensure_runtime_schema, get_session_factory
 
 LOG = logging.getLogger(__name__)
 
@@ -60,6 +60,7 @@ class SyncWorker:
         self.batch_size = batch_size
         self._task: asyncio.Task[None] | None = None
         self._stop_event = asyncio.Event()
+        self._wake_event = asyncio.Event()
         self._http: httpx.AsyncClient | None = None
 
     # ----- lifecycle -------------------------------------------------------
@@ -81,6 +82,7 @@ class SyncWorker:
 
     async def stop(self) -> None:
         self._stop_event.set()
+        self._wake_event.set()
         if self._task is not None:
             try:
                 await asyncio.wait_for(self._task, timeout=10)
@@ -92,6 +94,10 @@ class SyncWorker:
             self._http = None
         LOG.info("SyncWorker stopped.")
 
+    async def nudge(self) -> None:
+        """Request an immediate sync cycle instead of waiting for the next poll."""
+        self._wake_event.set()
+
     # ----- main loop -------------------------------------------------------
 
     async def _run(self) -> None:
@@ -100,14 +106,28 @@ class SyncWorker:
                 await self._drain_once()
             except Exception as exc:  # don't let one bad cycle kill the loop
                 LOG.exception("Sync cycle failed: %s", exc)
+            if self._stop_event.is_set():
+                break
+            self._wake_event.clear()
+            stop_wait = asyncio.create_task(self._stop_event.wait())
+            wake_wait = asyncio.create_task(self._wake_event.wait())
             try:
-                await asyncio.wait_for(
-                    self._stop_event.wait(), timeout=self.interval_seconds
+                done, pending = await asyncio.wait(
+                    {stop_wait, wake_wait},
+                    timeout=self.interval_seconds,
+                    return_when=asyncio.FIRST_COMPLETED,
                 )
-            except asyncio.TimeoutError:
-                pass
+                for task in pending:
+                    task.cancel()
+                if wake_wait in done:
+                    self._wake_event.clear()
+            finally:
+                for task in (stop_wait, wake_wait):
+                    if not task.done():
+                        task.cancel()
 
     async def _drain_once(self) -> None:
+        await ensure_runtime_schema()
         factory = get_session_factory()
         async with factory() as session:
             rows = await SyncQueueRepo.pending_batch(

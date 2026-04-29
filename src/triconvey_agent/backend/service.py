@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import threading
@@ -11,7 +12,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from triconvey_agent.ai.openai_client import OpenAIResponsesClient
+from triconvey_agent.ai.openai_client import OpenAIResponsesClient, openai_runtime_disabled
 from triconvey_agent.backend.runtime import ensure_runtime_dirs, get_runtime_paths
 from triconvey_agent.backend.settings import load_local_settings
 from triconvey_agent.brain_f.corpus import build_document_corpus
@@ -24,6 +25,8 @@ from triconvey_agent.canonical.runner.ai_review import run_ai_review
 from triconvey_agent.canonical.runner.fact_extraction import extract_fact_store
 from triconvey_agent.canonical.runner.summary_writer import write_summary
 from triconvey_agent.canonical.schemas import AnswerObject, FormActionPlan, FactStore
+
+LOG = logging.getLogger(__name__)
 _BRAIN_F_BUILD_LOCK = threading.Lock()
 _BRAIN_F_BUILD_EVENTS: dict[str, threading.Event] = {}
 _AUTOFILL_ACTIVITY_LOCK = threading.Lock()
@@ -36,6 +39,7 @@ _BRAIN_F_DEFAULT_WARMUP_DELAY_SECONDS = max(
 _AI_MODE_CHOICES = {"cost_efficient", "all_time_best", "turbo"}
 _OPENAI_MODELS = ("gpt-4.1-mini", "gpt-4.1", "gpt-4o")
 _ANTHROPIC_MODELS = ("claude-haiku-4-5-20251001", "claude-sonnet-4-6", "claude-opus-4-7")
+_GOOGLE_MODELS = ("gemini-3.1-flash-lite-preview", "gemini-3-flash-preview", "gemini-1.5-pro")
 _AI_COLLABORATION_PRESETS: dict[str, dict[str, list[dict[str, str]]]] = {
     "openai": {
         "cost_efficient": [
@@ -79,6 +83,20 @@ _AI_COLLABORATION_PRESETS: dict[str, dict[str, list[dict[str, str]]]] = {
             {"provider": "anthropic", "model": "claude-sonnet-4-6", "role": "Claude"},
         ],
     },
+    "google": {
+        "cost_efficient": [
+            {"provider": "google", "model": "gemini-3.1-flash-lite-preview", "role": "Scout"},
+            {"provider": "google", "model": "gemini-3-flash-preview", "role": "Reviewer"},
+        ],
+        "all_time_best": [
+            {"provider": "google", "model": "gemini-3.1-pro-preview", "role": "Lead"},
+            {"provider": "google", "model": "gemini-3-flash-preview", "role": "Cross-check"},
+        ],
+        "turbo": [
+            {"provider": "google", "model": "gemini-3-flash-preview", "role": "Turbo"},
+            {"provider": "google", "model": "gemini-3.1-flash-lite-preview", "role": "Verifier"},
+        ],
+    },
 }
 
 
@@ -92,6 +110,7 @@ def build_review_run(
     run_dir: str | Path | None = None,
     use_ai_review: bool = False,
     model: str = "gpt-4.1-mini",
+    progress_callback: Callable[[float, str], None] | None = None,
 ) -> dict[str, Any]:
     overall_started = time.perf_counter()
     runtime = ensure_runtime_dirs()
@@ -104,31 +123,45 @@ def build_review_run(
             ai_client = OpenAIResponsesClient(model=model)
         except ValueError:
             ai_client = None
+        if openai_runtime_disabled():
+            ai_client = None
 
+    if progress_callback:
+        progress_callback(5.0, "Extracting facts")
     store, total_facts = extract_fact_store(doc_paths, target_dir)
 
-    # Keep run creation fast. Brain F assets are built lazily on first chat use
-    # via _ensure_brain_f_assets(), so large PDF bundles do not block the review
-    # screen immediately after Brain C.
+    prewarmed_assets = False
+    if use_ai_review:
+        if progress_callback:
+            progress_callback(15.0, "Preparing corpus and Brain F")
+        _prewarm_all_assets(doc_paths, target_dir, model=model)
+        prewarmed_assets = True
 
     registry = load_question_registry()
     print("\n=== Brain D — Answering questions ===")
+    if progress_callback:
+        progress_callback(20.0, "Answering questions")
     brain_d_started = time.perf_counter()
     answers = answer_all_questions(registry.values(), store, ai_client=ai_client)
     _apply_answer_fallbacks(answers, store)
-    _write_answers(target_dir / "answers.json", answers)
     print(f"  [Time] Brain D total: {_format_elapsed(time.perf_counter() - brain_d_started)}")
 
     ai_review_results: dict[str, dict[str, Any]] = {}
-    if use_ai_review and ai_client is not None:
+    if use_ai_review and ai_client is not None and not openai_runtime_disabled():
         print("\n=== AI Review — Verifying answers ===")
+        if progress_callback:
+            progress_callback(50.0, "AI Review")
         ai_review_results = run_ai_review(answers, registry, ai_client)
+        answers = _apply_ai_review_overrides(answers, registry, ai_review_results)
         (target_dir / "ai_review.json").write_text(
             json.dumps(ai_review_results, indent=2, default=str),
             encoding="utf-8",
         )
+    _write_answers(target_dir / "answers.json", answers)
 
     print("\n=== Brain E — Building action plan ===")
+    if progress_callback:
+        progress_callback(75.0, "Building Matter")
     brain_e_started = time.perf_counter()
     action_plan = build_action_plan(answers, runtime.yaml_dir)
     (target_dir / "action_plan.json").write_text(
@@ -137,6 +170,8 @@ def build_review_run(
     )
     print(f"  [Time] Brain E total: {_format_elapsed(time.perf_counter() - brain_e_started)}")
     print("\n=== Writing summary ===")
+    if progress_callback:
+        progress_callback(90.0, "Writing summary")
     summary_started = time.perf_counter()
     write_summary(answers, target_dir)
     print(f"  [Time] Summary write total: {_format_elapsed(time.perf_counter() - summary_started)}")
@@ -155,6 +190,20 @@ def build_review_run(
         encoding="utf-8",
     )
     print(f"\n[Time] Review run total: {_format_elapsed(time.perf_counter() - overall_started)}")
+
+    # === Optional pre-warm so the UI is fully ready on first load ===
+    # This intentionally re-reads documents to build the corpus/RAG/Brain-F assets.
+    # Disable with `TRICONVEY_PREWARM_ASSETS=0` if you prefer faster run creation.
+    if (not prewarmed_assets) and str(os.getenv("TRICONVEY_PREWARM_ASSETS", "1")).strip().lower() not in {"0", "false", "no", "off"}:
+        if progress_callback:
+            progress_callback(95.0, "Warming assets")
+        # Run corpus extraction + RAG + Brain F assets synchronously so the user
+        # never hits a "still loading" state after the review screen appears.
+        _prewarm_all_assets(doc_paths, target_dir, model=model)
+
+    if progress_callback:
+        progress_callback(100.0, "Complete")
+
     return load_run_payload(target_dir)
 
 
@@ -196,6 +245,91 @@ def save_review_answers(
     )
     write_summary(answers, target_dir)
     return load_run_payload(target_dir)
+
+
+def _apply_ai_review_overrides(
+    answers: dict[str, AnswerObject],
+    registry: dict[str, Any],
+    ai_review_results: dict[str, dict[str, Any]],
+) -> dict[str, AnswerObject]:
+    updated = dict(answers)
+    minimum_confidence = max(0.0, min(float(os.getenv("TRICONVEY_AI_REVIEW_MIN_CONFIDENCE", "0.85")), 1.0))
+
+    for qid, answer in answers.items():
+        review = ai_review_results.get(qid)
+        if not isinstance(review, dict):
+            continue
+        if review.get("status") != "suggest_change":
+            continue
+        if not bool(review.get("quote_verified")):
+            continue
+        suggested_value = review.get("suggested_value")
+        if suggested_value in (None, "", []):
+            continue
+        if suggested_value == answer.value:
+            continue
+        confidence = _coerce_ai_review_confidence(review.get("confidence"))
+        if confidence < minimum_confidence:
+            continue
+        question = registry.get(qid)
+        if question is None:
+            continue
+
+        next_hints = dict(answer.presentation_hints)
+        next_hints["field_id"] = qid
+        next_hints["answer_origin"] = "ai_review"
+        next_hints["authoritative_value"] = answer.value
+        next_hints["authoritative_confidence"] = answer.confidence
+        next_hints["ai_review_reason"] = str(review.get("reason") or "")
+        next_hints["ai_review_source_file"] = str(review.get("source_file") or "")
+
+        updated[qid] = answer.model_copy(
+            update={
+                "value": _coerce_review_value(question, suggested_value),
+                "confidence": max(answer.confidence, confidence),
+                "needs_review": False,
+                "review_reasons": [],
+                "presentation_hints": next_hints,
+            }
+        )
+    return updated
+
+
+def _coerce_ai_review_confidence(raw_value: Any) -> float:
+    if isinstance(raw_value, (int, float)):
+        return max(0.0, min(float(raw_value), 1.0))
+    if isinstance(raw_value, str):
+        cleaned = raw_value.strip().lower()
+        qualitative = {
+            "very high": 0.95,
+            "high": 0.9,
+            "medium": 0.7,
+            "moderate": 0.7,
+            "low": 0.4,
+            "very low": 0.2,
+        }
+        if cleaned in qualitative:
+            return qualitative[cleaned]
+        try:
+            return max(0.0, min(float(cleaned), 1.0))
+        except ValueError:
+            return 0.0
+    return 0.0
+
+
+def _coerce_review_value(question: Any, suggested_value: Any) -> Any:
+    expected_type = getattr(question, "expected_type", None)
+    if expected_type == "bool":
+        if isinstance(suggested_value, bool):
+            return suggested_value
+        if isinstance(suggested_value, str):
+            return suggested_value.strip().lower() in {"1", "true", "yes", "y", "checked"}
+    if expected_type == "number":
+        try:
+            return float(suggested_value)
+        except (TypeError, ValueError):
+            return suggested_value
+    return suggested_value
 
 
 def autofill_run(
@@ -242,13 +376,19 @@ def _apply_preferred_autofill_filter(plan: FormActionPlan, preferred_fields: lis
     if not selected:
         return plan
 
+    # These Section 32 final items are always present in TriConvey and should
+    # not disappear just because a user's preferred-field list is narrower.
+    mandatory_question_ids = {
+        "policy_6_due_diligence",
+        "policy_6_attachments",
+    }
     registry = load_question_registry()
     filtered_actions = []
     selected_review_gate_required = False
     for action in plan.actions:
         question = registry.get(action.question_id)
         label = getattr(question, "label", "") if question else ""
-        if action.question_id in selected or label in selected:
+        if action.question_id in selected or label in selected or action.question_id in mandatory_question_ids:
             filtered_actions.append(action)
             if action.needs_review_first and action.action != "skip":
                 selected_review_gate_required = True
@@ -286,6 +426,320 @@ def check_triconvey_running_passive() -> bool:
         )
     except Exception:
         return False
+
+
+def extract_corpus_entry_async(
+    run_dir: str | Path,
+    document_path: str | Path,
+    document_id: str,
+    matter_id: str,
+    run_id: str,
+    model: str = "gpt-4.1-mini",
+) -> None:
+    """Extract corpus entry for a single document in a background thread.
+
+    The entry is written to corpus.json as *pending* so the user can confirm
+    it in the chat before it becomes part of the permanent corpus.
+    """
+    def _run() -> None:
+        try:
+            from triconvey_agent.corpus.builder import add_pending, load_corpus, save_corpus
+            from triconvey_agent.corpus.extractor import extract_corpus_entry
+            from triconvey_agent.ingest.pdf_loader import load_pdf_document
+
+            doc_path = Path(document_path)
+            pdf_doc = load_pdf_document(doc_path)
+            full_text = pdf_doc.full_text if hasattr(pdf_doc, "full_text") else _pdf_full_text(doc_path)
+            page_count = pdf_doc.page_count if hasattr(pdf_doc, "page_count") else 0
+            doc_type = _guess_document_type(doc_path.name)
+
+            resolved_provider = _provider_from_model(model)
+            ai_client = _make_ai_client_for_corpus(resolved_provider, model)
+            entry = extract_corpus_entry(
+                document_id=document_id,
+                filename=doc_path.name,
+                document_type=doc_type,
+                full_text=full_text,
+                page_count=page_count,
+                ai_client=ai_client,
+                model=model,
+                provider=resolved_provider,
+            )
+
+            corpus = load_corpus(Path(run_dir), matter_id=matter_id, run_id=run_id)
+            add_pending(corpus, entry, Path(run_dir))
+            print(f"  [Corpus] Pending entry created for {doc_path.name}")
+        except Exception as exc:
+            print(f"  [WARN] Corpus extraction failed for {document_path}: {exc}")
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
+def confirm_corpus_document(run_dir: str | Path, document_id: str, matter_id: str, run_id: str) -> dict[str, Any] | None:
+    """Confirm a pending corpus entry — called when user confirms in chat."""
+    from triconvey_agent.corpus.builder import confirm_document, load_corpus
+    corpus = load_corpus(Path(run_dir), matter_id=matter_id, run_id=run_id)
+    confirmed = confirm_document(corpus, document_id, Path(run_dir))
+    if confirmed is None:
+        return None
+    return confirmed.to_dict()
+
+
+def get_corpus_pending(run_dir: str | Path, matter_id: str, run_id: str) -> list[dict[str, Any]]:
+    """Return pending corpus entries awaiting user confirmation."""
+    from triconvey_agent.corpus.builder import load_corpus, pending_summary
+    corpus = load_corpus(Path(run_dir), matter_id=matter_id, run_id=run_id)
+    return pending_summary(corpus)
+
+
+def get_corpus_state(run_dir: str | Path, matter_id: str, run_id: str) -> dict[str, Any]:
+    """Return full corpus state for the run — confirmed + pending."""
+    from triconvey_agent.corpus.builder import build_corpus_context, load_corpus, pending_summary
+    from triconvey_agent.corpus.schema import MatterCorpus
+    corpus = load_corpus(Path(run_dir), matter_id=matter_id, run_id=run_id)
+    return {
+        "matter_id": corpus.matter_id,
+        "run_id": corpus.run_id,
+        "document_count": len(corpus.documents),
+        "pending_count": len(corpus.pending),
+        "documents": [d.to_dict() for d in corpus.documents],
+        "pending": pending_summary(corpus),
+        "updated_at": corpus.updated_at,
+        "context_preview": build_corpus_context(corpus)[:1000] if corpus.documents else "",
+    }
+
+
+def _pdf_full_text(path: Path) -> str:
+    try:
+        import pdfplumber
+        with pdfplumber.open(path) as pdf:
+            pages = pdf.pages[:20]  # cap at 20 pages
+            return "\n\n".join(p.extract_text() or "" for p in pages)
+    except Exception:
+        return ""
+
+
+def _guess_document_type(filename: str) -> str:
+    name = filename.lower()
+    if "title" in name:
+        return "vic_title"
+    if "council" in name or "rates" in name:
+        return "council_rates"
+    if "water" in name:
+        return "water_authority"
+    if "planning" in name:
+        return "planning_certificate"
+    if "building" in name and "permit" in name:
+        return "building_approval"
+    if "owner" in name or "corporation" in name or " oc " in name:
+        return "owners_corporation"
+    if "land tax" in name or "sro" in name or "revenue" in name:
+        return "land_tax"
+    if "vendor" in name or "section 32" in name or "s32" in name:
+        return "vendor_form"
+    return "general"
+
+
+def process_chat_document(
+    run_dir: str | Path,
+    doc_path: str | Path,
+    model: str = "gpt-4.1-mini",
+    matter_id: str = "",
+    run_id: str = "",
+) -> dict[str, Any]:
+    """Process a single newly chat-uploaded document.
+
+    Returns validation result, extracted corpus data, and proposed answer changes.
+    The caller (API endpoint) presents this to the user for approval.
+    """
+    from triconvey_agent.corpus.incremental import process_single_document
+    run_id = run_id or Path(run_dir).name
+    matter_id = matter_id or run_id
+    return process_single_document(
+        doc_path=Path(doc_path),
+        run_dir=Path(run_dir),
+        model=model,
+        provider=_provider_from_model(model),
+        run_id=run_id,
+        matter_id=matter_id,
+    )
+
+
+def apply_chat_document_changes(
+    run_dir: str | Path,
+    document_id: str,
+    doc_path: str | Path,
+    corpus_entry_dict: dict[str, Any] | None,
+    approved_change_ids: list[str],
+    all_changes: list[dict[str, Any]],
+    matter_id: str = "",
+    run_id: str = "",
+) -> dict[str, Any]:
+    """Apply user-approved changes from a single document processing result."""
+    from triconvey_agent.corpus.incremental import apply_document_changes
+    run_id = run_id or Path(run_dir).name
+    matter_id = matter_id or run_id
+    return apply_document_changes(
+        run_dir=Path(run_dir),
+        document_id=document_id,
+        doc_path=Path(doc_path),
+        corpus_entry_dict=corpus_entry_dict,
+        approved_change_ids=approved_change_ids,
+        all_changes=all_changes,
+        matter_id=matter_id,
+        run_id=run_id,
+    )
+
+
+def _prewarm_all_assets(doc_paths: list[Path], run_dir: Path, model: str = "gpt-4.1-mini") -> None:
+    """Run corpus extraction, RAG index build, and Brain F asset warming synchronously.
+
+    Called at the end of build_review_run so everything is ready when the
+    review screen loads. This adds ~15-45 seconds per document bundle but
+    eliminates all "loading…" delays in the UI.
+    """
+    from uuid import uuid4 as _uuid4
+
+    run_id = run_dir.name
+
+    print("\n=== Pre-warming AI assets (corpus + RAG + Brain F) ===")
+    prewarm_started = time.perf_counter()
+
+    # 1. Corpus extraction — extract structured data from all documents
+    try:
+        from triconvey_agent.corpus.builder import add_pending, load_corpus, save_corpus
+        from triconvey_agent.corpus.extractor import extract_corpus_entry
+        from triconvey_agent.ingest.pdf_loader import load_pdf_document
+
+        corpus = load_corpus(run_dir, matter_id=run_id, run_id=run_id)
+        provider = _provider_from_model(model)
+        ai_client = None if openai_runtime_disabled() else _make_ai_client_for_corpus(provider, model)
+
+        for doc_path in doc_paths:
+            if openai_runtime_disabled():
+                print("  [Corpus] AI unavailable — skipping remaining corpus AI extraction")
+                break
+            try:
+                pdf_doc = load_pdf_document(doc_path)
+                full_text = pdf_doc.full_text if hasattr(pdf_doc, "full_text") else _pdf_full_text(doc_path)
+                page_count = pdf_doc.page_count if hasattr(pdf_doc, "page_count") else 0
+                doc_type = _guess_document_type(doc_path.name)
+
+                entry = extract_corpus_entry(
+                    document_id=str(_uuid4()),
+                    filename=doc_path.name,
+                    document_type=doc_type,
+                    full_text=full_text,
+                    page_count=page_count,
+                    ai_client=ai_client,
+                    model=model,
+                    provider=provider,
+                )
+                add_pending(corpus, entry, run_dir)
+                corpus.confirm_pending(entry.document_id)
+                print(f"  [Corpus] {doc_path.name} ✓")
+            except Exception as exc:
+                print(f"  [WARN] Corpus extraction failed for {doc_path.name}: {exc}")
+
+        save_corpus(corpus, run_dir)
+        print(f"  [Corpus] {len(corpus.documents)} document(s) in corpus")
+    except Exception as exc:
+        print(f"  [WARN] Corpus build failed: {exc}")
+
+    # 2. RAG index — semantic search over document chunks
+    try:
+        from triconvey_agent.corpus.rag import build_rag_index
+        build_rag_index(doc_paths, run_dir, force=True)
+        print("  [RAG] Index built ✓")
+    except Exception as exc:
+        print(f"  [WARN] RAG index build failed: {exc}")
+
+    # 3. Brain F assets — document corpus chunks + memory summaries
+    try:
+        _build_brain_f_assets(run_dir, deferred=False, include_memory=True)
+        print("  [Brain F] Assets ready ✓")
+    except Exception as exc:
+        print(f"  [WARN] Brain F asset build failed: {exc}")
+
+    print(f"  [Time] Pre-warm total: {_format_elapsed(time.perf_counter() - prewarm_started)}")
+
+
+def _trigger_initial_corpus_extraction(doc_paths: list[Path], run_dir: Path, model: str = "gpt-4.1-mini") -> None:
+    """Extract and auto-confirm corpus entries for initial run documents in a background thread.
+
+    Initial documents don't require user confirmation — they are auto-confirmed
+    because they were explicitly uploaded when creating the run.
+    Chat-uploaded additions still go through the pending/confirm flow.
+    """
+    from uuid import uuid4 as _uuid4
+
+    def _run() -> None:
+        try:
+            from triconvey_agent.corpus.builder import confirm_all_pending, load_corpus, save_corpus, add_pending
+            from triconvey_agent.corpus.extractor import extract_corpus_entry
+            from triconvey_agent.ingest.pdf_loader import load_pdf_document
+
+            run_id = run_dir.name
+            corpus = load_corpus(run_dir, matter_id=run_id, run_id=run_id)
+
+            provider = _provider_from_model(model)
+            ai_client = None if openai_runtime_disabled() else _make_ai_client_for_corpus(provider, model)
+
+            for doc_path in doc_paths:
+                if openai_runtime_disabled():
+                    print("  [Corpus] AI unavailable — skipping remaining initial corpus extraction")
+                    break
+                try:
+                    pdf_doc = load_pdf_document(doc_path)
+                    full_text = pdf_doc.full_text if hasattr(pdf_doc, "full_text") else _pdf_full_text(doc_path)
+                    page_count = pdf_doc.page_count if hasattr(pdf_doc, "page_count") else 0
+                    doc_type = _guess_document_type(doc_path.name)
+
+                    entry = extract_corpus_entry(
+                        document_id=str(_uuid4()),
+                        filename=doc_path.name,
+                        document_type=doc_type,
+                        full_text=full_text,
+                        page_count=page_count,
+                        ai_client=ai_client,
+                        model=model,
+                        provider=provider,
+                    )
+                    # Add to pending then immediately confirm (auto-confirm for initial docs)
+                    add_pending(corpus, entry, run_dir)
+                    corpus.confirm_pending(entry.document_id)
+                    print(f"  [Corpus] Auto-confirmed entry for {doc_path.name}")
+                except Exception as exc:
+                    print(f"  [WARN] Corpus extraction failed for {doc_path.name}: {exc}")
+
+            save_corpus(corpus, run_dir)
+            print(f"  [Corpus] Initial corpus complete: {len(corpus.documents)} document(s)")
+        except Exception as exc:
+            print(f"  [WARN] Initial corpus extraction thread failed: {exc}")
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
+def _provider_from_model(model: str) -> str:
+    """Auto-detect provider from model name — same logic as ask_run_question."""
+    if any(model.startswith(m) for m in ("claude",)):
+        return "anthropic"
+    if model.startswith("gemini"):
+        return "google"
+    return "openai"
+
+
+def _make_ai_client_for_corpus(provider: str, model: str) -> Any:
+    if provider == "anthropic":
+        import anthropic
+        return anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
+    elif provider == "google":
+        import google.generativeai as genai
+        genai.configure(api_key=os.environ.get("GOOGLE_API_KEY", ""))
+        return genai.GenerativeModel(model)
+    else:
+        import openai
+        return openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
 
 
 def warm_brain_f_assets_async(run_dir: str | Path) -> bool:
@@ -326,6 +780,8 @@ def _infer_provider(model: str, preferred: str) -> str:
         return "anthropic"
     if m.startswith(("gpt-", "o1", "o3", "o4", "chatgpt")):
         return "openai"
+    if m.startswith("gemini"):
+        return "google"
     return preferred
 
 
@@ -351,6 +807,8 @@ def ask_run_question(
     ai_provider: str = "openai",
     ai_mode: str = "cost_efficient",
     mode: str = "standard",
+    session_id: str | None = None,
+    vector_memories: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Answer a question about a run using Brain F (agentic, tool-use).
 
@@ -358,9 +816,11 @@ def ask_run_question(
     Anthropic client even if the settings say 'openai'.
 
     Args:
-        ai_provider: Preferred provider — overridden if model name implies different.
-        model:       Model name (e.g. "gpt-4o", "claude-sonnet-4-6").
-        mode:        "quick" | "standard" | "thorough" — controls tool rounds + critic.
+        ai_provider:     Preferred provider — overridden if model name implies different.
+        model:           Model name (e.g. "gpt-4o", "claude-sonnet-4-6").
+        mode:            "quick" | "standard" | "thorough" — controls tool rounds + critic.
+        session_id:      Feature 4 — chat session UUID for vector memory scoping.
+        vector_memories: Feature 4 — pre-fetched vector memory entries to inject.
     """
     import os
     target_dir = Path(run_dir)
@@ -385,6 +845,8 @@ def ask_run_question(
             provider=agent_cfg["provider"],
             mode=normalized_mode,
             persist_chat=True,
+            session_id=session_id,
+            vector_memories=vector_memories,
         )
         result["agent_runs"] = [
             {
@@ -416,12 +878,26 @@ def _ask_brain_f(
     provider: str,
     mode: str = "standard",
     persist_chat: bool = True,
+    session_id: str | None = None,
+    vector_memories: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     from triconvey_agent.brain_f.agent import BrainFAgent
 
     store = _load_fact_store(target_dir)
-    agent = BrainFAgent(store=store, run_dir=target_dir, model=model, provider=provider, persist_chat=persist_chat)
-    return agent.ask(question=question, history=history, mode=mode)
+    agent = BrainFAgent(
+        store=store,
+        run_dir=target_dir,
+        model=model,
+        provider=provider,
+        persist_chat=persist_chat,
+        session_id=session_id,
+    )
+    return agent.ask(
+        question=question,
+        history=history,
+        mode=mode,
+        vector_memories=vector_memories,
+    )
 
 
 def _ask_brain_f_collaborative(
@@ -468,7 +944,12 @@ def _ask_brain_f_collaborative(
                 agent_runs.append(run_info)
 
     if not successful_results:
-        raise ValueError("No AI agent could complete the question.")
+        # Bubble up provider/model-specific errors so the UI can show the real cause
+        # (e.g. missing env var, invalid model name, 401/429, network failure).
+        raise ValueError(
+            "No AI agent could complete the question. "
+            f"Agent runs: {agent_runs}"
+        )
 
     if len(successful_results) == 1:
         winner = successful_results[0]
@@ -521,7 +1002,7 @@ def _build_ai_execution_plan(
     requested_model: str,
 ) -> dict[str, Any]:
     provider = (preferred_provider or "openai").strip().lower()
-    if provider not in {"openai", "anthropic", "hybrid"}:
+    if provider not in {"openai", "anthropic", "hybrid", "google"}:
         provider = "openai"
     normalized_ai_mode = (ai_mode or "cost_efficient").strip().lower()
     if normalized_ai_mode not in _AI_MODE_CHOICES:
@@ -529,8 +1010,17 @@ def _build_ai_execution_plan(
 
     has_openai = bool(os.getenv("OPENAI_API_KEY"))
     has_anthropic = bool(os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY"))
+    has_google = bool(os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"))
+
     if provider == "hybrid" and not (has_openai and has_anthropic):
         provider = "openai" if has_openai else "anthropic"
+    if provider == "google" and not has_google:
+        if has_openai:
+            provider = "openai"
+        elif has_anthropic:
+            provider = "anthropic"
+        else:
+            provider = "google"
     if provider == "openai" and not has_openai and has_anthropic:
         provider = "anthropic"
     if provider == "anthropic" and not has_anthropic and has_openai:
@@ -541,14 +1031,20 @@ def _build_ai_execution_plan(
         agents = [item for item in agents if item["provider"] == "openai" and has_openai]
     elif provider == "anthropic":
         agents = [item for item in agents if item["provider"] == "anthropic" and has_anthropic]
+    elif provider == "google":
+        agents = [item for item in agents if item["provider"] == "google" and has_google]
     else:
         agents = [
             item for item in agents
-            if (item["provider"] == "openai" and has_openai) or (item["provider"] == "anthropic" and has_anthropic)
+            if (
+                (item["provider"] == "openai" and has_openai)
+                or (item["provider"] == "anthropic" and has_anthropic)
+                or (item["provider"] == "google" and has_google)
+            )
         ]
 
     inferred_provider = _infer_provider(requested_model, provider)
-    if requested_model and inferred_provider in {"openai", "anthropic"}:
+    if requested_model and inferred_provider in {"openai", "anthropic", "google"}:
         for agent in agents:
             if agent["provider"] == inferred_provider:
                 agent["model"] = requested_model
@@ -560,6 +1056,8 @@ def _build_ai_execution_plan(
             agents = [{"provider": "openai", "model": requested_model, "role": "Solo"}]
         elif provider_hint == "anthropic" and has_anthropic:
             agents = [{"provider": "anthropic", "model": requested_model, "role": "Solo"}]
+        elif provider_hint == "google" and has_google:
+            agents = [{"provider": "google", "model": requested_model, "role": "Solo"}]
 
     summary_provider = "anthropic" if provider == "hybrid" and has_anthropic else (agents[0]["provider"] if agents else provider)
     summary_model = requested_model
@@ -581,6 +1079,12 @@ def _summary_model_for(provider: str, ai_mode: str) -> str:
             "all_time_best": "claude-opus-4-7",
             "turbo": "claude-sonnet-4-6",
         }.get(ai_mode, "claude-sonnet-4-6")
+    if provider == "google":
+        return {
+            "cost_efficient": "gemini-3.1-flash-lite-preview",
+            "all_time_best": "gemini-3.1-pro-preview",
+            "turbo": "gemini-3-flash-preview",
+        }.get(ai_mode, "gemini-3-flash-preview")
     return {
         "cost_efficient": "gpt-4.1",
         "all_time_best": "gpt-4.1",
@@ -619,6 +1123,19 @@ def _summarize_collaborative_answers(
         "Candidate answers:\n"
         + "\n".join(candidate_blocks)
     )
+    if summary_provider == "google":
+        try:
+            from triconvey_agent.ai.multi_client import MultiModelClient
+
+            client = MultiModelClient(provider="google", model=summary_model)
+            resp = client.chat(
+                [{"role": "user", "content": prompt}],
+                system="You produce polished final answers from grounded agent outputs.",
+                max_tokens=1024,
+            )
+            return (resp.content or "").strip()
+        except Exception:
+            pass
     if summary_provider == "anthropic":
         try:
             import anthropic
@@ -795,6 +1312,7 @@ def _apply_answer_fallbacks(answers: dict[str, AnswerObject], store: FactStoreIm
             )
     _suppress_zero_outgoings(answers)
     _suppress_owners_corporation_outgoing(answers, store)
+    _format_outgoing_authority_names(answers, store)
 
 
 def _extract_json_object(raw_text: str) -> dict[str, Any] | None:
@@ -984,6 +1502,74 @@ def _suppress_owners_corporation_outgoing(
         answers[authority_id] = _clear_answer_value(authority_answer)
 
 
+# Authority name → suffix mapping for the 4 outgoing rows
+_OUTGOING_AUTHORITY_SUFFIXES: dict[int, str] = {
+    1: "Annually",   # council rates
+    2: "Annually",   # water authority
+    3: "Annually",   # land tax (SRO)
+    4: "Annually",   # owners corporation
+}
+
+# Default names when the fact is absent but an amount exists
+_OUTGOING_AUTHORITY_DEFAULTS: dict[int, str] = {
+    1: "Council",
+    2: "Water Authority",
+    3: "State Revenue Office",
+    4: "Owners Corporation Insurance",
+}
+
+
+def _format_outgoing_authority_names(
+    answers: dict[str, AnswerObject],
+    store: FactStoreImpl,
+) -> None:
+    """Append ' - Annually' to every populated outgoing authority name.
+
+    For row 4 (OC), if no name is present but an amount exists, default
+    the name to 'Owners Corporation Insurance - Annually'.
+    """
+    for row, suffix in _OUTGOING_AUTHORITY_SUFFIXES.items():
+        authority_id = f"sec32_1.1_outgoing_{row}_authority"
+        amount_id = f"sec32_1.1_outgoing_{row}_amount"
+        authority_answer = answers.get(authority_id)
+        amount_answer = answers.get(amount_id)
+
+        has_amount = (
+            amount_answer is not None
+            and _parse_amount_like(amount_answer.value) is not None
+            and (_parse_amount_like(amount_answer.value) or 0) > 0
+        )
+
+        current_name: str | None = None
+        if authority_answer is not None:
+            v = authority_answer.value
+            current_name = str(v).strip() if v is not None else None
+            if current_name == "":
+                current_name = None
+
+        # If no name but amount exists, use default
+        if current_name is None and has_amount:
+            current_name = _OUTGOING_AUTHORITY_DEFAULTS[row]
+
+        if not current_name:
+            continue
+
+        # Don't double-append the suffix
+        display = current_name
+        if not display.endswith(f"- {suffix}") and not display.endswith(f"– {suffix}"):
+            display = f"{display} - {suffix}"
+
+        if authority_answer is not None:
+            answers[authority_id] = authority_answer.model_copy(update={"value": display})
+        else:
+            # Create a placeholder answer carrying just the display name
+            answers[authority_id] = AnswerObject(
+                question_id=authority_id,
+                question_label=f"1.1 Outgoing {row} - Authority name",
+                value=display,
+            )
+
+
 def _remove_tree(root: Path) -> None:
     for child in sorted(root.rglob("*"), reverse=True):
         if child.is_file():
@@ -1025,7 +1611,11 @@ def load_run_payload(run_dir: str | Path) -> dict[str, Any]:
                 "evidence": [source.model_dump(mode="json") for source in answer.evidence],
                 "options": question.options if question else None,
                 "description": question.description if question else None,
-                "presentation_hints": answer.presentation_hints,
+                "presentation_hints": {
+                    "field_id": qid,
+                    "answer_origin": str(dict(answer.presentation_hints).get("answer_origin") or "authoritative"),
+                    **answer.presentation_hints,
+                },
                 "ai_review": ai_review.get(qid),
             }
         )

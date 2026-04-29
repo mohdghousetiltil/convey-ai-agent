@@ -3,17 +3,21 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   AlertTriangle,
   Bot,
+  BrainCircuit,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
   CircleStop,
   FileText,
+  Loader2,
   Maximize2,
   Minimize2,
+  Paperclip,
   Pencil,
   Send,
   ShieldCheck,
   Sparkles,
+  Upload,
   User,
   Wrench,
   X,
@@ -22,11 +26,22 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   ChatAnswerPayload,
+  CorpusPendingEntry,
+  ProcessDocumentResult,
+  ProposedDocumentChange,
   ProposedPatch,
   ReasoningStep,
+  applyDocumentChanges,
+  confirmCorpusEntry,
+  getRunCorpus,
+  processNewChatDocument,
+  uploadChatFiles,
 } from "../lib/api";
 
 type Mode = "quick" | "standard" | "thorough";
+
+/** Whether this chatbot is scoped to a specific matter or the dashboard. */
+export type ChatbotContext = "matter" | "dashboard";
 
 interface HistoryTurn {
   role: "user" | "assistant";
@@ -49,6 +64,7 @@ interface Message {
   id: string;
   role: "user" | "assistant";
   text: string;
+  attachments?: string[];
   citations?: ChatAnswerPayload["citations"];
   proposed_patches?: ProposedPatch[];
   reasoning_steps?: ReasoningStep[];
@@ -59,6 +75,22 @@ interface Message {
   agent_runs?: ChatAnswerPayload["agent_runs"];
   summary_model?: string | null;
   summary_provider?: string | null;
+  /** If true this message is a re-review confirmation prompt */
+  isReviewConfirm?: boolean;
+}
+
+const REVIEW_AGAIN_PATTERNS = [
+  /\breview\s+(the\s+)?matter\s+again\b/i,
+  /\bre[-\s]?analys[ei]s?\b/i,
+  /\bre[-\s]?extract\b/i,
+  /\bstart\s+over\b/i,
+  /\bredo\s+(the\s+)?(analysis|extraction|review)\b/i,
+  /\brun\s+(the\s+)?(analysis|extraction|review)\s+again\b/i,
+  /\brefresh\s+(the\s+)?matter\b/i,
+];
+
+function isReviewAgainRequest(text: string): boolean {
+  return REVIEW_AGAIN_PATTERNS.some((pattern) => pattern.test(text));
 }
 
 interface ChatbotProps {
@@ -69,29 +101,158 @@ interface ChatbotProps {
     history: HistoryTurn[],
     mode: Mode,
     signal?: AbortSignal,
+    sessionId?: string,
   ) => Promise<ChatAnswerPayload>;
   onApplyPatch?: (questionId: string, newValue: string, reason: string) => Promise<void>;
+  /** Called when the user confirms they want to re-analyse the matter. */
+  onReviewAgain?: () => Promise<void>;
+  /** Called after a successful reprocess so the parent can refresh the run payload. */
+  onRunReprocessed?: () => void;
   initialConflicts?: ConflictPreview[];
   initialTurns?: HistoryTurn[];
   runId?: string;
+  userName?: string | null;
+  suppressMotion?: boolean;
+  chatContext?: ChatbotContext;
+  onResolveTriconveyReference?: (payloadText: string) => Promise<{ resolved: Array<{ name: string; path: string }>; display_name: string; subtitle: string }>;
 }
 
-const WELCOME_MESSAGE: Message = {
-  id: "welcome",
-  role: "assistant",
-  text:
-    "AI review is ready. I can cross-check extracted facts, review uploaded PDFs again, compare sources, and suggest safe corrections before autofill.",
-};
+function stableDropStamp(content: string): number {
+  let hash = 0;
+  for (let i = 0; i < content.length; i += 1) {
+    hash = ((hash << 5) - hash + content.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
 
-const SUGGESTED: string[] = [
-  "What is the annual water charge?",
-  "What are the annual council rates?",
-  "Is the property in a bushfire prone area?",
-  "What planning overlays affect the property?",
-  "Are there any unresolved conflicts in the extracted data?",
-  "What owners corporation fees apply?",
-  "Run full review checklist for this matter.",
+function makeReferenceFile(content: string): File {
+  const stamp = stableDropStamp(content);
+  return new File([content], `triconvey-drop-${stamp}.json`, {
+    type: "application/json",
+    lastModified: stamp,
+  });
+}
+
+function extractLocalPaths(...rawValues: string[]): string[] {
+  const paths = new Set<string>();
+  const pushMatches = (text: string) => {
+    for (const match of text.matchAll(/file:\/\/\/[^\s"'<>]+/gi)) {
+      paths.add(match[0]);
+    }
+    for (const match of text.matchAll(/@?[A-Za-z]:\\[^\r\n"<>|?*]+/g)) {
+      paths.add(match[0].replace(/^@+/, ""));
+    }
+  };
+  for (const raw of rawValues) {
+    const text = raw.trim();
+    if (!text) continue;
+    pushMatches(text);
+    for (const token of text.split(/\s+/)) {
+      const cleaned = token.trim().replace(/^@+/, "");
+      if (cleaned.startsWith("file:///") || /^[A-Za-z]:\\/.test(cleaned)) {
+        paths.add(cleaned);
+      }
+    }
+  }
+  return Array.from(paths);
+}
+
+function isTriconveyReferenceName(name: string): boolean {
+  const lower = name.toLowerCase();
+  return (
+    lower.endsWith(".smokeball.tmp") ||
+    lower.endsWith(".smokeball.json") ||
+    /^triconvey-drop-\d+\.json$/.test(lower) ||
+    lower.endsWith("triconvey-drop.json")
+  );
+}
+
+function extractDroppedFilePaths(files: File[]): string[] {
+  const paths = new Set<string>();
+  for (const file of files) {
+    const candidate = (file as File & { path?: string }).path;
+    if (typeof candidate === "string" && candidate.trim()) {
+      paths.add(candidate.trim());
+    }
+  }
+  return Array.from(paths);
+}
+
+function parseDroppedReferenceText(
+  rawPlain: string,
+  rawUriList = "",
+  rawHtml = "",
+): { localPaths?: string[]; matterPayload?: string } | null {
+  const matterPayload = rawPlain.trim().includes('"MatterId"') ? rawPlain.trim() : undefined;
+  const localPaths = extractLocalPaths(rawPlain, rawUriList, rawHtml);
+  if (!matterPayload && localPaths.length === 0) return null;
+  return { matterPayload, localPaths: localPaths.length ? localPaths : undefined };
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+/** A pending file attachment in the chatbot — may be a real PDF or a TriConvey reference. */
+interface ChatUploadItem {
+  file: File;
+  /** Human-readable label (resolved PDF names replace the raw reference filename). */
+  displayName?: string;
+  /** Secondary line shown under the chip. */
+  subtitle?: string;
+  /** True while we are fetching the TriConvey reference resolution. */
+  resolving?: boolean;
+}
+
+function isSupportedChatUpload(file: File): boolean {
+  const name = file.name.toLowerCase();
+  return file.type === "application/pdf" || name.endsWith(".pdf") || isTriconveyReferenceName(name);
+}
+
+// ---------------------------------------------------------------------------
+// Agent pipeline stages shown while waiting for a response
+// ---------------------------------------------------------------------------
+
+type AgentStage = { label: string; icon: React.ElementType; detail: string };
+
+const MATTER_STAGES: AgentStage[] = [
+  { label: "Reading documents",   icon: FileText,    detail: "Scanning uploaded matter files" },
+  { label: "Extracting facts",    icon: Wrench,      detail: "Pulling relevant facts and figures" },
+  { label: "Cross-checking",      icon: ShieldCheck, detail: "Verifying against known sources" },
+  { label: "Composing answer",    icon: BrainCircuit,detail: "Synthesising findings" },
 ];
+
+const DASHBOARD_STAGES: AgentStage[] = [
+  { label: "Thinking",  icon: BrainCircuit, detail: "Processing your question" },
+  { label: "Searching", icon: Wrench,       detail: "Looking up relevant context" },
+  { label: "Answering", icon: Sparkles,     detail: "Composing response" },
+];
+
+const UPLOAD_STAGES: AgentStage[] = [
+  { label: "Uploading files",    icon: Paperclip,   detail: "Sending documents to server" },
+  { label: "Processing PDFs",    icon: FileText,    detail: "Parsing and indexing content" },
+  { label: "Extracting fields",  icon: Wrench,      detail: "Running extraction pipeline" },
+  { label: "Updating matter",    icon: CheckCircle2,detail: "Merging new facts into the matter" },
+];
+
+// ---------------------------------------------------------------------------
+
+function buildWelcomeMessage(userName?: string | null, chatContext?: ChatbotContext): Message {
+  const name = userName?.trim() ? userName.trim().split(" ")[0] : null;
+  const greeting = name ? `Hi ${name}!` : "Hi there!";
+  if (chatContext === "dashboard") {
+    return {
+      id: "welcome",
+      role: "assistant",
+      text: `${greeting} I'm your workspace assistant. Ask me about your recent matters, how to use this app, or anything else. How can I help?`,
+    };
+  }
+  return {
+    id: "welcome",
+    role: "assistant",
+    text: `${greeting} I'm your AI agent for this matter. I've processed your files and I'm ready to cross-check facts, compare sources, or suggest corrections.\n\nYou can also attach new documents using the 📎 button — I'll extract the relevant information and update the matter fields automatically.\n\nHow can I help today?`,
+  };
+}
 
 const MODES: { id: Mode; label: string }[] = [
   { id: "quick", label: "Basic" },
@@ -99,45 +260,18 @@ const MODES: { id: Mode; label: string }[] = [
   { id: "thorough", label: "Deep" },
 ];
 
-const THINKING_LABELS: Record<Mode, string[]> = {
-  quick: [
-    "thinking",
-    "reviewing the files",
-    "finding the clue",
-    "checking the corpus",
-  ],
-  standard: [
-    "thinking hard",
-    "reviewing the files",
-    "cross-checking sources",
-    "building the branch",
-    "tightening the answer",
-  ],
-  thorough: [
-    "thinking hard",
-    "reviewing the files",
-    "cross-checking every source",
-    "finding the clue",
-    "building the branch",
-    "final AI review in progress",
-  ],
-};
-
-function buildConflictIntro(conflicts: ConflictPreview[]): string {
-  if (!conflicts.length) {
-    return "No unresolved fact conflicts were found. I am ready to help with document questions, source checks, and safe corrections.";
-  }
-  const lines = conflicts.slice(0, 4).map((conflict) => {
-    const summary = conflict.candidates
-      .slice(0, 2)
-      .map((candidate) => {
-        const source = candidate.file ? ` from ${candidate.file}` : "";
-        return `${candidate.extractor} says "${candidate.value}"${source}`;
-      })
-      .join(" vs ");
-    return `- ${conflict.path}: ${summary}`;
+function buildConflictIntro(conflicts: ConflictPreview[]): string | null {
+  if (!conflicts.length) return null;
+  const lines = conflicts.slice(0, 5).map((conflict) => {
+    const field = humanizeFieldId(conflict.path);
+    const files = Array.from(new Set(conflict.candidates.map(c => c.file).filter(Boolean)));
+    if (files.length > 1) {
+      return `- ${field}: Disagreement between "${files[0]}" and "${files[1]}"`;
+    }
+    return `- ${field}: Multiple values suggested by automated extractors`;
   });
-  return `${conflicts.length} unresolved conflict${conflicts.length !== 1 ? "s" : ""} found:\n${lines.join("\n")}\n\nAsk me about any of these and I will help resolve them.`;
+  const count = conflicts.length;
+  return `I've identified ${count} unresolved conflict${count !== 1 ? "s" : ""} across the matter documents. For instance:\n\n${lines.join("\n")}\n\nWhich of these would you like to resolve first?`;
 }
 
 function loadFromSession(runId: string): Message[] | null {
@@ -159,30 +293,6 @@ function saveToSession(runId: string, messages: Message[]) {
   }
 }
 
-function CitationCard({ citation }: { citation: NonNullable<ChatAnswerPayload["citations"]>[number] }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white text-[0.73rem] shadow-sm">
-      <button
-        onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center gap-1.5 px-2.5 py-2 text-left transition-colors hover:bg-slate-50"
-      >
-        <FileText className="h-3 w-3 shrink-0 text-primary/60" />
-        <span className="flex-1 truncate font-semibold text-slate-700">
-          {citation.file || "Unknown file"}
-          {citation.page ? ` - p.${citation.page}` : ""}
-        </span>
-        {open ? <ChevronUp className="h-3 w-3 text-slate-400" /> : <ChevronDown className="h-3 w-3 text-slate-400" />}
-      </button>
-      {open && citation.quote ? (
-        <p className="border-t border-slate-100 px-2.5 pb-2 pt-1.5 italic leading-relaxed text-slate-500">
-          "{citation.quote}"
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
 function humanizeFieldId(qid: string): string {
   return qid
     .replace(/^sec32_/, "")
@@ -196,6 +306,240 @@ function humanizeFieldId(qid: string): string {
 function shortReason(reason: string): string {
   const firstSentence = (reason || "").split(/\.\s/)[0].trim();
   return firstSentence.length > 100 ? `${firstSentence.slice(0, 97)}...` : firstSentence;
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+function CitationCard({ citation }: { citation: NonNullable<ChatAnswerPayload["citations"]>[number] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card text-[0.73rem] shadow-sm">
+      <button
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center gap-1.5 px-2.5 py-2 text-left transition-colors hover:bg-accent"
+      >
+        <FileText className="h-3 w-3 shrink-0 text-primary/60" />
+        <span className="flex-1 truncate font-semibold text-foreground">
+          {citation.file || "Unknown file"}
+          {citation.page ? ` - p.${citation.page}` : ""}
+        </span>
+        {open ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />}
+      </button>
+      {open && citation.quote ? (
+        <p className="border-t border-border px-2.5 pb-2 pt-1.5 italic leading-relaxed text-muted-foreground">
+          "{citation.quote}"
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function CorpusConfirmCard({
+  entry,
+  confirming,
+  onConfirm,
+  onDismiss,
+}: {
+  entry: CorpusPendingEntry;
+  confirming: boolean;
+  onConfirm: () => void;
+  onDismiss: () => void;
+}) {
+  const pageNote =
+    entry.pages_processed < entry.page_count
+      ? ` (first ${entry.pages_processed} of ${entry.page_count} pages)`
+      : "";
+  return (
+    <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-3 text-sm">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 font-semibold text-blue-800">
+          <FileText className="h-4 w-4 shrink-0" />
+          <span>New document extracted: {entry.filename}{pageNote}</span>
+        </div>
+        <button onClick={onDismiss} className="text-blue-400 hover:text-blue-600 shrink-0">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Extracted information</p>
+        <ul className="space-y-0.5 text-blue-900">
+          {entry.highlights.map((h, i) => (
+            <li key={i} className="flex items-start gap-1.5">
+              <span className="mt-0.5 text-blue-400">•</span>
+              <span>{h}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className="text-xs text-blue-600">
+        Confirm to add this information to the matter corpus so it can be used in answers.
+      </p>
+      <div className="flex gap-2">
+        <button
+          onClick={onConfirm}
+          disabled={confirming}
+          className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+        >
+          {confirming ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+          {confirming ? "Adding…" : "Confirm & add to corpus"}
+        </button>
+        <button
+          onClick={onDismiss}
+          className="rounded-lg border border-blue-300 px-4 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+        >
+          Dismiss
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DocumentWarningCard({
+  filename,
+  reason,
+  warningMessage,
+  onProceed,
+  onIgnore,
+  proceeding,
+}: {
+  filename: string;
+  reason: string;
+  warningMessage: string | null | undefined;
+  onProceed: () => void;
+  onIgnore: () => void;
+  proceeding: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 space-y-3 text-sm">
+      <div className="flex items-start gap-2 font-semibold text-amber-800">
+        <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+        <span>This might be the wrong document: <span className="font-normal italic">{filename}</span></span>
+      </div>
+      <p className="text-amber-900 text-xs">
+        {warningMessage || reason || "This document does not appear to be a conveyancing document for this matter."}
+      </p>
+      <p className="text-xs text-amber-700">Would you like me to proceed with this document anyway?</p>
+      <div className="flex gap-2">
+        <button
+          onClick={onProceed}
+          disabled={proceeding}
+          className="flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+        >
+          {proceeding ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+          {proceeding ? "Processing…" : "Yes, proceed"}
+        </button>
+        <button
+          onClick={onIgnore}
+          className="rounded-lg border border-amber-300 px-4 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
+        >
+          Ignore document
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ProposedChangesCard({
+  filename,
+  changes,
+  onApprove,
+  onDismiss,
+  applying,
+}: {
+  filename: string;
+  changes: ProposedDocumentChange[];
+  onApprove: (approvedIds: string[]) => void;
+  onDismiss: () => void;
+  applying: boolean;
+}) {
+  const [selected, setSelected] = React.useState<Set<string>>(
+    () => new Set(changes.map((c) => c.question_id))
+  );
+
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const formatVal = (v: unknown) => {
+    if (v === null || v === undefined) return <span className="italic text-gray-400">empty</span>;
+    if (typeof v === "boolean") return v ? "Yes" : "No";
+    return String(v);
+  };
+
+  return (
+    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-3 text-sm">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 font-semibold text-emerald-800">
+          <FileText className="h-4 w-4 shrink-0" />
+          <span>New information from: {filename}</span>
+        </div>
+        <button onClick={onDismiss} className="text-emerald-400 hover:text-emerald-600">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      {changes.length === 0 ? (
+        <p className="text-xs text-emerald-700">No new or changed information found in this document.</p>
+      ) : (
+        <>
+          <p className="text-xs text-emerald-700">
+            Select the information to add to this matter. Deselect anything that looks incorrect.
+          </p>
+          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+            {changes.map((change) => (
+              <label
+                key={change.question_id}
+                className="flex items-start gap-2.5 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={selected.has(change.question_id)}
+                  onChange={() => toggle(change.question_id)}
+                  className="mt-0.5 h-3.5 w-3.5 accent-emerald-600"
+                />
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-emerald-900">{change.question_label || change.question_id}</span>
+                  {change.current_value !== null && change.current_value !== undefined ? (
+                    <div className="text-xs text-gray-500 truncate">
+                      Was: {formatVal(change.current_value)} → Now: <span className="text-emerald-700 font-medium">{formatVal(change.proposed_value)}</span>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-emerald-700 truncate">
+                      New: <span className="font-medium">{formatVal(change.proposed_value)}</span>
+                    </div>
+                  )}
+                  {change.source && (
+                    <div className="text-[10px] text-gray-400 truncate">{change.source}</div>
+                  )}
+                </div>
+              </label>
+            ))}
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => onApprove([...selected])}
+              disabled={applying || selected.size === 0}
+              className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {applying ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+              {applying ? "Applying…" : `Apply ${selected.size} change${selected.size !== 1 ? "s" : ""}`}
+            </button>
+            <button
+              onClick={onDismiss}
+              className="rounded-lg border border-emerald-300 px-4 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+            >
+              Dismiss
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 function PatchCard({
@@ -221,16 +565,16 @@ function PatchCard({
         isApplied
           ? "border-emerald-200 bg-emerald-50/60"
           : isDismissed
-            ? "border-slate-200 bg-slate-50 opacity-50"
+            ? "border-border bg-muted opacity-50"
             : "border-amber-200 bg-amber-50/70",
       ].join(" ")}
     >
       <div className="flex items-center gap-3 px-3 py-2.5">
         <AlertTriangle className={["h-3.5 w-3.5 shrink-0", isApplied ? "text-emerald-500" : "text-amber-500"].join(" ")} />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[0.78rem] font-semibold text-slate-800">{label}</p>
-          <p className="text-[0.76rem] font-bold text-slate-700">{patch.new_value}</p>
-          {brief ? <p className="mt-0.5 truncate text-[0.7rem] text-slate-400">{brief}</p> : null}
+          <p className="truncate text-[0.78rem] font-semibold text-foreground">{label}</p>
+          <p className="text-[0.76rem] font-bold text-foreground">{patch.new_value}</p>
+          {brief ? <p className="mt-0.5 truncate text-[0.7rem] text-muted-foreground">{brief}</p> : null}
         </div>
         {state === "pending" ? (
           <div className="flex shrink-0 gap-1">
@@ -243,17 +587,135 @@ function PatchCard({
             </button>
             <button
               onClick={onDismiss}
-              className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[0.7rem] font-semibold text-slate-500 transition-colors hover:bg-slate-50"
+              className="flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1 text-[0.7rem] font-semibold text-muted-foreground transition-colors hover:bg-accent"
             >
               <XCircle className="h-3 w-3" />
             </button>
           </div>
         ) : (
-          <span className={["text-[0.68rem] font-bold uppercase tracking-wider", isApplied ? "text-emerald-600" : "text-slate-400"].join(" ")}>
+          <span className={["text-[0.68rem] font-bold uppercase tracking-wider", isApplied ? "text-emerald-600" : "text-muted-foreground"].join(" ")}>
             {isApplied ? "Applied" : "Dismissed"}
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Multi-layer agent pipeline shown while waiting for a response. */
+function AgentPipeline({
+  stages,
+  activeIndex,
+  suppressMotion,
+}: {
+  stages: AgentStage[];
+  activeIndex: number;
+  suppressMotion: boolean;
+}) {
+  const stage = stages[activeIndex] || stages[0];
+
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
+        {suppressMotion ? (
+          <Loader2 className="h-3 w-3 text-primary" />
+        ) : (
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          >
+            <Loader2 className="h-3 w-3 text-primary" />
+          </motion.div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={stage.label}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.2 }}
+            className="flex items-center gap-2"
+          >
+            <span className="text-[0.8rem] font-semibold text-foreground truncate">
+              {stage.label}
+            </span>
+            <span className="text-[0.72rem] text-muted-foreground hidden sm:inline whitespace-nowrap">
+              — {stage.detail}
+            </span>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+type ThinkingPhase = "uploading" | "reprocessing" | "thinking";
+
+function ThinkingIndicator({
+  mode,
+  phase,
+  chatContext,
+  suppressMotion = false,
+}: {
+  mode: Mode;
+  phase: ThinkingPhase;
+  chatContext: ChatbotContext;
+  suppressMotion?: boolean;
+}) {
+  const [stageIndex, setStageIndex] = useState(0);
+  const [elapsedSecs, setElapsedSecs] = useState(0);
+
+  const stages: AgentStage[] = useMemo(() => {
+    if (phase === "uploading") return UPLOAD_STAGES;
+    return chatContext === "dashboard" ? DASHBOARD_STAGES : MATTER_STAGES;
+  }, [phase, chatContext]);
+
+  useEffect(() => {
+    setStageIndex(0);
+    setElapsedSecs(0);
+  }, [stages]);
+
+  // Advance stage every 3.5 s
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setStageIndex((i) => Math.min(i + 1, stages.length - 1));
+    }, 3500);
+    return () => window.clearInterval(timer);
+  }, [stages]);
+
+  // Elapsed seconds counter
+  useEffect(() => {
+    const timer = window.setInterval(() => setElapsedSecs((s) => s + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const wrapper = (
+    <div className="flex gap-2.5">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-foreground shadow-sm mt-0.5">
+        <Bot className="h-3.5 w-3.5 text-white" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <AgentPipeline stages={stages} activeIndex={stageIndex} suppressMotion={suppressMotion} />
+        <p className="px-0.5 text-[0.68rem] font-semibold text-muted-foreground/60">{elapsedSecs}s elapsed</p>
+      </div>
+    </div>
+  );
+
+  if (suppressMotion) return wrapper;
+  return <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>{wrapper}</motion.div>;
+}
+
+/** A small chip showing a pending attachment. */
+function AttachmentChip({ name, onRemove }: { name: string; onRemove: () => void }) {
+  return (
+    <div className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/8 px-2.5 py-1 text-[0.72rem] font-semibold text-primary">
+      <FileText className="h-3 w-3 shrink-0" />
+      <span className="max-w-[120px] truncate">{name}</span>
+      <button onClick={onRemove} className="ml-0.5 rounded text-primary/60 hover:text-primary">
+        <X className="h-3 w-3" />
+      </button>
     </div>
   );
 }
@@ -263,31 +725,43 @@ function MessageBubble({
   onApplyPatch,
   onDismissPatch,
   onEdit,
+  suppressMotion,
 }: {
   msg: Message;
   onApplyPatch: (msgId: string, questionId: string) => void;
   onDismissPatch: (msgId: string, questionId: string) => void;
   onEdit?: (msgId: string, text: string) => void;
+  onConfirmReview?: () => void;
+  onDismissReview?: (msgId: string) => void;
+  suppressMotion?: boolean;
 }) {
   const isUser = msg.role === "user";
   const [citationsOpen, setCitationsOpen] = useState(false);
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`flex gap-2.5 group/bubble ${isUser ? "flex-row-reverse" : ""}`}
-    >
-      <div className={["mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl shadow-sm", isUser ? "bg-slate-200" : "bg-primary/10"].join(" ")}>
-        {isUser ? <User className="h-3.5 w-3.5 text-slate-600" /> : <Bot className="h-3.5 w-3.5 text-primary" />}
+  const content = (
+    <>
+      <div className={["mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl shadow-sm", isUser ? "bg-muted" : "bg-primary/10"].join(" ")}>
+        {isUser ? <User className="h-3.5 w-3.5 text-muted-foreground" /> : <Bot className="h-3.5 w-3.5 text-primary" />}
       </div>
 
       <div className={`flex max-w-[88%] flex-col gap-2 ${isUser ? "items-end" : "items-start"}`}>
+        {/* Attachment chips on user messages */}
+        {isUser && msg.attachments && msg.attachments.length > 0 ? (
+          <div className="flex flex-wrap gap-1 justify-end">
+            {msg.attachments.map((name) => (
+              <div key={name} className="inline-flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/8 px-2 py-0.5 text-[0.7rem] font-semibold text-primary">
+                <FileText className="h-2.5 w-2.5" />
+                <span className="max-w-[100px] truncate">{name}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
         <div className="flex items-start gap-1.5">
           {isUser && onEdit ? (
             <button
               onClick={() => onEdit(msg.id, msg.text)}
-              className="mt-2 shrink-0 rounded-lg p-1 text-slate-400 opacity-0 transition-opacity hover:bg-slate-100 hover:text-slate-600 group-hover/bubble:opacity-100"
+              className="mt-2 shrink-0 rounded-lg p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover/bubble:opacity-100"
               title="Edit and resend"
             >
               <Pencil className="h-3 w-3" />
@@ -295,20 +769,40 @@ function MessageBubble({
           ) : null}
           <div
             className={[
-              "rounded-3xl px-4 py-3 text-[0.84rem] leading-relaxed shadow-sm",
+              "rounded-2xl px-4 py-3 text-[0.84rem] leading-relaxed shadow-sm transition-all",
               isUser
-                ? "rounded-tr-md bg-primary text-white shadow-primary/20"
-                : "rounded-tl-md border border-slate-200/80 bg-white text-slate-800",
+                ? "rounded-tr-sm bg-linear-to-br from-primary to-indigo-600 text-white shadow-lg shadow-primary/10"
+                : "rounded-tl-sm border border-border/50 bg-card/90 backdrop-blur-sm text-foreground",
             ].join(" ")}
           >
             <p className="whitespace-pre-wrap">{msg.text}</p>
           </div>
         </div>
 
+        {/* Re-review confirmation buttons */}
+        {!isUser && msg.isReviewConfirm ? (
+          <div className="flex gap-2 px-1">
+            <button
+              onClick={onConfirmReview}
+              className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-[0.75rem] font-semibold text-white transition-colors hover:bg-primary/90"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Yes, re-analyse
+            </button>
+            <button
+              onClick={() => onDismissReview?.(msg.id)}
+              className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-[0.75rem] font-semibold text-muted-foreground transition-colors hover:bg-accent"
+            >
+              <XCircle className="h-3.5 w-3.5" />
+              No, cancel
+            </button>
+          </div>
+        ) : null}
+
         {!isUser && (msg.tool_calls_made || msg.critic_applied || msg.summary_model) ? (
           <div className="flex flex-wrap items-center gap-1.5 px-1">
             {msg.tool_calls_made ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[0.67rem] font-medium text-slate-500">
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[0.67rem] font-medium text-muted-foreground">
                 <Wrench className="h-2.5 w-2.5" />
                 {msg.tool_calls_made} tool call{msg.tool_calls_made !== 1 ? "s" : ""}
               </span>
@@ -332,7 +826,7 @@ function MessageBubble({
           <div className="w-full space-y-1">
             <button
               onClick={() => setCitationsOpen((value) => !value)}
-              className="flex items-center gap-1.5 px-1 text-[0.7rem] font-semibold text-slate-400 transition-colors hover:text-slate-600"
+              className="flex items-center gap-1.5 px-1 text-[0.7rem] font-semibold text-muted-foreground transition-colors hover:text-foreground"
             >
               <FileText className="h-3 w-3" />
               {msg.citations.length} source{msg.citations.length !== 1 ? "s" : ""}
@@ -366,85 +860,72 @@ function MessageBubble({
         ) : null}
 
         {!isUser && msg.reasoning_steps && msg.reasoning_steps.length > 0 ? (
-          <details className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[0.73rem] shadow-sm">
-            <summary className="cursor-pointer font-semibold text-slate-600">
+          <details className="w-full rounded-xl border border-border bg-card px-3 py-2 text-[0.73rem] shadow-sm">
+            <summary className="cursor-pointer font-semibold text-muted-foreground">
               Reasoning ({msg.reasoning_steps.length} step{msg.reasoning_steps.length !== 1 ? "s" : ""})
             </summary>
-            <div className="mt-2 space-y-2 text-slate-500">
+            <div className="mt-2 space-y-2 text-muted-foreground">
               {msg.reasoning_steps.map((step, index) => (
-                <div key={`${msg.id}-step-${index}`} className="rounded-lg bg-slate-50 px-3 py-2">
-                  <div className="font-semibold text-slate-700">
+                <div key={`${msg.id}-step-${index}`} className="rounded-lg bg-muted px-3 py-2">
+                  <div className="font-semibold text-foreground">
                     {index + 1}. {step.tool}
                   </div>
-                  <div className="mt-1 text-slate-500">{step.summary}</div>
+                  <div className="mt-1 text-muted-foreground">{step.summary}</div>
                 </div>
               ))}
             </div>
           </details>
         ) : null}
       </div>
-    </motion.div>
+    </>
   );
-}
 
-function ThinkingIndicator({ mode, uploadState }: { mode: Mode; uploadState: string | null }) {
-  const [labelIndex, setLabelIndex] = useState(0);
-  const labels = useMemo(() => {
-    if (uploadState) {
-      return [uploadState];
-    }
-    return THINKING_LABELS[mode];
-  }, [mode, uploadState]);
-
-  useEffect(() => {
-    setLabelIndex(0);
-  }, [labels]);
-
-  useEffect(() => {
-    if (labels.length <= 1) return;
-    const timer = window.setInterval(() => {
-      setLabelIndex((current) => (current + 1) % labels.length);
-    }, 1700);
-    return () => window.clearInterval(timer);
-  }, [labels]);
+  if (suppressMotion) {
+    return <div className={`flex gap-2.5 group/bubble ${isUser ? "flex-row-reverse" : ""}`}>{content}</div>;
+  }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2.5">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">
-        <Bot className="h-3.5 w-3.5 text-primary" />
-      </div>
-      <div className="flex items-center gap-3 rounded-3xl rounded-tl-md border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="flex items-center gap-1">
-          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />
-          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]" />
-          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400" />
-        </div>
-        <span className="text-[0.78rem] font-medium capitalize text-slate-500">{labels[labelIndex]}</span>
-      </div>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`flex gap-2.5 group/bubble ${isUser ? "flex-row-reverse" : ""}`}
+    >
+      {content}
     </motion.div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Main Chatbot component
+// ---------------------------------------------------------------------------
 
 export function Chatbot({
   isOpen,
   onClose,
   onAsk,
   onApplyPatch,
+  onReviewAgain,
+  onRunReprocessed,
   initialConflicts = [],
   initialTurns = [],
   runId,
+  userName,
+  suppressMotion = false,
+  chatContext = "matter",
+  onResolveTriconveyReference,
 }: ChatbotProps) {
   const [messages, setMessages] = useState<Message[]>(() => {
     if (runId) {
       const stored = loadFromSession(runId);
       if (stored) return stored;
     }
-    return [WELCOME_MESSAGE];
+    return [buildWelcomeMessage(userName, chatContext)];
   });
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [mode, setMode] = useState<Mode>("standard");
   const [expanded, setExpanded] = useState(false);
+  const [sessionId] = useState<string>(() => crypto.randomUUID());
   const [conflictInjected, setConflictInjected] = useState(() => {
     if (runId) {
       const stored = loadFromSession(runId);
@@ -452,12 +933,27 @@ export function Chatbot({
     }
     return false;
   });
-  const [uploadState, setUploadState] = useState<string | null>(null);
+
+  // ── File attachment state ─────────────────────────────────────────────────
+  const [pendingFiles, setPendingFiles] = useState<ChatUploadItem[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  // ── Corpus confirmation state ─────────────────────────────────────────────
+  const [corpusPending, setCorpusPending] = useState<CorpusPendingEntry[]>([]);
+  const [confirmingCorpus, setConfirmingCorpus] = useState<Set<string>>(new Set());
+  // ── Incremental document processing state ─────────────────────────────────
+  type DocProcState =
+    | { phase: "warning"; result: ProcessDocumentResult }
+    | { phase: "changes"; result: ProcessDocumentResult; applying: boolean }
+    | { phase: "processing"; filename: string };
+  const [docProcQueue, setDocProcQueue] = useState<DocProcState[]>([]);
+  const [thinkingPhase, setThinkingPhase] = useState<ThinkingPhase>("thinking");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const requestRef = useRef<AbortController | null>(null);
   const prevRunIdRef = useRef(runId);
+
   useEffect(() => {
     if (runId && messages.length > 0) {
       saveToSession(runId, messages);
@@ -471,7 +967,7 @@ export function Chatbot({
     requestRef.current?.abort();
     requestRef.current = null;
     setSending(false);
-    setUploadState(null);
+    setPendingFiles([]);
     setInput("");
 
     if (runId) {
@@ -482,21 +978,21 @@ export function Chatbot({
         return;
       }
     }
-    setMessages([WELCOME_MESSAGE]);
+    setMessages([buildWelcomeMessage(userName, chatContext)]);
     setConflictInjected(false);
   }, [runId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, sending]);
+    bottomRef.current?.scrollIntoView({ behavior: suppressMotion ? "auto" : "smooth" });
+  }, [messages, sending, suppressMotion]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !suppressMotion) {
       window.setTimeout(() => textareaRef.current?.focus(), 300);
     } else {
       setInput("");
     }
-  }, [isOpen]);
+  }, [isOpen, suppressMotion]);
 
   useEffect(() => {
     return () => {
@@ -507,17 +1003,13 @@ export function Chatbot({
 
   useEffect(() => {
     if (!isOpen || conflictInjected) return;
-    setMessages((prev) => {
-      if (prev.some((message) => message.id === "conflicts-intro")) return prev;
-      return [
-        ...prev,
-        {
-          id: "conflicts-intro",
-          role: "assistant",
-          text: buildConflictIntro(initialConflicts),
-        },
-      ];
-    });
+    const introText = buildConflictIntro(initialConflicts);
+    if (introText) {
+      setMessages((prev) => {
+        if (prev.some((message) => message.id === "conflicts-intro")) return prev;
+        return [...prev, { id: "conflicts-intro", role: "assistant", text: introText }];
+      });
+    }
     setConflictInjected(true);
   }, [isOpen, conflictInjected, initialConflicts]);
 
@@ -539,19 +1031,223 @@ export function Chatbot({
       .filter((message) => message.id !== "welcome" && message.id !== "conflicts-intro")
       .map((message) => ({ role: message.role, content: message.text }));
 
+  const appendFiles = async (nextFiles: File[]) => {
+    // Build initial items — TriConvey references start in "resolving" state
+    const nextItems: ChatUploadItem[] = nextFiles.map((file) => {
+      if (isTriconveyReferenceName(file.name)) {
+        return { file, displayName: "TriConvey document", subtitle: "Loading PDFs…", resolving: true };
+      }
+      return { file };
+    });
+
+    setPendingFiles((prev) => {
+      const existing = new Set(prev.map((item) => `${item.file.name}:${item.file.size}:${item.file.lastModified}`));
+      return [...prev, ...nextItems.filter((item) => !existing.has(`${item.file.name}:${item.file.size}:${item.file.lastModified}`))];
+    });
+
+    if (!onResolveTriconveyReference) return;
+
+    // Resolve each TriConvey reference and update the chip once resolved
+    await Promise.all(
+      nextFiles.map(async (file) => {
+        if (!isTriconveyReferenceName(file.name)) return;
+        const key = `${file.name}:${file.size}:${file.lastModified}`;
+        const payloadText = await file.text();
+
+        let resolved: { displayName: string; subtitle: string } = {
+          displayName: "TriConvey document",
+          subtitle: "Could not load PDFs — open them in TriConvey first",
+        };
+
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          try {
+            const result = await onResolveTriconveyReference(payloadText);
+            const names = result.resolved.map((r) => r.name).filter(Boolean);
+            if (names.length > 0) {
+              resolved = {
+                displayName: names.join(", "),
+                subtitle: `${names.length} PDF${names.length === 1 ? "" : "s"} from TriConvey`,
+              };
+              break;
+            }
+          } catch {
+            // retry
+          }
+          if (attempt < 2) await delay(attempt === 0 ? 1000 : 1200);
+        }
+
+        // Update the chip with resolved names
+        setPendingFiles((prev) =>
+          prev.map((item) =>
+            `${item.file.name}:${item.file.size}:${item.file.lastModified}` === key
+              ? { ...item, ...resolved, resolving: false }
+              : item
+          )
+        );
+      })
+    );
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(event.target.files ?? []).filter(isSupportedChatUpload);
+    void appendFiles(selected);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const plainText = e.dataTransfer.getData("text/plain");
+    const uriList = e.dataTransfer.getData("text/uri-list");
+    const htmlText = e.dataTransfer.getData("text/html");
+    const parsed = parseDroppedReferenceText(plainText, uriList, htmlText);
+    const droppedFiles = Array.from(e.dataTransfer.files ?? []).filter(isSupportedChatUpload);
+    const droppedFilePaths = extractDroppedFilePaths(droppedFiles);
+    const droppedPdfFiles = droppedFiles.filter((f) => !isTriconveyReferenceName(f.name));
+    const hasOnlyTriconveyRefs =
+      droppedFiles.length > 0 && droppedFiles.every((f) => isTriconveyReferenceName(f.name));
+
+    // 1. Desktop file paths (e.g. from Windows Explorer or TriConvey)
+    if (droppedFilePaths.length) {
+      void appendFiles([makeReferenceFile(JSON.stringify({ LocalPaths: droppedFilePaths }, null, 2))]);
+      return;
+    }
+    // 2. Local paths in drag payload text (TriConvey drag from document list)
+    if (parsed?.localPaths?.length) {
+      void appendFiles([makeReferenceFile(JSON.stringify({ LocalPaths: parsed.localPaths }, null, 2))]);
+      return;
+    }
+    // 3. Plain PDFs dropped directly
+    if (droppedPdfFiles.length > 0) {
+      void appendFiles(droppedPdfFiles);
+      return;
+    }
+    // 4. Matter payload from TriConvey
+    if (parsed?.matterPayload) {
+      void appendFiles([makeReferenceFile(parsed.matterPayload)]);
+      return;
+    }
+    // 5. TriConvey reference files (.smokeball.tmp / .json)
+    if (hasOnlyTriconveyRefs) {
+      void appendFiles(droppedFiles);
+      return;
+    }
+    if (droppedFiles.length > 0) {
+      void appendFiles(droppedFiles);
+    }
+  };
+
+  const removeFile = (name: string) => {
+    setPendingFiles((prev) => prev.filter((item) => item.file.name !== name));
+  };
+
+  const handleConfirmReviewAgain = async () => {
+    if (!onReviewAgain) return;
+    // Replace confirm message with acknowledgement
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.isReviewConfirm
+          ? { ...m, isReviewConfirm: false, text: "Re-analysing the matter — I'll update all fields once done. This may take a minute." }
+          : m,
+      ),
+    );
+    try {
+      await onReviewAgain();
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        { id: `${Date.now()}-err`, role: "assistant", text: `Re-analysis failed: ${err instanceof Error ? err.message : "unknown error"}` },
+      ]);
+    }
+  };
+
   const handleSend = async (text?: string) => {
     const question = (text ?? input).trim();
-    if (!question || sending) return;
+    const hasFiles = pendingFiles.length > 0;
+    if ((!question && !hasFiles) || sending) return;
+
+    // ── Intercept "review again" intent ─────────────────────────────────────
+    if (chatContext === "matter" && onReviewAgain && isReviewAgainRequest(question)) {
+      setMessages((prev) => [
+        ...prev,
+        { id: `${Date.now()}-user`, role: "user", text: question },
+        {
+          id: `${Date.now()}-confirm`,
+          role: "assistant",
+          text: "Do you want me to re-analyse this matter with all current documents? I'll re-extract every field and update the review screen.",
+          isReviewConfirm: true,
+        },
+      ]);
+      setInput("");
+      return;
+    }
 
     const history = buildHistory();
-    setMessages((prev) => [...prev, { id: `${Date.now()}-user`, role: "user", text: question }]);
+    const attachmentNames = pendingFiles.map((item) => item.displayName || item.file.name);
+    const filesToUpload = pendingFiles.map((item) => item.file);
+    const questionText = question || `Please extract and update all relevant matter fields from the attached document${filesToUpload.length > 1 ? "s" : ""}.`;
+
+    setMessages((prev) => [
+      ...prev,
+      { id: `${Date.now()}-user`, role: "user", text: questionText, attachments: attachmentNames.length ? attachmentNames : undefined },
+    ]);
     setInput("");
+    setPendingFiles([]);
     setSending(true);
     const controller = new AbortController();
     requestRef.current = controller;
 
     try {
-      const response = await onAsk(question, history, mode, controller.signal);
+      // ── Step 1: Process each file individually (validate → extract → propose) ──
+      if (hasFiles && runId) {
+        setThinkingPhase("uploading");
+        for (const file of filesToUpload) {
+          // Show a "processing" placeholder immediately
+          setDocProcQueue((prev) => [...prev, { phase: "processing", filename: file.name }]);
+          try {
+            const result = await processNewChatDocument(runId, file);
+            // Remove the placeholder
+            setDocProcQueue((prev) => prev.filter(
+              (s) => !(s.phase === "processing" && s.filename === file.name)
+            ));
+            if (result.already_exists) {
+              setMessages((prev) => [
+                ...prev,
+                { id: `${Date.now()}-dup`, role: "assistant", text: `ℹ️ **${result.filename ?? file.name}** is already part of this matter — it was included in the original documents. If you have an updated version, rename the file and drop it again.` },
+              ]);
+              continue;
+            }
+            if (result.error) {
+              setMessages((prev) => [
+                ...prev,
+                { id: `${Date.now()}-doc-err`, role: "assistant", text: `Could not process ${file.name}: ${result.error}` },
+              ]);
+              continue;
+            }
+            // If suspicious → show warning card first
+            if (result.validation?.is_suspicious) {
+              setDocProcQueue((prev) => [...prev, { phase: "warning", result }]);
+            } else {
+              // Go straight to proposed changes
+              setDocProcQueue((prev) => [...prev, { phase: "changes", result, applying: false }]);
+            }
+          } catch (uploadErr) {
+            setDocProcQueue((prev) => prev.filter(
+              (s) => !(s.phase === "processing" && s.filename === file.name)
+            ));
+            const msg = uploadErr instanceof Error ? uploadErr.message : "Upload failed";
+            setMessages((prev) => [
+              ...prev,
+              { id: `${Date.now()}-upload-err`, role: "assistant", text: `Failed to process ${file.name}: ${msg}` },
+            ]);
+          }
+        }
+      }
+
+      // ── Step 2: Ask the AI ───────────────────────────────────────────────
+      setThinkingPhase("thinking");
+      const response = await onAsk(questionText, history, mode, controller.signal, sessionId);
       setMessages((prev) => [
         ...prev,
         {
@@ -564,7 +1260,9 @@ export function Chatbot({
           tool_calls_made: response.tool_calls_made,
           confidence_note: response.confidence_note,
           critic_applied: response.critic_applied,
-          patchStates: Object.fromEntries((response.proposed_patches ?? []).map((patch) => [patch.question_id, "pending" as const])),
+          patchStates: Object.fromEntries(
+            (response.proposed_patches ?? []).map((patch) => [patch.question_id, "pending" as const]),
+          ),
           agent_runs: response.agent_runs,
           summary_model: response.summary_model,
           summary_provider: response.summary_provider,
@@ -586,6 +1284,7 @@ export function Chatbot({
     } finally {
       requestRef.current = null;
       setSending(false);
+      setThinkingPhase("thinking");
     }
   };
 
@@ -593,6 +1292,7 @@ export function Chatbot({
     requestRef.current?.abort();
     requestRef.current = null;
     setSending(false);
+    setThinkingPhase("thinking");
   };
 
   const handleEditMessage = (msgId: string, text: string) => {
@@ -605,7 +1305,9 @@ export function Chatbot({
     if (index === -1) return;
     setMessages((prev) => prev.slice(0, index));
     setInput(text);
-    window.setTimeout(() => textareaRef.current?.focus(), 50);
+    if (!suppressMotion) {
+      window.setTimeout(() => textareaRef.current?.focus(), 50);
+    }
   };
 
   const handleApplyPatch = async (msgId: string, questionId: string) => {
@@ -633,97 +1335,295 @@ export function Chatbot({
     );
   };
 
-  const isBusy = sending || Boolean(uploadState);
-  const statusText = isBusy ? "multi-agent review" : "ready";
+  const assistantPaused = suppressMotion;
+  const isBusy = assistantPaused || sending;
+  const isDashboard = chatContext === "dashboard";
+  const agentLabel = isDashboard ? "Assistant" : "Matter Agent";
+  const statusText = isBusy ? (isDashboard ? "thinking" : "multi-agent review") : "ready";
   const panelWidth = expanded ? 660 : 500;
-  const showSuggestions = messages.length <= 2 && !sending;
+  const lastUserIndex = messages.reduce((last, message, index) => (message.role === "user" ? index : last), -1);
+  const canSend = (input.trim().length > 0 || pendingFiles.length > 0) && !assistantPaused;
 
-  return (
-    <motion.div
-      initial={false}
-      animate={{ width: isOpen ? panelWidth : 0, opacity: isOpen ? 1 : 0 }}
-      transition={{ type: "spring", stiffness: 320, damping: 32 }}
-      className="relative z-10 flex h-full shrink-0 flex-col overflow-hidden border-l border-slate-200 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.08),_transparent_38%),linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] shadow-2xl"
-    >
-      <div className="flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="group/icon relative flex h-10 w-10 items-center justify-center rounded-[1.1rem] bg-[linear-gradient(135deg,#0f172a_0%,#1e3a8a_55%,#0ea5e9_100%)] text-white shadow-lg shadow-sky-900/20 transition-transform duration-200 hover:scale-105">
-            <Bot className="h-4 w-4" />
-            <Sparkles className="absolute -right-0.5 -top-0.5 h-3 w-3 text-sky-200 transition-transform duration-300 group-hover/icon:-translate-y-0.5 group-hover/icon:translate-x-0.5 group-hover/icon:rotate-12" />
-            <span className="absolute inset-0 rounded-[1.1rem] border border-white/10 transition-opacity duration-200 group-hover/icon:opacity-0" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold leading-tight text-slate-900">AI Agent</h3>
-            <div className="flex items-center gap-1.5">
-              <span className={["h-1.5 w-1.5 rounded-full", isBusy ? "animate-pulse bg-amber-400" : "bg-emerald-500"].join(" ")} />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{statusText}</span>
+  const handleDismissReviewConfirm = (msgId: string) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === msgId ? { ...m, isReviewConfirm: false, text: "Okay, no problem! Let me know if you need anything else." } : m,
+      ),
+    );
+  };
+
+  const messageList = suppressMotion ? (
+    messages.map((message, index) => (
+      <MessageBubble
+        key={message.id}
+        msg={message}
+        onApplyPatch={handleApplyPatch}
+        onDismissPatch={handleDismissPatch}
+        onEdit={index === lastUserIndex ? handleEditMessage : undefined}
+        onConfirmReview={handleConfirmReviewAgain}
+        onDismissReview={handleDismissReviewConfirm}
+        suppressMotion
+      />
+    ))
+  ) : (
+    <AnimatePresence initial={false}>
+      {messages.map((message, index) => (
+        <MessageBubble
+          key={message.id}
+          msg={message}
+          onApplyPatch={handleApplyPatch}
+          onDismissPatch={handleDismissPatch}
+          onEdit={index === lastUserIndex ? handleEditMessage : undefined}
+          onConfirmReview={handleConfirmReviewAgain}
+          onDismissReview={handleDismissReviewConfirm}
+        />
+      ))}
+    </AnimatePresence>
+  );
+
+  const shell = (
+    <>
+      {/* Header */}
+      <div className="flex shrink-0 flex-col gap-3 border-b border-border bg-card px-4 py-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="group/icon relative flex h-11 w-11 items-center justify-center rounded-[1.1rem] bg-foreground text-background shadow-lg shadow-black/20">
+              {isDashboard ? <Sparkles className="h-4 w-4 relative z-10" /> : <Bot className="h-4 w-4 relative z-10" />}
+              {!isDashboard ? (
+                <Sparkles className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 text-sky-200 transition-transform duration-500 group-hover/icon:-translate-y-1 group-hover/icon:translate-x-1 group-hover/icon:rotate-12" />
+              ) : null}
+              <div className="absolute inset-0 rounded-[1.1rem] bg-white/10 opacity-0 transition-opacity group-hover/icon:opacity-100" />
+              <span className="absolute inset-0 rounded-[1.1rem] border border-white/20" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold leading-tight text-foreground">{agentLabel}</h3>
+              <div className="flex items-center gap-1.5">
+                <span className={["h-1.5 w-1.5 rounded-full", isBusy ? (suppressMotion ? "bg-amber-400" : "animate-pulse bg-amber-400") : "bg-emerald-500"].join(" ")} />
+                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{statusText}</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={mode}
-            onChange={(event) => setMode(event.target.value as Mode)}
-            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-[0.74rem] font-semibold text-slate-600 outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
-          >
-            {MODES.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() => setExpanded((value) => !value)}
-            className="rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-slate-100"
-            title={expanded ? "Collapse" : "Expand"}
-          >
-            {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-          </button>
-          <button onClick={onClose} className="rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-slate-100">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
-      <div className="custom-scrollbar flex-1 space-y-5 overflow-y-auto px-4 py-4">
-        <AnimatePresence initial={false}>
-          {(() => {
-            const lastUserIndex = messages.reduce((last, message, index) => (message.role === "user" ? index : last), -1);
-            return messages.map((message, index) => (
-              <MessageBubble
-                key={message.id}
-                msg={message}
-                onApplyPatch={handleApplyPatch}
-                onDismissPatch={handleDismissPatch}
-                onEdit={index === lastUserIndex ? handleEditMessage : undefined}
-              />
-            ));
-          })()}
-        </AnimatePresence>
-        {sending ? <ThinkingIndicator mode={mode} uploadState={uploadState} /> : null}
-        <div ref={bottomRef} />
-      </div>
-
-      {showSuggestions ? (
-        <div className="px-4 pb-2 shrink-0">
-          <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Suggested</p>
-          <div className="flex flex-wrap gap-2">
-            {SUGGESTED.map((question) => (
-              <button
-                key={question}
-                onClick={() => void handleSend(question)}
-                disabled={sending}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-left text-[0.76rem] text-slate-600 shadow-sm transition-colors hover:border-primary hover:text-primary disabled:opacity-40"
-              >
-                {question}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <select
+              value={mode}
+              onChange={(event) => setMode(event.target.value as Mode)}
+              className="h-9 rounded-xl border border-border bg-card px-3 text-[0.74rem] font-semibold text-foreground outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+            >
+              {MODES.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() => setExpanded((value) => !value)}
+              className="rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-accent"
+              title={expanded ? "Collapse" : "Expand"}
+            >
+              {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </button>
+            <button onClick={onClose} className="rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-accent">
+              <X className="h-4 w-4" />
+            </button>
           </div>
         </div>
-      ) : null}
+      </div>
 
-      <div className="border-t border-slate-200 bg-white/85 px-3 pb-3 pt-2 backdrop-blur shrink-0">
-        <div className="relative flex items-end gap-2 rounded-3xl border border-slate-200 bg-slate-50/90 px-3 py-2 transition-colors focus-within:border-primary focus-within:bg-white">
+      {/* Messages */}
+      <div className="custom-scrollbar relative flex-1 overflow-y-auto bg-muted/20">
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.03]"
+          style={{ backgroundImage: `radial-gradient(circle at 1px 1px, #000 1px, transparent 0)`, backgroundSize: "24px 24px" }}
+        />
+        <div className="relative space-y-5 px-4 py-6">
+          {messageList}
+          {sending ? (
+            <ThinkingIndicator
+              mode={mode}
+              phase={thinkingPhase}
+              chatContext={chatContext}
+              suppressMotion={suppressMotion}
+            />
+          ) : null}
+
+          {/* Corpus pending confirmation cards (legacy path) */}
+          {corpusPending.length > 0 ? (
+            <div className="mt-3 space-y-3 px-1">
+              {corpusPending.map((entry) => (
+                <CorpusConfirmCard
+                  key={entry.document_id}
+                  entry={entry}
+                  confirming={confirmingCorpus.has(entry.document_id)}
+                  onConfirm={async () => {
+                    if (!runId) return;
+                    setConfirmingCorpus((prev) => new Set([...prev, entry.document_id]));
+                    try {
+                      const result = await confirmCorpusEntry(runId, entry.document_id);
+                      setCorpusPending((prev) => prev.filter((e) => e.document_id !== entry.document_id));
+                      setMessages((prev) => [
+                        ...prev,
+                        {
+                          id: `${Date.now()}-corpus-confirmed`,
+                          role: "assistant",
+                          text: result.message || `Document corpus updated with ${entry.filename}.`,
+                        },
+                      ]);
+                    } catch {
+                      // keep card visible on error
+                    } finally {
+                      setConfirmingCorpus((prev) => {
+                        const next = new Set(prev);
+                        next.delete(entry.document_id);
+                        return next;
+                      });
+                    }
+                  }}
+                  onDismiss={() =>
+                    setCorpusPending((prev) => prev.filter((e) => e.document_id !== entry.document_id))
+                  }
+                />
+              ))}
+            </div>
+          ) : null}
+
+          {/* Incremental document processing cards */}
+          {docProcQueue.length > 0 ? (
+            <div className="mt-3 space-y-3 px-1">
+              {docProcQueue.map((state, idx) => {
+                const key = idx;
+                const dismiss = () =>
+                  setDocProcQueue((prev) => prev.filter((_, i) => i !== idx));
+
+                if (state.phase === "processing") {
+                  return (
+                    <div key={key} className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Analysing <span className="font-medium">{state.filename}</span>…</span>
+                    </div>
+                  );
+                }
+
+                if (state.phase === "warning") {
+                  return (
+                    <DocumentWarningCard
+                      key={key}
+                      filename={state.result.filename}
+                      reason={state.result.validation?.reason ?? ""}
+                      warningMessage={state.result.validation?.warning_message}
+                      proceeding={false}
+                      onIgnore={dismiss}
+                      onProceed={() => {
+                        // User approved — move straight to changes card
+                        setDocProcQueue((prev) =>
+                          prev.map((s, i) =>
+                            i === idx ? { phase: "changes" as const, result: (s as { phase: "warning"; result: ProcessDocumentResult }).result, applying: false } : s
+                          )
+                        );
+                      }}
+                    />
+                  );
+                }
+
+                if (state.phase === "changes") {
+                  return (
+                    <ProposedChangesCard
+                      key={key}
+                      filename={state.result.filename}
+                      changes={state.result.proposed_changes ?? []}
+                      applying={state.applying}
+                      onDismiss={dismiss}
+                      onApprove={async (approvedIds) => {
+                        if (!runId) return;
+                        setDocProcQueue((prev) =>
+                          prev.map((s, i) => i === idx ? { ...s, applying: true } : s)
+                        );
+                        try {
+                          const applied = await applyDocumentChanges(runId, {
+                            document_id: state.result.document_id,
+                            doc_path: state.result.doc_path,
+                            corpus_entry: state.result.corpus_entry,
+                            approved_change_ids: approvedIds,
+                            all_changes: state.result.proposed_changes ?? [],
+                          });
+                          dismiss();
+                          onRunReprocessed?.();
+                          setMessages((prev) => [
+                            ...prev,
+                            {
+                              id: `${Date.now()}-doc-applied`,
+                              role: "assistant",
+                              text: applied.applied_changes.length > 0
+                                ? `Applied ${applied.applied_changes.length} change(s) from **${state.result.filename}** to this matter.`
+                                : `${state.result.filename} added to the matter. No answer changes were needed.`,
+                            },
+                          ]);
+                        } catch {
+                          setDocProcQueue((prev) =>
+                            prev.map((s, i) => i === idx ? { ...s, applying: false } : s)
+                          );
+                        }
+                      }}
+                    />
+                  );
+                }
+
+                return null;
+              })}
+            </div>
+          ) : null}
+
+          <div ref={bottomRef} />
+        </div>
+      </div>
+
+      {/* Input area */}
+      <div className="border-t border-border bg-card px-4 pb-4 pt-3 shrink-0">
+        {/* Pending file chips */}
+        {pendingFiles.length > 0 ? (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {pendingFiles.map((item) => (
+              <div key={`${item.file.name}:${item.file.lastModified}`} className="relative">
+                <AttachmentChip
+                  name={item.displayName || item.file.name}
+                  onRemove={() => removeFile(item.file.name)}
+                />
+                {item.resolving && (
+                  <span className="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-primary">
+                    <Loader2 className="h-2 w-2 animate-spin text-primary-foreground" />
+                  </span>
+                )}
+                {item.subtitle && !item.resolving && (
+                  <span className="sr-only">{item.subtitle}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="relative flex items-end gap-2 rounded-[1.4rem] border border-border bg-muted/50 px-3.5 py-2.5 shadow-xs transition-all duration-300 focus-within:border-primary/40 focus-within:bg-card focus-within:shadow-lg focus-within:shadow-primary/5">
+          {/* File attach — only available for matter chatbot with a runId */}
+          {chatContext === "matter" && runId ? (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,application/pdf,.json,.smokeball.tmp"
+                multiple
+                className="sr-only"
+                onChange={handleFileChange}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={sending || assistantPaused}
+                className="shrink-0 rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-primary disabled:opacity-40"
+                title="Attach PDFs or drag from TriConvey"
+              >
+                <Paperclip className="h-4 w-4" />
+              </button>
+            </>
+          ) : null}
+
           <Textarea
             ref={textareaRef}
             value={input}
@@ -735,14 +1635,21 @@ export function Chatbot({
               }
             }}
             placeholder={
-              sending
-                ? "AI is reviewing... press stop to cancel"
-                : "Ask anything about the documents... (Shift+Enter for new line)"
+              assistantPaused
+                ? "Assistant pauses while autofill is running"
+                : sending
+                ? "AI is reviewing… press stop to cancel"
+                : pendingFiles.length > 0
+                ? "Add a question or send to extract all fields…"
+                : chatContext === "matter"
+                ? "Ask anything about the documents…"
+                : "Ask anything about your workspace…"
             }
             rows={1}
-            disabled={sending}
+            disabled={sending || assistantPaused}
             className="min-h-[1.5rem] max-h-32 flex-1 resize-none border-0 bg-transparent p-0 text-[0.85rem] leading-relaxed outline-none focus-visible:ring-0 disabled:opacity-60"
           />
+
           {sending ? (
             <button
               onClick={handleCancel}
@@ -754,7 +1661,7 @@ export function Chatbot({
           ) : (
             <button
               onClick={() => void handleSend()}
-              disabled={!input.trim()}
+              disabled={!canSend}
               className="shrink-0 rounded-2xl bg-primary p-1.5 text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-40"
               title="Send"
             >
@@ -762,17 +1669,65 @@ export function Chatbot({
             </button>
           )}
         </div>
-        <p className="mt-1.5 text-center text-[10px] text-slate-400">
-          Every answer is AI-reviewed against the uploaded matter files. Verify important values before autofill.
+        <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
+          {chatContext === "matter"
+            ? "Every answer is AI-reviewed against the uploaded matter files. Verify important values before autofill."
+            : "AI assistant for workspace navigation and general queries."}
         </p>
       </div>
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
       `}</style>
+    </>
+  );
+
+  if (suppressMotion) {
+    return (
+      <div
+        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+        onDragLeave={(e) => { e.stopPropagation(); if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragging(false); }}
+        onDrop={(e) => { e.stopPropagation(); void handleDrop(e); }}
+        className="relative z-10 flex h-full shrink-0 flex-col overflow-hidden border-l border-border bg-card shadow-2xl"
+        style={{ width: isOpen ? panelWidth : 0, opacity: isOpen ? 1 : 0 }}
+      >
+        {isDragging && (
+          <div className="absolute inset-0 z-[110] flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-white shadow-xl">
+              <Upload className="h-10 w-10 animate-bounce" />
+            </div>
+            <p className="mt-4 text-lg font-black text-foreground">Drop PDFs or TriConvey documents</p>
+            <p className="text-sm font-bold text-muted-foreground">PDFs and TriConvey reference files accepted</p>
+          </div>
+        )}
+        {shell}
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={false}
+      animate={{ width: isOpen ? panelWidth : 0, opacity: isOpen ? 1 : 0 }}
+      transition={{ type: "spring", stiffness: 320, damping: 32 }}
+      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+      onDragLeave={(e) => { e.stopPropagation(); if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragging(false); }}
+      onDrop={(e) => { e.stopPropagation(); void handleDrop(e); }}
+      className="relative z-10 flex h-full shrink-0 flex-col overflow-hidden border-l border-border bg-card shadow-2xl"
+    >
+      {isDragging && (
+        <div className="absolute inset-0 z-[110] flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-white shadow-xl">
+            <Upload className="h-10 w-10 animate-bounce" />
+          </div>
+          <p className="mt-4 text-lg font-black text-foreground">Drop PDFs or TriConvey documents</p>
+          <p className="text-sm font-bold text-muted-foreground">PDFs and TriConvey reference files accepted</p>
+        </div>
+      )}
+      {shell}
     </motion.div>
   );
 }
