@@ -49,54 +49,75 @@ DEFAULT_AUTHORITY_RULES: list[AuthorityRule] = [
         on_unresolved="review",
         note="Title register outranks vendor disclosures for everything on title.",
     ),
-    # ---- Rates: council, water, land tax ----
+    # ---- Rates: council, water, land tax, owners corporation ----
+    #
+    # STRICT CERTIFICATE HIERARCHY — vendor form is LAST RESORT only.
+    # These fields MUST be sourced from their respective authority documents:
+    #   Council authority/amount  → Land Information Certificate (council_rates_certificate*)
+    #   Water authority/amount    → Water Information Statement  (water_authority_certificate*)
+    #   Land tax                  → SRO Property Clearance Cert  (land_tax_certificate*)
+    #   Owners corporation        → OC Certificate               (owners_corporation*)
+    #
+    # Vendor form facts for these paths are emitted at confidence 0.40 so any
+    # certificate fact (0.80+) always wins outright. The vendor form is only
+    # ever used when no certificate PDF has been uploaded.
     AuthorityRule(
         path_pattern="rates.council.authority_name",
         authoritative_extractors=[
-            "rule:vendor_form*",
-            "ai:doc_extractor:vendor_form*",
             "rule:council_rates_certificate*",
             "ai:doc_extractor:council_rates_certificate*",
-            "rule:property_report*",
-            "rule:planning_certificate*",
+            "rule:vendor_form*",
+            "ai:doc_extractor:vendor_form*",
         ],
-        on_unresolved="review",
-        note="Council outgoing name should come from vendor disclosure first; council documents are fallback naming sources.",
+        on_unresolved="highest_confidence",
+        note=(
+            "LIC is authoritative. When two LIC-level facts disagree (e.g. LIC vs "
+            "annual rates notice), pick highest confidence. Vendor is last resort only."
+        ),
     ),
     AuthorityRule(
         path_pattern="rates.council.*",
         authoritative_extractors=[
             "rule:council_rates_certificate*",
             "ai:doc_extractor:council_rates_certificate*",
-            "rule:property_report*",
             "rule:vendor_form*",
+            "ai:doc_extractor:vendor_form*",
         ],
         on_unresolved="highest_confidence",
-        note="Council cert rarely uploaded; vendor-only conflicts should auto-resolve by confidence.",
+        note=(
+            "LIC is authoritative. When two LIC-level facts disagree (e.g. LIC at "
+            "conf=0.97 vs annual rates notice at conf=0.95), highest confidence wins. "
+            "Vendor form is last resort — only used when no certificate is uploaded."
+        ),
     ),
-    # Authority NAME — the certificate has the official full name; vendor form
-    # may truncate it (e.g. "Yarra Valley" vs "Yarra Valley Water").
     AuthorityRule(
         path_pattern="rates.water.authority_name",
         authoritative_extractors=[
             "rule:water_authority_certificate*",
             "ai:doc_extractor:water_authority_certificate*",
             "rule:vendor_form*",
+            "ai:doc_extractor:vendor_form*",
         ],
-        on_unresolved="highest_confidence",
-        note="Water cert has the official authority name; vendor form may truncate it.",
+        on_unresolved="review",
+        note=(
+            "STRICT: Water Information Statement is the only authoritative source. "
+            "Vendor form is last resort — used only when certificate is not uploaded."
+        ),
     ),
     AuthorityRule(
         path_pattern="rates.water.*",
         authoritative_extractors=[
             "rule:water_authority_certificate*",
             "ai:doc_extractor:water_authority_certificate*",
+            "rule:property_report*",
             "rule:vendor_form*",
             "ai:doc_extractor:vendor_form*",
-            "rule:property_report*",
         ],
         on_unresolved="review",
-        note="Water authority certificate is preferred; vendor form is fallback.",
+        note=(
+            "STRICT: Water Information Statement is the only authoritative source for "
+            "water authority and annual amount. Vendor form is last resort only."
+        ),
     ),
     AuthorityRule(
         path_pattern="rates.owners_corporation.*",
@@ -104,9 +125,13 @@ DEFAULT_AUTHORITY_RULES: list[AuthorityRule] = [
             "rule:owners_corporation*",
             "ai:doc_extractor:owners_corporation*",
             "rule:vendor_form*",
+            "ai:doc_extractor:vendor_form*",
         ],
         on_unresolved="review",
-        note="Owners corporation document is preferred over vendor fallback for OC outgoings.",
+        note=(
+            "STRICT: OC Certificate is the only authoritative source. "
+            "Vendor form is last resort — used only when certificate is not uploaded."
+        ),
     ),
     AuthorityRule(
         path_pattern="rates.land_tax.*",
@@ -114,8 +139,13 @@ DEFAULT_AUTHORITY_RULES: list[AuthorityRule] = [
             "rule:land_tax_certificate*",
             "ai:doc_extractor:land_tax_certificate*",
             "rule:vendor_form*",
+            "ai:doc_extractor:vendor_form*",
         ],
         on_unresolved="review",
+        note=(
+            "STRICT: SRO Property Clearance Certificate is the only authoritative source. "
+            "Vendor form is last resort — used only when certificate is not uploaded."
+        ),
     ),
     # ---- Services ----
     AuthorityRule(

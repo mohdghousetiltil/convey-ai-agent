@@ -70,14 +70,12 @@ class BrainFAgent:
         if self._provider == "anthropic":
             self._client = _make_anthropic_client()
         elif self._provider == "google":
-            # Google uses MultiModelClient; fall back gracefully on import error
-            try:
-                from triconvey_agent.ai.multi_client import MultiModelClient
-                self._client = MultiModelClient(provider="google", model=self._model)
-            except Exception as exc:
-                LOG.warning("Google client init failed: %s — falling back to OpenAI", exc)
-                self._provider = "openai"
-                self._client = _make_openai_client()
+            # Google uses MultiModelClient.
+            # Do not silently fall back to OpenAI; that produces confusing 404s like
+            # "model_not_found" for Gemini models and ignores the user's provider choice.
+            from triconvey_agent.ai.multi_client import MultiModelClient
+
+            self._client = MultiModelClient(provider="google", model=self._model)
         else:
             self._client = _make_openai_client()
 

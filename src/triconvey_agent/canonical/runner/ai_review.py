@@ -111,9 +111,13 @@ def run_ai_review(answers: dict, registry: dict, ai_client: AIClient) -> dict[st
     review_targets: list[tuple[str, object, object]] = []
     for qid, answer in answers.items():
         question = registry.get(qid)
-        if question is None or not answer.evidence:
+        if question is None:
             continue
-        if answer.value is None and not answer.needs_review:
+        # STRICT: only review questions explicitly flagged for human/AI review.
+        # Do NOT send confirmed answers to AI — that is "deep review" mode and
+        # is too slow.  The AI pass is reserved for genuine ambiguities where
+        # the rule-based extractor could not pick a winner.
+        if not answer.needs_review:
             continue
         review_targets.append((qid, answer, question))
 

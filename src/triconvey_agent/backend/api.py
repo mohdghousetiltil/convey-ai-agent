@@ -15,6 +15,7 @@ import subprocess
 import shutil
 import threading
 import tempfile
+import time
 import zipfile
 import uuid as _uuid
 from datetime import datetime, timedelta, UTC
@@ -52,6 +53,12 @@ from triconvey_agent.backend.settings import (
 )
 from triconvey_agent.backend.update_manager import check_for_updates, download_update_installer
 from triconvey_agent.db.bootstrap import apply_runtime_migrations
+from triconvey_agent.copy_rules import find_best_copy_rule_match
+from triconvey_agent.backend.triconvey_import_utils import (
+    apply_multi_water_outgoing_rows,
+    parse_amount_text,
+    wait_for_triconvey_paths,
+)
 from triconvey_agent.backend.service import (
     ask_run_question,
     autofill_run,
@@ -74,6 +81,7 @@ from triconvey_agent.canonical.questions.loader import load_question_registry
 from triconvey_agent.db.repositories import (
     AnswerRepo,
     ClientRepo,
+    CopyRuleRepo,
     MatterRepo,
     RunRepo,
     SyncQueueRepo,
@@ -91,6 +99,21 @@ class ReviewAnswerUpdate(BaseModel):
 
 class SaveAnswersRequest(BaseModel):
     updates: dict[str, ReviewAnswerUpdate] = Field(default_factory=dict)
+
+
+class CopyRuleCreateRequest(BaseModel):
+    rule_type: str = "water_authority"
+    authority_name: str = Field(..., min_length=1)
+    annual_amount: float = Field(..., ge=0)
+    notes: str | None = None
+    is_active: bool = True
+
+
+class CopyRuleUpdateRequest(BaseModel):
+    authority_name: str = Field(..., min_length=1)
+    annual_amount: float = Field(..., ge=0)
+    notes: str | None = None
+    is_active: bool = True
 
 
 class AutofillRequest(BaseModel):
@@ -235,6 +258,84 @@ async def _nudge_sync_worker() -> None:
         await worker.nudge()
     except Exception:
         LOG.debug("Could not nudge sync worker for immediate drain.", exc_info=True)
+
+
+async def _apply_copy_rule_fallbacks_to_run(
+    session: AsyncSession,
+    *,
+    client_id: _uuid.UUID,
+    run_dir: Path,
+) -> None:
+    rules = await CopyRuleRepo.list_for_client(
+        session,
+        client_id=client_id,
+        rule_type="water_authority",
+        include_inactive=False,
+    )
+
+    answers_path = run_dir / "answers.json"
+    facts_path = run_dir / "facts.json"
+    if not answers_path.exists() or not facts_path.exists():
+        return
+
+    try:
+        answers = json.loads(answers_path.read_text(encoding="utf-8"))
+        facts_raw = json.loads(facts_path.read_text(encoding="utf-8"))
+    except Exception:
+        return
+    if not isinstance(answers, dict):
+        return
+
+    facts_by_path = facts_raw.get("facts", {}) if isinstance(facts_raw, dict) else {}
+    apply_multi_water_outgoing_rows(answers, facts_by_path, rules)
+    if not rules:
+        answers_path.write_text(json.dumps(answers, indent=2, default=str), encoding="utf-8")
+        return
+
+    water_authority_facts = list(facts_by_path.get("rates.water.authority_name") or [])
+    vendor_authority_facts = [
+        fact for fact in water_authority_facts if "vendor_form" in str(fact.get("extractor") or "")
+    ]
+    authority_candidates = water_authority_facts + vendor_authority_facts
+    authority_name = None
+    for fact in authority_candidates:
+        value = str(fact.get("value") or "").strip()
+        if value:
+            authority_name = value
+            break
+    if not authority_name:
+        return
+
+    current_answer = answers.get("sec32_1.1_outgoing_2_amount") or {}
+    current_value = current_answer.get("human_value_json")
+    if current_value in (None, "", [], {}):
+        current_value = current_answer.get("value_json")
+    parsed_current = parse_amount_text(current_value)
+    if parsed_current is not None and parsed_current > 0:
+        return
+
+    match = find_best_copy_rule_match(
+        authority_name,
+        [(row.authority_name, row.annual_amount) for row in rules],
+    )
+    if match is None:
+        return
+
+    formatted_amount = f"${match.annual_amount:,.2f}"
+    next_hints = dict(current_answer.get("presentation_hints") or {})
+    next_hints["copy_rule_fallback"] = {
+        "matched_authority_name": match.authority_name,
+        "source_authority_name": authority_name,
+        "match_score": round(match.score, 4),
+        "matched_on": match.matched_on,
+    }
+    current_answer["value_json"] = formatted_amount
+    current_answer["presentation_hints"] = next_hints
+    current_answer["confidence"] = max(float(current_answer.get("confidence") or 0.0), 0.86)
+    current_answer["needs_review"] = False
+    current_answer["review_reasons"] = []
+    answers["sec32_1.1_outgoing_2_amount"] = current_answer
+    answers_path.write_text(json.dumps(answers, indent=2, default=str), encoding="utf-8")
 
 
 async def _stop_sync_worker() -> None:
@@ -473,6 +574,108 @@ def post_settings(
     ctx: AuthContext = Depends(require_auth),
 ) -> dict[str, Any]:
     return save_local_settings(body.model_dump(mode="json"), user_id=str(ctx.user.id))
+
+
+def _serialize_copy_rule(row: Any) -> dict[str, Any]:
+    return {
+        "id": str(row.id),
+        "rule_type": row.rule_type,
+        "authority_name": row.authority_name,
+        "annual_amount": float(row.annual_amount),
+        "notes": row.notes,
+        "is_active": bool(row.is_active),
+        "created_by": row.created_by,
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+        "updated_by": row.updated_by,
+        "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+    }
+
+
+@app.get("/api/copy-rules")
+async def list_copy_rules(
+    rule_type: str = "water_authority",
+    include_inactive: bool = False,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> list[dict[str, Any]]:
+    rows = await CopyRuleRepo.list_for_client(
+        session,
+        client_id=ctx.client.id,
+        rule_type=rule_type,
+        include_inactive=include_inactive,
+    )
+    return [_serialize_copy_rule(row) for row in rows]
+
+
+@app.post("/api/copy-rules", status_code=201)
+async def create_copy_rule(
+    body: CopyRuleCreateRequest,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    row = await CopyRuleRepo.create(
+        session,
+        client_id=ctx.client.id,
+        rule_type=body.rule_type,
+        authority_name=body.authority_name,
+        annual_amount=body.annual_amount,
+        notes=body.notes,
+        is_active=body.is_active,
+        changed_by=ctx.user.email,
+    )
+    await _nudge_sync_worker()
+    return _serialize_copy_rule(row)
+
+
+@app.put("/api/copy-rules/{rule_id}")
+async def update_copy_rule(
+    rule_id: str,
+    body: CopyRuleUpdateRequest,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    try:
+        rule_uuid = _uuid.UUID(rule_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid copy rule id.") from exc
+
+    row = await CopyRuleRepo.update(
+        session,
+        client_id=ctx.client.id,
+        rule_id=rule_uuid,
+        authority_name=body.authority_name,
+        annual_amount=body.annual_amount,
+        notes=body.notes,
+        is_active=body.is_active,
+        changed_by=ctx.user.email,
+    )
+    if row is None:
+        raise HTTPException(status_code=404, detail="Copy rule not found.")
+    await _nudge_sync_worker()
+    return _serialize_copy_rule(row)
+
+
+@app.delete("/api/copy-rules/{rule_id}")
+async def delete_copy_rule(
+    rule_id: str,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    try:
+        rule_uuid = _uuid.UUID(rule_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid copy rule id.") from exc
+
+    row = await CopyRuleRepo.soft_delete(
+        session,
+        client_id=ctx.client.id,
+        rule_id=rule_uuid,
+        changed_by=ctx.user.email,
+    )
+    if row is None:
+        raise HTTPException(status_code=404, detail="Copy rule not found.")
+    await _nudge_sync_worker()
+    return {"ok": True, "id": rule_id}
 
 
 # ---------------------------------------------------------------------------
@@ -754,6 +957,8 @@ async def create_run(background_tasks: BackgroundTasks,
                 error_message=str(exc),
             )
             raise HTTPException(status_code=500, detail=str(exc)) from exc
+        await _apply_copy_rule_fallbacks_to_run(session, client_id=ctx.client.id, run_dir=target_dir)
+        payload = load_run_payload(target_dir)
         await _persist_run_to_db(session, payload, client_id=ctx.client.id, run_uuid=run_uuid)
         await _nudge_sync_worker()
         return payload
@@ -877,6 +1082,8 @@ async def _run_analysis_pipeline_background(
 
         # 2) Persist to DB.
         async with factory() as session:
+            await _apply_copy_rule_fallbacks_to_run(session, client_id=client_id, run_dir=target_dir)
+            payload = load_run_payload(target_dir)
             await _persist_run_to_db(session, payload, client_id=client_id, run_uuid=run_uuid)
             await session.commit()
 
@@ -1010,6 +1217,7 @@ async def get_run(
         }
 
     run_dir = _resolve_run_dir(run_id)
+    await _apply_copy_rule_fallbacks_to_run(session, client_id=ctx.client.id, run_dir=run_dir)
     payload = load_run_payload(run_dir)
     if run_row:
         payload["status"] = "completed" if run_row.status in {"complete", "completed"} else run_row.status
@@ -1058,7 +1266,9 @@ async def save_answers(
         await _nudge_sync_worker()
 
     # 2) Mirror to file-based storage so the existing autofill pipeline keeps working.
-    return save_review_answers(run_dir, updates)
+    save_review_answers(run_dir, updates)
+    await _apply_copy_rule_fallbacks_to_run(session, client_id=ctx.client.id, run_dir=run_dir)
+    return load_run_payload(run_dir)
 
 
 @app.post("/api/runs/{run_id}/chat")
@@ -1294,6 +1504,8 @@ async def reprocess_run(
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Reprocess failed: {exc}") from exc
 
+    await _apply_copy_rule_fallbacks_to_run(session, client_id=ctx.client.id, run_dir=run_dir)
+    payload = load_run_payload(run_dir)
     await _persist_run_to_db(session, payload, client_id=ctx.client.id, run_uuid=run_uuid)
     # Bust Brain F caches so the next chat uses fresh facts
     for cache_file in (
@@ -1368,6 +1580,12 @@ async def process_chat_document_endpoint(
     saved_settings = load_local_settings(user_id=str(ctx.user.id))
     model = saved_settings.get("defaultModelName") or "gpt-4.1-mini"
     matter_id = str(run.matter_id) if run.matter_id else run_id
+    copy_rules = await CopyRuleRepo.list_for_client(
+        session,
+        client_id=ctx.client.id,
+        rule_type="water_authority",
+        include_inactive=False,
+    )
 
     # If this is a TriConvey reference file, resolve it to the actual PDF(s)
     if _looks_like_triconvey_reference(dest_path):
@@ -1404,7 +1622,15 @@ async def process_chat_document_endpoint(
     try:
         result = await loop.run_in_executor(
             None,
-            partial(process_chat_document, run_dir, dest_path, model, matter_id, run_id),
+            partial(
+                process_chat_document,
+                run_dir,
+                dest_path,
+                model,
+                matter_id,
+                run_id,
+                [(row.authority_name, float(row.annual_amount)) for row in copy_rules],
+            ),
         )
     except Exception as exc:
         LOG.exception("process_chat_document failed for %s", dest_path.name)
@@ -1455,7 +1681,7 @@ async def apply_chat_document_changes_endpoint(
         except OSError:
             pass
     warm_brain_f_assets_async(run_dir)
-
+    await _apply_copy_rule_fallbacks_to_run(session, client_id=ctx.client.id, run_dir=run_dir)
     return {"ok": True, **result}
 
 
@@ -2339,6 +2565,7 @@ def _resolve_triconvey_reference_payload(payload: dict[str, Any]) -> list[Path]:
 
 def _resolve_explicit_triconvey_paths(payload: dict[str, Any]) -> list[Path]:
     explicit_paths = _extract_triconvey_explicit_path_values(payload)
+    wait_for_triconvey_paths(explicit_paths, sleeper=time.sleep, delay_seconds=2.0)
     resolved: list[Path] = []
     seen: set[Path] = set()
     for raw_value in explicit_paths:

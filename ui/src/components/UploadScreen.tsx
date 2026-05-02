@@ -340,14 +340,15 @@ export function UploadScreen({
                           <FileText className="h-5 w-5" />
                         </div>
                         <div>
-                          <p className="max-w-[300px] truncate text-sm font-semibold text-foreground">
+                          <p className="max-w-[500px] truncate text-sm font-semibold text-foreground">
+                            {/* <p className="text-sm font-semibold text-foreground break-words"></p> */}
                             {item.displayName || item.file.name}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {item.file.name.toLowerCase().endsWith(".pdf")
                               ? `${(item.file.size / 1024 / 1024).toFixed(2)} MB`
                               : (item.subtitle || "TriConvey reference")}
-                        </p>
+                          </p>
                         </div>
                       </div>
                       <button

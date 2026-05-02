@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from triconvey_agent.auth.deps import require_api_token
-from triconvey_agent.db.models import Answer, Matter, Run
+from triconvey_agent.db.models import Answer, CopyRule, Matter, Run
 from triconvey_agent.db.repositories import ClientRepo
 from triconvey_agent.db.session import get_session
 
@@ -152,6 +152,8 @@ async def _apply_event(
         return await _apply_answer_event(session, client_id, entity_id, event)
     if entity_type == "matter":
         return await _apply_matter_event(session, client_id, entity_id, event)
+    if entity_type == "copy_rule":
+        return await _apply_copy_rule_event(session, client_id, entity_id, event)
     raise ValueError(f"Unknown entity_type: {event.entity_type}")
 
 
@@ -384,3 +386,63 @@ async def _apply_matter_event(
         return None
 
     raise ValueError(f"Unknown matter operation: {event.operation}")
+
+
+async def _apply_copy_rule_event(
+    session: AsyncSession,
+    client_id: uuid.UUID,
+    rule_id: uuid.UUID,
+    event: SyncEvent,
+) -> SyncConflictDetail | None:
+    existing = await session.get(CopyRule, rule_id)
+    payload = dict(event.payload or {})
+    operation = _normalize_operation(event.operation)
+
+    if existing is not None and existing.client_id != client_id:
+        return _conflict(event.sync_queue_id, _serialize_model(existing))
+
+    if operation in {"INSERT", "CREATE", "UPSERT", "UPDATE"}:
+        if existing is None:
+            row = CopyRule(
+                id=rule_id,
+                client_id=client_id,
+                rule_type=str(payload.get("rule_type") or "water_authority"),
+                authority_name=str(payload.get("authority_name") or "").strip(),
+                annual_amount=float(payload.get("annual_amount") or 0.0),
+                notes=payload.get("notes"),
+                is_active=bool(payload.get("is_active", True)),
+                created_by=str(payload.get("created_by") or payload.get("updated_by") or "sync"),
+                created_at=_parse_optional_datetime(payload.get("created_at")) or datetime.now(UTC),
+                updated_by=payload.get("updated_by"),
+                updated_at=_parse_optional_datetime(payload.get("updated_at")),
+            )
+            session.add(row)
+            await session.flush()
+            return None
+
+        existing.rule_type = str(payload.get("rule_type") or existing.rule_type)
+        if "authority_name" in payload:
+            existing.authority_name = str(payload.get("authority_name") or "").strip()
+        if "annual_amount" in payload:
+            existing.annual_amount = float(payload.get("annual_amount") or 0.0)
+        if "notes" in payload:
+            existing.notes = payload.get("notes")
+        if "is_active" in payload:
+            existing.is_active = bool(payload.get("is_active"))
+        if "updated_by" in payload:
+            existing.updated_by = payload.get("updated_by")
+        if "updated_at" in payload:
+            existing.updated_at = _parse_optional_datetime(payload.get("updated_at"))
+        await session.flush()
+        return None
+
+    if operation == "DELETE":
+        if existing is None:
+            return None
+        existing.is_active = False
+        existing.updated_by = payload.get("updated_by") or existing.updated_by
+        existing.updated_at = _parse_optional_datetime(payload.get("updated_at")) or datetime.now(UTC)
+        await session.flush()
+        return None
+
+    raise ValueError(f"Unknown copy_rule operation: {event.operation}")

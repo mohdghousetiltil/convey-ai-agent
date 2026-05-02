@@ -270,7 +270,7 @@ function AppContent() {
       try {
         setAppInfo(await getAppInfo());
       } catch {
-        setAppInfo({ name: "Convey Agent", publisher: "Convey Agent", version: "0.0.125" });
+        setAppInfo({ name: "Convey Agent", publisher: "Convey Agent", version: "0.0.127" });
       }
 
       setIsLoadingRuns(true);

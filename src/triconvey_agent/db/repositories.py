@@ -26,6 +26,8 @@ from triconvey_agent.db.models import (
     AuditLog,
     AutofillJob,
     Client,
+    CopyRule,
+    CopyRuleAudit,
     Document,
     Fact,
     FactConflict,
@@ -1024,6 +1026,250 @@ class SyncQueueRepo:
             )
         )
         return int(q.scalar_one())
+
+
+class CopyRuleRepo:
+    @staticmethod
+    async def list_for_client(
+        session: AsyncSession,
+        *,
+        client_id: uuid.UUID,
+        rule_type: str = "water_authority",
+        include_inactive: bool = False,
+    ) -> list[CopyRule]:
+        stmt = (
+            select(CopyRule)
+            .where(CopyRule.client_id == client_id, CopyRule.rule_type == rule_type)
+            .order_by(CopyRule.authority_name.asc())
+        )
+        if not include_inactive:
+            stmt = stmt.where(CopyRule.is_active.is_(True))
+        q = await session.execute(stmt)
+        return list(q.scalars().all())
+
+    @staticmethod
+    async def get(
+        session: AsyncSession,
+        *,
+        client_id: uuid.UUID,
+        rule_id: uuid.UUID,
+    ) -> CopyRule | None:
+        q = await session.execute(
+            select(CopyRule).where(CopyRule.id == rule_id, CopyRule.client_id == client_id)
+        )
+        return q.scalar_one_or_none()
+
+    @staticmethod
+    async def find_water_authority(
+        session: AsyncSession,
+        *,
+        client_id: uuid.UUID,
+        authority_name: str,
+        min_score: float = 0.86,
+    ) -> tuple[CopyRule | None, float]:
+        """Fuzzy-match authority_name against active water_authority copy rules.
+
+        Returns (best_matching_rule, score) or (None, best_score_seen).
+        Exact normalized match is always preferred over fuzzy.
+        Uses the shared copy_rules module so normalization is consistent.
+        """
+        from triconvey_agent.copy_rules import find_best_copy_rule_match
+
+        rules = await CopyRuleRepo.list_for_client(
+            session,
+            client_id=client_id,
+            rule_type="water_authority",
+            include_inactive=False,
+        )
+        if not rules:
+            return None, 0.0
+
+        rule_pairs = [(r.authority_name, float(r.annual_amount)) for r in rules]
+        match = find_best_copy_rule_match(
+            authority_name,
+            rule_pairs,
+            minimum_score=min_score,
+        )
+        if match is None:
+            return None, 0.0
+
+        # Find the original CopyRule row that matched
+        matched_row = next(
+            (r for r in rules if r.authority_name == match.authority_name),
+            None,
+        )
+        return matched_row, match.score
+
+    @staticmethod
+    async def create(
+        session: AsyncSession,
+        *,
+        client_id: uuid.UUID,
+        rule_type: str,
+        authority_name: str,
+        annual_amount: float,
+        notes: str | None,
+        is_active: bool,
+        changed_by: str,
+    ) -> CopyRule:
+        row = CopyRule(
+            client_id=client_id,
+            rule_type=rule_type,
+            authority_name=authority_name.strip(),
+            annual_amount=float(annual_amount),
+            notes=notes.strip() if isinstance(notes, str) and notes.strip() else None,
+            is_active=bool(is_active),
+            created_by=changed_by,
+        )
+        session.add(row)
+        await session.flush()
+
+        session.add(
+            CopyRuleAudit(
+                copy_rule_id=row.id,
+                change_type="INSERT",
+                changed_by=changed_by,
+                new_authority_name=row.authority_name,
+                new_annual_amount=row.annual_amount,
+                new_is_active=row.is_active,
+                new_notes=row.notes,
+            )
+        )
+        await _enqueue_sync(
+            session,
+            client_id=client_id,
+            entity_type="copy_rule",
+            entity_id=row.id,
+            operation="UPSERT",
+            payload={
+                "rule_type": row.rule_type,
+                "authority_name": row.authority_name,
+                "annual_amount": row.annual_amount,
+                "notes": row.notes,
+                "is_active": row.is_active,
+                "created_by": row.created_by,
+                "created_at": row.created_at.isoformat(),
+                "updated_by": row.updated_by,
+                "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+            },
+        )
+        return row
+
+    @staticmethod
+    async def update(
+        session: AsyncSession,
+        *,
+        client_id: uuid.UUID,
+        rule_id: uuid.UUID,
+        authority_name: str,
+        annual_amount: float,
+        notes: str | None,
+        is_active: bool,
+        changed_by: str,
+    ) -> CopyRule | None:
+        row = await CopyRuleRepo.get(session, client_id=client_id, rule_id=rule_id)
+        if row is None:
+            return None
+
+        before = {
+            "authority_name": row.authority_name,
+            "annual_amount": row.annual_amount,
+            "notes": row.notes,
+            "is_active": row.is_active,
+        }
+        row.authority_name = authority_name.strip()
+        row.annual_amount = float(annual_amount)
+        row.notes = notes.strip() if isinstance(notes, str) and notes.strip() else None
+        row.is_active = bool(is_active)
+        row.updated_by = changed_by
+        row.updated_at = _now()
+        await session.flush()
+
+        session.add(
+            CopyRuleAudit(
+                copy_rule_id=row.id,
+                change_type="UPDATE",
+                changed_by=changed_by,
+                old_authority_name=before["authority_name"],
+                new_authority_name=row.authority_name,
+                old_annual_amount=before["annual_amount"],
+                new_annual_amount=row.annual_amount,
+                old_is_active=before["is_active"],
+                new_is_active=row.is_active,
+                old_notes=before["notes"],
+                new_notes=row.notes,
+            )
+        )
+        await _enqueue_sync(
+            session,
+            client_id=client_id,
+            entity_type="copy_rule",
+            entity_id=row.id,
+            operation="UPSERT",
+            payload={
+                "rule_type": row.rule_type,
+                "authority_name": row.authority_name,
+                "annual_amount": row.annual_amount,
+                "notes": row.notes,
+                "is_active": row.is_active,
+                "created_by": row.created_by,
+                "created_at": row.created_at.isoformat(),
+                "updated_by": row.updated_by,
+                "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+            },
+        )
+        return row
+
+    @staticmethod
+    async def soft_delete(
+        session: AsyncSession,
+        *,
+        client_id: uuid.UUID,
+        rule_id: uuid.UUID,
+        changed_by: str,
+    ) -> CopyRule | None:
+        row = await CopyRuleRepo.get(session, client_id=client_id, rule_id=rule_id)
+        if row is None:
+            return None
+
+        before = {
+            "authority_name": row.authority_name,
+            "annual_amount": row.annual_amount,
+            "notes": row.notes,
+            "is_active": row.is_active,
+        }
+        row.is_active = False
+        row.updated_by = changed_by
+        row.updated_at = _now()
+        await session.flush()
+
+        session.add(
+            CopyRuleAudit(
+                copy_rule_id=row.id,
+                change_type="DELETE",
+                changed_by=changed_by,
+                old_authority_name=before["authority_name"],
+                old_annual_amount=before["annual_amount"],
+                old_is_active=before["is_active"],
+                old_notes=before["notes"],
+                new_authority_name=row.authority_name,
+                new_annual_amount=row.annual_amount,
+                new_is_active=row.is_active,
+                new_notes=row.notes,
+            )
+        )
+        await _enqueue_sync(
+            session,
+            client_id=client_id,
+            entity_type="copy_rule",
+            entity_id=row.id,
+            operation="DELETE",
+            payload={
+                "updated_by": row.updated_by,
+                "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+            },
+        )
+        return row
 
 
 # ---------------------------------------------------------------------------

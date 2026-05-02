@@ -39,7 +39,7 @@ _BRAIN_F_DEFAULT_WARMUP_DELAY_SECONDS = max(
 _AI_MODE_CHOICES = {"cost_efficient", "all_time_best", "turbo"}
 _OPENAI_MODELS = ("gpt-4.1-mini", "gpt-4.1", "gpt-4o")
 _ANTHROPIC_MODELS = ("claude-haiku-4-5-20251001", "claude-sonnet-4-6", "claude-opus-4-7")
-_GOOGLE_MODELS = ("gemini-3.1-flash-lite-preview", "gemini-3-flash-preview", "gemini-1.5-pro")
+_GOOGLE_MODELS = ("gemini-2.5-flash", "gemini-3.1-flash-lite-preview", "gemini-3-flash-preview", "gemini-1.5-pro")
 _AI_COLLABORATION_PRESETS: dict[str, dict[str, list[dict[str, str]]]] = {
     "openai": {
         "cost_efficient": [
@@ -131,11 +131,10 @@ def build_review_run(
     store, total_facts = extract_fact_store(doc_paths, target_dir)
 
     prewarmed_assets = False
-    if use_ai_review:
-        if progress_callback:
-            progress_callback(15.0, "Preparing corpus and Brain F")
-        _prewarm_all_assets(doc_paths, target_dir, model=model)
-        prewarmed_assets = True
+    # Pre-warm is skipped here — AI review now only covers needs_review questions,
+    # not all evidence-backed answers.  The corpus/RAG/Brain-F assets are not
+    # needed for the strict-review-only pass.
+    # (was: if use_ai_review: _prewarm_all_assets(...))
 
     registry = load_question_registry()
     print("\n=== Brain D — Answering questions ===")
@@ -193,8 +192,10 @@ def build_review_run(
 
     # === Optional pre-warm so the UI is fully ready on first load ===
     # This intentionally re-reads documents to build the corpus/RAG/Brain-F assets.
-    # Disable with `TRICONVEY_PREWARM_ASSETS=0` if you prefer faster run creation.
-    if (not prewarmed_assets) and str(os.getenv("TRICONVEY_PREWARM_ASSETS", "1")).strip().lower() not in {"0", "false", "no", "off"}:
+    # DEFAULT IS NOW OFF — enable with `TRICONVEY_PREWARM_ASSETS=1`.
+    # Pre-warming sends all documents through AI extraction which adds 15-45s per
+    # document bundle and is the primary source of "too much AI" slowness.
+    if (not prewarmed_assets) and str(os.getenv("TRICONVEY_PREWARM_ASSETS", "0")).strip().lower() not in {"0", "false", "no", "off"}:
         if progress_callback:
             progress_callback(95.0, "Warming assets")
         # Run corpus extraction + RAG + Brain F assets synchronously so the user
@@ -546,6 +547,7 @@ def process_chat_document(
     model: str = "gpt-4.1-mini",
     matter_id: str = "",
     run_id: str = "",
+    copy_rules: list[tuple[str, float]] | None = None,
 ) -> dict[str, Any]:
     """Process a single newly chat-uploaded document.
 
@@ -562,6 +564,7 @@ def process_chat_document(
         provider=_provider_from_model(model),
         run_id=run_id,
         matter_id=matter_id,
+        copy_rules=copy_rules or [],
     )
 
 

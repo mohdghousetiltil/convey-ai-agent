@@ -1,7 +1,7 @@
 {
   "language": "English",
   "aiProvider": "openai",
-  "defaultModelName": "gpt-4o",
+  "defaultModelName": "gpt-4.1-mini",
   "triconveyPath": "C:\\Program Files\\Smokeball\\binaries\\triConvey.exe",
   "updateRepository": "mohdghousetiltil/convey-ai-agent",
   "includePrereleaseUpdates": false,

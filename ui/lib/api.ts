@@ -188,6 +188,27 @@ export interface LocalSettingsPayload {
   autoCheckForUpdates: boolean;
 }
 
+export interface CopyRulePayload {
+  id: string;
+  rule_type: string;
+  authority_name: string;
+  annual_amount: number;
+  notes?: string | null;
+  is_active: boolean;
+  created_by: string;
+  created_at?: string | null;
+  updated_by?: string | null;
+  updated_at?: string | null;
+}
+
+export interface CopyRuleUpsertPayload {
+  rule_type?: string;
+  authority_name: string;
+  annual_amount: number;
+  notes?: string | null;
+  is_active?: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // Feature 2: Vector memory types
 // ---------------------------------------------------------------------------
@@ -942,6 +963,32 @@ export async function saveSettings(settings: LocalSettingsPayload): Promise<Loca
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(settings),
+  });
+}
+
+export async function listCopyRules(ruleType = "water_authority"): Promise<CopyRulePayload[]> {
+  return apiRequest<CopyRulePayload[]>(`/copy-rules?rule_type=${encodeURIComponent(ruleType)}`);
+}
+
+export async function createCopyRule(payload: CopyRuleUpsertPayload): Promise<CopyRulePayload> {
+  return apiRequest<CopyRulePayload>("/copy-rules", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateCopyRule(ruleId: string, payload: CopyRuleUpsertPayload): Promise<CopyRulePayload> {
+  return apiRequest<CopyRulePayload>(`/copy-rules/${encodeURIComponent(ruleId)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteCopyRule(ruleId: string): Promise<{ ok: boolean; id: string }> {
+  return apiRequest<{ ok: boolean; id: string }>(`/copy-rules/${encodeURIComponent(ruleId)}`, {
+    method: "DELETE",
   });
 }
 

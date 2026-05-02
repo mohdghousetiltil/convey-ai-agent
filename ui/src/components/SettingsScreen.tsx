@@ -35,6 +35,7 @@ const ANTHROPIC_MODELS = [
 
 // Feature 1: Google Gemini models
 const GOOGLE_MODELS = [
+  { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash", badge: "Fast" },
   { id: "gemini-3.1-flash", label: "Gemini 3.1 Flash", badge: "Fast" },
   { id: "gemini-3-deep-think", label: "Gemini 3 Deep Think", badge: "Reasoning" },
   { id: "gemini-3.1-pro", label: "Gemini 3.1 Pro", badge: "Smart" },

@@ -534,6 +534,59 @@ class ClientSetting(Base):
     updated_at:    Mapped[datetime]   = _ts_now()
 
 
+# ── Copy Rules ───────────────────────────────────────────────────────────────
+
+class CopyRule(Base):
+    """User-maintained tariff lookup table.
+
+    rule_type = 'water_authority' for now; extensible to other categories.
+    When the extractor cannot determine an annual amount from the document,
+    it looks up authority_name (fuzzy match) against rows for the client.
+    """
+    __tablename__ = "copy_rules"
+    __table_args__ = (
+        UniqueConstraint("client_id", "rule_type", "authority_name",
+                         name="uq_copy_rules_client_type_name"),
+        Index("ix_copy_rules_lookup", "client_id", "rule_type", "is_active"),
+    )
+
+    id:             Mapped[uuid.UUID]       = _uuid_pk()
+    client_id:      Mapped[uuid.UUID]       = mapped_column(_UUID, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
+    rule_type:      Mapped[str]             = mapped_column(Text, nullable=False, default="water_authority")
+    authority_name: Mapped[str]             = mapped_column(Text, nullable=False)
+    annual_amount:  Mapped[float]           = mapped_column(Float, nullable=False)
+    notes:          Mapped[str | None]      = mapped_column(Text, nullable=True)
+    is_active:      Mapped[bool]            = mapped_column(Boolean, nullable=False, default=True)
+    created_by:     Mapped[str]             = mapped_column(Text, nullable=False)
+    created_at:     Mapped[datetime]        = _ts_now()
+    updated_by:     Mapped[str | None]      = mapped_column(Text, nullable=True)
+    updated_at:     Mapped[datetime | None] = _ts_optional()
+
+    audits: Mapped[list["CopyRuleAudit"]] = relationship(back_populates="copy_rule", cascade="all, delete-orphan")
+
+
+class CopyRuleAudit(Base):
+    """Immutable log of every change to a CopyRule row."""
+    __tablename__ = "copy_rules_audit"
+    __table_args__ = (Index("ix_copy_rules_audit_rule", "copy_rule_id"),)
+
+    id:                  Mapped[uuid.UUID]       = _uuid_pk()
+    copy_rule_id:        Mapped[uuid.UUID]       = mapped_column(_UUID, ForeignKey("copy_rules.id", ondelete="CASCADE"), nullable=False)
+    change_type:         Mapped[str]             = mapped_column(Text, nullable=False)   # INSERT | UPDATE | DELETE
+    changed_by:          Mapped[str]             = mapped_column(Text, nullable=False)
+    changed_at:          Mapped[datetime]        = _ts_now()
+    old_authority_name:  Mapped[str | None]      = mapped_column(Text, nullable=True)
+    new_authority_name:  Mapped[str | None]      = mapped_column(Text, nullable=True)
+    old_annual_amount:   Mapped[float | None]    = mapped_column(Float, nullable=True)
+    new_annual_amount:   Mapped[float | None]    = mapped_column(Float, nullable=True)
+    old_is_active:       Mapped[bool | None]     = mapped_column(Boolean, nullable=True)
+    new_is_active:       Mapped[bool | None]     = mapped_column(Boolean, nullable=True)
+    old_notes:           Mapped[str | None]      = mapped_column(Text, nullable=True)
+    new_notes:           Mapped[str | None]      = mapped_column(Text, nullable=True)
+
+    copy_rule: Mapped["CopyRule"] = relationship(back_populates="audits")
+
+
 # ── Public registry ──────────────────────────────────────────────────────────
 
 ALL_MODELS: tuple[type[Base], ...] = (
@@ -543,4 +596,5 @@ ALL_MODELS: tuple[type[Base], ...] = (
     AutofillJob, ActionResult, ExtractorsRun, AuthorityRuleRow,
     FieldBinding, FormTemplate, AuditLog, SyncQueue, SyncConflict,
     CacheMetadata, FileDeletionLog, ClientSetting,
+    CopyRule, CopyRuleAudit,
 )

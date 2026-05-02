@@ -43,11 +43,14 @@ def default_docs() -> list[Path]:
     )
 
 
-def run_all_extractors(doc) -> list:
+def run_all_extractors(doc, *, ai_client=None) -> list:
     facts = []
     for fn in EXTRACTORS:
         try:
-            emitted = fn(doc)
+            if fn is extract_council_rates_certificate_facts:
+                emitted = fn(doc, ai_client=ai_client)
+            else:
+                emitted = fn(doc)
             facts.extend(emitted)
         except Exception as exc:
             print(f"  [WARN] {fn.__name__} raised {type(exc).__name__}: {exc}")
@@ -58,8 +61,18 @@ def _format_elapsed(seconds: float) -> str:
     return f"{seconds:.2f}s"
 
 
-def extract_fact_store(doc_paths: list[Path], out_dir: Path) -> tuple[FactStoreImpl, int]:
-    """Run Brain A + Brain C and write `facts.json`."""
+def extract_fact_store(
+    doc_paths: list[Path],
+    out_dir: Path,
+    *,
+    ai_client=None,
+) -> tuple[FactStoreImpl, int]:
+    """Run Brain A + Brain C and write `facts.json`.
+
+    ai_client — optional AIClient instance forwarded to extractors that
+    support LLM-assisted fallback (currently council rates).  Pass None
+    (the default) to keep extraction fully deterministic.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
     overall_started = time.perf_counter()
 
@@ -78,7 +91,7 @@ def extract_fact_store(doc_paths: list[Path], out_dir: Path) -> tuple[FactStoreI
         try:
             doc = load_pdf_document(path)
             prime_cached_pdf_analysis(path, doc)
-            facts = run_all_extractors(doc)
+            facts = run_all_extractors(doc, ai_client=ai_client)
             store.add_many(facts)
             total_facts += len(facts)
             print(f"{len(facts)} fact(s) [{_format_elapsed(time.perf_counter() - doc_started)}]")
@@ -110,4 +123,98 @@ def extract_fact_store(doc_paths: list[Path], out_dir: Path) -> tuple[FactStoreI
         json.dumps(store.to_dict(), indent=2, default=str), encoding="utf-8"
     )
     print(f"  [Time] Brain A + C total: {_format_elapsed(time.perf_counter() - overall_started)}")
+
+    _write_rates_debug(store, out_dir)
+
     return store, total_facts
+
+
+# ---------------------------------------------------------------------------
+# Rates debug log  — written to  <out_dir>/rates_debug.log
+# ---------------------------------------------------------------------------
+
+_RATES_DEBUG_PATHS = [
+    ("rates.council.authority_name",           "Council Authority"),
+    ("rates.council.annual_amount",            "Council Amount"),
+    ("rates.water.authority_name",             "Water Authority"),
+    ("rates.water.annual_amount",              "Water Amount"),
+    ("rates.land_tax.authority_name",          "Land Tax Authority"),
+    ("rates.land_tax.amount",                  "Land Tax Amount"),
+    ("rates.owners_corporation.authority_name","OC Authority"),
+    ("rates.owners_corporation.annual_amount", "OC Amount"),
+]
+
+
+def _write_rates_debug(store, out_dir: Path) -> None:
+    """Write authority + amount fact resolution table to rates_debug.log."""
+    lines: list[str] = []
+    lines.append("=" * 70)
+    lines.append("RATES DEBUG  --  Authority & Amount Resolution")
+    lines.append("=" * 70)
+    lines.append("")
+
+    for path, label in _RATES_DEBUG_PATHS:
+        all_facts = store.get_all(path)
+        winner, conflict = store.get(path)
+
+        lines.append("-" * 70)
+        lines.append(f"  PATH : {path}")
+        lines.append(f"  LABEL: {label}")
+
+        if not all_facts:
+            lines.append("  RESULT : [NO FACTS -- nothing extracted from any document]")
+            lines.append("")
+            continue
+
+        final_val  = winner.value if winner else "NEEDS REVIEW (no clear winner)"
+        final_conf = winner.confidence if winner else 0.0
+        final_src  = winner.extractor if winner else "--"
+        resolution = conflict.resolution if conflict else "single fact"
+
+        lines.append(f"  FINAL  : {final_val}")
+        lines.append(f"  CONF   : {final_conf:.2f}")
+        lines.append(f"  SOURCE : {final_src}")
+        lines.append(f"  HOW    : {resolution}")
+        lines.append("")
+
+        if len(all_facts) == 1:
+            f = all_facts[0]
+            src_file = f.sources[0].file if f.sources else "unknown"
+            lines.append(f"  ONLY CANDIDATE:")
+            lines.append(f"    value     = {f.value!r}")
+            lines.append(f"    conf      = {f.confidence:.2f}")
+            lines.append(f"    extractor = {f.extractor}")
+            lines.append(f"    file      = {src_file}")
+        else:
+            lines.append(f"  ALL CANDIDATES ({len(all_facts)} facts, highest conf first):")
+            for f in sorted(all_facts, key=lambda x: -x.confidence):
+                is_win = (winner and f.extractor == winner.extractor
+                          and str(f.value) == str(winner.value))
+                mark = "  [WINNER]" if is_win else "          "
+                src_file = f.sources[0].file if f.sources else "unknown"
+                lines.append(f"  {mark}")
+                lines.append(f"    value     = {f.value!r}")
+                lines.append(f"    conf      = {f.confidence:.2f}")
+                lines.append(f"    extractor = {f.extractor}")
+                lines.append(f"    file      = {src_file}")
+                if f.notes:
+                    lines.append(f"    notes     = {f.notes[:120]}")
+        lines.append("")
+
+    lines.append("=" * 70)
+    lines.append("END RATES DEBUG")
+    lines.append("=" * 70)
+
+    output = "\n".join(lines)
+
+    # Always print to stdout so it shows in the terminal regardless of
+    # log-capture configuration.
+    print(output)
+
+    # Also write to file so it's readable even when stdout is captured/redirected.
+    log_path = out_dir / "rates_debug.log"
+    try:
+        log_path.write_text(output, encoding="utf-8")
+        print(f"  [Rates Debug] Also written to {log_path}")
+    except Exception as exc:
+        print(f"  [WARN] Could not write rates_debug.log: {exc}")

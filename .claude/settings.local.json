@@ -86,7 +86,16 @@
       "Bash(python -c \"from triconvey_agent.backend.service import extract_corpus_entry_async, confirm_corpus_document, get_corpus_state; print\\('service OK'\\)\")",
       "Bash(python -c \"from triconvey_agent.brain_f.agent import BrainFAgent; print\\('agent OK'\\)\")",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('compilerOptions',{}\\).get\\('paths',{}\\)\\)\")",
-      "Bash(python -c \"from triconvey_agent.backend import api; print\\('API OK'\\)\")"
+      "Bash(python -c \"from triconvey_agent.backend import api; print\\('API OK'\\)\")",
+      "Bash(findstr /v \"DEBUG\\\\|method\\\\|Facts\\\\|conf=0\\\\|note:\\\\|-----\")",
+      "Bash(python -c \"import sys; [print\\(l\\) for l in sys.stdin if 'RESULTS' in l or any\\(x in l for x in ['Yarra','Central','Greater','===']\\)]\")",
+      "Bash(python -c \"import sys; [print\\(l.rstrip\\(\\)\\) for l in sys.stdin if not l.strip\\(\\).startswith\\('[CRC'\\)]\")",
+      "Bash(python -c \"import sys; [print\\(l.rstrip\\(\\)\\) for l in sys.stdin if not '[CRC' in l]\")",
+      "Bash(python -c \"import sys; [print\\(l.rstrip\\(\\)\\) for l in sys.stdin if any\\(x in l for x in ['annual','notes','quote']\\)]\")",
+      "Read(//c/Users/moham/Downloads/**)",
+      "Bash(python -c \"import sys; sys.path.insert\\(0,'src'\\); import triconvey_agent.canonical.extractors.council_rates_certificate as m; print\\('OK', m.EXTRACTOR_NAME\\)\")",
+      "Bash(python3)",
+      "Bash(python -c \"from triconvey_agent.canonical.extractors.water_authority_certificate import extract_water_authority_certificate_facts; print\\('OK'\\)\")"
     ]
   }
 }

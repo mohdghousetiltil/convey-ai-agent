@@ -155,7 +155,7 @@ class MultiModelClient:
         except ImportError:
             raise ImportError(
                 "google-generativeai is not installed. "
-                "Run: pip install google-generativeai --break-system-packages"
+                "Run: pip install google-generativeai"
             )
         key = self._api_key or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
         if not key:
@@ -377,32 +377,62 @@ class MultiModelClient:
         except ImportError:
             return []
 
+        def _schema_from_jsonschema(node: dict[str, Any]) -> Any:
+            json_type = (node.get("type") or "string").lower()
+            description = node.get("description", "")
+            type_map: dict[str, str] = {
+                "string": "STRING",
+                "number": "NUMBER",
+                "integer": "INTEGER",
+                "boolean": "BOOLEAN",
+                "array": "ARRAY",
+                "object": "OBJECT",
+            }
+            g_type = type_map.get(json_type, "STRING")
+
+            if json_type == "array":
+                items_node = node.get("items") or {"type": "string"}
+                return genai.protos.Schema(
+                    type=genai.protos.Type[g_type],
+                    description=description,
+                    items=_schema_from_jsonschema(items_node),
+                )
+
+            if json_type == "object":
+                properties: dict[str, Any] = {}
+                for prop_name, prop_def in (node.get("properties") or {}).items():
+                    try:
+                        properties[prop_name] = _schema_from_jsonschema(prop_def or {})
+                    except Exception:
+                        properties[prop_name] = genai.protos.Schema(type=genai.protos.Type.STRING)
+                return genai.protos.Schema(
+                    type=genai.protos.Type[g_type],
+                    description=description,
+                    properties=properties,
+                    required=node.get("required", []),
+                )
+
+            try:
+                return genai.protos.Schema(
+                    type=genai.protos.Type[g_type],
+                    description=description,
+                )
+            except Exception:
+                return genai.protos.Schema(
+                    type=genai.protos.Type.STRING,
+                    description=description,
+                )
+
         declarations = []
-        type_map: dict[str, str] = {
-            "string": "STRING",
-            "number": "NUMBER",
-            "integer": "INTEGER",
-            "boolean": "BOOLEAN",
-            "array": "ARRAY",
-            "object": "OBJECT",
-        }
 
         for tool in tools:
             schema = tool.get("input_schema", {})
             properties: dict[str, Any] = {}
-            for prop_name, prop_def in schema.get("properties", {}).items():
-                json_type = (prop_def.get("type") or "string").lower()
-                g_type = type_map.get(json_type, "STRING")
+            for prop_name, prop_def in (schema.get("properties") or {}).items():
                 try:
-                    properties[prop_name] = genai.protos.Schema(
-                        type=genai.protos.Type[g_type],
-                        description=prop_def.get("description", ""),
-                    )
+                    properties[prop_name] = _schema_from_jsonschema(prop_def or {})
                 except Exception:
-                    properties[prop_name] = genai.protos.Schema(
-                        type=genai.protos.Type.STRING,
-                        description=prop_def.get("description", ""),
-                    )
+                    properties[prop_name] = genai.protos.Schema(type=genai.protos.Type.STRING)
 
             try:
                 fn_decl = genai.protos.FunctionDeclaration(

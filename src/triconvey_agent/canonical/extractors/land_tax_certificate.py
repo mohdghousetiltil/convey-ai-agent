@@ -77,12 +77,22 @@ _CERT_NO_RE = re.compile(r"Certificate No:?\s*\n?\s*(\d{6,})", re.IGNORECASE)
 _LAND_ADDRESS_RE = re.compile(r"Land Address:\s*(.+?)(?:\r?\n|$)", re.IGNORECASE)
 _VENDOR_RE = re.compile(r"Vendor:\s*\n?\s*(.+?)(?:\r?\n)", re.IGNORECASE)
 _LAND_ID_RE = re.compile(r"Land Id\s*\n\s*(\d+)", re.IGNORECASE)
+# Matches both complete and incomplete Volume/Folio rows.
+# Groups: (lot, plan, volume_or_None, folio_or_None)
 _LOT_PLAN_VF_RE = re.compile(
-    r"Lot\s+Plan\s+Volume\s+Folio\s*\n\s*(\d+)\s+(\w+)\s+(\d+)\s+(\d+)",
+    r"Lot\s+Plan\s+Volume\s+Folio\s*\n\s*(\d+)\s+(\w+)(?:\s+(\d+)\s+(\d+))?",
     re.IGNORECASE,
 )
 _TAX_PAYABLE_RE = re.compile(
     r"Tax Payable\s*\n\s*(\$[\d,]+\.\d{2})", re.IGNORECASE
+)
+# Matches "Land Tax = $1,515.00" in the "For Information Only" calculation section.
+# This is always preferred over Tax Payable = $0.00 because the certificate may show
+# $0 when Volume/Folio is incomplete or the property has a PPoR exemption — the
+# calculation figure is the true single-ownership land tax amount.
+_LAND_TAX_VALUE_RE = re.compile(
+    r"\bLand\s+Tax\s*=\s*\$\s*([\d,]+\.\d{2})",
+    re.IGNORECASE | re.MULTILINE,
 )
 _SITE_VALUE_RE = re.compile(
     r"Taxable Value \(SV\)\s*\n\s*(\$[\d,]+)", re.IGNORECASE
@@ -162,44 +172,145 @@ def _extract_land_identity(doc: Document, text: str) -> list[Fact]:
         facts.append(
             _make_fact(doc, P.PROPERTY_PLAN_NUMBER, plan, quote, confidence=0.95)
         )
-        facts.append(
-            _make_fact(doc, P.PROPERTY_VOLUME_OR_BOOK, volume, quote, confidence=0.95)
-        )
-        facts.append(
-            _make_fact(doc, P.PROPERTY_FOLIO_OR_NUMBER, folio, quote, confidence=0.95)
-        )
+        if volume:
+            facts.append(
+                _make_fact(doc, P.PROPERTY_VOLUME_OR_BOOK, volume, quote, confidence=0.95)
+            )
+        if folio:
+            facts.append(
+                _make_fact(doc, P.PROPERTY_FOLIO_OR_NUMBER, folio, quote, confidence=0.95)
+            )
     return facts
+
+
+def _volume_folio_complete(text: str) -> bool:
+    """Return True if both Volume and Folio are populated on the certificate."""
+    m = _LOT_PLAN_VF_RE.search(text)
+    if not m:
+        return False
+    return bool(m.group(3) and m.group(4))
+
+
+def _has_property_exemption(text: str) -> bool:
+    return _EXEMPTION_RE.search(text) is not None
 
 
 def _extract_tax_amounts(doc: Document, text: str) -> list[Fact]:
     facts: list[Fact] = []
     tax_amount: str | None = None
+    tax_quote: str | None = None
 
+    vf_complete = _volume_folio_complete(text)
+    payable_amount: str | None = None
+    payable_quote: str | None = None
     if m := _TAX_PAYABLE_RE.search(text):
-        tax_amount = m.group(1)
-        quote = _compact(m.group(0))
-        facts.append(_make_fact(doc, P.RATES_LAND_TAX_AMOUNT, tax_amount, quote))
+        payable_amount = m.group(1)
+        payable_quote = _compact(m.group(0))
+
+    # Rule 1: Volume AND Folio both present + Tax Payable = $0 → operative amount is $0.00
+    # (property is finalised / exempt — no land tax applies)
+    vf_zero = (
+        vf_complete
+        and payable_amount is not None
+        and _amount_to_zero_bool(payable_amount)
+    )
+
+    if vf_zero:
+        tax_amount = "$0.00"
+        tax_quote = payable_quote or "Tax Payable $0.00 — Volume/Folio present"
+        facts.append(
+            _make_fact(
+                doc,
+                P.RATES_LAND_TAX_AMOUNT,
+                tax_amount,
+                tax_quote,
+                confidence=0.99,
+                notes=(
+                    "Volume and Folio both present AND Tax Payable = $0.00. "
+                    "Certificate is finalised — operative land tax = $0.00."
+                ),
+            )
+        )
+    else:
+        # Rule 2: Volume/Folio missing  → use 'Land Tax = $X' calculation figure.
+        # Rule 3: Volume/Folio present + Tax Payable ≠ $0 → also use calculation figure.
+        # In both cases the 'For Information Only' single-ownership amount is authoritative.
+        if m := _LAND_TAX_VALUE_RE.search(text):
+            tax_amount = "$" + m.group(1)
+            tax_quote = _compact(m.group(0))
+            if not vf_complete:
+                note = "Volume/Folio blank — certificate not finalised. Using single-ownership calculation."
+            else:
+                note = "Volume/Folio present but Tax Payable is non-zero. Using single-ownership calculation."
+            facts.append(
+                _make_fact(
+                    doc,
+                    P.RATES_LAND_TAX_AMOUNT,
+                    tax_amount,
+                    tax_quote,
+                    confidence=0.99,
+                    notes=note,
+                )
+            )
+
+    if payable_amount is not None and payable_quote is not None:
+        # Only use Tax Payable as the amount if nothing else resolved.
+        if tax_amount is None:
+            tax_amount = payable_amount
+            tax_quote = payable_quote
+            facts.append(
+                _make_fact(
+                    doc,
+                    P.RATES_LAND_TAX_AMOUNT,
+                    tax_amount,
+                    payable_quote,
+                    confidence=0.97,
+                    notes="land tax amount sourced from Tax Payable field",
+                )
+            )
+        effective_amount = tax_amount or payable_amount
+        facts.append(
+            _make_fact(
+                doc,
+                P.RATES_LAND_TAX_PAYABLE,
+                not _amount_to_zero_bool(effective_amount),
+                payable_quote,
+                confidence=0.99,
+                notes=(
+                    f"derived from land tax amount {effective_amount}; "
+                    f"Tax Payable field = {payable_amount}"
+                ),
+            )
+        )
+        facts.append(
+            _make_fact(
+                doc,
+                P.RATES_VACANT_LAND_TAX_PAYABLE,
+                not _amount_to_zero_bool(effective_amount),
+                payable_quote,
+                confidence=0.85,
+                notes="follows the main land tax payable status on this certificate",
+            )
+        )
+    elif tax_amount is not None and tax_quote is not None:
         facts.append(
             _make_fact(
                 doc,
                 P.RATES_LAND_TAX_PAYABLE,
                 not _amount_to_zero_bool(tax_amount),
-                quote,
-                confidence=0.99,
-                notes=f"derived from Tax Payable = {tax_amount}",
+                tax_quote,
+                confidence=0.95,
+                notes="derived from direct land tax amount on SRO certificate",
             )
         )
-        # Vacant residential land tax is in the same certificate; if the
-        # main "Tax Payable" is zero AND the certificate explicitly mentions
-        # an exemption, vacant tax is not payable either.
         facts.append(
             _make_fact(
                 doc,
                 P.RATES_VACANT_LAND_TAX_PAYABLE,
                 not _amount_to_zero_bool(tax_amount),
-                quote,
-                confidence=0.85,
-                notes="follows the main land tax payable status on this certificate",
+                tax_quote,
+                confidence=0.80,
+                notes="follows direct land tax amount when Tax Payable field is absent",
             )
         )
 

@@ -1,10 +1,30 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown, ChevronRight, Sparkles, Star } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Sparkles,
+  Star,
+  Copy,
+  Settings2,
+  ArrowLeft,
+  Search,
+  Filter,
+  Check,
+  Zap,
+  Info,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  createCopyRule,
+  deleteCopyRule,
+  listCopyRules,
+  updateCopyRule,
+  type CopyRulePayload,
+} from "@/lib/api";
 import { Header } from "./Header";
 
-interface SettingsForm {
+export interface SettingsForm {
   language: string;
   openAiApiKey: string;
   anthropicApiKey: string;
@@ -49,6 +69,15 @@ type PreferenceSection = {
   id: string;
   title: string;
   nodes: PreferenceNode[];
+};
+
+type EditableCopyRule = {
+  id: string;
+  authority_name: string;
+  annual_amount: string;
+  notes: string;
+  is_active: boolean;
+  isNew?: boolean;
 };
 
 const ALL_OUTGOING_TARGETS = [
@@ -242,13 +271,12 @@ const SECTIONS: PreferenceSection[] = [
   },
 ];
 
-/** All autofill targets — used as the app-wide default (all fields starred). */
 export const DEFAULT_PREFERRED_FIELDS: string[] = Array.from(
   new Set(
-    SECTIONS.flatMap((s) =>
-      s.nodes
-        .filter((n): n is PreferenceItem => n.kind === "item")
-        .flatMap((n) => n.targets),
+    SECTIONS.flatMap((section) =>
+      section.nodes
+        .filter((node): node is PreferenceItem => node.kind === "item")
+        .flatMap((node) => node.targets),
     ),
   ),
 );
@@ -264,14 +292,13 @@ function removeTargets(existing: string[], next: string[]) {
 
 export function ClientPolicyScreen({
   onBack,
-  userInitials,
   onProfile,
   onSettings,
-  onAbout,
   onLogout,
   settings,
   onSaveSettings,
 }: ClientPolicyScreenProps) {
+  const [currentSubView, setCurrentSubView] = React.useState<"menu" | "configure" | "copy">("menu");
   const [selectedTargets, setSelectedTargets] = React.useState<string[]>(
     settings.preferredAutofillFields?.length ? settings.preferredAutofillFields : DEFAULT_PREFERRED_FIELDS,
   );
@@ -281,12 +308,39 @@ export function ClientPolicyScreen({
   const [starredOpen, setStarredOpen] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveError, setSaveError] = React.useState("");
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [copyRules, setCopyRules] = React.useState<EditableCopyRule[]>([]);
+  const [copyRulesLoading, setCopyRulesLoading] = React.useState(false);
+  const [copyRulesError, setCopyRulesError] = React.useState("");
+  const [copyRulesSavingId, setCopyRulesSavingId] = React.useState<string>("");
 
   React.useEffect(() => {
     setSelectedTargets(
       settings.preferredAutofillFields?.length ? settings.preferredAutofillFields : DEFAULT_PREFERRED_FIELDS,
     );
   }, [settings.preferredAutofillFields]);
+
+  React.useEffect(() => {
+    if (currentSubView !== "copy") return;
+    let cancelled = false;
+    setCopyRulesLoading(true);
+    setCopyRulesError("");
+    void listCopyRules()
+      .then((rows) => {
+        if (cancelled) return;
+        setCopyRules(rows.map(toEditableCopyRule));
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setCopyRulesError(error instanceof Error ? error.message : "Could not load water authorities.");
+      })
+      .finally(() => {
+        if (!cancelled) setCopyRulesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentSubView]);
 
   const items = React.useMemo(
     () => SECTIONS.flatMap((section) => section.nodes).filter((node): node is PreferenceItem => node.kind === "item"),
@@ -298,6 +352,18 @@ export function ClientPolicyScreen({
     [items, selectedTargets],
   );
 
+  const filteredSections = React.useMemo(() => {
+    if (!searchQuery) return SECTIONS;
+    return SECTIONS.map((section) => ({
+      ...section,
+      nodes: section.nodes.filter(
+        (node) =>
+          node.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (node.kind === "item" && node.id.toLowerCase().includes(searchQuery.toLowerCase())),
+      ),
+    })).filter((section) => section.nodes.length > 0);
+  }, [searchQuery]);
+
   const toggleSection = (id: string) => {
     setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
   };
@@ -305,6 +371,19 @@ export function ClientPolicyScreen({
   const toggleItem = (item: PreferenceItem) => {
     const selected = item.targets.every((target) => selectedTargets.includes(target));
     setSelectedTargets((prev) => (selected ? removeTargets(prev, item.targets) : mergeTargets(prev, item.targets)));
+  };
+
+  const toggleEntireSection = (section: PreferenceSection) => {
+    const sectionItems = section.nodes.filter((node): node is PreferenceItem => node.kind === "item");
+    const allSelected = sectionItems.every((item) => item.targets.every((target) => selectedTargets.includes(target)));
+
+    if (allSelected) {
+      const targetsToRemove = sectionItems.flatMap((item) => item.targets);
+      setSelectedTargets((prev) => removeTargets(prev, targetsToRemove));
+    } else {
+      const targetsToAdd = sectionItems.flatMap((item) => item.targets);
+      setSelectedTargets((prev) => mergeTargets(prev, targetsToAdd));
+    }
   };
 
   const handleSave = async () => {
@@ -316,6 +395,7 @@ export function ClientPolicyScreen({
         ...settings,
         preferredAutofillFields: selectedTargets,
       });
+      setCurrentSubView("menu");
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Could not save starred autofill preferences.");
     } finally {
@@ -323,222 +403,535 @@ export function ClientPolicyScreen({
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background font-sans">
-      <Header
-        onBack={onBack}
-        userInitials={userInitials}
-        onProfile={onProfile}
-        onSettings={onSettings}
-        onLogout={onLogout}
-      />
+  function toEditableCopyRule(rule: CopyRulePayload): EditableCopyRule {
+    return {
+      id: rule.id,
+      authority_name: rule.authority_name,
+      annual_amount: String(rule.annual_amount.toFixed(2)),
+      notes: rule.notes || "",
+      is_active: rule.is_active,
+    };
+  }
 
-      <main className="mx-auto max-w-5xl px-6 py-10">
-        <div className="mb-10 flex flex-col gap-2">
-          <h1 className="text-3xl font-black tracking-tight text-foreground">Custom Policy</h1>
-          <p className="text-base text-muted-foreground">Configure how Agent auto-fills your Section 32 documents in Convey.</p>
+  const updateCopyRuleDraft = (id: string, patch: Partial<EditableCopyRule>) => {
+    setCopyRules((prev) => prev.map((rule) => (rule.id === id ? { ...rule, ...patch } : rule)));
+  };
+
+  const handleAddCopyRule = () => {
+    setCopyRules((prev) => [
+      {
+        id: `new-${Date.now()}`,
+        authority_name: "",
+        annual_amount: "",
+        notes: "",
+        is_active: true,
+        isNew: true,
+      },
+      ...prev,
+    ]);
+  };
+
+  const handleSaveCopyRule = async (rule: EditableCopyRule) => {
+    const annualAmount = Number(rule.annual_amount);
+    if (!rule.authority_name.trim()) {
+      setCopyRulesError("Authority name is required.");
+      return;
+    }
+    if (!Number.isFinite(annualAmount) || annualAmount < 0) {
+      setCopyRulesError("Annual amount must be a valid positive number.");
+      return;
+    }
+
+    setCopyRulesSavingId(rule.id);
+    setCopyRulesError("");
+    try {
+      const payload = {
+        rule_type: "water_authority" as const,
+        authority_name: rule.authority_name.trim(),
+        annual_amount: annualAmount,
+        notes: rule.notes.trim() || null,
+        is_active: rule.is_active,
+      };
+      const saved = rule.isNew ? await createCopyRule(payload) : await updateCopyRule(rule.id, payload);
+      setCopyRules((prev) => prev.map((item) => (item.id === rule.id ? toEditableCopyRule(saved) : item)));
+    } catch (error) {
+      setCopyRulesError(error instanceof Error ? error.message : "Could not save water authority rule.");
+    } finally {
+      setCopyRulesSavingId("");
+    }
+  };
+
+  const handleDeleteCopyRule = async (rule: EditableCopyRule) => {
+    if (rule.isNew) {
+      setCopyRules((prev) => prev.filter((item) => item.id !== rule.id));
+      return;
+    }
+    setCopyRulesSavingId(rule.id);
+    setCopyRulesError("");
+    try {
+      await deleteCopyRule(rule.id);
+      setCopyRules((prev) => prev.filter((item) => item.id !== rule.id));
+    } catch (error) {
+      setCopyRulesError(error instanceof Error ? error.message : "Could not delete water authority rule.");
+    } finally {
+      setCopyRulesSavingId("");
+    }
+  };
+
+  const renderMenu = () => (
+    <div className="mx-auto max-w-4xl py-12">
+      <div className="mb-12 text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 text-primary"
+        >
+          <Sparkles className="h-8 w-8" />
+        </motion.div>
+        <h1 className="text-4xl font-serif italic text-slate-900">Custom Policy</h1>
+        <p className="mt-2 text-lg text-slate-500">Manage how your AI assistant handles property law conventions.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+        {[
+          {
+            id: "configure",
+            title: "Configure Rules",
+            desc: "Fine-tune which fields are automatically processed and starred in your workspace.",
+            icon: Settings2,
+            color: "bg-blue-50 text-blue-600 border-blue-100",
+            action: () => setCurrentSubView("configure"),
+          },
+          {
+            id: "copy",
+            title: "Copy Rules",
+            desc: "Import configuration sets from existing clients or pre-approved law templates.",
+            icon: Copy,
+            color: "bg-emerald-50 text-emerald-600 border-emerald-100",
+            action: () => setCurrentSubView("copy"),
+          },
+        ].map((option, index) => (
+          <motion.div
+            key={option.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            onClick={option.action}
+            className="group relative cursor-pointer"
+          >
+            <div className="h-full rounded-[2.5rem] border border-slate-200 bg-white p-8 transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-200">
+              <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border ${option.color} transition-transform group-hover:scale-110`}>
+                <option.icon className="h-7 w-7" />
+              </div>
+              <h3 className="mb-3 text-2xl font-bold text-slate-900">{option.title}</h3>
+              <p className="mb-6 leading-relaxed text-slate-500">{option.desc}</p>
+              <div className="flex items-center text-sm font-bold text-primary transition-all group-hover:gap-2">
+                Enter {option.title} <ChevronRight className="h-4 w-4" />
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderConfigure = () => (
+    <div className="mx-auto max-w-5xl">
+      <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-center">
+        <div>
+          <button
+            onClick={() => setCurrentSubView("menu")}
+            className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-400 transition-colors hover:text-slate-600"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Custom Policy
+          </button>
+          <h1 className="font-sans text-3xl font-black tracking-tight text-slate-900">Configure Rules</h1>
+          <p className="text-base text-slate-500">Fine-tune your autofill preferences and system conventions.</p>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-          {/* Starred Summary Section */}
-          <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card shadow-xl shadow-black/10">
-            <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: `radial-gradient(circle at 1px 1px, #000 1px, transparent 0)`, backgroundSize: '24px 24px' }} />
-            <div className="relative">
-              <button
-                onClick={() => setStarredOpen((value) => !value)}
-                className="flex w-full items-center justify-between px-8 py-7 text-left transition-colors hover:bg-accent/50"
-              >
-                <div className="flex items-center gap-5">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 shadow-inner">
-                    <Star className="h-6 w-6 fill-current" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground">Starred for Autofill</h2>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      {starredItems.length === 0 ? "No fields selected" : `${starredItems.length} fields will be auto-filled`}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  {starredOpen ? <ChevronDown className="h-5 w-5 text-muted-foreground" /> : <ChevronRight className="h-5 w-5 text-muted-foreground" />}
-                </div>
-              </button>
+        <div className="group relative">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-primary" />
+          <input
+            type="text"
+            placeholder="Search rules or sections..."
+            className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-6 text-sm shadow-sm transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:w-72"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+          />
+        </div>
+      </div>
 
-              <AnimatePresence>
-                {starredOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden border-t border-border"
-                  >
-                    <div className="px-8 py-7">
-                      {starredItems.length ? (
-                        <div className="flex flex-wrap gap-2.5">
-                          {starredItems.map((item) => (
-                            <button
-                              key={item.id}
-                              onClick={() => toggleItem(item)}
-                              className="group flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/50 px-4 py-2 text-sm font-bold text-amber-800 transition-all hover:bg-amber-100 hover:scale-[1.02] active:scale-[0.98]"
-                            >
-                              <Star className="h-3.5 w-3.5 fill-current" />
-                              {item.label}
-                            </button>
-                          ))}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+        <section className="relative overflow-hidden rounded-[2.5rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
+          <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #000 1px, transparent 0)", backgroundSize: "24px 24px" }} />
+          <div className="relative">
+            <button
+              onClick={() => setStarredOpen((value) => !value)}
+              className="flex w-full items-center justify-between px-10 py-8 text-left transition-colors hover:bg-slate-50/50"
+            >
+              <div className="flex items-center gap-6">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50 text-violet-400 shadow-inner transition-transform group-hover:rotate-6">
+                  <Star className="h-8 w-8 fill-current" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">Starred for Autofill</h2>
+                  <p className="text-sm font-medium text-slate-400">
+                    {starredItems.length === 0 ? "No fields selected" : `${starredItems.length} items will be auto-prioritized in processing`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="rounded-full bg-slate-100 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  {starredItems.length} ACTIVE
+                </div>
+                {starredOpen ? <ChevronDown className="h-5 w-5 text-slate-400" /> : <ChevronRight className="h-5 w-5 text-slate-400" />}
+              </div>
+            </button>
+
+            <AnimatePresence>
+              {starredOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden border-t border-slate-100"
+                >
+                  <div className="px-10 py-8">
+                    {starredItems.length ? (
+                      <div className="flex flex-wrap gap-3">
+                        {starredItems.map((item) => (
+                          <button
+                            key={item.id}
+                            onClick={() => toggleItem(item)}
+                            className="group flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition-all hover:scale-[1.03] hover:bg-slate-50 active:scale-[0.97]"
+                          >
+                            <Star className="h-3.5 w-3.5 fill-violet-400 text-violet-400" />
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50/50 px-10 py-12 text-center">
+                        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-100 bg-white text-slate-300 shadow-sm">
+                          <Star className="h-6 w-6" />
                         </div>
-                      ) : (
-                        <div className="rounded-3xl border-2 border-dashed border-border bg-muted/30 px-8 py-10 text-center">
-                          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-sm">
-                            <Star className="h-5 w-5" />
-                          </div>
-                          <p className="text-sm font-bold text-foreground">Your preferences are empty</p>
-                          <p className="mt-1 text-xs text-muted-foreground">Star questions below to automate your Convey workflow.</p>
-                        </div>
-                      )}
+                        <p className="text-lg font-bold text-slate-900">No starred preferences yet</p>
+                        <p className="mx-auto mt-1 max-w-sm text-sm font-medium text-slate-400">Starred items are automatically filled by AI and prioritized in the review workspace.</p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        <div className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-3">
+              <Filter className="h-4 w-4 text-primary" />
+              <h2 className="text-sm font-black uppercase tracking-widest text-slate-400">Document Sections</h2>
+            </div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Showing {filteredSections.length} of {SECTIONS.length}
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {filteredSections.map((section, index) => {
+              const open = expandedSections[section.id];
+              const sectionItems = section.nodes.filter((node): node is PreferenceItem => node.kind === "item");
+              const selectableCount = sectionItems.length;
+              const activeCount = sectionItems.filter((item) => item.targets.every((target) => selectedTargets.includes(target))).length;
+              const allSelected = activeCount === selectableCount;
+
+              return (
+                <motion.div
+                  key={section.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md"
+                >
+                  <div className="flex w-full items-center justify-between py-6 pl-6 pr-4">
+                    <div className="flex flex-1 cursor-pointer items-center gap-5" onClick={() => toggleSection(section.id)}>
+                      <div
+                        className={[
+                          "flex h-12 w-12 items-center justify-center rounded-2xl text-base font-bold shadow-inner transition-all",
+                          activeCount > 0 ? "scale-110 bg-primary text-white" : "bg-slate-100 text-slate-400",
+                        ].join(" ")}
+                      >
+                        {section.title.split(".")[0]}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900 transition-colors group-hover:text-primary">{section.title.replace(/^\d+\.\s*/, "")}</h3>
+                        <p className="mt-0.5 text-xs font-semibold text-slate-400">{activeCount} items marked for autofill</p>
+                      </div>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </section>
 
-          {/* Preference Selection */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 px-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Configure Rules</h2>
-            </div>
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => toggleEntireSection(section)}
+                        className={[
+                          "flex h-10 items-center gap-2 rounded-xl border px-4 text-[10px] font-black uppercase tracking-tighter transition-all",
+                          allSelected
+                            ? "border-violet-300 bg-violet-400 text-white shadow-lg shadow-violet-300/20"
+                            : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50",
+                        ].join(" ")}
+                      >
+                        <Star className={["h-3.5 w-3.5", allSelected ? "fill-current" : ""].join(" ")} />
+                        {allSelected ? "Starred All" : "Star Section"}
+                      </button>
 
-            <div className="grid gap-4">
-              {SECTIONS.map((section) => {
-                const open = expandedSections[section.id];
-                const selectableCount = section.nodes.filter((node) => node.kind === "item").length;
-                const activeCount = section.nodes.filter((node) => node.kind === "item" && node.targets.every(t => selectedTargets.includes(t))).length;
+                      <button
+                        onClick={() => toggleSection(section.id)}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl transition-colors hover:bg-slate-50"
+                      >
+                        {open ? <ChevronDown className="h-5 w-5 text-slate-400" /> : <ChevronRight className="h-5 w-5 text-slate-400" />}
+                      </button>
+                    </div>
+                  </div>
 
-                return (
-                  <div key={section.id} className="overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-sm transition-all hover:shadow-md">
-                    <button
-                      onClick={() => toggleSection(section.id)}
-                      className="flex w-full items-center justify-between px-6 py-5 text-left transition-colors hover:bg-accent/50"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={[
-                          "flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold transition-colors",
-                          activeCount > 0 ? "bg-primary text-white" : "bg-muted text-muted-foreground"
-                        ].join(" ")}>
-                          {section.title.split('.')[0]}
-                        </div>
-                        <div>
-                          <h3 className="text-base font-bold text-foreground">{section.title.replace(/^\d+\.\s*/, '')}</h3>
-                          <p className="mt-0.5 text-xs font-semibold text-muted-foreground">
-                            {activeCount} / {selectableCount} selected
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {activeCount > 0 && (
-                          <div className="h-2 w-2 rounded-full bg-primary" />
-                        )}
-                        {open ? <ChevronDown className="h-5 w-5 text-muted-foreground" /> : <ChevronRight className="h-5 w-5 text-muted-foreground" />}
-                      </div>
-                    </button>
-
-                    <AnimatePresence>
-                      {open && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden border-t border-border"
-                        >
-                          <div className="space-y-2 px-6 py-6 bg-muted/20">
-                            {section.nodes.map((node) => {
-                              if (node.kind === "heading") {
-                                return (
-                                  <div key={node.id} className="mb-2 pt-4 first:pt-0 text-[0.7rem] font-black uppercase tracking-widest text-muted-foreground">
-                                    {node.label}
-                                  </div>
-                                );
-                              }
-
-                              const active = node.targets.every((target) => selectedTargets.includes(target));
+                  <AnimatePresence>
+                    {open && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden border-t border-slate-100"
+                      >
+                        <div className="grid grid-cols-1 gap-3 bg-slate-50/50 px-8 py-8 md:grid-cols-2">
+                          {section.nodes.map((node) => {
+                            if (node.kind === "heading") {
                               return (
-                                <button
-                                  key={node.id}
-                                  onClick={() => toggleItem(node)}
+                                <div key={node.id} className="col-span-2 mb-2 flex items-center gap-3 pt-6 text-[0.7rem] font-black uppercase tracking-widest text-slate-400 first:pt-0">
+                                  <div className="h-px flex-1 bg-slate-200" />
+                                  {node.label}
+                                  <div className="h-px flex-1 bg-slate-200" />
+                                </div>
+                              );
+                            }
+
+                            const active = node.targets.every((target) => selectedTargets.includes(target));
+                            return (
+                              <button
+                                key={node.id}
+                                onClick={() => toggleItem(node)}
+                                className={[
+                                  "group flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition-all",
+                                  active ? "border-slate-300 bg-white shadow-md" : "border-slate-100 bg-white hover:border-primary/30",
+                                ].join(" ")}
+                              >
+                                <div
                                   className={[
-                                    "flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition-all group",
+                                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.9rem] border transition-all",
                                     active
-                                      ? "border-amber-200 bg-white shadow-md shadow-amber-500/5 ring-1 ring-amber-100"
-                                      : "border-border bg-card/50 hover:border-primary/30 hover:bg-card",
+                                      ? "border-violet-200 bg-violet-50 text-violet-400"
+                                      : "border-slate-100 bg-slate-50 text-slate-300 group-hover:border-primary/30",
                                   ].join(" ")}
                                 >
+                                  <Star className={["h-5 w-5", active ? "fill-current" : ""].join(" ")} />
+                                </div>
+                                <div className="flex-1">
                                   <div
                                     className={[
-                                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.8rem] border transition-all",
-                                      active
-                                        ? "border-amber-200 bg-amber-50 text-amber-600"
-                                        : "border-border bg-card text-muted-foreground/50 group-hover:border-primary/30",
+                                      "text-[0.9rem] font-bold leading-tight transition-colors",
+                                      active ? "text-slate-900" : "text-slate-500 group-hover:text-slate-700",
                                     ].join(" ")}
                                   >
-                                    <Star className={["h-4 w-4", active ? "fill-current" : ""].join(" ")} />
+                                    {node.label}
                                   </div>
-                                  <div className="flex-1">
-                                    <div className={[
-                                      "text-[0.85rem] font-bold transition-colors",
-                                      active ? "text-foreground" : "text-muted-foreground"
-                                    ].join(" ")}>
-                                      {node.label}
-                                    </div>
-                                    <div className="mt-0.5 text-[0.7rem] font-medium text-muted-foreground">
-                                      {node.targets.length} target field{node.targets.length !== 1 ? 's' : ''}
-                                    </div>
+                                  <div className="mt-1 flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-widest text-slate-400">
+                                    <Zap className="h-2.5 w-2.5 text-slate-400" />
+                                    {node.targets.length} autofill targets
                                   </div>
-                                  {active && (
-                                    <div className="h-2 w-2 rounded-full bg-amber-400" />
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                                </div>
+                                {active && (
+                                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/20">
+                                    <Check className="h-3 w-3 stroke-[3] text-white" />
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="fixed bottom-10 right-10 z-50 flex items-center gap-4 rounded-3xl border border-white/40 bg-white/60 p-2 shadow-2xl shadow-indigo-200/50 backdrop-blur-2xl">
+          {saveError ? (
+            <p className="mr-2 whitespace-nowrap rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2 text-xs font-bold text-destructive shadow-sm">
+              {saveError}
+            </p>
+          ) : null}
+          <Button
+            variant="outline"
+            className="h-14 rounded-2xl border-none border-slate-200 bg-white/80 px-8 font-bold text-slate-600 shadow-sm transition-all hover:bg-slate-50"
+            onClick={() => setCurrentSubView("menu")}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="h-14 rounded-2xl bg-violet-500 px-10 font-bold text-white shadow-2xl shadow-violet-200 transition-all hover:bg-violet-600 hover:shadow-violet-300 active:scale-[0.98]"
+            onClick={() => void handleSave()}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                Saving...
+              </div>
+            ) : "Confirm & Save"}
+          </Button>
+        </div>
+      </motion.div>
+    </div>
+  );
+
+  const renderCopy = () => (
+    <div className="mx-auto max-w-4xl py-8">
+      <div className="mb-10">
+        <button
+          onClick={() => setCurrentSubView("menu")}
+          className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-400 transition-colors hover:text-slate-600"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Custom Policy
+        </button>
+        <h1 className="font-sans text-3xl font-black tracking-tight text-slate-900">Copy Records</h1>
+        <p className="text-base text-slate-500">Manage fallback authority tariffs used when a water authority amount cannot be extracted from the document.</p>
+      </div>
+
+      <div className="space-y-6">
+        <div className="flex items-start gap-8 rounded-[2.5rem] border border-primary/10 bg-primary/5 p-10">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+            <Info className="h-10 w-10" />
+          </div>
+          <div className="space-y-4">
+            <h3 className="text-2xl font-bold text-slate-900">How water authority fallback works</h3>
+            <p className="text-lg leading-relaxed text-slate-600">
+              The water authority name is still extracted from the uploaded documents. If the annual amount is missing or fails to extract, the app matches that authority name against this table and uses the saved annual amount as the fallback.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Water Authorities</h4>
+            <Button className="rounded-2xl bg-violet-500 px-5 font-bold text-white hover:bg-violet-600" onClick={handleAddCopyRule}>
+              + Add Authority
+            </Button>
+          </div>
+
+          <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+            <div className="grid grid-cols-[2fr_1fr_1.3fr_160px] gap-3 border-b border-slate-100 bg-slate-50 px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">
+              <div>Authority Name</div>
+              <div>Annual Amount</div>
+              <div>Notes</div>
+              <div>Actions</div>
+            </div>
+
+            {copyRulesError ? <div className="px-6 py-3 text-sm font-semibold text-destructive">{copyRulesError}</div> : null}
+            {copyRulesLoading ? <div className="px-6 py-6 text-sm text-slate-500">Loading water authority rules...</div> : null}
+            {!copyRulesLoading && copyRules.length === 0 ? (
+              <div className="px-6 py-8 text-sm text-slate-500">No water authority fallback rules yet. Add one to start using database fallback amounts.</div>
+            ) : null}
+
+            <div className="divide-y divide-slate-100">
+              {copyRules.map((rule) => {
+                const saving = copyRulesSavingId === rule.id;
+                return (
+                  <div key={rule.id} className="grid grid-cols-[2fr_1fr_1.3fr_160px] gap-3 px-6 py-4">
+                    <input
+                      value={rule.authority_name}
+                      onChange={(event) => updateCopyRuleDraft(rule.id, { authority_name: event.target.value })}
+                      placeholder="Yarra Valley Water"
+                      className="h-12 rounded-2xl border border-slate-200 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    <input
+                      value={rule.annual_amount}
+                      onChange={(event) => updateCopyRuleDraft(rule.id, { annual_amount: event.target.value })}
+                      placeholder="774.72"
+                      className="h-12 rounded-2xl border border-slate-200 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    <input
+                      value={rule.notes}
+                      onChange={(event) => updateCopyRuleDraft(rule.id, { notes: event.target.value })}
+                      placeholder="Optional note"
+                      className="h-12 rounded-2xl border border-slate-200 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        className="rounded-2xl border-slate-200 font-bold"
+                        onClick={() => void handleSaveCopyRule(rule)}
+                        disabled={saving}
+                      >
+                        {saving ? "Saving..." : "Save"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="rounded-2xl border-rose-200 font-bold text-rose-600 hover:bg-rose-50"
+                        onClick={() => void handleDeleteCopyRule(rule)}
+                        disabled={saving}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
 
-          {/* Floating Action Buttons */}
-          <div className="fixed bottom-10 right-10 z-50 flex items-center gap-4">
-            {saveError ? (
-              <p className="mr-4 rounded-xl bg-destructive/10 px-4 py-2 text-xs font-bold text-destructive shadow-sm border border-destructive/20">
-                {saveError}
-              </p>
-            ) : null}
-            <Button
-              variant="outline"
-              className="rounded-2xl h-12 px-6 border-border bg-card/80 backdrop-blur-sm font-bold text-foreground shadow-lg hover:bg-card transition-all"
-              onClick={onBack}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="rounded-2xl h-12 px-8 bg-foreground text-background font-bold shadow-xl shadow-black/20 active:scale-[0.98] transition-all"
-              onClick={() => void handleSave()}
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                  Saving...
-                </div>
-              ) : "Save Preferences"}
-            </Button>
-          </div>
-        </motion.div>
+  return (
+    <div className="min-h-screen overflow-hidden bg-slate-50 font-sans text-foreground">
+      <Header
+        onBack={currentSubView === "menu" ? onBack : () => setCurrentSubView("menu")}
+        onProfile={onProfile || (() => {})}
+        onSettings={onSettings || (() => {})}
+        onPolicy={() => {}}
+        onLogout={onLogout || (() => {})}
+        title={currentSubView === "menu" ? "Custom Policy" : currentSubView === "configure" ? "Configure Rules" : "Copy Rules"}
+      />
+
+      <main className="custom-scrollbar h-[calc(100vh-64px)] flex-1 overflow-y-auto px-6 py-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSubView}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            {currentSubView === "menu" && renderMenu()}
+            {currentSubView === "configure" && renderConfigure()}
+            {currentSubView === "copy" && renderCopy()}
+          </motion.div>
+        </AnimatePresence>
       </main>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+        }
+      `}</style>
     </div>
   );
 }

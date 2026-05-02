@@ -227,6 +227,27 @@ export interface LocalSettingsPayload {
   theme: "light" | "dark" | "auto";
 }
 
+export interface CopyRulePayload {
+  id: string;
+  rule_type: string;
+  authority_name: string;
+  annual_amount: number;
+  notes?: string | null;
+  is_active: boolean;
+  created_by: string;
+  created_at?: string | null;
+  updated_by?: string | null;
+  updated_at?: string | null;
+}
+
+export interface CopyRuleUpsertPayload {
+  rule_type?: string;
+  authority_name: string;
+  annual_amount: number;
+  notes?: string | null;
+  is_active?: boolean;
+}
+
 export interface AppInfoPayload {
   name: string;
   publisher: string;
@@ -1111,6 +1132,32 @@ export async function saveSettings(settings: LocalSettingsPayload): Promise<Loca
   });
 }
 
+export async function listCopyRules(ruleType = "water_authority"): Promise<CopyRulePayload[]> {
+  return apiRequest<CopyRulePayload[]>(`/copy-rules?rule_type=${encodeURIComponent(ruleType)}`);
+}
+
+export async function createCopyRule(payload: CopyRuleUpsertPayload): Promise<CopyRulePayload> {
+  return apiRequest<CopyRulePayload>("/copy-rules", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateCopyRule(ruleId: string, payload: CopyRuleUpsertPayload): Promise<CopyRulePayload> {
+  return apiRequest<CopyRulePayload>(`/copy-rules/${encodeURIComponent(ruleId)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteCopyRule(ruleId: string): Promise<{ ok: boolean; id: string }> {
+  return apiRequest<{ ok: boolean; id: string }>(`/copy-rules/${encodeURIComponent(ruleId)}`, {
+    method: "DELETE",
+  });
+}
+
 export async function getAppInfo(): Promise<AppInfoPayload> {
   return apiRequest<AppInfoPayload>("/app/info");
 }
@@ -1210,4 +1257,3 @@ export async function pushS32ToSmokeball(
 export async function listSmokeballMatters(): Promise<SmokeballMatter[]> {
   return apiRequest<SmokeballMatter[]>("/smokeball/matters");
 }
-

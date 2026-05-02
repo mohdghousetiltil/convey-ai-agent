@@ -36,13 +36,18 @@ EXTRACTOR_NAME = "rule:owners_corporation_v1"
 
 _DOC_PATTERN = re.compile(
     r"(?:"
-    r"owners?\s+corporation\s+(?:search\s+)?report"   # Landata OC search report
-    r"|owners?\s+corporation\s+(?:certificate|basic\s+report)"
-    r"|oc\s+(?:certificate|report|fee\s+schedule|levy\s+notice)"
+    r"owners?\s+corporation\s+(?:search\s+)?report"        # Landata OC search report
+    r"|owners?\s+corporation\s+(?:certificate|basic\s+report|information)"
+    r"|oc\s+(?:certificate|report|fee\s+schedule|levy\s+notice|search)"
     r"|strata\s+(?:certificate|fees?\s+schedule|levy\s+notice)"
     r"|lot\s+entitlement\s+and\s+liability"
     r"|body\s+corporate\s+(?:certificate|search\s+report)"
-    r"|plan\s+no\.\s*[A-Z]{0,3}\d+"               # plan reference typical in OC docs
+    r"|plan\s+no\.\s*[A-Z]{0,3}\d+"                       # plan reference typical in OC docs
+    r"|owners?\s+corporation\s+levy\s+notice"              # levy notice format
+    r"|subdivision\s+act\s+1988"                           # Victorian OC Act citation
+    r"|(?:admin(?:istration)?|sinking\s+fund)\s+levy"      # levy component headings
+    r"|lot\s+liability"                                    # liability schedule
+    r"|lot\s+entitlement"                                  # entitlement schedule
     r")",
     re.IGNORECASE,
 )
@@ -60,12 +65,19 @@ _OC_NUMBERED_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Named OC manager or body (NOT government departments)
-# Must start with a proper noun that isn't a government department
+# Named OC manager or body (NOT government departments or document cross-references)
+# Must start with a proper noun that isn't a government department or reference word.
 _OC_NAMED_RE = re.compile(
-    r"\b(?!Department|State|Victorian|Commonwealth|Federal|Government|Municipal|Local)"
+    r"\b(?!Department|State|Victorian|Commonwealth|Federal|Government|Municipal|Local"
+    r"|See|Refer|Refer\s+To|An\s|The\s|This\s|Any\s|Each\s|No\s|Each\b)"
     r"([A-Z][A-Za-z]+(?:\s+[A-Za-z]+){0,4})\s+Owners?\s+Corporation\b",
 )
+
+# Single common English words that shouldn't be treated as OC names
+_OC_NAMED_EXCLUDED = frozenset({
+    "see", "refer", "the", "an", "a", "this", "that", "any", "each",
+    "no", "such", "above", "below", "said", "relevant", "applicable",
+})
 
 # Plan of subdivision reference: PS723695D, LP1234, CP12345, RP1234A etc.
 _PLAN_NUMBER_RE = re.compile(
@@ -83,14 +95,14 @@ _ANNUAL_PATTERNS = [
         rf"((?:current\s+)?fees?[^\n$]{{0,120}}are\s+({_CURRENCY_PATTERN})[^\n$]{{0,40}}payable\s+annually)",
         re.IGNORECASE,
     ),
+    # "Total annual fees $X" / "Total annual levy $X"
+    re.compile(
+        rf"(total\s+annual\s+(?:fees?|levies|levy|amount|contribution|charge)[^\n$]{{0,60}}({_CURRENCY_PATTERN}))",
+        re.IGNORECASE,
+    ),
     # "Annual levy $X", "Annual fee $X", "Annual contribution $X"
     re.compile(
         rf"(annual(?:ly)?\s+(?:fees?|levies|levy|amount|contribution|charge)[^\n$]{{0,60}}({_CURRENCY_PATTERN}))",
-        re.IGNORECASE,
-    ),
-    # "Total annual fees $X"
-    re.compile(
-        rf"(total\s+annual\s+(?:fees?|levies|levy|amount|contribution)[^\n$]{{0,60}}({_CURRENCY_PATTERN}))",
         re.IGNORECASE,
     ),
     # "Annual contribution $X"
@@ -100,7 +112,7 @@ _ANNUAL_PATTERNS = [
     ),
     # "Fees per annum $X" / "per annum $X"
     re.compile(
-        rf"((?:fees?|levies|levy|amount)\s+per\s+annum[^\n$]{{0,60}}({_CURRENCY_PATTERN}))",
+        rf"((?:fees?|levies|levy|amount|contribution)\s+per\s+annum[^\n$]{{0,60}}({_CURRENCY_PATTERN}))",
         re.IGNORECASE,
     ),
     re.compile(
@@ -130,7 +142,63 @@ _ANNUAL_PATTERNS = [
         rf"(total\s+fees?\s+for\s+the\s+(?:financial\s+)?year[^\n$]{{0,40}}({_CURRENCY_PATTERN}))",
         re.IGNORECASE,
     ),
+    # "Total levy $X" / "Total levies $X"
+    re.compile(
+        rf"(total\s+lev(?:y|ies)[^\n$]{{0,40}}({_CURRENCY_PATTERN}))",
+        re.IGNORECASE,
+    ),
+    # "Total fee $X" (some Landata reports)
+    re.compile(
+        rf"(total\s+fees?[^\n$]{{0,40}}({_CURRENCY_PATTERN}))",
+        re.IGNORECASE,
+    ),
+    # "OC fee for the year $X"
+    re.compile(
+        rf"(oc\s+fees?\s+for\s+the\s+(?:financial\s+)?year[^\n$]{{0,40}}({_CURRENCY_PATTERN}))",
+        re.IGNORECASE,
+    ),
 ]
+
+# ---------------------------------------------------------------------------
+# Half-yearly patterns
+# ---------------------------------------------------------------------------
+
+_HALFYEARLY_PATTERNS = [
+    re.compile(
+        rf"(half[- ]?(?:year(?:ly)?|annual)\s+(?:fees?|levies|levy|amount|instalment)[^\n$]{{0,60}}({_CURRENCY_PATTERN}))",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        rf"(fees?\s+(?:per|for\s+a)\s+half[- ]?year[^\n$]{{0,60}}({_CURRENCY_PATTERN}))",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        rf"(({_CURRENCY_PATTERN})\s+per\s+half[- ]?year[^\n]*?)",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        rf"(semi[- ]annual\s+(?:fees?|levies|levy|instalment)[^\n$]{{0,60}}({_CURRENCY_PATTERN}))",
+        re.IGNORECASE,
+    ),
+]
+
+# ---------------------------------------------------------------------------
+# Admin + sinking fund component patterns
+# (when total annual is not stated, sum the two components)
+# ---------------------------------------------------------------------------
+
+_ADMIN_FUND_RE = re.compile(
+    rf"admin(?:istration)?\s+(?:fund\s+)?(?:levy|fee|contribution)[^\n$]{{0,60}}({_CURRENCY_PATTERN})",
+    re.IGNORECASE,
+)
+_SINKING_FUND_RE = re.compile(
+    rf"sinking\s+fund\s+(?:levy|fee|contribution)[^\n$]{{0,60}}({_CURRENCY_PATTERN})",
+    re.IGNORECASE,
+)
+_MAINTENANCE_FUND_RE = re.compile(
+    rf"maintenance\s+fund\s+(?:levy|fee|contribution)[^\n$]{{0,60}}({_CURRENCY_PATTERN})",
+    re.IGNORECASE,
+)
 
 # ---------------------------------------------------------------------------
 # Quarterly patterns
@@ -258,14 +326,16 @@ def _extract_oc_name(doc: Document, text: str) -> list[Fact]:
     # --- 1. Named OC (e.g. "Acme Owners Corporation") ---
     m_named = _OC_NAMED_RE.search(text)
     if m_named:
-        name = " ".join(m_named.group(0).split())
-        return [
-            _make_fact(
-                doc, P.RATES_OC_AUTHORITY_NAME, name, name,
-                confidence=0.90,
-                notes="Named OC body from document text",
-            )
-        ]
+        prefix_word = m_named.group(1).split()[0].lower()
+        if prefix_word not in _OC_NAMED_EXCLUDED:
+            name = " ".join(m_named.group(0).split())
+            return [
+                _make_fact(
+                    doc, P.RATES_OC_AUTHORITY_NAME, name, name,
+                    confidence=0.90,
+                    notes="Named OC body from document text",
+                )
+            ]
 
     # --- 2 & 3. Numbered OC, optionally enriched with plan number ---
     m_num = _OC_NUMBERED_RE.search(text)
@@ -360,6 +430,31 @@ def extract_owners_corporation_facts(doc: Document) -> list[Fact]:
         )
         return facts
 
+    # --- Half-yearly patterns → × 2 ---
+    for pattern in _HALFYEARLY_PATTERNS:
+        match = pattern.search(text)
+        if not match:
+            continue
+        half_amount = _first_currency_group(match)
+        if half_amount is None:
+            continue
+        try:
+            annualised = _parse_currency(half_amount) * 2
+            annual_str = f"${annualised:,.2f}"
+            facts.append(
+                _make_fact(
+                    doc,
+                    P.RATES_OC_ANNUAL_AMOUNT,
+                    annual_str,
+                    " ".join(match.group(0).split()),
+                    confidence=0.87,
+                    notes=f"Annual OC fee: half-yearly {half_amount} × 2 = {annual_str}",
+                )
+            )
+        except (ValueError, AttributeError):
+            pass
+        return facts
+
     # --- Quarterly patterns → × 4 ---
     for pattern in _QUARTERLY_PATTERNS:
         match = pattern.search(text)
@@ -368,9 +463,6 @@ def extract_owners_corporation_facts(doc: Document) -> list[Fact]:
         quarterly_amount = _first_currency_group(match)
         if quarterly_amount is None:
             continue
-        multiplier = _period_multiplier(text)
-        if multiplier != 4:
-            multiplier = 4  # always 4 for quarterly regardless of period range
         try:
             annualised = _parse_currency(quarterly_amount) * 4
             annual_str = f"${annualised:,.2f}"
@@ -412,5 +504,35 @@ def extract_owners_corporation_facts(doc: Document) -> list[Fact]:
         except (ValueError, AttributeError):
             pass
         return facts
+
+    # --- Admin fund + sinking fund components summed ---
+    # Many OC certificates list fees broken into administration and sinking fund
+    # levies without stating the annual total. Sum the components found.
+    admin_m = _ADMIN_FUND_RE.search(text)
+    sinking_m = _SINKING_FUND_RE.search(text)
+    maintenance_m = _MAINTENANCE_FUND_RE.search(text)
+    component_facts: list[tuple[str, float]] = []
+    for label, m in [("admin fund", admin_m), ("sinking fund", sinking_m), ("maintenance fund", maintenance_m)]:
+        if m:
+            try:
+                component_facts.append((label, _parse_currency(m.group(1))))
+            except (ValueError, AttributeError):
+                pass
+    if len(component_facts) >= 1:
+        total = sum(v for _, v in component_facts)
+        if total > 0:
+            annual_str = f"${total:,.2f}"
+            breakdown = " + ".join(f"{lbl} ${v:,.2f}" for lbl, v in component_facts)
+            facts.append(
+                _make_fact(
+                    doc,
+                    P.RATES_OC_ANNUAL_AMOUNT,
+                    annual_str,
+                    breakdown,
+                    confidence=0.80,
+                    notes=f"Annual OC fee: sum of levy components — {breakdown} = {annual_str}",
+                )
+            )
+            return facts
 
     return facts

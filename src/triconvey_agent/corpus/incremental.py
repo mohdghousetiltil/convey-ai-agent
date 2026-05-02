@@ -44,6 +44,7 @@ def process_single_document(
     provider: str = "openai",
     run_id: str = "",
     matter_id: str = "",
+    copy_rules: list[tuple[str, float]] | None = None,
 ) -> dict[str, Any]:
     """Process a single newly uploaded document.
 
@@ -116,6 +117,7 @@ def process_single_document(
         doc_type=doc_type,
         run_dir=run_dir,
         corpus_entry=corpus_entry,
+        copy_rules=copy_rules or [],
     )
 
     # 5. Append to RAG index (so future queries can search this document)
@@ -213,8 +215,10 @@ def _find_proposed_changes(
     doc_type: str,
     run_dir: Path,
     corpus_entry: Any | None,
+    copy_rules: list[tuple[str, float]],
 ) -> list[dict[str, Any]]:
     """Run extractors for this single document type and compare against existing answers."""
+    from triconvey_agent.copy_rules import find_best_copy_rule_match
     from triconvey_agent.canonical.runner.fact_extraction import run_all_extractors
     from triconvey_agent.canonical.facts.store import FactStoreImpl
     from triconvey_agent.canonical.questions.loader import load_question_registry
@@ -235,6 +239,38 @@ def _find_proposed_changes(
     except Exception as exc:
         LOG.warning("Single-doc fact extraction failed: %s", exc)
         return []
+
+    if doc_type == "water_authority" and copy_rules:
+        authority_fact, _ = single_store.get("rates.water.authority_name")
+        authority_name = str(authority_fact.value).strip() if authority_fact and authority_fact.value else ""
+        if authority_name:
+            match = find_best_copy_rule_match(authority_name, copy_rules)
+            if match is not None:
+                from triconvey_agent.canonical.schemas import Fact, Source
+
+                # Always inject the DB price — do NOT gate on has_amount.
+                # Document-extracted amounts (e.g. daily-rate calculations at
+                # conf 0.80) are less reliable than manually confirmed DB prices.
+                # The fact store resolves conflicts by confidence, so the 0.99
+                # DB fact wins over any document-derived 0.80 candidate.
+                single_store.add(
+                    Fact(
+                        path="rates.water.annual_amount",
+                        value=f"${match.annual_amount:,.2f}",
+                        confidence=0.99,
+                        extractor="copy_rule:water_authority",
+                        notes=(
+                            f"Local DB copy rule: '{match.authority_name}' "
+                            f"({match.matched_on}, score={match.score:.3f}). "
+                            "Overrides any document-extracted amount."
+                        ),
+                        sources=[Source(
+                            file=doc_path.name,
+                            quote=f"Copy rule match: {match.authority_name}",
+                            quote_verified=False,
+                        )],
+                    )
+                )
 
     # Load existing answers
     answers_path = run_dir / "answers.json"

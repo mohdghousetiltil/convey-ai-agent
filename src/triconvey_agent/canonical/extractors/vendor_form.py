@@ -321,6 +321,14 @@ def _extract_property(doc: Document, lines: list[str]) -> list[Fact]:
     return facts
 
 
+# Paths whose boolean must come from a certificate, not the vendor form.
+# Set at last-resort confidence so any certificate fact always wins.
+_CERT_BOOLEAN_PATHS = {
+    P.RATES_LAND_TAX_PAYABLE,
+    P.RATES_VACANT_LAND_TAX_PAYABLE,
+}
+
+
 def _extract_property_booleans(doc: Document, lines: list[str]) -> list[Fact]:
     facts: list[Fact] = []
     bools = [
@@ -357,7 +365,21 @@ def _extract_property_booleans(doc: Document, lines: list[str]) -> list[Fact]:
             bool_value = _yes_no_to_bool(value)
             if bool_value is None:
                 continue
-            facts.append(_make_fact(doc, path, bool_value, _quote_for(lines, label_idx, value_end)))
+            # Certificate-sourced booleans use last-resort confidence so the
+            # SRO / authority certificate always wins when present.
+            conf = _VENDOR_RATES_CONFIDENCE if path in _CERT_BOOLEAN_PATHS else 0.97
+            notes = (
+                "Vendor-stated — LAST RESORT. SRO Land Tax Certificate is authoritative."
+                if path in _CERT_BOOLEAN_PATHS else None
+            )
+            facts.append(
+                _make_fact(
+                    doc, path, bool_value,
+                    _quote_for(lines, label_idx, value_end),
+                    confidence=conf,
+                    notes=notes,
+                )
+            )
             break
     return facts
 
@@ -374,6 +396,14 @@ _AMOUNT_NULL_LIKE = frozenset({
 
 _AUTHORITY_PATHS = {P.RATES_COUNCIL_AUTHORITY, P.RATES_WATER_AUTHORITY}
 _AMOUNT_PATHS = {P.RATES_COUNCIL_ANNUAL, P.RATES_WATER_ANNUAL}
+
+# Confidence ceiling for vendor-form rates/authority facts.
+# These fields MUST come from their respective authority certificates
+# (Land Information Certificate, Water Information Statement, SRO certificate,
+# OC certificate). The vendor form is strictly a last-resort fallback used
+# ONLY when the certificate PDF has not been uploaded.
+# Setting confidence to 0.40 ensures any certificate fact (0.80+) always wins.
+_VENDOR_RATES_CONFIDENCE = 0.40
 
 
 def _extract_rates(doc: Document, lines: list[str]) -> list[Fact]:
@@ -395,7 +425,16 @@ def _extract_rates(doc: Document, lines: list[str]) -> list[Fact]:
             # Skip null-like authority names — let authority documents provide them.
             if norm in _NULL_LIKE:
                 continue
-            facts.append(_make_fact(doc, path, value, quote))
+            facts.append(
+                _make_fact(
+                    doc, path, value, quote,
+                    confidence=_VENDOR_RATES_CONFIDENCE,
+                    notes=(
+                        "Vendor-stated authority name — LAST RESORT ONLY. "
+                        "Superseded by any Land Information / Water certificate fact."
+                    ),
+                )
+            )
 
         elif path in _AMOUNT_PATHS:
             # Null-like amounts → $0.00 (property may have no water/council charges).
@@ -403,18 +442,19 @@ def _extract_rates(doc: Document, lines: list[str]) -> list[Fact]:
                 facts.append(
                     _make_fact(
                         doc, path, "$0.00", quote,
-                        confidence=0.80,
-                        notes=f"Vendor form shows '{value}' — treated as $0.00",
+                        confidence=_VENDOR_RATES_CONFIDENCE,
+                        notes=f"Vendor form shows '{value}' — treated as $0.00 (last-resort fallback).",
                     )
                 )
             else:
-                # Vendor form amounts are treated as annual (vendor's stated figure).
-                # Authority docs (confidence 0.95) will win over this (0.90) when present.
                 facts.append(
                     _make_fact(
                         doc, path, value, quote,
-                        confidence=0.90,
-                        notes="Vendor-stated annual amount; authority certificate preferred when available.",
+                        confidence=_VENDOR_RATES_CONFIDENCE,
+                        notes=(
+                            "Vendor-stated annual amount — LAST RESORT ONLY. "
+                            "Superseded by any authority certificate fact."
+                        ),
                     )
                 )
     return facts

@@ -40,6 +40,12 @@ import {
 
 type Mode = "quick" | "standard" | "thorough";
 
+const MATTER_SUGGESTION_PILLS = [
+  { id: "update-matter", label: "Update the Matter" },
+  { id: "process-again", label: "Process Again" },
+  { id: "authority-logic", label: "Tell Me the Logic Behind Authorities Amount" },
+] as const;
+
 /** Whether this chatbot is scoped to a specific matter or the dashboard. */
 export type ChatbotContext = "matter" | "dashboard";
 
@@ -1162,6 +1168,132 @@ export function Chatbot({
     }
   };
 
+  const processPendingFiles = async (filesToUpload: File[]) => {
+    if (!runId || filesToUpload.length === 0) return;
+
+    setThinkingPhase("uploading");
+    for (const file of filesToUpload) {
+      setDocProcQueue((prev) => [...prev, { phase: "processing", filename: file.name }]);
+      try {
+        const result = await processNewChatDocument(runId, file);
+        setDocProcQueue((prev) => prev.filter((state) => !(state.phase === "processing" && state.filename === file.name)));
+        if (result.already_exists) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `${Date.now()}-dup`,
+              role: "assistant",
+              text: `**${result.filename ?? file.name}** is already part of this matter. If this is a newer version, rename the file and drop it again.`,
+            },
+          ]);
+          continue;
+        }
+        if (result.error) {
+          setMessages((prev) => [
+            ...prev,
+            { id: `${Date.now()}-doc-err`, role: "assistant", text: `Could not process ${file.name}: ${result.error}` },
+          ]);
+          continue;
+        }
+        if (result.validation?.is_suspicious) {
+          setDocProcQueue((prev) => [...prev, { phase: "warning", result }]);
+        } else {
+          setDocProcQueue((prev) => [...prev, { phase: "changes", result, applying: false }]);
+        }
+      } catch (uploadErr) {
+        setDocProcQueue((prev) => prev.filter((state) => !(state.phase === "processing" && state.filename === file.name)));
+        const msg = uploadErr instanceof Error ? uploadErr.message : "Upload failed";
+        setMessages((prev) => [
+          ...prev,
+          { id: `${Date.now()}-upload-err`, role: "assistant", text: `Failed to process ${file.name}: ${msg}` },
+        ]);
+      }
+    }
+  };
+
+  const handleUpdateMatterFromPendingFiles = async () => {
+    if (sending || assistantPaused) return;
+    if (!runId || pendingFiles.length === 0) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `${Date.now()}-update-matter-help`,
+          role: "assistant",
+          text: "Add a new document in chat first, then use Update the Matter so I can extract it and prepare changes for your confirmation.",
+        },
+      ]);
+      return;
+    }
+
+    const attachmentNames = pendingFiles.map((item) => item.displayName || item.file.name);
+    const filesToUpload = pendingFiles.map((item) => item.file);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `${Date.now()}-user`,
+        role: "user",
+        text: "Update the matter",
+        attachments: attachmentNames,
+      },
+      {
+        id: `${Date.now()}-assistant`,
+        role: "assistant",
+        text: "I’m processing the newly added document and will only update the matter after you confirm the proposed changes here in chat.",
+      },
+    ]);
+    setInput("");
+    setPendingFiles([]);
+    setSending(true);
+
+    try {
+      await processPendingFiles(filesToUpload);
+    } finally {
+      setSending(false);
+      setThinkingPhase("thinking");
+    }
+  };
+
+  const handleProcessAgain = async () => {
+    if (sending || assistantPaused || !onReviewAgain) return;
+    setMessages((prev) => [
+      ...prev,
+      { id: `${Date.now()}-user`, role: "user", text: "Process Again" },
+      {
+        id: `${Date.now()}-assistant`,
+        role: "assistant",
+        text: "Reprocessing all matter documents now. I’ll re-extract every field and update the matter from the full document set.",
+      },
+    ]);
+    setInput("");
+    setSending(true);
+
+    try {
+      await onReviewAgain();
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        { id: `${Date.now()}-err`, role: "assistant", text: `Re-analysis failed: ${err instanceof Error ? err.message : "unknown error"}` },
+      ]);
+    } finally {
+      setSending(false);
+      setThinkingPhase("thinking");
+    }
+  };
+
+  const handleSuggestionPillClick = async (pillId: (typeof MATTER_SUGGESTION_PILLS)[number]["id"]) => {
+    if (pillId === "update-matter") {
+      await handleUpdateMatterFromPendingFiles();
+      return;
+    }
+    if (pillId === "process-again") {
+      await handleProcessAgain();
+      return;
+    }
+    if (pillId === "authority-logic") {
+      await handleSend("Tell me the logic behind authorities amount. Explain in detail how each authority amount was found, combined, and calculated from the uploaded documents, with document support.");
+    }
+  };
+
   const handleSend = async (text?: string) => {
     const question = (text ?? input).trim();
     const hasFiles = pendingFiles.length > 0;
@@ -1201,48 +1333,7 @@ export function Chatbot({
     try {
       // ── Step 1: Process each file individually (validate → extract → propose) ──
       if (hasFiles && runId) {
-        setThinkingPhase("uploading");
-        for (const file of filesToUpload) {
-          // Show a "processing" placeholder immediately
-          setDocProcQueue((prev) => [...prev, { phase: "processing", filename: file.name }]);
-          try {
-            const result = await processNewChatDocument(runId, file);
-            // Remove the placeholder
-            setDocProcQueue((prev) => prev.filter(
-              (s) => !(s.phase === "processing" && s.filename === file.name)
-            ));
-            if (result.already_exists) {
-              setMessages((prev) => [
-                ...prev,
-                { id: `${Date.now()}-dup`, role: "assistant", text: `ℹ️ **${result.filename ?? file.name}** is already part of this matter — it was included in the original documents. If you have an updated version, rename the file and drop it again.` },
-              ]);
-              continue;
-            }
-            if (result.error) {
-              setMessages((prev) => [
-                ...prev,
-                { id: `${Date.now()}-doc-err`, role: "assistant", text: `Could not process ${file.name}: ${result.error}` },
-              ]);
-              continue;
-            }
-            // If suspicious → show warning card first
-            if (result.validation?.is_suspicious) {
-              setDocProcQueue((prev) => [...prev, { phase: "warning", result }]);
-            } else {
-              // Go straight to proposed changes
-              setDocProcQueue((prev) => [...prev, { phase: "changes", result, applying: false }]);
-            }
-          } catch (uploadErr) {
-            setDocProcQueue((prev) => prev.filter(
-              (s) => !(s.phase === "processing" && s.filename === file.name)
-            ));
-            const msg = uploadErr instanceof Error ? uploadErr.message : "Upload failed";
-            setMessages((prev) => [
-              ...prev,
-              { id: `${Date.now()}-upload-err`, role: "assistant", text: `Failed to process ${file.name}: ${msg}` },
-            ]);
-          }
-        }
+        await processPendingFiles(filesToUpload);
       }
 
       // ── Step 2: Ask the AI ───────────────────────────────────────────────
@@ -1511,7 +1602,7 @@ export function Chatbot({
                       reason={state.result.validation?.reason ?? ""}
                       warningMessage={state.result.validation?.warning_message}
                       proceeding={false}
-                      onIgnore={dismiss}
+                      onIgnore={dismiss}  
                       onProceed={() => {
                         // User approved — move straight to changes card
                         setDocProcQueue((prev) =>
@@ -1596,6 +1687,21 @@ export function Chatbot({
                   <span className="sr-only">{item.subtitle}</span>
                 )}
               </div>
+            ))}
+          </div>
+        ) : null}
+
+        {chatContext === "matter" && !sending && !assistantPaused && pendingFiles.length === 0 && input.trim().length === 0 ? (
+          <div className="mb-2 flex gap-2 overflow-x-auto whitespace-nowrap pb-1 no-scrollbar">
+            {MATTER_SUGGESTION_PILLS.map((pill) => (
+              <button
+                key={pill.id}
+                type="button"
+                onClick={() => void handleSuggestionPillClick(pill.id)}
+                className="shrink-0 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                {pill.label}
+              </button>
             ))}
           </div>
         ) : null}

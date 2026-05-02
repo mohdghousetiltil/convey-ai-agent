@@ -441,14 +441,11 @@ def map_sec32_1(final_output: dict[str, Any], question_lookup: dict[str, dict[st
     total_cap = safe_total_with_buffer([row["amount"] for row in rows], buffer_amount=1000)
     set_answer(question_lookup, "s32_1.rates_total_does_not_exceed_amount", format_currency(total_cap))
 
-    if len(rows) > 0:
-        set_answer(question_lookup, "s32_1.outgoing_1_authority", rows[0]["authority"])
-        set_answer(question_lookup, "s32_1.outgoing_1_amount", rows[0]["amount"])
-        set_answer(question_lookup, "s32_1.outgoing_1_interest", rows[0]["interest"])
-
-    if len(rows) > 1:
-        set_answer(question_lookup, "s32_1.outgoing_2_authority", rows[1]["authority"])
-        set_answer(question_lookup, "s32_1.outgoing_2_amount", rows[1]["amount"])
+    for index, row in enumerate(rows[:4], start=1):
+        set_answer(question_lookup, f"s32_1.outgoing_{index}_authority", row["authority"])
+        set_answer(question_lookup, f"s32_1.outgoing_{index}_amount", row["amount"])
+        if index == 1:
+            set_answer(question_lookup, "s32_1.outgoing_1_interest", row["interest"])
 
     set_answer(question_lookup, "s32_1.sale_subject_to_mortgage", bool(collect_mortgage_numbers(final_output)))
 
