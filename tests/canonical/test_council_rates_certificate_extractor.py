@@ -21,6 +21,54 @@ def _doc(filename: str, text: str) -> Document:
     )
 
 
+REGRESSION_FIXTURES = [
+    {
+        "name": "Cardinia",
+        "filename": "cardinia-rates.pdf",
+        "text": """
+        Land Information Certificate
+        cardinia.vic.gov.au
+        RATES & CHARGES
+        ARREARS BROUGHT FORWARD
+        RATES
+        INTEREST
+        LEVIED
+        GARBAGE
+        BALANCE
+        SPECIAL RATES /SPECIAL CHARGES
+        $0.00
+        $0.00
+        $1,215.80 $912.00
+        $384.50 $288.37
+        MUNICIPAL CHARGE $0.00 $0.00
+        GREEN WASTE LEVY $109.45 $82.09
+        EMERGENCY SERVICES & VOLUNTEERS FUND $226.83 $170.12
+        TOTAL OUTSTANDING $1,452.58
+        """,
+        "expected_authority": "Cardinia Shire Council",
+        "expected_annual": "$1,936.58",
+    },
+    {
+        "name": "Glen Eira",
+        "filename": "glen-eira-rates.pdf",
+        "text": """
+        Glen Eira City Council
+        Land Information Certificate
+        General Rates   ESVF   Garbage Charge   Total
+        Current Rates
+        Levied 2025/2026   402.80   186.15   345.00   $933.95
+        Payments          -293.14  -135.48  -251.08  ($679.70)
+        Balance
+        Outstanding        109.86    50.77    94.07   $254.70
+        Summary of Charges Outstanding
+        General Rates, Charges & ESVF $254.70
+        """,
+        "expected_authority": "Glen Eira City Council",
+        "expected_annual": "$933.95",
+    },
+]
+
+
 class TestCouncilRatesCertificateExtractor(unittest.TestCase):
     """Test council rates certificate extraction for various Victorian council formats."""
 
@@ -286,6 +334,75 @@ class TestCouncilRatesCertificateExtractor(unittest.TestCase):
 
         self.assertEqual(by_path["rates.council.authority_name"].value, "Merri-bek City Council")
         self.assertEqual(by_path["rates.council.annual_amount"].value, "$1,301.43")
+
+    def test_cardinia_scrambled_levied_balance_block_beats_inline_partial_sum(self):
+        text = """
+        Land Information Certificate
+        cardinia.vic.gov.au
+        RATES & CHARGES
+        ARREARS BROUGHT FORWARD
+        RATES
+        INTEREST
+        LEVIED
+        GARBAGE
+        BALANCE
+        SPECIAL RATES /SPECIAL CHARGES
+        $0.00
+        $0.00
+        $1,215.80 $912.00
+        $384.50 $288.37
+        MUNICIPAL CHARGE $0.00 $0.00
+        GREEN WASTE LEVY $109.45 $82.09
+        EMERGENCY SERVICES & VOLUNTEERS FUND $226.83 $170.12
+        TOTAL OUTSTANDING $1,452.58
+        """
+
+        doc = _doc("cardinia-rates.pdf", text)
+        facts = extract_council_rates_certificate_facts(doc)
+        by_path = {fact.path: fact for fact in facts}
+
+        self.assertEqual(by_path["rates.council.authority_name"].value, "Cardinia Shire Council")
+        self.assertEqual(by_path["rates.council.annual_amount"].value, "$1,936.58")
+        self.assertIn("scrambled_levied_balance_block", by_path["rates.council.annual_amount"].notes)
+
+    def test_glen_eira_matrix_levied_row_beats_balance_outstanding(self):
+        text = """
+        Glen Eira City Council
+        Land Information Certificate
+        General Rates   ESVF   Garbage Charge   Total
+        Current Rates
+        Levied 2025/2026   402.80   186.15   345.00   $933.95
+        Payments          -293.14  -135.48  -251.08  ($679.70)
+        Balance
+        Outstanding        109.86    50.77    94.07   $254.70
+        Summary of Charges Outstanding
+        General Rates, Charges & ESVF $254.70
+        """
+
+        doc = _doc("glen-eira-rates.pdf", text)
+        facts = extract_council_rates_certificate_facts(doc)
+        by_path = {fact.path: fact for fact in facts}
+
+        self.assertEqual(by_path["rates.council.authority_name"].value, "Glen Eira City Council")
+        self.assertEqual(by_path["rates.council.annual_amount"].value, "$933.95")
+        self.assertIn("current_levied_matrix_row", by_path["rates.council.annual_amount"].notes)
+
+    def test_regression_fixtures(self):
+        for fixture in REGRESSION_FIXTURES:
+            with self.subTest(fixture=fixture["name"]):
+                doc = _doc(fixture["filename"], fixture["text"])
+                facts = extract_council_rates_certificate_facts(doc)
+                by_path = {fact.path: fact for fact in facts}
+
+                if fixture.get("expected_authority"):
+                    self.assertEqual(
+                        by_path["rates.council.authority_name"].value,
+                        fixture["expected_authority"],
+                    )
+                self.assertEqual(
+                    by_path["rates.council.annual_amount"].value,
+                    fixture["expected_annual"],
+                )
 
 
 if __name__ == "__main__":

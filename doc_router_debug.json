@@ -1,0 +1,182 @@
+[
+  {
+    "timestamp": "2026-05-03T03:34:07.249551",
+    "file": "VIC- Enquiry - Alpine Shire- Land Information Certificate - 11022-112.pdf",
+    "doc_type": "council_rates",
+    "confidence": 0.99,
+    "evidence": "Land Information Certificate: 'Land Information Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:34:12.299061",
+    "file": "VIC- Enquiry - East Gippsland Water- Water Information Statement - 11022-112.pdf",
+    "doc_type": "water_authority",
+    "confidence": 0.99,
+    "evidence": "Water Information Statement: 'Water Information Statement'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:34:12.561350",
+    "file": "VIC- Enquiry - State Revenue Office- Land Tax Certificate - 11022-112 - 52 HORSEHAIR BEND, DI.pdf",
+    "doc_type": "land_tax",
+    "confidence": 0.99,
+    "evidence": "Land Tax Certificate: 'Land Tax Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:36:57.378840",
+    "file": "VIC- Enquiry - Greater Bendigo- Land Information Certificate.pdf",
+    "doc_type": "council_rates",
+    "confidence": 0.99,
+    "evidence": "Land Information Certificate: 'Land Information Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:36:57.611775",
+    "file": "VIC- Enquiry - State Revenue Office- Land Tax Certificate - Unknown - 1271 AXE CREEK ROAD, SE.pdf",
+    "doc_type": "land_tax",
+    "confidence": 0.99,
+    "evidence": "Land Tax Certificate: 'Land Tax Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:37:03.996136",
+    "file": "VIC- Enquiry - Coliban Water- Water Information and Special Meter Reading.pdf",
+    "doc_type": "water_authority",
+    "confidence": 0.99,
+    "evidence": "Information Statement Issue Date 23/10/2024",
+    "method": "ai",
+    "ai_called": true
+  },
+  {
+    "timestamp": "2026-05-03T03:40:00.046823",
+    "file": "VIC- Enquiry - Glenelg- Land Information Certificate - 9195-819.pdf",
+    "doc_type": "council_rates",
+    "confidence": 0.99,
+    "evidence": "Land Information Certificate: 'Land Information Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:41:23.172004",
+    "file": "VIC- Enquiry - Southern Rural Water- Water Information Statement - 9195-819.pdf",
+    "doc_type": "water_authority",
+    "confidence": 0.99,
+    "evidence": "Water Information Statement: 'Water Information Statement'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:41:27.321551",
+    "file": "VIC- Enquiry - State Revenue Office- Land Tax Certificate - 9195-819 - 177 BERRYS ROAD, GORAE.pdf",
+    "doc_type": "land_tax",
+    "confidence": 0.99,
+    "evidence": "Land Tax Certificate: 'Land Tax Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:46:12.087676",
+    "file": "VIC- Enquiry - State Revenue Office- Land Tax Certificate - 9441-448 - SKENE STREET, LEXTON V.pdf",
+    "doc_type": "land_tax",
+    "confidence": 0.99,
+    "evidence": "Land Tax Certificate: 'Land Tax Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:46:12.186088",
+    "file": "VIC- Enquiry - Central Highlands Water- Water Information Statement - 9441-448.pdf",
+    "doc_type": "water_authority",
+    "confidence": 0.99,
+    "evidence": "Water Information Statement: 'Water Information Statement'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:46:14.100692",
+    "file": "VIC- Enquiry - Pyrenees- Land Information Certificate - 9441-448.pdf",
+    "doc_type": "council_rates",
+    "confidence": 0.99,
+    "evidence": "Land Information Certificate: 'Land Information Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:47:45.507485",
+    "file": "VIC- Enquiry - Greater Western Water- Water Information Statement - 12614-074.pdf",
+    "doc_type": "water_authority",
+    "confidence": 0.99,
+    "evidence": "Water Information Statement: 'Water Information Statement'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:48:14.000091",
+    "file": "VIC- Enquiry - State Revenue Office- Land Tax Certificate - 12614-074 - 1-44 MAYWOOD ROAD, MA.pdf",
+    "doc_type": "land_tax",
+    "confidence": 0.99,
+    "evidence": "Land Tax Certificate: 'Land Tax Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:48:14.147912",
+    "file": "VIC- Enquiry - Wyndham- Land Information Certificate - 12614-074.pdf",
+    "doc_type": "council_rates",
+    "confidence": 0.99,
+    "evidence": "Land Information Certificate: 'Land Information Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T03:59:19.501014",
+    "file": "VIC- Enquiry - Wyndham- Land Information Certificate - 12614-074.pdf",
+    "doc_type": "council_rates",
+    "confidence": 0.99,
+    "evidence": "Land Information Certificate: 'Land Information Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T04:07:22.445536",
+    "file": "VIC- Enquiry - Wyndham- Land Information Certificate - 12614-074.pdf",
+    "doc_type": "council_rates",
+    "confidence": 0.99,
+    "evidence": "Land Information Certificate: 'Land Information Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T04:07:53.424312",
+    "file": "VIC- Enquiry - Wyndham- Land Information Certificate - 12614-074.pdf",
+    "doc_type": "council_rates",
+    "confidence": 0.99,
+    "evidence": "Land Information Certificate: 'Land Information Certificate'",
+    "method": "rule",
+    "ai_called": false
+  },
+  {
+    "timestamp": "2026-05-03T04:16:06.226990",
+    "file": "ball_37_07-s2.pdf",
+    "doc_type": "planning",
+    "confidence": 0.98,
+    "evidence": "BALLARAT PLANNING SCHEME",
+    "method": "ai",
+    "ai_called": true
+  },
+  {
+    "timestamp": "2026-05-03T04:16:29.689683",
+    "file": "ball_45_06.pdf",
+    "doc_type": "planning",
+    "confidence": 0.97,
+    "evidence": "DEVELOPMENT CONTRIBUTIONS PLAN OVERLAY",
+    "method": "ai",
+    "ai_called": true
+  }
+]

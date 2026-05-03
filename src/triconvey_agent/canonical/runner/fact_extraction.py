@@ -5,6 +5,18 @@ import time
 from pathlib import Path
 
 from triconvey_agent.brain_f.cache import prime_cached_pdf_analysis
+from triconvey_agent.canonical.doc_router import (
+    DOC_TYPE_BUILDING,
+    DOC_TYPE_COUNCIL,
+    DOC_TYPE_LAND_TAX,
+    DOC_TYPE_OC,
+    DOC_TYPE_PLANNING,
+    DOC_TYPE_TITLE,
+    DOC_TYPE_UNKNOWN,
+    DOC_TYPE_VENDOR,
+    DOC_TYPE_WATER,
+    classify_document,
+)
 from triconvey_agent.canonical.extractors import (
     extract_building_approval_facts,
     extract_council_rates_certificate_facts,
@@ -18,10 +30,33 @@ from triconvey_agent.canonical.extractors import (
 )
 from triconvey_agent.canonical.facts.store import FactStoreImpl
 from triconvey_agent.canonical.policy import run_policy_pass
-from triconvey_agent.ingest.pdf_loader import load_pdf_document
+from triconvey_agent.ingest.pdf_loader import load_document
 
-EXTRACTORS = [
-    extract_generic_doc_meta_facts,
+SAMPLES_DIR = Path(__file__).resolve().parents[4] / "samples"
+
+_SUPPORTED_DOC_SUFFIXES = {".pdf", ".docx", ".doc"}
+
+# Extractors that accept an ai_client keyword argument
+_AI_CLIENT_EXTRACTORS = frozenset({
+    "extract_council_rates_certificate_facts",
+    "extract_water_authority_certificate_facts",
+    "extract_owners_corporation_facts",
+})
+
+# Doc-type → specific extractor (all also run extract_generic_doc_meta_facts)
+_EXTRACTOR_MAP = {
+    DOC_TYPE_COUNCIL:   extract_council_rates_certificate_facts,
+    DOC_TYPE_WATER:     extract_water_authority_certificate_facts,
+    DOC_TYPE_LAND_TAX:  extract_land_tax_certificate_facts,
+    DOC_TYPE_OC:        extract_owners_corporation_facts,
+    DOC_TYPE_VENDOR:    extract_vendor_form_facts,
+    DOC_TYPE_PLANNING:  extract_planning_certificate_facts,
+    DOC_TYPE_BUILDING:  extract_building_approval_facts,
+    DOC_TYPE_TITLE:     extract_vic_title_facts,
+}
+
+# Fall-back list used when routing produces "unknown"
+_ALL_SPECIFIC_EXTRACTORS = [
     extract_building_approval_facts,
     extract_vendor_form_facts,
     extract_vic_title_facts,
@@ -32,28 +67,62 @@ EXTRACTORS = [
     extract_council_rates_certificate_facts,
 ]
 
-SAMPLES_DIR = Path(__file__).resolve().parents[4] / "samples"
-
 
 def default_docs() -> list[Path]:
-    """Return every PDF currently present in the samples directory."""
+    """Return every PDF or Word document currently present in the samples directory."""
     return sorted(
         path for path in SAMPLES_DIR.rglob("*")
-        if path.is_file() and path.suffix.lower() == ".pdf"
+        if path.is_file() and path.suffix.lower() in _SUPPORTED_DOC_SUFFIXES
     )
 
 
+def _run_extractor(fn, doc, *, ai_client):
+    """Run a single extractor, forwarding ai_client when the extractor supports it."""
+    if fn.__name__ in _AI_CLIENT_EXTRACTORS and ai_client is not None:
+        return fn(doc, ai_client=ai_client)
+    return fn(doc)
+
+
 def run_all_extractors(doc, *, ai_client=None) -> list:
+    """Route the document then run only the matching extractor.
+
+    Steps
+    -----
+    1. Always run extract_generic_doc_meta_facts (metadata applies to all docs).
+    2. Classify the document with the doc router (rule-based, AI fallback).
+    3. Run the single matching specific extractor.
+    4. For unknown/ambiguous docs, run all specific extractors as a safety net
+       (each extractor's own trigger guard will reject documents it doesn't own).
+    """
     facts = []
-    for fn in EXTRACTORS:
-        try:
-            if fn is extract_council_rates_certificate_facts:
-                emitted = fn(doc, ai_client=ai_client)
-            else:
-                emitted = fn(doc)
-            facts.extend(emitted)
-        except Exception as exc:
-            print(f"  [WARN] {fn.__name__} raised {type(exc).__name__}: {exc}")
+
+    # Generic metadata — always runs
+    try:
+        facts.extend(extract_generic_doc_meta_facts(doc))
+    except Exception as exc:
+        print(f"  [WARN] extract_generic_doc_meta_facts raised {type(exc).__name__}: {exc}")
+
+    # Route the document
+    route = classify_document(doc, ai_client=ai_client)
+    print(f"  +- ROUTER [{doc.filename}]: {route.doc_type}  conf={route.confidence:.2f}  "
+          f"via={route.method}  ({route.evidence[:80]})")
+
+    if route.doc_type != DOC_TYPE_UNKNOWN:
+        fn = _EXTRACTOR_MAP.get(route.doc_type)
+        if fn is not None:
+            try:
+                facts.extend(_run_extractor(fn, doc, ai_client=ai_client))
+            except Exception as exc:
+                print(f"  [WARN] {fn.__name__} raised {type(exc).__name__}: {exc}")
+    else:
+        # Unknown — run all specific extractors as fallback
+        print(f"  [ROUTER] Unknown doc type — running all extractors as fallback")
+        for fn in _ALL_SPECIFIC_EXTRACTORS:
+            try:
+                facts.extend(_run_extractor(fn, doc, ai_client=ai_client))
+            except Exception as exc:
+                print(f"  [WARN] {fn.__name__} raised {type(exc).__name__}: {exc}")
+
     return facts
 
 
@@ -66,12 +135,15 @@ def extract_fact_store(
     out_dir: Path,
     *,
     ai_client=None,
+    copy_rules: list[tuple[str, float]] | None = None,
 ) -> tuple[FactStoreImpl, int]:
     """Run Brain A + Brain C and write `facts.json`.
 
-    ai_client — optional AIClient instance forwarded to extractors that
-    support LLM-assisted fallback (currently council rates).  Pass None
-    (the default) to keep extraction fully deterministic.
+    ai_client   — optional AIClient forwarded to council-rates LLM extractor.
+    copy_rules  — list of (authority_name, annual_amount) tuples from the local
+                  copy-rules DB.  When provided, the best fuzzy match for the
+                  extracted water authority name is injected at conf=0.99,
+                  overriding any document-calculated amount.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     overall_started = time.perf_counter()
@@ -89,7 +161,7 @@ def extract_fact_store(
         doc_started = time.perf_counter()
         print(f"  Loading {path.name} ...", end=" ", flush=True)
         try:
-            doc = load_pdf_document(path)
+            doc = load_document(path)
             prime_cached_pdf_analysis(path, doc)
             facts = run_all_extractors(doc, ai_client=ai_client)
             store.add_many(facts)
@@ -100,6 +172,41 @@ def extract_fact_store(
 
     print(f"  Total facts in store: {total_facts}")
     print(f"  [Time] Brain A total: {_format_elapsed(time.perf_counter() - brain_a_started)}")
+
+    # --- Copy-rules DB override for water authority ---
+    # Inject AFTER all document extractors so the high-confidence DB fact wins.
+    if copy_rules:
+        try:
+            from triconvey_agent.copy_rules import find_best_copy_rule_match
+            from triconvey_agent.canonical.schemas import Fact
+            authority_fact, _ = store.get("rates.water.authority_name")
+            authority_name = (
+                str(authority_fact.value).strip()
+                if authority_fact and authority_fact.value else ""
+            )
+            if authority_name:
+                match = find_best_copy_rule_match(authority_name, copy_rules)
+                if match is not None:
+                    store.add(
+                        Fact(
+                            path="rates.water.annual_amount",
+                            value=f"${match.annual_amount:,.2f}",
+                            confidence=0.99,
+                            extractor="copy_rule:water_authority",
+                            notes=(
+                                f"DB copy rule: '{match.authority_name}' "
+                                f"(matched_on={match.matched_on}, score={match.score:.3f}). "
+                                "Overrides any document-calculated amount."
+                            ),
+                            sources=[],
+                        )
+                    )
+                    print(
+                        f"  [Copy Rule] Water authority '{authority_name}' → "
+                        f"${match.annual_amount:,.2f} (score={match.score:.3f})"
+                    )
+        except Exception as exc:
+            print(f"  [WARN] Copy-rule water injection failed: {exc}")
 
     print("\n=== Brain C - Policy pass ===")
     brain_c_started = time.perf_counter()

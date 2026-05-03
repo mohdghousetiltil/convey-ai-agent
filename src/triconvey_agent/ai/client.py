@@ -10,5 +10,5 @@ class AIResult:
 
 
 class AIClient(Protocol):
-    def complete(self, prompt: str) -> AIResult:
+    def complete(self, prompt: str, *, image_data_url: str | None = None) -> AIResult:
         ...

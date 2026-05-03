@@ -86,12 +86,10 @@ _LOT_PLAN_VF_RE = re.compile(
 _TAX_PAYABLE_RE = re.compile(
     r"Tax Payable\s*\n\s*(\$[\d,]+\.\d{2})", re.IGNORECASE
 )
-# Matches "Land Tax = $1,515.00" in the "For Information Only" calculation section.
-# This is always preferred over Tax Payable = $0.00 because the certificate may show
-# $0 when Volume/Folio is incomplete or the property has a PPoR exemption — the
-# calculation figure is the true single-ownership land tax amount.
+# Matches "Land Tax = $1,515.00" (or without $) in the "For Information Only"
+# calculation section.  Used when Volume/Folio is absent (incomplete certificate).
 _LAND_TAX_VALUE_RE = re.compile(
-    r"\bLand\s+Tax\s*=\s*\$\s*([\d,]+\.\d{2})",
+    r"\bLand\s+Tax\s*=\s*\$?\s*([\d,]+\.\d{2})",
     re.IGNORECASE | re.MULTILINE,
 )
 _SITE_VALUE_RE = re.compile(
@@ -197,27 +195,49 @@ def _has_property_exemption(text: str) -> bool:
 
 def _extract_tax_amounts(doc: Document, text: str) -> list[Fact]:
     facts: list[Fact] = []
-    tax_amount: str | None = None
-    tax_quote: str | None = None
 
     vf_complete = _volume_folio_complete(text)
+
+    # Collect raw candidates from the document.
     payable_amount: str | None = None
     payable_quote: str | None = None
     if m := _TAX_PAYABLE_RE.search(text):
         payable_amount = m.group(1)
         payable_quote = _compact(m.group(0))
 
-    # Rule 1: Volume AND Folio both present + Tax Payable = $0 → operative amount is $0.00
-    # (property is finalised / exempt — no land tax applies)
-    vf_zero = (
-        vf_complete
-        and payable_amount is not None
-        and _amount_to_zero_bool(payable_amount)
-    )
+    land_tax_amount: str | None = None
+    land_tax_quote: str | None = None
+    if m := _LAND_TAX_VALUE_RE.search(text):
+        land_tax_amount = "$" + m.group(1)
+        land_tax_quote = _compact(m.group(0))
 
-    if vf_zero:
-        tax_amount = "$0.00"
-        tax_quote = payable_quote or "Tax Payable $0.00 — Volume/Folio present"
+    # --- Decision logic ---
+    # IF Volume and Folio are both present → Tax Payable is the operative amount
+    #    (includes $0.00 when the property is exempt or cleared).
+    # IF Volume or Folio is absent → certificate is incomplete; use the
+    #    "Land Tax = $X" calculation figure from the For-Information-Only section.
+    # Fallback: use whichever field was found.
+    tax_amount: str | None
+    tax_quote: str | None
+    note: str
+
+    if vf_complete and payable_amount is not None:
+        tax_amount = payable_amount
+        tax_quote = payable_quote
+        note = "Volume/Folio present — using Tax Payable as state revenue land tax amount."
+    elif not vf_complete and land_tax_amount is not None:
+        tax_amount = land_tax_amount
+        tax_quote = land_tax_quote
+        note = (
+            "Volume/Folio absent — certificate incomplete. "
+            "Using Land Tax calculation amount."
+        )
+    else:
+        tax_amount = payable_amount or land_tax_amount
+        tax_quote = payable_quote or land_tax_quote
+        note = "Fallback: used first available land tax amount."
+
+    if tax_amount is not None and tax_quote is not None:
         facts.append(
             _make_fact(
                 doc,
@@ -225,49 +245,13 @@ def _extract_tax_amounts(doc: Document, text: str) -> list[Fact]:
                 tax_amount,
                 tax_quote,
                 confidence=0.99,
-                notes=(
-                    "Volume and Folio both present AND Tax Payable = $0.00. "
-                    "Certificate is finalised — operative land tax = $0.00."
-                ),
+                notes=note,
             )
         )
-    else:
-        # Rule 2: Volume/Folio missing  → use 'Land Tax = $X' calculation figure.
-        # Rule 3: Volume/Folio present + Tax Payable ≠ $0 → also use calculation figure.
-        # In both cases the 'For Information Only' single-ownership amount is authoritative.
-        if m := _LAND_TAX_VALUE_RE.search(text):
-            tax_amount = "$" + m.group(1)
-            tax_quote = _compact(m.group(0))
-            if not vf_complete:
-                note = "Volume/Folio blank — certificate not finalised. Using single-ownership calculation."
-            else:
-                note = "Volume/Folio present but Tax Payable is non-zero. Using single-ownership calculation."
-            facts.append(
-                _make_fact(
-                    doc,
-                    P.RATES_LAND_TAX_AMOUNT,
-                    tax_amount,
-                    tax_quote,
-                    confidence=0.99,
-                    notes=note,
-                )
-            )
 
+    # --- Downstream boolean facts (payable / vacant land tax) ---
+    effective_amount = tax_amount
     if payable_amount is not None and payable_quote is not None:
-        # Only use Tax Payable as the amount if nothing else resolved.
-        if tax_amount is None:
-            tax_amount = payable_amount
-            tax_quote = payable_quote
-            facts.append(
-                _make_fact(
-                    doc,
-                    P.RATES_LAND_TAX_AMOUNT,
-                    tax_amount,
-                    payable_quote,
-                    confidence=0.97,
-                    notes="land tax amount sourced from Tax Payable field",
-                )
-            )
         effective_amount = tax_amount or payable_amount
         facts.append(
             _make_fact(

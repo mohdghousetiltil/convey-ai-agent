@@ -260,6 +260,24 @@ async def _nudge_sync_worker() -> None:
         LOG.debug("Could not nudge sync worker for immediate drain.", exc_info=True)
 
 
+async def _fetch_water_copy_rules(
+    session: AsyncSession,
+    *,
+    client_id: _uuid.UUID,
+) -> list[tuple[str, float]]:
+    """Return (authority_name, annual_amount) pairs for active water copy rules."""
+    try:
+        rules = await CopyRuleRepo.list_for_client(
+            session,
+            client_id=client_id,
+            rule_type="water_authority",
+            include_inactive=False,
+        )
+        return [(r.authority_name, float(r.annual_amount)) for r in rules]
+    except Exception:
+        return []
+
+
 async def _apply_copy_rule_fallbacks_to_run(
     session: AsyncSession,
     *,
@@ -307,11 +325,9 @@ async def _apply_copy_rule_fallbacks_to_run(
         return
 
     current_answer = answers.get("sec32_1.1_outgoing_2_amount") or {}
-    current_value = current_answer.get("human_value_json")
-    if current_value in (None, "", [], {}):
-        current_value = current_answer.get("value_json")
-    parsed_current = parse_amount_text(current_value)
-    if parsed_current is not None and parsed_current > 0:
+    # Only skip if a human has already manually edited this value — DB still
+    # overrides any system-calculated amount.
+    if current_answer.get("human_edited"):
         return
 
     match = find_best_copy_rule_match(
@@ -906,7 +922,8 @@ async def create_run(background_tasks: BackgroundTasks,
         for search_dir in (source_uploads, source_dir):
             if search_dir.exists():
                 saved_paths.extend(
-                    p for p in search_dir.glob("*.pdf") if p.is_file()
+                    p for p in search_dir.iterdir()
+                    if p.is_file() and p.suffix.lower() in (".pdf", ".docx", ".doc")
                 )
         if not saved_paths:
             raise HTTPException(
@@ -938,6 +955,7 @@ async def create_run(background_tasks: BackgroundTasks,
             use_ai_review=use_ai_review,
         )
         await session.commit()
+        water_copy_rules = await _fetch_water_copy_rules(session, client_id=ctx.client.id)
         try:
             loop = asyncio.get_event_loop()
             pipeline_fn = partial(
@@ -946,6 +964,7 @@ async def create_run(background_tasks: BackgroundTasks,
                 run_dir=target_dir,
                 use_ai_review=use_ai_review,
                 model=resolved_model,
+                copy_rules=water_copy_rules,
             )
             payload: dict[str, Any] = await loop.run_in_executor(None, pipeline_fn)
         except Exception as exc:
@@ -1067,6 +1086,15 @@ async def _run_analysis_pipeline_background(
             loop
         )
 
+    # Fetch copy rules before entering the sync executor so Brain A can inject
+    # the DB price into the fact store before Brain D runs.
+    water_copy_rules: list[tuple[str, float]] = []
+    try:
+        async with factory() as _session:
+            water_copy_rules = await _fetch_water_copy_rules(_session, client_id=client_id)
+    except Exception:
+        pass
+
     try:
         # 1) Execute the pipeline in the thread pool.
         pipeline_fn = partial(
@@ -1076,6 +1104,7 @@ async def _run_analysis_pipeline_background(
             use_ai_review=use_ai_review,
             model=resolved_model,
             progress_callback=progress_callback,
+            copy_rules=water_copy_rules,
         )
         payload: dict[str, Any] = await loop.run_in_executor(None, pipeline_fn)
         LOG.info("Pipeline complete for run %s; starting DB persistence", run_uuid)
@@ -1471,11 +1500,14 @@ async def reprocess_run(
     run_dir = _resolve_run_dir(run_id)
     uploads_dir = run_dir / "uploads"
 
-    # Collect all PDFs from both the run root and uploads subdir
+    # Collect all documents (PDF + Word) from both the run root and uploads subdir
     doc_paths: list[Path] = []
     for search_dir in (uploads_dir, run_dir):
         if search_dir.exists():
-            doc_paths.extend(p for p in search_dir.glob("*.pdf") if p.is_file())
+            doc_paths.extend(
+                p for p in search_dir.iterdir()
+                if p.is_file() and p.suffix.lower() in (".pdf", ".docx", ".doc")
+            )
     # Deduplicate by name (uploads/ takes priority)
     seen: set[str] = set()
     unique_paths: list[Path] = []
@@ -1490,6 +1522,7 @@ async def reprocess_run(
     saved_settings = load_local_settings(user_id=str(ctx.user.id))
     model = run.model or saved_settings.get("defaultModelName", "gpt-4.1-mini")
     use_ai_review = bool(run.use_ai_review)
+    water_copy_rules = await _fetch_water_copy_rules(session, client_id=ctx.client.id)
 
     try:
         loop = asyncio.get_event_loop()
@@ -1499,6 +1532,7 @@ async def reprocess_run(
             run_dir=run_dir,
             use_ai_review=use_ai_review,
             model=model,
+            copy_rules=water_copy_rules,
         )
         payload: dict[str, Any] = await loop.run_in_executor(None, pipeline_fn)
     except Exception as exc:
@@ -1594,7 +1628,7 @@ async def process_chat_document_endpoint(
         dest_path.unlink(missing_ok=True)
         if not resolved_pdfs:
             return {
-                "error": "TriConvey reference resolved to no accessible PDFs. Open the document in TriConvey first so it is cached locally.",
+                "error": "TriConvey reference resolved to no accessible documents. Open the document in TriConvey first so it is cached locally.",
                 "doc_path": None,
                 "proposed_changes": [],
                 "corpus_entry": None,
@@ -1602,10 +1636,11 @@ async def process_chat_document_endpoint(
         dest_path = _copy_into_uploads(resolved_pdfs[0], uploads_dir)
 
     # Check for duplicate: if this file is already in the uploads, warn the user
-    existing_uploads = {p.name for p in uploads_dir.iterdir() if p.is_file() and p != dest_path and p.suffix.lower() == ".pdf"}
+    _doc_suffixes = (".pdf", ".docx", ".doc")
+    existing_uploads = {p.name for p in uploads_dir.iterdir() if p.is_file() and p != dest_path and p.suffix.lower() in _doc_suffixes}
     if dest_path.name in existing_uploads or any(
         p.stem == dest_path.stem for p in uploads_dir.iterdir()
-        if p.is_file() and p != dest_path and p.suffix.lower() == ".pdf"
+        if p.is_file() and p != dest_path and p.suffix.lower() in _doc_suffixes
     ):
         return {
             "already_exists": True,
@@ -1807,7 +1842,7 @@ async def resolve_triconvey_reference(
 
     resolved = [{"name": path.name, "path": str(path)} for path in resolved_paths]
     display_name = resolved[0]["name"] if resolved else ""
-    subtitle = f"Resolved {len(resolved)} PDF(s)" if resolved else "No local PDFs resolved yet"
+    subtitle = f"Resolved {len(resolved)} document(s)" if resolved else "No local documents resolved yet"
 
     _triconvey_import_debug(
         "ui_resolve_reference_done",
@@ -2465,7 +2500,7 @@ def _resolve_triconvey_reference_payload(payload: dict[str, Any]) -> list[Path]:
     # --- Primary: %TEMP%\{hex}\{hex}\{hex}\*.pdf (WebView2 download cache) ----
     _hex_dir = _re.compile(r"^[0-9a-f]{5,9}$", _re.I)
 
-    def _collect_hex3_pdfs(root: Path) -> list[Path]:
+    def _collect_hex3_docs(root: Path) -> list[Path]:
         seen: set[Path] = set()
         found: list[Path] = []
         try:
@@ -2484,27 +2519,30 @@ def _resolve_triconvey_reference_payload(payload: dict[str, Any]) -> list[Path]:
                     continue
                 for l3 in l3_dirs:
                     try:
-                        pdfs = list(l3.glob("*.pdf"))
+                        docs = [
+                            p for p in l3.iterdir()
+                            if p.is_file() and p.suffix.lower() in (".pdf", ".docx", ".doc")
+                        ]
                     except OSError:
                         continue
-                    for pdf in pdfs:
-                        if pdf in seen:
+                    for doc in docs:
+                        if doc in seen:
                             continue
                         try:
-                            mtime = datetime.fromtimestamp(pdf.stat().st_mtime, tz=UTC)
+                            mtime = datetime.fromtimestamp(doc.stat().st_mtime, tz=UTC)
                         except OSError:
                             continue
                         if mtime >= cutoff:
-                            seen.add(pdf)
-                            found.append(pdf)
+                            seen.add(doc)
+                            found.append(doc)
         return found
 
-    webview2_pdfs = _collect_hex3_pdfs(temp_root)
+    webview2_pdfs = _collect_hex3_docs(temp_root)
     if webview2_pdfs:
         result = _limit_candidates(webview2_pdfs)
         _triconvey_import_debug("resolve_payload_webview2_hits", matter_id=matter_id, count=len(result), names=[p.name for p in result])
         LOG.info(
-            "Resolved %d PDF(s) from WebView2 temp cache for matter %s: %s",
+            "Resolved %d document(s) from WebView2 temp cache for matter %s: %s",
             len(result), matter_id, [p.name for p in result],
         )
         return result
@@ -2535,22 +2573,25 @@ def _resolve_triconvey_reference_payload(payload: dict[str, Any]) -> list[Path]:
             continue
         for sub_dir in sub_dirs:
             try:
-                pdfs = list(sub_dir.glob("*.pdf"))
+                docs = [
+                    p for p in sub_dir.iterdir()
+                    if p.is_file() and p.suffix.lower() in (".pdf", ".docx", ".doc")
+                ]
             except OSError:
                 continue
-            for pdf in pdfs:
+            for doc in docs:
                 try:
-                    mtime = datetime.fromtimestamp(pdf.stat().st_mtime, tz=UTC)
+                    mtime = datetime.fromtimestamp(doc.stat().st_mtime, tz=UTC)
                 except OSError:
                     continue
                 if mtime >= cutoff:
-                    fallback.append(pdf)
+                    fallback.append(doc)
 
     if fallback:
         result = _limit_candidates(fallback)
         _triconvey_import_debug("resolve_payload_smokeball_hits", matter_id=matter_id, count=len(result), names=[p.name for p in result])
         LOG.info(
-            "Resolved %d PDF(s) from Smokeball app cache for matter %s: %s",
+            "Resolved %d document(s) from Smokeball app cache for matter %s: %s",
             len(result), matter_id, [p.name for p in result],
         )
         return result
@@ -2574,14 +2615,14 @@ def _resolve_explicit_triconvey_paths(payload: dict[str, Any]) -> list[Path]:
         if path is None or path in seen or not path.exists():
             continue
         seen.add(path)
-        if path.suffix.lower() == ".pdf":
+        if path.suffix.lower() in (".pdf", ".docx", ".doc"):
             resolved.append(path)
             continue
         if _looks_like_triconvey_reference(path):
             resolved.extend(_resolve_triconvey_reference_upload(path))
     if resolved:
         _triconvey_import_debug("explicit_path_hits", count=len(resolved), names=[p.name for p in resolved])
-        LOG.info("Resolved %d PDF(s) from explicit TriConvey local paths: %s", len(resolved), [p.name for p in resolved])
+        LOG.info("Resolved %d document(s) from explicit TriConvey local paths: %s", len(resolved), [p.name for p in resolved])
     return _dedupe_paths(resolved)
 
 
@@ -2750,7 +2791,7 @@ async def _persist_uploaded_files(
             size = destination.stat().st_size
         except OSError:
             size = -1
-        if destination.suffix.lower() == ".pdf":
+        if destination.suffix.lower() in (".pdf", ".docx", ".doc"):
             saved_paths.append(destination)
             _triconvey_import_debug("persist_upload_saved_pdf", source_name=upload.filename, destination=destination, size=size)
         elif _looks_like_triconvey_reference(destination):

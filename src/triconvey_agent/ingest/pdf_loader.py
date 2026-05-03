@@ -19,6 +19,10 @@ from triconvey_agent.schemas.documents import (
     InputFileType,
 )
 
+# Minimum ratio of printable-to-total characters for a page to be considered
+# successfully decoded by pypdf. Below this threshold, OCR fallback is used.
+_OCR_PRINTABLE_RATIO_THRESHOLD = 0.35
+
 LARGE_PDF_PAGE_THRESHOLD = 100
 LARGE_PDF_HEAD_PAGES = 25
 LARGE_PDF_MIDDLE_PAGES = 2
@@ -107,12 +111,60 @@ def classify_pdf_document(filename: str, extracted_text: str) -> tuple[DocumentT
     return best_type, round(confidence, 3), best_reasons
 
 
+def load_document(path: str | Path) -> Document:
+    """Load a PDF or Word document, dispatching by file extension."""
+    file_path = Path(path).expanduser().resolve()
+    suffix = file_path.suffix.lower()
+    if suffix in (".docx", ".doc"):
+        from triconvey_agent.ingest.word_loader import load_word_document
+        return load_word_document(file_path)
+    return load_pdf_document(file_path)
+
+
+def _printable_ratio(text: str) -> float:
+    """Return fraction of characters that are printable (non-control) Unicode."""
+    if not text:
+        return 0.0
+    printable = sum(1 for c in text if c.isprintable() and not c.isspace())
+    return printable / len(text)
+
+
+def _ocr_page_text(fitz_doc: object, page_index: int) -> str:
+    """Render a PDF page via pymupdf and run pytesseract OCR on it.
+
+    Returns empty string if either library is unavailable or OCR fails.
+    """
+    try:
+        import io
+        import fitz  # type: ignore[import]
+        import pytesseract  # type: ignore[import]
+        from PIL import Image  # type: ignore[import]
+
+        page = fitz_doc[page_index]
+        mat = fitz.Matrix(2.5, 2.5)  # ~180 DPI -- good OCR quality
+        pix = page.get_pixmap(matrix=mat)
+        img = Image.open(io.BytesIO(pix.tobytes("png")))
+        return pytesseract.image_to_string(img)
+    except Exception:
+        return ""
+
+
 def load_pdf_document(path: str | Path) -> Document:
     file_path = Path(path).expanduser().resolve()
     reader = PdfReader(str(file_path))
 
+    # Lazily open a pymupdf handle for OCR fallback (None if unavailable)
+    _fitz_doc: object = None
+    try:
+        import fitz  # type: ignore[import]
+        import pytesseract  # type: ignore[import]  # noqa: F401 -- just check availability
+        _fitz_doc = fitz.open(str(file_path))
+    except Exception:
+        pass
+
     pages: list[DocumentPage] = []
     raw_page_texts: list[str] = []
+    ocr_pages_used: list[int] = []
 
     total_pages = len(reader.pages)
     selected_indices = _selected_page_indices(file_path.name, total_pages)
@@ -121,15 +173,30 @@ def load_pdf_document(path: str | Path) -> Document:
         page_number = page_index + 1
         page = reader.pages[page_index]
         page_text = page.extract_text() or ""
+
+        # OCR fallback: if pypdf returned mostly non-printable garbage (custom
+        # font encoding without a ToUnicode table), re-extract via image OCR.
+        if _fitz_doc is not None and _printable_ratio(page_text) < _OCR_PRINTABLE_RATIO_THRESHOLD:
+            ocr_text = _ocr_page_text(_fitz_doc, page_index)
+            if ocr_text.strip():
+                page_text = ocr_text
+                ocr_pages_used.append(page_number)
+
         raw_page_texts.append(page_text.strip())
         pages.append(
             DocumentPage(
                 page_number=page_number,
                 text=page_text,
                 normalized_text=normalize_text(page_text),
-                metadata={},
+                metadata={"ocr": page_number in ocr_pages_used},
             )
         )
+
+    if _fitz_doc is not None:
+        try:
+            _fitz_doc.close()
+        except Exception:
+            pass
 
     raw_text = "\n\n".join(part for part in raw_page_texts if part).strip()
     normalized_text = normalize_text(raw_text)
@@ -163,6 +230,7 @@ def load_pdf_document(path: str | Path) -> Document:
             "page_count": total_pages,
             "pages_extracted": len(pages),
             "page_extraction_truncated": len(selected_indices) < total_pages,
+            "ocr_pages": ocr_pages_used,
             "text_preview": collapse_snippet(normalized_text),
         },
     )

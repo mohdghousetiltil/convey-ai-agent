@@ -95,7 +95,12 @@
       "Read(//c/Users/moham/Downloads/**)",
       "Bash(python -c \"import sys; sys.path.insert\\(0,'src'\\); import triconvey_agent.canonical.extractors.council_rates_certificate as m; print\\('OK', m.EXTRACTOR_NAME\\)\")",
       "Bash(python3)",
-      "Bash(python -c \"from triconvey_agent.canonical.extractors.water_authority_certificate import extract_water_authority_certificate_facts; print\\('OK'\\)\")"
+      "Bash(python -c \"from triconvey_agent.canonical.extractors.water_authority_certificate import extract_water_authority_certificate_facts; print\\('OK'\\)\")",
+      "Bash(python -c \"from triconvey_agent.canonical.extractors.water_authority_certificate import extract_water_authority_certificate_facts, _parse_daily_rate_lines, _parse_period_charge_lines, _AUTHORITY_ALIASES, _parse_any_date; from datetime import date; print\\('Import OK'\\); d = _parse_any_date\\('22/09/25'\\); print\\(f'22/09/25 → {d}'\\); d2 = _parse_any_date\\('29-Jan-2026'\\); print\\(f'29-Jan-2026 → {d2}'\\); d3 = _parse_any_date\\('22/09/2025'\\); print\\(f'22/09/2025 → {d3}'\\); print\\('Aliases:', list\\(_AUTHORITY_ALIASES.keys\\(\\)\\)\\)\")",
+      "Bash(.venv\\\\Scripts\\\\pip install *)",
+      "Bash(python -c \"from triconvey_agent.ingest.pdf_loader import load_document; from triconvey_agent.ingest.word_loader import load_word_document; from triconvey_agent.schemas.documents import InputFileType; print\\('InputFileType.WORD =', InputFileType.WORD\\); print\\('load_document OK'\\); print\\('load_word_document OK'\\)\")",
+      "Read(//mnt/c/Users/moham/projects/**)",
+      "PowerShell(cd C:\\\\Users\\\\moham\\\\projects\\\\triconvey-agent; python test_oc.py 2>&1 | Where-Object { $_ -match \"Scenario|WINNER|Blocks|Cand|notes\" })"
     ]
   }
 }

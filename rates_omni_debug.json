@@ -1,0 +1,553 @@
+[
+  {
+    "timestamp": "2026-05-03T03:10:17.345248",
+    "file": "VIC- Enquiry - Alpine Shire- Land Information Certificate - 11022-112.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=6",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rows": [
+      {
+        "label": "General rates",
+        "amounts": [
+          712.72
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied"
+        ],
+        "evidence": "General Date Levied 01/07/2025 : $712.72"
+      },
+      {
+        "label": "Waste Management",
+        "amounts": [
+          0.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied"
+        ],
+        "evidence": "Waste Management Date Levied 01/07/2025 : $0.00"
+      },
+      {
+        "label": "Recycling",
+        "amounts": [
+          0.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied"
+        ],
+        "evidence": "Recycling Date Levied 01/07/2025 : $0.00"
+      },
+      {
+        "label": "ESVF",
+        "amounts": [
+          188.25
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied"
+        ],
+        "evidence": "ESVF Date Levied 01/07/2025 : $188.25"
+      },
+      {
+        "label": "Total Due",
+        "amounts": [
+          900.97
+        ],
+        "row_type": "annual_total",
+        "column_meanings": [
+          "total"
+        ],
+        "evidence": "Total Due: $900.97"
+      }
+    ],
+    "candidate": "$900.97",
+    "accepted": true
+  },
+  {
+    "timestamp": "2026-05-03T03:10:20.246545",
+    "file": "VIC- Enquiry - Alpine Shire- Land Information Certificate - 11022-112.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=False suspicious=False from_balance=False lower_than_balance=True unknown_table=False best=date_levied_scan=$188.25",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rows": [],
+    "candidate": null,
+    "accepted": false
+  },
+  {
+    "timestamp": "2026-05-03T03:34:11.674406",
+    "file": "VIC- Enquiry - Alpine Shire- Land Information Certificate - 11022-112.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=False suspicious=True single_weak=False disagrees_with_total_due=True from_balance=False lower_than_balance=True unknown_table=False best=moneyrow_charge_rows=$188.25",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "moneyrow_charge_rows",
+        "$188.25"
+      ]
+    ],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T03:41:23.090701",
+    "file": "VIC- Enquiry - Glenelg- Land Information Certificate - 9195-819.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=False suspicious=True single_weak=False disagrees_with_total_due=True from_balance=False lower_than_balance=True unknown_table=False best=moneyrow_charge_rows=$2.02",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "moneyrow_charge_rows",
+        "$2.02"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General Land",
+        "amounts": [
+          1991.69,
+          -555.1
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "balance"
+        ],
+        "evidence": "General Land - $1,991.69 -$555.10"
+      },
+      {
+        "label": "General Land",
+        "amounts": [
+          182.46,
+          0.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "balance"
+        ],
+        "evidence": "General Land - $182.46 $0.00"
+      },
+      {
+        "label": "Fire Services Property Levy - Receipts",
+        "amounts": [
+          -2729.25,
+          -555.1
+        ],
+        "row_type": "payment",
+        "column_meanings": [
+          "levied",
+          "balance"
+        ],
+        "evidence": "Fire Services Property Levy - Receipts -$2,729.25 -$555.10"
+      },
+      {
+        "label": "Sub Total Rates & Charges",
+        "amounts": [
+          -555.1
+        ],
+        "row_type": "annual_total",
+        "column_meanings": [
+          "total"
+        ],
+        "evidence": "Sub Total Rates & Charges"
+      }
+    ],
+    "ai_candidate": "$2,174.15",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "The final amount $2.02 is not directly derivable from any of the visible evidence rows; the charge rows sum to 2174.15 and the sub‑total is -555.10, which differ significantly from $2.02."
+  },
+  {
+    "timestamp": "2026-05-03T03:48:13.736615",
+    "file": "VIC- Enquiry - Greater Western Water- Water Information Statement - 12614-074.pdf",
+    "doc_type": "water",
+    "called": true,
+    "reason": "conflict=True suspicious=False best=explicit_annual=$564.30",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Residential Water Service Charge",
+        "amounts": [
+          224.26,
+          0.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "outstanding"
+        ],
+        "evidence": "Residential Water Service Charge $224.26 Quarterly $0.00 $0.00"
+      },
+      {
+        "label": "Residential Sewer Service Charge",
+        "amounts": [
+          298.0,
+          0.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "outstanding"
+        ],
+        "evidence": "Residential Sewer Service Charge $298.00 Quarterly $0.00 $0.00"
+      },
+      {
+        "label": "Residential Recycled Water Service Charge",
+        "amounts": [
+          42.04,
+          0.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "outstanding"
+        ],
+        "evidence": "Residential Recycled Water Service Charge $42.04 Quarterly $0.00 $0.00"
+      },
+      {
+        "label": "Total annual charges",
+        "amounts": [
+          564.3,
+          0.0
+        ],
+        "row_type": "annual_total",
+        "column_meanings": [
+          "total",
+          "outstanding"
+        ],
+        "evidence": "Total annual charges $564.30 $0.00 $0.00"
+      }
+    ],
+    "ai_candidate": "$564.30",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T03:48:42.639450",
+    "file": "VIC- Enquiry - Wyndham- Land Information Certificate - 12614-074.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=moneyrow_annual_total_row=$665.24",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "current_levied_matrix_row",
+        "$46.92"
+      ],
+      [
+        "moneyrow_annual_total_row",
+        "$665.24"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$665.24"
+      ],
+      [
+        "inline_charge_rows",
+        "$1,330.48"
+      ],
+      [
+        "paid_plus_outstanding",
+        "$724.36"
+      ],
+      [
+        "paid_plus_outstanding",
+        "$724.36"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General VRL Rates",
+        "amounts": [
+          454.28
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied"
+        ],
+        "evidence": "General VRL Rates $454.28"
+      },
+      {
+        "label": "Municipal Charge",
+        "amounts": [
+          64.35
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied"
+        ],
+        "evidence": "Municipal Charge $64.35"
+      },
+      {
+        "label": "Fire Services Levy",
+        "amounts": [
+          146.61
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied"
+        ],
+        "evidence": "Fire Services Levy $146.61"
+      },
+      {
+        "label": "Current Rates Levied",
+        "amounts": [
+          665.24
+        ],
+        "row_type": "annual_total",
+        "column_meanings": [
+          "total"
+        ],
+        "evidence": "Current Rates Levied $665.24"
+      },
+      {
+        "label": "Interest",
+        "amounts": [
+          12.2
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied"
+        ],
+        "evidence": "Interest $12.20"
+      },
+      {
+        "label": "Adjustments",
+        "amounts": [
+          46.92
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied"
+        ],
+        "evidence": "Adjustments $46.92"
+      },
+      {
+        "label": "Less Payments",
+        "amounts": [
+          -166.0
+        ],
+        "row_type": "payment",
+        "column_meanings": [
+          "payment"
+        ],
+        "evidence": "Less Payments ($166.00)"
+      },
+      {
+        "label": "Balance Outstanding",
+        "amounts": [
+          558.36
+        ],
+        "row_type": "balance",
+        "column_meanings": [
+          "outstanding"
+        ],
+        "evidence": "Balance Outstanding $558.36"
+      },
+      {
+        "label": "TOTAL OUTSTANDING",
+        "amounts": [
+          558.36
+        ],
+        "row_type": "balance",
+        "column_meanings": [
+          "outstanding"
+        ],
+        "evidence": "TOTAL OUTSTANDING $558.36"
+      }
+    ],
+    "ai_candidate": "$665.24",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T03:59:59.182575",
+    "file": "VIC- Enquiry - Wyndham- Land Information Certificate - 12614-074.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=current_rates_levied_line=$665.24",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "current_rates_levied_line",
+        "$665.24"
+      ],
+      [
+        "current_levied_matrix_row",
+        "$46.92"
+      ],
+      [
+        "moneyrow_annual_total_row",
+        "$665.24"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$665.24"
+      ],
+      [
+        "inline_charge_rows",
+        "$1,330.48"
+      ],
+      [
+        "paid_plus_outstanding",
+        "$724.36"
+      ]
+    ],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T04:08:16.894513",
+    "file": "VIC- Enquiry - Wyndham- Land Information Certificate - 12614-074.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=current_rates_levied_line=$665.24",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "current_rates_levied_line",
+        "$665.24"
+      ],
+      [
+        "current_levied_matrix_row",
+        "$46.92"
+      ],
+      [
+        "moneyrow_annual_total_row",
+        "$665.24"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$665.24"
+      ],
+      [
+        "inline_charge_rows",
+        "$1,330.48"
+      ],
+      [
+        "paid_plus_outstanding",
+        "$724.36"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General VRL Rates",
+        "amounts": [
+          454.28
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "charge"
+        ],
+        "evidence": "General VRL Rates $454.28"
+      },
+      {
+        "label": "Municipal Charge",
+        "amounts": [
+          64.35
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "charge"
+        ],
+        "evidence": "Municipal Charge $64.35"
+      },
+      {
+        "label": "Fire Services Levy",
+        "amounts": [
+          146.61
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "charge"
+        ],
+        "evidence": "Fire Services Levy $146.61"
+      },
+      {
+        "label": "Current Rates Levied",
+        "amounts": [
+          665.24
+        ],
+        "row_type": "annual_total",
+        "column_meanings": [
+          "annual"
+        ],
+        "evidence": "Current Rates Levied $665.24"
+      },
+      {
+        "label": "Interest",
+        "amounts": [
+          12.2
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "charge"
+        ],
+        "evidence": "Interest $12.20"
+      },
+      {
+        "label": "Adjustments",
+        "amounts": [
+          46.92
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "charge"
+        ],
+        "evidence": "Adjustments $46.92"
+      },
+      {
+        "label": "Less Payments",
+        "amounts": [
+          -166.0
+        ],
+        "row_type": "payment",
+        "column_meanings": [
+          "payment"
+        ],
+        "evidence": "Less Payments ($166.00)"
+      },
+      {
+        "label": "Balance Outstanding",
+        "amounts": [
+          558.36
+        ],
+        "row_type": "balance",
+        "column_meanings": [
+          "balance"
+        ],
+        "evidence": "Balance Outstanding $558.36"
+      },
+      {
+        "label": "TOTAL OUTSTANDING",
+        "amounts": [
+          558.36
+        ],
+        "row_type": "annual_total",
+        "column_meanings": [
+          "annual"
+        ],
+        "evidence": "TOTAL OUTSTANDING $558.36"
+      }
+    ],
+    "ai_candidate": "$665.24",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  }
+]

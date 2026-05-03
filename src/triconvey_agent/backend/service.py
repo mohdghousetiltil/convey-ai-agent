@@ -13,6 +13,7 @@ from typing import Any
 from uuid import uuid4
 
 from triconvey_agent.ai.openai_client import OpenAIResponsesClient, openai_runtime_disabled
+from triconvey_agent.ai.openrouter_client import OpenRouterClient
 from triconvey_agent.backend.runtime import ensure_runtime_dirs, get_runtime_paths
 from triconvey_agent.backend.settings import load_local_settings
 from triconvey_agent.brain_f.corpus import build_document_corpus
@@ -111,6 +112,7 @@ def build_review_run(
     use_ai_review: bool = False,
     model: str = "gpt-4.1-mini",
     progress_callback: Callable[[float, str], None] | None = None,
+    copy_rules: list[tuple[str, float]] | None = None,
 ) -> dict[str, Any]:
     overall_started = time.perf_counter()
     runtime = ensure_runtime_dirs()
@@ -128,7 +130,11 @@ def build_review_run(
 
     if progress_callback:
         progress_callback(5.0, "Extracting facts")
-    store, total_facts = extract_fact_store(doc_paths, target_dir)
+    store, total_facts = extract_fact_store(
+        doc_paths, target_dir,
+        ai_client=_make_omni_client(),
+        copy_rules=copy_rules or [],
+    )
 
     prewarmed_assets = False
     # Pre-warm is skipped here — AI review now only covers needs_review questions,
@@ -730,6 +736,14 @@ def _provider_from_model(model: str) -> str:
     if model.startswith("gemini"):
         return "google"
     return "openai"
+
+
+def _make_omni_client() -> OpenRouterClient | None:
+    """Return an OpenRouterClient when OPENROUTER_API_KEY is set, else None."""
+    try:
+        return OpenRouterClient()
+    except ValueError:
+        return None
 
 
 def _make_ai_client_for_corpus(provider: str, model: str) -> Any:

@@ -18,6 +18,7 @@ class DocumentType(str, Enum):
 
 class InputFileType(str, Enum):
     PDF = "pdf"
+    WORD = "word"
     YAML = "yaml"
     UNKNOWN = "unknown"
 

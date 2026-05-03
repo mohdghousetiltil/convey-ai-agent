@@ -118,7 +118,15 @@ export function UploadScreen({
 
   const isSupportedUpload = (file: File) => {
     const name = file.name.toLowerCase();
-    return file.type === "application/pdf" || name.endsWith(".pdf") || isTriconveyReferenceName(name);
+    return (
+      file.type === "application/pdf" ||
+      name.endsWith(".pdf") ||
+      name.endsWith(".docx") ||
+      name.endsWith(".doc") ||
+      file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.type === "application/msword" ||
+      isTriconveyReferenceName(name)
+    );
   };
 
   const appendFiles = async (nextFiles: File[]) => {
@@ -153,7 +161,7 @@ export function UploadScreen({
         let nextState: UploadListItem = {
           file,
           displayName: "TriConvey drop reference",
-          subtitle: "No local PDFs resolved yet - try downloading",
+          subtitle: "No local documents resolved yet - try downloading",
           resolving: false,
         };
 
@@ -165,7 +173,7 @@ export function UploadScreen({
               nextState = {
                 file,
                 displayName: resolvedNames.join(", "),
-                subtitle: `${resolvedNames.length} TriConvey PDF${resolvedNames.length === 1 ? "" : "s"}`,
+                subtitle: `${resolvedNames.length} TriConvey document${resolvedNames.length === 1 ? "" : "s"}`,
                 resolving: false,
               };
               break;
@@ -203,7 +211,7 @@ export function UploadScreen({
     const parsed = parseDroppedReferenceText(plainText, uriList, htmlText);
     const droppedFiles = Array.from(e.dataTransfer.files ?? []).filter(isSupportedUpload);
     const droppedFilePaths = extractDroppedFilePaths(droppedFiles);
-    const droppedPdfFiles = droppedFiles.filter((f) => !isTriconveyReferenceName(f.name));
+    const droppedDocFiles = droppedFiles.filter((f) => !isTriconveyReferenceName(f.name));
     const hasOnlyTriconveyRefs =
       droppedFiles.length > 0 && droppedFiles.every((f) => isTriconveyReferenceName(f.name));
 
@@ -215,8 +223,8 @@ export function UploadScreen({
       void appendFiles([makeReferenceFile(JSON.stringify({ LocalPaths: parsed.localPaths }, null, 2))]);
       return;
     }
-    if (droppedPdfFiles.length > 0) {
-      void appendFiles(droppedPdfFiles);
+    if (droppedDocFiles.length > 0) {
+      void appendFiles(droppedDocFiles);
       return;
     }
     if (parsed?.matterPayload) {
@@ -271,7 +279,7 @@ export function UploadScreen({
               className="hidden"
               multiple
               onChange={(e) => handleFiles(e.target.files)}
-              accept=".pdf,.json,.tmp"
+              accept=".pdf,.docx,.doc,.json,.tmp"
             />
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted text-primary">
               <Upload className="h-8 w-8" />
@@ -279,7 +287,7 @@ export function UploadScreen({
             <div className="text-center">
               <p className="text-[1.1rem] font-semibold text-foreground">Drag and drop files here</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                PDFs or TriConvey folder drops, ready for canonical extraction and Convey autofill
+                PDFs, Word documents, or TriConvey folder drops — ready for canonical extraction and Convey autofill
               </p>
             </div>
             <Button
@@ -345,9 +353,12 @@ export function UploadScreen({
                             {item.displayName || item.file.name}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {item.file.name.toLowerCase().endsWith(".pdf")
-                              ? `${(item.file.size / 1024 / 1024).toFixed(2)} MB`
-                              : (item.subtitle || "TriConvey reference")}
+                            {(() => {
+                              const n = item.file.name.toLowerCase();
+                              if (n.endsWith(".pdf") || n.endsWith(".docx") || n.endsWith(".doc"))
+                                return `${(item.file.size / 1024 / 1024).toFixed(2)} MB`;
+                              return item.subtitle || "TriConvey reference";
+                            })()}
                           </p>
                         </div>
                       </div>
