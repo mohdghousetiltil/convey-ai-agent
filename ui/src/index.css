@@ -90,8 +90,8 @@
     --accent: oklch(0.24 0.025 258);        /* #212b43 hover/accent */
     --accent-foreground: oklch(0.93 0.012 240);
     --destructive: oklch(0.65 0.22 22);     /* red, brighter on dark */
-    --border: oklch(1 0 0 / 7%);            /* ultra-subtle white border */
-    --input: oklch(1 0 0 / 9%);
+    --border: oklch(1 0 0 / 11%);
+    --input: oklch(1 0 0 / 13%);
     --ring: oklch(0.6 0.18 250);            /* blue ring matches primary */
     --chart-1: oklch(0.6 0.18 250);
     --chart-2: oklch(0.7 0.15 180);
@@ -106,6 +106,19 @@
     --sidebar-accent-foreground: oklch(0.93 0.012 240);
     --sidebar-border: oklch(1 0 0 / 7%);
     --sidebar-ring: oklch(0.6 0.18 250);
+}
+
+/* Stronger dark-mode defaults for legibility and hover contrast */
+.dark .shadow-xl,
+.dark .shadow-2xl,
+.dark .shadow-sm {
+    box-shadow: none !important;
+}
+
+.dark [class*="hover:bg-white"],
+.dark [class*="hover:bg-slate-50"],
+.dark [class*="hover:bg-slate-100"] {
+    background-color: color-mix(in oklab, var(--accent) 75%, transparent) !important;
 }
 
 /* Smooth transition when toggling dark mode */

@@ -488,8 +488,8 @@ export function ClientPolicyScreen({
         >
           <Sparkles className="h-8 w-8" />
         </motion.div>
-        <h1 className="text-4xl font-serif italic text-slate-900">Custom Policy</h1>
-        <p className="mt-2 text-lg text-slate-500">Manage how your AI assistant handles property law conventions.</p>
+        <h1 className="text-4xl font-serif italic text-slate-900 dark:text-foreground">Custom Policy</h1>
+        <p className="mt-2 text-lg text-slate-500 dark:text-muted-foreground">Manage how your AI assistant handles property law conventions.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -519,12 +519,12 @@ export function ClientPolicyScreen({
             onClick={option.action}
             className="group relative cursor-pointer"
           >
-            <div className="h-full rounded-[2.5rem] border border-slate-200 bg-white p-8 transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-200">
+            <div className="h-full rounded-[2.5rem] border border-slate-200 dark:border-border bg-white dark:bg-card p-8 transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-200 dark:hover:shadow-none">
               <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border ${option.color} transition-transform group-hover:scale-110`}>
                 <option.icon className="h-7 w-7" />
               </div>
-              <h3 className="mb-3 text-2xl font-bold text-slate-900">{option.title}</h3>
-              <p className="mb-6 leading-relaxed text-slate-500">{option.desc}</p>
+              <h3 className="mb-3 text-2xl font-bold text-slate-900 dark:text-foreground">{option.title}</h3>
+              <p className="mb-6 leading-relaxed text-slate-500 dark:text-muted-foreground">{option.desc}</p>
               <div className="flex items-center text-sm font-bold text-primary transition-all group-hover:gap-2">
                 Enter {option.title} <ChevronRight className="h-4 w-4" />
               </div>
@@ -541,20 +541,20 @@ export function ClientPolicyScreen({
         <div>
           <button
             onClick={() => setCurrentSubView("menu")}
-            className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-400 transition-colors hover:text-slate-600"
+            className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-400 dark:text-muted-foreground transition-colors hover:text-slate-600 dark:hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Back to Custom Policy
           </button>
-          <h1 className="font-sans text-3xl font-black tracking-tight text-slate-900">Configure Rules</h1>
-          <p className="text-base text-slate-500">Fine-tune your autofill preferences and system conventions.</p>
+          <h1 className="font-sans text-3xl font-black tracking-tight text-slate-900 dark:text-foreground">Configure Rules</h1>
+          <p className="text-base text-slate-500 dark:text-muted-foreground">Fine-tune your autofill preferences and system conventions.</p>
         </div>
 
         <div className="group relative">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-primary" />
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-muted-foreground transition-colors group-focus-within:text-primary" />
           <input
             type="text"
             placeholder="Search rules or sections..."
-            className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-6 text-sm shadow-sm transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:w-72"
+            className="h-12 w-full rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card pl-11 pr-6 text-sm shadow-sm dark:shadow-none transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:w-72"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
           />
@@ -562,29 +562,29 @@ export function ClientPolicyScreen({
       </div>
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-        <section className="relative overflow-hidden rounded-[2.5rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
+        <section className="relative overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-border bg-white dark:bg-card shadow-xl shadow-slate-200/50 dark:shadow-none">
           <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #000 1px, transparent 0)", backgroundSize: "24px 24px" }} />
           <div className="relative">
             <button
               onClick={() => setStarredOpen((value) => !value)}
-              className="flex w-full items-center justify-between px-10 py-8 text-left transition-colors hover:bg-slate-50/50"
+              className="flex w-full items-center justify-between px-10 py-8 text-left transition-colors hover:bg-slate-50 dark:hover:bg-accent/60"
             >
               <div className="flex items-center gap-6">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50 text-violet-400 shadow-inner transition-transform group-hover:rotate-6">
                   <Star className="h-8 w-8 fill-current" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Starred for Autofill</h2>
-                  <p className="text-sm font-medium text-slate-400">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-foreground">Starred for Autofill</h2>
+                  <p className="text-sm font-medium text-slate-400 dark:text-muted-foreground">
                     {starredItems.length === 0 ? "No fields selected" : `${starredItems.length} items will be auto-prioritized in processing`}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="rounded-full bg-slate-100 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <div className="rounded-full bg-slate-100 dark:bg-accent/50 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-muted-foreground">
                   {starredItems.length} ACTIVE
                 </div>
-                {starredOpen ? <ChevronDown className="h-5 w-5 text-slate-400" /> : <ChevronRight className="h-5 w-5 text-slate-400" />}
+                {starredOpen ? <ChevronDown className="h-5 w-5 text-slate-400 dark:text-muted-foreground" /> : <ChevronRight className="h-5 w-5 text-slate-400 dark:text-muted-foreground" />}
               </div>
             </button>
 
@@ -594,7 +594,7 @@ export function ClientPolicyScreen({
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden border-t border-slate-100"
+                  className="overflow-hidden border-t border-slate-100 dark:border-border/60"
                 >
                   <div className="px-10 py-8">
                     {starredItems.length ? (
@@ -603,7 +603,7 @@ export function ClientPolicyScreen({
                           <button
                             key={item.id}
                             onClick={() => toggleItem(item)}
-                            className="group flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition-all hover:scale-[1.03] hover:bg-slate-50 active:scale-[0.97]"
+                            className="group flex items-center gap-2.5 rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-foreground shadow-sm dark:shadow-none transition-all hover:scale-[1.03] hover:bg-slate-50 dark:hover:bg-accent/60 active:scale-[0.97]"
                           >
                             <Star className="h-3.5 w-3.5 fill-violet-400 text-violet-400" />
                             {item.label}
@@ -611,12 +611,12 @@ export function ClientPolicyScreen({
                         ))}
                       </div>
                     ) : (
-                      <div className="rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50/50 px-10 py-12 text-center">
-                        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-100 bg-white text-slate-300 shadow-sm">
+                      <div className="rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-border bg-slate-50/50 dark:bg-accent/30 px-10 py-12 text-center">
+                        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-100 dark:border-border/60 bg-white text-slate-300 shadow-sm">
                           <Star className="h-6 w-6" />
                         </div>
-                        <p className="text-lg font-bold text-slate-900">No starred preferences yet</p>
-                        <p className="mx-auto mt-1 max-w-sm text-sm font-medium text-slate-400">Starred items are automatically filled by AI and prioritized in the review workspace.</p>
+                        <p className="text-lg font-bold text-slate-900 dark:text-foreground">No starred preferences yet</p>
+                        <p className="mx-auto mt-1 max-w-sm text-sm font-medium text-slate-400 dark:text-muted-foreground">Starred items are automatically filled by AI and prioritized in the review workspace.</p>
                       </div>
                     )}
                   </div>
@@ -630,9 +630,9 @@ export function ClientPolicyScreen({
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-3">
               <Filter className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-black uppercase tracking-widest text-slate-400">Document Sections</h2>
+              <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">Document Sections</h2>
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
               Showing {filteredSections.length} of {SECTIONS.length}
             </div>
           </div>
@@ -651,21 +651,21 @@ export function ClientPolicyScreen({
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md"
+                  className="overflow-hidden rounded-[2rem] border border-slate-200 dark:border-border bg-white dark:bg-card shadow-sm dark:shadow-none transition-all hover:shadow-md dark:hover:shadow-none"
                 >
                   <div className="flex w-full items-center justify-between py-6 pl-6 pr-4">
                     <div className="flex flex-1 cursor-pointer items-center gap-5" onClick={() => toggleSection(section.id)}>
                       <div
                         className={[
                           "flex h-12 w-12 items-center justify-center rounded-2xl text-base font-bold shadow-inner transition-all",
-                          activeCount > 0 ? "scale-110 bg-primary text-white" : "bg-slate-100 text-slate-400",
+                          activeCount > 0 ? "scale-110 bg-primary text-white" : "bg-slate-100 dark:bg-accent/50 text-slate-400 dark:text-muted-foreground",
                         ].join(" ")}
                       >
                         {section.title.split(".")[0]}
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-slate-900 transition-colors group-hover:text-primary">{section.title.replace(/^\d+\.\s*/, "")}</h3>
-                        <p className="mt-0.5 text-xs font-semibold text-slate-400">{activeCount} items marked for autofill</p>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-foreground transition-colors group-hover:text-primary">{section.title.replace(/^\d+\.\s*/, "")}</h3>
+                        <p className="mt-0.5 text-xs font-semibold text-slate-400 dark:text-muted-foreground">{activeCount} items marked for autofill</p>
                       </div>
                     </div>
 
@@ -675,8 +675,8 @@ export function ClientPolicyScreen({
                         className={[
                           "flex h-10 items-center gap-2 rounded-xl border px-4 text-[10px] font-black uppercase tracking-tighter transition-all",
                           allSelected
-                            ? "border-violet-300 bg-violet-400 text-white shadow-lg shadow-violet-300/20"
-                            : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50",
+                            ? "border-violet-300 bg-violet-400 text-white shadow-lg shadow-violet-300/20 dark:shadow-none"
+                            : "border-slate-200 dark:border-border bg-white text-slate-500 dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-accent/60",
                         ].join(" ")}
                       >
                         <Star className={["h-3.5 w-3.5", allSelected ? "fill-current" : ""].join(" ")} />
@@ -685,9 +685,9 @@ export function ClientPolicyScreen({
 
                       <button
                         onClick={() => toggleSection(section.id)}
-                        className="flex h-10 w-10 items-center justify-center rounded-xl transition-colors hover:bg-slate-50"
+                        className="flex h-10 w-10 items-center justify-center rounded-xl transition-colors hover:bg-slate-50 dark:hover:bg-accent/60"
                       >
-                        {open ? <ChevronDown className="h-5 w-5 text-slate-400" /> : <ChevronRight className="h-5 w-5 text-slate-400" />}
+                        {open ? <ChevronDown className="h-5 w-5 text-slate-400 dark:text-muted-foreground" /> : <ChevronRight className="h-5 w-5 text-slate-400 dark:text-muted-foreground" />}
                       </button>
                     </div>
                   </div>
@@ -698,13 +698,13 @@ export function ClientPolicyScreen({
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden border-t border-slate-100"
+                        className="overflow-hidden border-t border-slate-100 dark:border-border/60"
                       >
-                        <div className="grid grid-cols-1 gap-3 bg-slate-50/50 px-8 py-8 md:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-3 bg-slate-50/50 dark:bg-accent/30 px-8 py-8 md:grid-cols-2">
                           {section.nodes.map((node) => {
                             if (node.kind === "heading") {
                               return (
-                                <div key={node.id} className="col-span-2 mb-2 flex items-center gap-3 pt-6 text-[0.7rem] font-black uppercase tracking-widest text-slate-400 first:pt-0">
+                                <div key={node.id} className="col-span-2 mb-2 flex items-center gap-3 pt-6 text-[0.7rem] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground first:pt-0">
                                   <div className="h-px flex-1 bg-slate-200" />
                                   {node.label}
                                   <div className="h-px flex-1 bg-slate-200" />
@@ -719,7 +719,7 @@ export function ClientPolicyScreen({
                                 onClick={() => toggleItem(node)}
                                 className={[
                                   "group flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition-all",
-                                  active ? "border-slate-300 bg-white shadow-md" : "border-slate-100 bg-white hover:border-primary/30",
+                                  active ? "border-slate-300 dark:border-border bg-white dark:bg-card shadow-md dark:shadow-none" : "border-slate-100 dark:border-border/60 bg-white dark:bg-card hover:border-primary/30",
                                 ].join(" ")}
                               >
                                 <div
@@ -727,7 +727,7 @@ export function ClientPolicyScreen({
                                     "flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.9rem] border transition-all",
                                     active
                                       ? "border-violet-200 bg-violet-50 text-violet-400"
-                                      : "border-slate-100 bg-slate-50 text-slate-300 group-hover:border-primary/30",
+                                      : "border-slate-100 dark:border-border/60 bg-slate-50 text-slate-300 group-hover:border-primary/30",
                                   ].join(" ")}
                                 >
                                   <Star className={["h-5 w-5", active ? "fill-current" : ""].join(" ")} />
@@ -736,13 +736,13 @@ export function ClientPolicyScreen({
                                   <div
                                     className={[
                                       "text-[0.9rem] font-bold leading-tight transition-colors",
-                                      active ? "text-slate-900" : "text-slate-500 group-hover:text-slate-700",
+                                      active ? "text-slate-900 dark:text-foreground" : "text-slate-500 dark:text-muted-foreground group-hover:text-slate-700 dark:group-hover:text-foreground",
                                     ].join(" ")}
                                   >
                                     {node.label}
                                   </div>
-                                  <div className="mt-1 flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-widest text-slate-400">
-                                    <Zap className="h-2.5 w-2.5 text-slate-400" />
+                                  <div className="mt-1 flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
+                                    <Zap className="h-2.5 w-2.5 text-slate-400 dark:text-muted-foreground" />
                                     {node.targets.length} autofill targets
                                   </div>
                                 </div>
@@ -764,7 +764,7 @@ export function ClientPolicyScreen({
           </div>
         </div>
 
-        <div className="fixed bottom-10 right-10 z-50 flex items-center gap-4 rounded-3xl border border-white/40 bg-white/60 p-2 shadow-2xl shadow-indigo-200/50 backdrop-blur-2xl">
+        <div className="fixed bottom-10 right-10 z-50 flex items-center gap-4 rounded-3xl border border-white/40 dark:border-border bg-white/60 dark:bg-card/80 p-2 shadow-2xl shadow-indigo-200/50 dark:shadow-none backdrop-blur-2xl">
           {saveError ? (
             <p className="mr-2 whitespace-nowrap rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-2 text-xs font-bold text-destructive shadow-sm">
               {saveError}
@@ -772,13 +772,13 @@ export function ClientPolicyScreen({
           ) : null}
           <Button
             variant="outline"
-            className="h-14 rounded-2xl border-none border-slate-200 bg-white/80 px-8 font-bold text-slate-600 shadow-sm transition-all hover:bg-slate-50"
+            className="h-14 rounded-2xl border border-slate-200 dark:border-border bg-white/80 dark:bg-card px-8 font-bold text-slate-600 dark:text-foreground shadow-sm dark:shadow-none transition-all hover:bg-slate-50 dark:hover:bg-accent/60"
             onClick={() => setCurrentSubView("menu")}
           >
             Cancel
           </Button>
           <Button
-            className="h-14 rounded-2xl bg-violet-500 px-10 font-bold text-white shadow-2xl shadow-violet-200 transition-all hover:bg-violet-600 hover:shadow-violet-300 active:scale-[0.98]"
+            className="h-14 rounded-2xl bg-violet-500 px-10 font-bold text-white shadow-2xl shadow-violet-200 dark:shadow-none transition-all hover:bg-violet-600 hover:shadow-violet-300 dark:hover:shadow-none active:scale-[0.98]"
             onClick={() => void handleSave()}
             disabled={isSaving}
           >
@@ -799,12 +799,12 @@ export function ClientPolicyScreen({
       <div className="mb-10">
         <button
           onClick={() => setCurrentSubView("menu")}
-          className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-400 transition-colors hover:text-slate-600"
+          className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-400 dark:text-muted-foreground transition-colors hover:text-slate-600"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Custom Policy
         </button>
-        <h1 className="font-sans text-3xl font-black tracking-tight text-slate-900">Copy Records</h1>
-        <p className="text-base text-slate-500">Manage fallback authority tariffs used when a water authority amount cannot be extracted from the document.</p>
+        <h1 className="font-sans text-3xl font-black tracking-tight text-slate-900 dark:text-foreground">Copy Records</h1>
+        <p className="text-base text-slate-500 dark:text-muted-foreground">Manage fallback authority tariffs used when a water authority amount cannot be extracted from the document.</p>
       </div>
 
       <div className="space-y-6">
@@ -813,7 +813,7 @@ export function ClientPolicyScreen({
             <Info className="h-10 w-10" />
           </div>
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold text-slate-900">How water authority fallback works</h3>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-foreground">How water authority fallback works</h3>
             <p className="text-lg leading-relaxed text-slate-600">
               The water authority name is still extracted from the uploaded documents. If the annual amount is missing or fails to extract, the app matches that authority name against this table and uses the saved annual amount as the fallback.
             </p>
@@ -822,14 +822,14 @@ export function ClientPolicyScreen({
 
         <div className="space-y-4">
           <div className="flex items-center justify-between px-2">
-            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Water Authorities</h4>
+            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">Water Authorities</h4>
             <Button className="rounded-2xl bg-violet-500 px-5 font-bold text-white hover:bg-violet-600" onClick={handleAddCopyRule}>
               + Add Authority
             </Button>
           </div>
 
-          <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-            <div className="grid grid-cols-[2fr_1fr_1.3fr_160px] gap-3 border-b border-slate-100 bg-slate-50 px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">
+          <div className="overflow-hidden rounded-[2rem] border border-slate-200 dark:border-border dark:border-border bg-white dark:bg-card shadow-sm">
+            <div className="grid grid-cols-[2fr_1fr_1.3fr_160px] gap-3 border-b border-slate-100 dark:border-border/60 bg-slate-50 px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-muted-foreground">
               <div>Authority Name</div>
               <div>Annual Amount</div>
               <div>Notes</div>
@@ -837,9 +837,9 @@ export function ClientPolicyScreen({
             </div>
 
             {copyRulesError ? <div className="px-6 py-3 text-sm font-semibold text-destructive">{copyRulesError}</div> : null}
-            {copyRulesLoading ? <div className="px-6 py-6 text-sm text-slate-500">Loading water authority rules...</div> : null}
+            {copyRulesLoading ? <div className="px-6 py-6 text-sm text-slate-500 dark:text-muted-foreground">Loading water authority rules...</div> : null}
             {!copyRulesLoading && copyRules.length === 0 ? (
-              <div className="px-6 py-8 text-sm text-slate-500">No water authority fallback rules yet. Add one to start using database fallback amounts.</div>
+              <div className="px-6 py-8 text-sm text-slate-500 dark:text-muted-foreground">No water authority fallback rules yet. Add one to start using database fallback amounts.</div>
             ) : null}
 
             <div className="divide-y divide-slate-100">
@@ -851,24 +851,24 @@ export function ClientPolicyScreen({
                       value={rule.authority_name}
                       onChange={(event) => updateCopyRuleDraft(rule.id, { authority_name: event.target.value })}
                       placeholder="Yarra Valley Water"
-                      className="h-12 rounded-2xl border border-slate-200 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="h-12 rounded-2xl border border-slate-200 dark:border-border px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     />
                     <input
                       value={rule.annual_amount}
                       onChange={(event) => updateCopyRuleDraft(rule.id, { annual_amount: event.target.value })}
                       placeholder="774.72"
-                      className="h-12 rounded-2xl border border-slate-200 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="h-12 rounded-2xl border border-slate-200 dark:border-border px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     />
                     <input
                       value={rule.notes}
                       onChange={(event) => updateCopyRuleDraft(rule.id, { notes: event.target.value })}
                       placeholder="Optional note"
-                      className="h-12 rounded-2xl border border-slate-200 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="h-12 rounded-2xl border border-slate-200 dark:border-border px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     />
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
-                        className="rounded-2xl border-slate-200 font-bold"
+                        className="rounded-2xl border-slate-200 dark:border-border font-bold"
                         onClick={() => void handleSaveCopyRule(rule)}
                         disabled={saving}
                       >
@@ -894,7 +894,7 @@ export function ClientPolicyScreen({
   );
 
   return (
-    <div className="min-h-screen overflow-hidden bg-slate-50 font-sans text-foreground">
+    <div className="min-h-screen overflow-hidden bg-slate-50 dark:bg-background font-sans text-foreground">
       <Header
         onBack={currentSubView === "menu" ? onBack : () => setCurrentSubView("menu")}
         onProfile={onProfile || (() => {})}
@@ -935,3 +935,4 @@ export function ClientPolicyScreen({
     </div>
   );
 }
+

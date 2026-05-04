@@ -134,7 +134,7 @@ export function AboutScreen({
                   onClick={onInstallUpdate}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  {isInstallingUpdate ? "Preparing installer..." : "Download and install"}
+                  {isInstallingUpdate ? "Preparing installer..." : "Install update"}
                 </Button>
               </CardContent>
             </Card>

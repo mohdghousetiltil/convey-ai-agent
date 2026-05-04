@@ -1158,6 +1158,21 @@ export async function deleteCopyRule(ruleId: string): Promise<{ ok: boolean; id:
   });
 }
 
+export interface UseCopyRuleResult {
+  ok: boolean;
+  row_num: number;
+  authority_name: string;
+  matched_rule: string;
+  amount: string;
+  match_score: number;
+}
+
+export async function useCopyRuleForRow(runId: string, rowNum: number): Promise<UseCopyRuleResult> {
+  return apiRequest<UseCopyRuleResult>(`/runs/${encodeURIComponent(runId)}/authority-rows/${rowNum}/use-copy-rule`, {
+    method: "POST",
+  });
+}
+
 export async function getAppInfo(): Promise<AppInfoPayload> {
   return apiRequest<AppInfoPayload>("/app/info");
 }

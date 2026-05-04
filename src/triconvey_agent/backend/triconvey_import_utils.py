@@ -23,7 +23,10 @@ def parse_amount_text(value: Any) -> float | None:
     if value in (None, "", [], {}):
         return None
     try:
-        return float(str(value).replace("$", "").replace(",", "").strip())
+        cleaned = str(value).replace("$", "").replace(",", "").strip()
+        if cleaned.lower() in {"n/a", "na", "-", "–", "—"}:
+            return None
+        return float(cleaned)
     except ValueError:
         return None
 
@@ -37,17 +40,44 @@ def set_answer_value(answer: dict[str, Any], value: str | None) -> dict[str, Any
     return next_answer
 
 
+def _best_fact_value(facts: list[dict[str, Any]]) -> str:
+    """Return the value from the highest-confidence fact in the list."""
+    if not facts:
+        return ""
+    best = max(facts, key=lambda f: float(f.get("confidence") or 0.0))
+    return str(best.get("value") or "").strip()
+
+
+def _format_amount(parsed: float | None) -> str:
+    if parsed is None:
+        return "$0.00"
+    return f"${parsed:,.2f}"
+
+
+def collect_council_row_from_facts(
+    facts_by_path: dict[str, Any],
+) -> list[dict[str, str]]:
+    authority_facts = [f for f in (facts_by_path.get("rates.council.authority_name") or []) if isinstance(f, dict)]
+    amount_facts = [f for f in (facts_by_path.get("rates.council.annual_amount") or []) if isinstance(f, dict)]
+    if not authority_facts and not amount_facts:
+        return []
+    authority = _best_fact_value(authority_facts) or "Council"
+    parsed = parse_amount_text(_best_fact_value(amount_facts))
+    return [{"authority": authority, "amount": _format_amount(parsed)}]
+
+
 def collect_water_rows_from_facts(
     facts_by_path: dict[str, Any],
     rules: list[Any],
 ) -> list[dict[str, str]]:
-    authority_facts = [fact for fact in list(facts_by_path.get("rates.water.authority_name") or []) if isinstance(fact, dict)]
-    amount_facts = [fact for fact in list(facts_by_path.get("rates.water.annual_amount") or []) if isinstance(fact, dict)]
+    authority_facts = [f for f in (facts_by_path.get("rates.water.authority_name") or []) if isinstance(f, dict)]
+    amount_facts = [f for f in (facts_by_path.get("rates.water.annual_amount") or []) if isinstance(f, dict)]
 
     authority_by_file = best_fact_by_file(authority_facts)
     amount_by_file = best_fact_by_file(amount_facts)
 
     rows: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
     for file_name in sorted(set(authority_by_file) | set(amount_by_file)):
         authority_fact = authority_by_file.get(file_name)
         amount_fact = amount_by_file.get(file_name)
@@ -55,17 +85,77 @@ def collect_water_rows_from_facts(
         amount_value = str((amount_fact or {}).get("value") or "").strip()
         if not authority_name:
             continue
-        if parse_amount_text(amount_value) is None:
+        parsed = parse_amount_text(amount_value)
+        if parsed is None:
             match = find_best_copy_rule_match(
                 authority_name,
                 [(row.authority_name, row.annual_amount) for row in rules],
             )
             if match is not None:
-                amount_value = f"${match.annual_amount:,.2f}"
-        if parse_amount_text(amount_value) is None:
+                parsed = match.annual_amount
+        amount_str = _format_amount(parsed)
+        key = (authority_name.lower(), amount_str)
+        if key in seen:
             continue
-        rows.append({"authority": authority_name, "amount": amount_value})
+        seen.add(key)
+        rows.append({"authority": authority_name, "amount": amount_str})
     return rows
+
+
+def collect_land_tax_row_from_facts(
+    facts_by_path: dict[str, Any],
+) -> list[dict[str, str]]:
+    authority_facts = [f for f in (facts_by_path.get("rates.land_tax.authority_name") or []) if isinstance(f, dict)]
+    amount_facts = [f for f in (facts_by_path.get("rates.land_tax.amount") or []) if isinstance(f, dict)]
+    if not authority_facts and not amount_facts:
+        return []
+    authority = _best_fact_value(authority_facts) or "State Revenue Office"
+    parsed = parse_amount_text(_best_fact_value(amount_facts))
+    return [{"authority": authority, "amount": _format_amount(parsed)}]
+
+
+def collect_oc_rows_from_facts(
+    facts_by_path: dict[str, Any],
+) -> list[dict[str, str]]:
+    authority_facts = [f for f in (facts_by_path.get("rates.owners_corporation.authority_name") or []) if isinstance(f, dict)]
+    amount_facts = [f for f in (facts_by_path.get("rates.owners_corporation.annual_amount") or []) if isinstance(f, dict)]
+    if not authority_facts and not amount_facts:
+        return []
+    authority = _best_fact_value(authority_facts) or "Owners Corporation"
+    parsed = parse_amount_text(_best_fact_value(amount_facts))
+    return [{"authority": authority, "amount": _format_amount(parsed)}]
+
+
+def build_priority_outgoing_rows(
+    answers: dict[str, Any],
+    facts_by_path: dict[str, Any],
+    rules: list[Any],
+) -> None:
+    """Build priority-ordered authority table and write exactly 4 rows to answers.
+
+    Priority order: council → water (multiple allowed) → land tax → owners corporation.
+    Zero amounts are shown as $0.00 rather than suppressed.
+    Rows with no supporting documents are omitted; remaining slots are blanked.
+    """
+    rows: list[dict[str, str]] = []
+    rows += collect_council_row_from_facts(facts_by_path)
+    rows += collect_water_rows_from_facts(facts_by_path, rules)
+    rows += collect_land_tax_row_from_facts(facts_by_path)
+    rows += collect_oc_rows_from_facts(facts_by_path)
+
+    rows = rows[:4]
+
+    for i in range(1, 5):
+        authority_id = f"sec32_1.1_outgoing_{i}_authority"
+        amount_id = f"sec32_1.1_outgoing_{i}_amount"
+        idx = i - 1
+        if idx < len(rows):
+            row = rows[idx]
+            answers[authority_id] = set_answer_value(answers.get(authority_id) or {}, row["authority"])
+            answers[amount_id] = set_answer_value(answers.get(amount_id) or {}, row["amount"])
+        else:
+            answers[authority_id] = set_answer_value(answers.get(authority_id) or {}, None)
+            answers[amount_id] = set_answer_value(answers.get(amount_id) or {}, None)
 
 
 def apply_multi_water_outgoing_rows(
@@ -73,37 +163,8 @@ def apply_multi_water_outgoing_rows(
     facts_by_path: dict[str, Any],
     rules: list[Any],
 ) -> None:
-    water_rows = collect_water_rows_from_facts(facts_by_path, rules)
-    if len(water_rows) <= 1:
-        return
-
-    existing_non_water: list[dict[str, str]] = []
-    seen_pairs: set[tuple[str, str]] = set()
-    water_keys = {(row["authority"].strip().lower(), row["amount"].strip()) for row in water_rows}
-    for row_num in range(2, 5):
-        authority_answer = answers.get(f"sec32_1.1_outgoing_{row_num}_authority") or {}
-        amount_answer = answers.get(f"sec32_1.1_outgoing_{row_num}_amount") or {}
-        authority_value = str(authority_answer.get("human_value_json") or authority_answer.get("value_json") or "").strip()
-        amount_value = str(amount_answer.get("human_value_json") or amount_answer.get("value_json") or "").strip()
-        if not authority_value or parse_amount_text(amount_value) is None:
-            continue
-        key = (authority_value.lower(), amount_value)
-        if key in water_keys or key in seen_pairs:
-            continue
-        seen_pairs.add(key)
-        existing_non_water.append({"authority": authority_value, "amount": amount_value})
-
-    combined_rows = (water_rows + existing_non_water)[:3]
-    for index, row_num in enumerate(range(2, 5)):
-        authority_id = f"sec32_1.1_outgoing_{row_num}_authority"
-        amount_id = f"sec32_1.1_outgoing_{row_num}_amount"
-        if index < len(combined_rows):
-            row = combined_rows[index]
-            answers[authority_id] = set_answer_value(answers.get(authority_id) or {}, row["authority"])
-            answers[amount_id] = set_answer_value(answers.get(amount_id) or {}, row["amount"])
-        else:
-            answers[authority_id] = set_answer_value(answers.get(authority_id) or {}, None)
-            answers[amount_id] = set_answer_value(answers.get(amount_id) or {}, None)
+    """Backward-compatible alias for build_priority_outgoing_rows."""
+    build_priority_outgoing_rows(answers, facts_by_path, rules)
 
 
 def wait_for_triconvey_paths(

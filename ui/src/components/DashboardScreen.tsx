@@ -171,6 +171,17 @@ export function DashboardScreen({
     return () => clearInterval(timer);
   }, [name]);
 
+  React.useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "r") {
+        event.preventDefault();
+        window.location.reload();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   const [quickSetupForm, setQuickSetupForm] = React.useState(() => quickSetupSettings);
   const [quickSetupSaving, setQuickSetupSaving] = React.useState(false);
 
@@ -255,7 +266,7 @@ export function DashboardScreen({
                     <button
                       onClick={onInstallUpdate}
                       disabled={isInstallingUpdate}
-                      className="flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+                      className="inline-flex items-center gap-1 rounded-full border border-blue-300 dark:border-blue-700 bg-card px-2.5 py-1 text-blue-700 dark:text-blue-300 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-60"
                     >
                       <Download className="h-2.5 w-2.5" />
                       {isInstallingUpdate ? "Installing..." : "Install"}

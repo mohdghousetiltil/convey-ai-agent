@@ -163,6 +163,18 @@ function applyThemePreference(theme: "light" | "dark" | "auto") {
   }
 })();
 
+// HashRouter hard fallback for desktop/webview launches that open "/" with no hash.
+(function ensureHashRoute() {
+  try {
+    if (typeof window === "undefined") return;
+    if (!window.location.hash || window.location.hash === "#") {
+      window.location.hash = "/dashboard";
+    }
+  } catch {
+    // Ignore location write failures.
+  }
+})();
+
 export default function App() {
   return (
     <AuthProvider>
@@ -223,6 +235,9 @@ function AppContent() {
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [installingUpdate, setInstallingUpdate] = useState(false);
   const [updateError, setUpdateError] = useState("");
+  const [downloadedInstallerPath, setDownloadedInstallerPath] = useState<string | null>(null);
+  const [downloadedInstallerVersion, setDownloadedInstallerVersion] = useState<string | null>(null);
+  const [isBackgroundDownloadingUpdate, setIsBackgroundDownloadingUpdate] = useState(false);
   const [cloudSyncStatus, setCloudSyncStatus] = useState<CloudSyncStatusPayload | null>(null);
   const [isLoadingRuns, setIsLoadingRuns] = useState(false);
   const [isLoadingAllRuns, setIsLoadingAllRuns] = useState(false);
@@ -232,6 +247,27 @@ function AppContent() {
   const [loadingRunId, setLoadingRunId] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [loadingStatusHeading, setLoadingStatusHeading] = useState<string>("");
+  const [backgroundRunWatchId, setBackgroundRunWatchId] = useState<string | null>(null);
+
+  const maybeStartBackgroundUpdateDownload = async (status: UpdateStatusPayload | null) => {
+    if (!status?.update_available || !status.latest_version) return;
+    if (isBackgroundDownloadingUpdate) return;
+    if (downloadedInstallerVersion === status.latest_version && downloadedInstallerPath) return;
+    setIsBackgroundDownloadingUpdate(true);
+    try {
+      const payload = await downloadUpdateInstaller({
+        includePrerelease: settings.includePrereleaseUpdates,
+        updateRepository: settings.updateRepository || undefined,
+      });
+      setUpdateStatus(payload.release);
+      setDownloadedInstallerPath(payload.download.installer_path);
+      setDownloadedInstallerVersion(payload.download.latest_version);
+    } catch {
+      // Keep background behavior silent to avoid noisy startup errors.
+    } finally {
+      setIsBackgroundDownloadingUpdate(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -301,6 +337,7 @@ function AppContent() {
             updateRepository: loadedSettings.updateRepository || undefined,
           });
           setUpdateStatus(next);
+          await maybeStartBackgroundUpdateDownload(next);
         } catch {
           // Silently ignore startup update check failures.
         }
@@ -532,6 +569,61 @@ function AppContent() {
     }
   }, [location.pathname, navigate, user]);
 
+  useEffect(() => {
+    if (!backgroundRunWatchId || !user) return;
+    let cancelled = false;
+    let timer: number | undefined;
+
+    const maybeNotify = (title: string, body: string) => {
+      if (typeof window === "undefined" || !("Notification" in window)) return;
+      if (Notification.permission === "granted") {
+        new Notification(title, { body });
+        return;
+      }
+      if (Notification.permission !== "denied") {
+        void Notification.requestPermission().then((permission) => {
+          if (permission === "granted") {
+            new Notification(title, { body });
+          }
+        });
+      }
+    };
+
+    const pollBackground = async () => {
+      try {
+        const current = await getRun(backgroundRunWatchId);
+        if (cancelled) return;
+        const status = String(current.status || "").toLowerCase();
+        if (status === "completed" || status === "complete") {
+          maybeNotify("Analysis complete", "Your matter processing has finished.");
+          setBackgroundRunWatchId(null);
+          const nextRecent = await getRecentRuns(10);
+          if (!cancelled) {
+            setRecentRuns(nextRecent);
+            saveRecentRuns(user.user_id, nextRecent);
+          }
+          return;
+        }
+        if (status === "failed") {
+          maybeNotify("Analysis failed", "The background analysis run failed.");
+          setBackgroundRunWatchId(null);
+          return;
+        }
+      } catch {
+        // Keep polling; transient errors are expected occasionally.
+      }
+      if (!cancelled) {
+        timer = window.setTimeout(pollBackground, 4000);
+      }
+    };
+
+    pollBackground();
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [backgroundRunWatchId, user]);
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -651,11 +743,14 @@ function AppContent() {
   };
 
   const handleCancelAnalysis = () => {
+    if (loadingRunId) {
+      setBackgroundRunWatchId(loadingRunId);
+    }
     setLoadingKind(null);
     setLoadingRunId(null);
     setLoadingProgress(0);
     setLoadingStatusHeading("");
-    navigate("/analysis/upload", { replace: true });
+    navigate("/dashboard", { replace: true });
   };
 
   const handleContinueAutofill = async () => {
@@ -771,6 +866,12 @@ function AppContent() {
         updateRepository: settings.updateRepository || undefined,
       });
       setUpdateStatus(next);
+      if (next.update_available) {
+        void maybeStartBackgroundUpdateDownload(next);
+      } else {
+        setDownloadedInstallerPath(null);
+        setDownloadedInstallerVersion(null);
+      }
       if (manual) {
         setUpdateError("");
       }
@@ -789,20 +890,26 @@ function AppContent() {
     setUpdateError("");
 
     try {
-      const payload = await downloadUpdateInstaller({
-        includePrerelease: settings.includePrereleaseUpdates,
-        updateRepository: settings.updateRepository || undefined,
-      });
-      setUpdateStatus(payload.release);
+      let installerPath = downloadedInstallerPath;
+      if (!installerPath || downloadedInstallerVersion !== updateStatus?.latest_version) {
+        const payload = await downloadUpdateInstaller({
+          includePrerelease: settings.includePrereleaseUpdates,
+          updateRepository: settings.updateRepository || undefined,
+        });
+        setUpdateStatus(payload.release);
+        setDownloadedInstallerPath(payload.download.installer_path);
+        setDownloadedInstallerVersion(payload.download.latest_version);
+        installerPath = payload.download.installer_path;
+      }
       const bridge = window as unknown as DesktopBridge;
       const launchInstaller = bridge.pywebview?.api?.launch_installer;
-      if (launchInstaller) {
-        await Promise.resolve(launchInstaller(payload.download.installer_path));
+      if (launchInstaller && installerPath) {
+        await Promise.resolve(launchInstaller(installerPath));
         bridge.pywebview?.api?.close_app?.();
         return;
       }
-      if (payload.release.release_url) {
-        window.open(payload.release.release_url, "_blank", "noopener,noreferrer");
+      if (updateStatus?.release_url) {
+        window.open(updateStatus.release_url, "_blank", "noopener,noreferrer");
       }
     } catch (error) {
       setUpdateError(error instanceof Error ? error.message : "Could not download the update installer.");
@@ -1029,7 +1136,16 @@ function AppContent() {
               statusHeading={loadingStatusHeading}
               cancellable={loadingKind === "analysis" || Boolean(autofillJob && ["queued", "running", "cancelling", "awaiting_user"].includes(autofillJob.status))}
               onCancel={loadingKind === "analysis" ? handleCancelAnalysis : handleCancelAutofill}
-              cancelLabel={autofillJob?.status === "cancelling" ? "Cancelling..." : "Cancel Autofill"}
+              cancelLabel={
+                loadingKind === "analysis"
+                  ? "Stop processing"
+                  : (autofillJob?.status === "cancelling" ? "Cancelling..." : "Cancel")
+              }
+              cancelHint={
+                loadingKind === "analysis"
+                  ? "Stops this screen only. Processing continues in the background and uploaded files are kept."
+                  : "Cancelling autofill keeps your uploaded files and current matter."
+              }
               actionLabel={autofillJob?.status === "awaiting_user" ? (autofillJob.manual_action?.cta || "Continue") : undefined}
               onAction={autofillJob?.status === "awaiting_user" ? handleContinueAutofill : undefined}
             />

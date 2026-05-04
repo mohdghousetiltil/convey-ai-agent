@@ -549,5 +549,797 @@
     "accepted": true,
     "verifier_supported": null,
     "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T04:25:23.894801",
+    "file": "Disclosure Statement and Residential Rental Agreement [2024-05-07] 6 Goyin Street  Bonshaw 3352.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=72",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Not answerable",
+        "amounts": [
+          0.0
+        ],
+        "row_type": "ignore",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "No lot levy/fee table or amounts found in the provided document."
+      }
+    ],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T04:25:28.831723",
+    "file": "Vendor Instruction Form-Scott Azarnikow.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=2",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T04:41:30.146374",
+    "file": "Vendor Instruction Form-Jessica Mann.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=3",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T04:42:12.603381",
+    "file": "VIC_ Certificate - Owners Corporation Basic Report - 1_PS723695D.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Lot 1",
+        "amounts": [
+          160.0,
+          160.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 1 160 160"
+      },
+      {
+        "label": "Lot 2",
+        "amounts": [
+          200.0,
+          200.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 2 200 200"
+      },
+      {
+        "label": "Lot 3",
+        "amounts": [
+          190.0,
+          190.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 3 190 190"
+      },
+      {
+        "label": "Lot 4",
+        "amounts": [
+          210.0,
+          210.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 4 210 210"
+      },
+      {
+        "label": "Lot 5",
+        "amounts": [
+          190.0,
+          190.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 5 190 190"
+      },
+      {
+        "label": "Lot 6",
+        "amounts": [
+          200.0,
+          200.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 6 200 200"
+      },
+      {
+        "label": "Lot 7",
+        "amounts": [
+          240.0,
+          240.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 7 240 240"
+      },
+      {
+        "label": "Lot 8",
+        "amounts": [
+          170.0,
+          170.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 8 170 170"
+      },
+      {
+        "label": "Lot 9",
+        "amounts": [
+          160.0,
+          160.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 9 160 160"
+      },
+      {
+        "label": "Lot 10",
+        "amounts": [
+          225.0,
+          225.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 10 225 225"
+      },
+      {
+        "label": "Lot 11",
+        "amounts": [
+          140.0,
+          140.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 11 140 140"
+      },
+      {
+        "label": "Lot 12",
+        "amounts": [
+          140.0,
+          140.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 12 140 140"
+      },
+      {
+        "label": "Lot 13",
+        "amounts": [
+          180.0,
+          180.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 13 180 180"
+      },
+      {
+        "label": "Lot 14",
+        "amounts": [
+          205.0,
+          205.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 14 205 205"
+      },
+      {
+        "label": "Lot 15",
+        "amounts": [
+          180.0,
+          180.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 15 180 180"
+      },
+      {
+        "label": "Lot 16",
+        "amounts": [
+          180.0,
+          180.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 16 180 180"
+      },
+      {
+        "label": "Lot 17",
+        "amounts": [
+          210.0,
+          210.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "levied",
+          "current"
+        ],
+        "evidence": "Lot 17 210 210"
+      }
+    ],
+    "ai_candidate": "$3,180.00",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T04:42:16.856827",
+    "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T04:47:38.968369",
+    "file": "VIC_ Certificate - Owners Corporation Basic Report - 1_PS723695D.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Lot 1",
+        "amounts": [
+          160.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 1 160 160"
+      },
+      {
+        "label": "Lot 2",
+        "amounts": [
+          200.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 2 200 200"
+      },
+      {
+        "label": "Lot 3",
+        "amounts": [
+          190.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 3 190 190"
+      },
+      {
+        "label": "Lot 4",
+        "amounts": [
+          210.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 4 210 210"
+      },
+      {
+        "label": "Lot 5",
+        "amounts": [
+          190.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 5 190 190"
+      },
+      {
+        "label": "Lot 6",
+        "amounts": [
+          200.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 6 200 200"
+      },
+      {
+        "label": "Lot 7",
+        "amounts": [
+          240.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 7 240 240"
+      },
+      {
+        "label": "Lot 8",
+        "amounts": [
+          170.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 8 170 170"
+      },
+      {
+        "label": "Lot 9",
+        "amounts": [
+          160.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 9 160 160"
+      },
+      {
+        "label": "Lot 10",
+        "amounts": [
+          225.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 10 225 225"
+      },
+      {
+        "label": "Lot 11",
+        "amounts": [
+          140.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 11 140 140"
+      },
+      {
+        "label": "Lot 12",
+        "amounts": [
+          140.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 12 140 140"
+      },
+      {
+        "label": "Lot 13",
+        "amounts": [
+          180.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 13 180 180"
+      },
+      {
+        "label": "Lot 14",
+        "amounts": [
+          205.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 14 205 205"
+      },
+      {
+        "label": "Lot 15",
+        "amounts": [
+          180.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 15 180 180"
+      },
+      {
+        "label": "Lot 16",
+        "amounts": [
+          180.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 16 180 180"
+      },
+      {
+        "label": "Lot 17",
+        "amounts": [
+          210.0
+        ],
+        "row_type": "charge",
+        "column_meanings": [
+          "unknown"
+        ],
+        "evidence": "Lot 17 210 210"
+      },
+      {
+        "label": "Total",
+        "amounts": [
+          3180.0
+        ],
+        "row_type": "annual_total",
+        "column_meanings": [
+          "total"
+        ],
+        "evidence": "Total 3180.00 3180.00"
+      }
+    ],
+    "ai_candidate": "$3,180.00",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T04:47:42.185186",
+    "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T04:50:15.293287",
+    "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T04:50:28.835576",
+    "file": "Vendor Instruction Form-Jessica Mann.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=3",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T04:50:34.703308",
+    "file": "VIC_ Certificate - Owners Corporation Basic Report - 1_PS723695D.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:04:02.851783",
+    "file": "Vendor Instruction Form-Jessica Mann.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=3",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Council rates",
+        "amounts": [
+          1297.59
+        ],
+        "row_type": "annual_total",
+        "column_meanings": [
+          "annual"
+        ],
+        "evidence": "Council rates $1,297.59"
+      },
+      {
+        "label": "Water rates",
+        "amounts": [
+          1144.12
+        ],
+        "row_type": "annual_total",
+        "column_meanings": [
+          "annual"
+        ],
+        "evidence": "Water Authority Central Highlands Water Water rates $1,144.12"
+      }
+    ],
+    "ai_candidate": "$1,297.59",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:04:09.476812",
+    "file": "VIC_ Certificate - Owners Corporation Basic Report - 1_PS723695D.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:04:11.175547",
+    "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:06:41.801842",
+    "file": "Vendor Instruction Form-Jessica Mann.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=3",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:06:48.442290",
+    "file": "VIC_ Certificate - Owners Corporation Basic Report - 1_PS723695D.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:11:03.232634",
+    "file": "VIC_ Certificate - Owners Corporation Basic Report - 1_PS723695D.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:11:12.622177",
+    "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:11:24.702821",
+    "file": "Vendor Instruction Form-Jessica Mann.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=3",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:24:31.563724",
+    "file": "Vendor Instruction Form-Jessica Mann.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=3",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:24:41.810989",
+    "file": "VIC_ Certificate - Owners Corporation Basic Report - 1_PS723695D.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:24:42.769695",
+    "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:24:43.168220",
+    "file": "Vendor Instruction Form-Jessica Mann.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=3",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:24:46.686007",
+    "file": "VIC_ Certificate - Owners Corporation Basic Report - 1_PS723695D.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-03T05:24:47.922601",
+    "file": "VIC_ Certificate - Register Search Statement (Copy of Title) Volume 11586 Folio 024.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
   }
 ]

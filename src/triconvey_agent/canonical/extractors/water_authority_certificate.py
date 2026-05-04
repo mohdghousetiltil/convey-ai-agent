@@ -225,8 +225,23 @@ _TOTAL_ALT_RE = re.compile(
     r"Total (?:charges|amount)\s+\$?([\d,]+\.\d{2})", re.IGNORECASE
 )
 
+# Primary: "Date of Issue DD Month YYYY"
 _DATE_OF_ISSUE_RE = re.compile(
-    r"Date of Issue\s+(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})",
+    r"Date\s+of\s+Issue\s+(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})",
+    re.IGNORECASE,
+)
+
+# Broad: label + any date format (numeric or alpha)
+_DATE_LABEL_RE = re.compile(
+    r"(?:"
+    r"Statement\s+Date"
+    r"|Issue\s+Date"
+    r"|Date\s+of\s+(?:Issue|Statement|Certification|Preparation|Certificate)"
+    r"|Dated?"
+    r"|Date"
+    r")"
+    r"\s*[:\-]?\s*"
+    r"(?P<date>" + _DATE_ANY + r")",
     re.IGNORECASE,
 )
 
@@ -1037,16 +1052,46 @@ def _extract_outstanding(doc: Document, text: str) -> list[Fact]:
     )]
 
 
+def _normalise_date_str(raw: str) -> str | None:
+    """Normalise any supported date format to DD/MM/YYYY.
+
+    Returns None if the string cannot be parsed.
+    """
+    d = _parse_any_date(raw.strip())
+    if d is None:
+        return None
+    return f"{d.day:02d}/{d.month:02d}/{d.year}"
+
+
 def _extract_doc_date(doc: Document, text: str) -> list[Fact]:
+    """Extract the certificate issue date from a water authority statement.
+
+    Tries multiple label patterns in priority order:
+      1. "Date of Issue DD Month YYYY"  (classic format)
+      2. Any labelled date: "Statement Date:", "Issue Date:", "Dated:", etc.
+    Normalises all formats to DD/MM/YYYY.
+    """
+    # Strategy 1: classic "Date of Issue DD Month YYYY"
     m = _DATE_OF_ISSUE_RE.search(text)
-    if not m:
-        return []
-    day, month, year = m.group(1), m.group(2), m.group(3)
-    date_str = f"{int(day):02d}/{_month_to_num(month)}/{year}"
-    return [_make_fact(
-        doc, P.DOCS_WATER_CERT_DATE, date_str, _compact(m.group(0)),
-        confidence=0.95, notes="water authority statement issue date",
-    )]
+    if m:
+        day, month, year = m.group(1), m.group(2), m.group(3)
+        date_str = f"{int(day):02d}/{_month_to_num(month)}/{year}"
+        return [_make_fact(
+            doc, P.DOCS_WATER_CERT_DATE, date_str, _compact(m.group(0)),
+            confidence=0.97, notes="water authority statement issue date",
+        )]
+
+    # Strategy 2: broader labelled-date patterns (numeric or alpha date formats)
+    for m2 in _DATE_LABEL_RE.finditer(text):
+        raw_date = m2.group("date").strip()
+        date_str = _normalise_date_str(raw_date)
+        if date_str:
+            return [_make_fact(
+                doc, P.DOCS_WATER_CERT_DATE, date_str, _compact(m2.group(0)),
+                confidence=0.90, notes="water authority statement date (label match)",
+            )]
+
+    return []
 
 
 _WATER_SERVICE_TRIGGERS: tuple[str, ...] = (

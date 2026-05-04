@@ -18,11 +18,14 @@ import requests
 
 from triconvey_agent.ai.client import AIResult
 
-_DEFAULT_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+_DEFAULT_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b:free"
 _API_URL = "https://openrouter.ai/api/v1/chat/completions"
 _SYSTEM_PROMPT = (
     "You are a document table perception agent for Australian conveyancing documents. "
-    "Return only valid JSON. Do not invent values. Do not hallucinate amounts."
+    "Return only valid JSON in assistant message.content. "
+    "Do not output reasoning-only responses. "
+    "Do not invent values. Do not hallucinate amounts. "
+    "If unsure, return a minimal valid JSON object with empty rows."
 )
 
 
@@ -77,6 +80,7 @@ class OpenRouterClient:
                 {"role": "user", "content": content},
             ],
             "temperature": 0,
+            "response_format": {"type": "json_object"},
         }
 
         headers = {
@@ -116,7 +120,12 @@ class OpenRouterClient:
             content = "\n".join(x for x in text_parts if x.strip())
 
         if content is None:
-            raise RuntimeError(f"OpenRouter returned null content: {data}")
+            reasoning = msg.get("reasoning")
+            raise RuntimeError(
+                "OpenRouter returned null content. "
+                "Model produced reasoning but no final JSON in message.content. "
+                f"model={data.get('model')}; reasoning_preview={str(reasoning)[:300]!r}"
+            )
 
         raw = str(content).strip()
         if not raw:

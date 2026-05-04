@@ -514,7 +514,7 @@ export function SettingsScreen({
                         onClick={onInstallUpdate}
                       >
                         <Download className="mr-2 h-4 w-4" />
-                        {isInstallingUpdate ? "Preparing..." : "Download and install"}
+                        {isInstallingUpdate ? "Preparing..." : "Install update"}
                       </Button>
                     </div>
                   </div>

@@ -14,7 +14,7 @@ APP_COPYRIGHT = "Copyright (c) 2026 Convey Agent"
 DEFAULT_UPDATE_REPOSITORY = "mohdghousetiltil/convey-ai-agent"
 DEFAULT_CLOUD_BACKEND_URL = "https://convey-ai-agent-production.up.railway.app"
 DEFAULT_CLOUD_SYNC_URL = f"{DEFAULT_CLOUD_BACKEND_URL}/api/sync"
-FALLBACK_APP_VERSION = "0.0.125"
+FALLBACK_APP_VERSION = "0.0.127"
 
 
 def get_app_version() -> str:

@@ -18,7 +18,10 @@ import re
 
 from triconvey_agent.canonical.extractors import paths as P
 from triconvey_agent.canonical.schemas import Fact, Source
-from triconvey_agent.normalizers.display_names import normalize_council_display_name
+from triconvey_agent.normalizers.display_names import (
+    normalize_council_display_name,
+    normalize_water_authority_display_name,
+)
 
 EXTRACTOR_NAME = "rule:policy_attachments_v1"
 
@@ -161,6 +164,13 @@ def _normalise_council_name(name: object | None) -> str | None:
     return normalize_council_display_name(str(name).strip())
 
 
+def _normalise_water_name(name: object | None) -> str | None:
+    if name is None:
+        return None
+    value = normalize_water_authority_display_name(str(name).strip())
+    return value.strip() if value else None
+
+
 def _norm_vol(vol: str) -> str:
     """Normalise a volume number for deduplication: strip leading zeros.
 
@@ -291,9 +301,7 @@ def _plan_entries(store) -> list[str]:
 
         if plan_type_u == "PS" and dedup_key not in seen:
             seen.add(dedup_key)
-            lines.append(
-                f"- Plan of Subdivision {_strip_plan_prefix(full, 'PS')} dated {date}"
-            )
+            lines.append(f"- Plan of Subdivision {full} dated {date}")
         elif plan_type_u in ("LP", "TP") and dedup_key not in seen:
             seen.add(dedup_key)
             lines.append(f"- Plan of Subdivision {full} dated {date}")
@@ -315,9 +323,9 @@ def _plan_entries(store) -> list[str]:
             dedup_key = _normalize_plan_num_key(str(num))
             if dedup_key not in seen:
                 seen.add(dedup_key)
-                lines.append(
-                    f"- Plan of Subdivision {_strip_plan_prefix(str(num), 'PS')} dated {date}"
-                )
+                n = str(num).strip().upper()
+                full = n if n.startswith("PS") else f"PS{n}"
+                lines.append(f"- Plan of Subdivision {full} dated {date}")
         except (json.JSONDecodeError, TypeError):
             pass
 
@@ -451,6 +459,80 @@ def _building_permit_entries(store) -> list[str]:
     return lines
 
 
+def _water_entries(store) -> list[str]:
+    """Build one water encumbrance certificate line per water document.
+
+    Groups authority-name and date facts by source file so that multiple
+    water documents (different authorities or different units) each get
+    their own attachment line.
+    """
+    _PREFERRED_WATER_EXTRACTORS = (
+        "rule:water_authority_certificate_v1",
+        "ai:doc_extractor:water_authority_certificate_v1",
+        "ai:doc_extractor:water_authority_certificate",
+    )
+
+    auth_facts = _get_all_facts(store, P.RATES_WATER_AUTHORITY)
+    date_facts = _get_all_facts(store, P.DOCS_WATER_CERT_DATE)
+
+    # Build file → best fact maps (prefer certificate extractors over vendor form)
+    def _best_by_file(facts: list[Fact], preferred: tuple[str, ...]) -> dict[str, Fact]:
+        result: dict[str, Fact] = {}
+        for f in facts:
+            file_name = _source_file(f) or "__no_file__"
+            current = result.get(file_name)
+            if current is None:
+                result[file_name] = f
+                continue
+            # prefer certificate extractor over vendor_form
+            current_rank = next((i for i, p in enumerate(preferred) if current.extractor == p), len(preferred))
+            new_rank = next((i for i, p in enumerate(preferred) if f.extractor == p), len(preferred))
+            if new_rank < current_rank or (new_rank == current_rank and f.confidence >= current.confidence):
+                result[file_name] = f
+        return result
+
+    auth_by_file = _best_by_file(auth_facts, _PREFERRED_WATER_EXTRACTORS)
+    date_by_file: dict[str, Fact] = {}
+    for f in date_facts:
+        file_name = _source_file(f) or "__no_file__"
+        current = date_by_file.get(file_name)
+        if current is None or f.confidence >= current.confidence:
+            date_by_file[file_name] = f
+
+    # Collect all file keys from both maps (a doc may have authority but no date or vice versa)
+    all_files = sorted(set(auth_by_file) | set(date_by_file))
+
+    if not all_files:
+        # No water facts at all — output a single placeholder line
+        return [f"- ## Water Encumbrance Certificate dated {_REVIEW_PLACEHOLDER}"]
+
+    lines: list[str] = []
+    seen_auth: set[str] = set()
+
+    for file_name in all_files:
+        auth_fact = auth_by_file.get(file_name)
+        date_fact = date_by_file.get(file_name)
+
+        raw_name = auth_fact.value if auth_fact else None
+        water_name = _normalise_water_name(raw_name)
+
+        date_str = _clean_date(str(date_fact.value)) if date_fact else _REVIEW_PLACEHOLDER
+
+        # Deduplicate: same authority name across files (e.g. duplicate docs)
+        dedup_key = (water_name or "").lower()
+        if dedup_key and dedup_key in seen_auth:
+            continue
+        if dedup_key:
+            seen_auth.add(dedup_key)
+
+        if water_name:
+            lines.append(f"- {water_name} Encumbrance Certificate dated {date_str}")
+        else:
+            lines.append(f"- ## Water Encumbrance Certificate dated {date_str}")
+
+    return lines
+
+
 def build_attachments_text(store) -> str:  # type: ignore[type-arg]
     """Build the complete formatted attachment list text for Tab 6 field 13.
 
@@ -504,19 +586,8 @@ def build_attachments_text(store) -> str:  # type: ignore[type-arg]
         lines.append(f"- ## Council Building Approval Certificate dated {council_building_date}")
         lines.append(f"- ## Council Land Information Certificate dated {council_land_info_date}")
 
-    # 7. Water encumbrance certificate (named with water authority)
-    water_name = _pick_fact_value(
-        store,
-        P.RATES_WATER_AUTHORITY,
-        preferred_extractors=("rule:water_authority_certificate_v1",),
-    )
-    water_cert_date = _date_from_path(store, P.DOCS_WATER_CERT_DATE)
-    if water_name:
-        lines.append(
-            f"- {water_name} Encumbrance Certificate dated {water_cert_date}"
-        )
-    else:
-        lines.append(f"- ## Water Encumbrance Certificate dated {water_cert_date}")
+    # 7. Water encumbrance certificate(s) — one line per water document/authority
+    lines.extend(_water_entries(store))
 
     # 8. SRO Land Tax Certificate
     land_tax_date = _date_from_path(store, P.DOCS_LAND_TAX_CERT_DATE)

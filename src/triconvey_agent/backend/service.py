@@ -25,7 +25,7 @@ from triconvey_agent.canonical.router import answer_all_questions
 from triconvey_agent.canonical.runner.ai_review import run_ai_review
 from triconvey_agent.canonical.runner.fact_extraction import extract_fact_store
 from triconvey_agent.canonical.runner.summary_writer import write_summary
-from triconvey_agent.canonical.schemas import AnswerObject, FormActionPlan, FactStore
+from triconvey_agent.canonical.schemas import AnswerObject, Fact, FormActionPlan, FactStore
 
 LOG = logging.getLogger(__name__)
 _BRAIN_F_BUILD_LOCK = threading.Lock()
@@ -1312,6 +1312,116 @@ def _load_fact_store(run_dir: Path) -> FactStoreImpl:
         return FactStoreImpl()
 
 
+def _collect_water_rows_from_store(store: FactStoreImpl) -> list[tuple[str, str]]:
+    """Return (authority_name, formatted_amount) for each water document in the store."""
+    authority_facts = store.get_all("rates.water.authority_name")
+    amount_facts = store.get_all("rates.water.annual_amount")
+
+    def _best_by_file(facts: list[Fact]) -> dict[str, Fact]:
+        result: dict[str, Fact] = {}
+        for f in facts:
+            file_name = (f.sources[0].file if f.sources else "") or "__no_file__"
+            current = result.get(file_name)
+            if current is None or f.confidence >= current.confidence:
+                result[file_name] = f
+        return result
+
+    auth_by_file = _best_by_file(authority_facts)
+    amt_by_file = _best_by_file(amount_facts)
+
+    rows: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for file_name in sorted(set(auth_by_file) | set(amt_by_file)):
+        auth_fact = auth_by_file.get(file_name)
+        amt_fact = amt_by_file.get(file_name)
+        auth_name = str(auth_fact.value if auth_fact else "").strip()
+        if not auth_name:
+            continue
+        amt_raw = str(amt_fact.value if amt_fact else "").strip()
+        parsed = _parse_amount_like(amt_raw) if amt_raw else None
+        amt_str = f"${parsed:,.2f}" if parsed is not None else "$0.00"
+        key = (auth_name.lower(), amt_str)
+        if key in seen:
+            continue
+        seen.add(key)
+        rows.append((auth_name, amt_str))
+    return rows
+
+
+def _reorder_outgoing_rows(answers: dict[str, AnswerObject], store: FactStoreImpl) -> None:
+    """Reorder outgoing rows by priority: council → water(s) → land tax → owners corporation.
+
+    Zero amounts are shown as $0.00 rather than suppressed.
+    Authority types with no supporting documents are omitted; remaining slots are blanked.
+    Multiple water documents each get their own row.
+    Always writes exactly 4 rows.
+    """
+    # Collect typed rows in priority order: (authority_name, formatted_amount)
+    typed_rows: list[tuple[str, str]] = []
+
+    # Council
+    council_auth = str(store.get_value("rates.council.authority_name") or "").strip()
+    council_amt_raw = store.get_value("rates.council.annual_amount")
+    if council_auth or council_amt_raw is not None:
+        parsed = _parse_amount_like(council_amt_raw)
+        typed_rows.append((council_auth or "Council", f"${parsed:,.2f}" if parsed is not None else "$0.00"))
+
+    # Water — multiple documents supported
+    for auth_name, amt_str in _collect_water_rows_from_store(store):
+        typed_rows.append((auth_name, amt_str))
+
+    # Land tax
+    lt_auth = str(store.get_value("rates.land_tax.authority_name") or "").strip()
+    lt_amt_raw = store.get_value("rates.land_tax.amount")
+    if lt_auth or lt_amt_raw is not None:
+        parsed = _parse_amount_like(lt_amt_raw)
+        typed_rows.append((lt_auth or "State Revenue Office", f"${parsed:,.2f}" if parsed is not None else "$0.00"))
+
+    # Owners corporation
+    oc_auth = str(store.get_value("rates.owners_corporation.authority_name") or "").strip()
+    oc_amt_raw = store.get_value("rates.owners_corporation.annual_amount")
+    if oc_auth or oc_amt_raw is not None:
+        parsed = _parse_amount_like(oc_amt_raw)
+        typed_rows.append((oc_auth or "Owners Corporation", f"${parsed:,.2f}" if parsed is not None else "$0.00"))
+
+    typed_rows = typed_rows[:4]
+
+    for i in range(1, 5):
+        auth_id = f"sec32_1.1_outgoing_{i}_authority"
+        amt_id = f"sec32_1.1_outgoing_{i}_amount"
+        existing_auth = answers.get(auth_id)
+        existing_amt = answers.get(amt_id)
+        idx = i - 1
+
+        if idx < len(typed_rows):
+            auth_name, amt_str = typed_rows[idx]
+            if existing_auth is not None:
+                answers[auth_id] = existing_auth.model_copy(
+                    update={"value": auth_name, "needs_review": False, "review_reasons": []}
+                )
+            else:
+                answers[auth_id] = AnswerObject(
+                    question_id=auth_id,
+                    question_label=f"1.1 Outgoing {i} - Authority name",
+                    value=auth_name,
+                )
+            if existing_amt is not None:
+                answers[amt_id] = existing_amt.model_copy(
+                    update={"value": amt_str, "needs_review": False, "review_reasons": []}
+                )
+            else:
+                answers[amt_id] = AnswerObject(
+                    question_id=amt_id,
+                    question_label=f"1.1 Outgoing {i} - Amount",
+                    value=amt_str,
+                )
+        else:
+            if existing_auth is not None:
+                answers[auth_id] = _clear_answer_value(existing_auth)
+            if existing_amt is not None:
+                answers[amt_id] = _clear_answer_value(existing_amt)
+
+
 def _apply_answer_fallbacks(answers: dict[str, AnswerObject], store: FactStoreImpl) -> None:
     bushfire_answer = answers.get("sec32_3.3_bushfire_prone")
     chosen_bushfire = _choose_bushfire_fact(store)
@@ -1327,8 +1437,7 @@ def _apply_answer_fallbacks(answers: dict[str, AnswerObject], store: FactStoreIm
                     "review_reasons": [],
                 }
             )
-    _suppress_zero_outgoings(answers)
-    _suppress_owners_corporation_outgoing(answers, store)
+    _reorder_outgoing_rows(answers, store)
     _format_outgoing_authority_names(answers, store)
 
 

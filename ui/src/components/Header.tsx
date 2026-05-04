@@ -36,7 +36,7 @@ export function Header({
   showChatToggle = false,
 }: HeaderProps) {
   return (
-    <header className="z-50 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-6">
+    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-6">
       <div className="flex w-10 items-center">
         {onBack ? (
           <div

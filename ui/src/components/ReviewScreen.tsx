@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AnswerUpdatePayload, ChatAnswerPayload, ReviewFieldItem, ReviewRunPayload, UpdateStatusPayload, pushS32ToSmokeball } from "../lib/api";
+import { AnswerUpdatePayload, ChatAnswerPayload, ReviewFieldItem, ReviewRunPayload, UpdateStatusPayload, pushS32ToSmokeball, useCopyRuleForRow } from "../lib/api";
 import { Header } from "./Header";
 
 type HistoryTurn = { role: "user" | "assistant"; content: string };
@@ -48,7 +48,7 @@ function StatusPill({ item }: { item?: ReviewFieldItem }) {
     return <span className="rounded-full bg-muted px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-muted-foreground">Unmapped</span>;
   }
   if (item.needs_review) {
-    return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-amber-700">Review</span>;
+    return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">Review</span>;
   }
   if (item.presentation_hints?.answer_origin === "ai_review") {
     return <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-sky-700">AI</span>;
@@ -56,7 +56,7 @@ function StatusPill({ item }: { item?: ReviewFieldItem }) {
   if (item.confidence >= 0.9) {
     return <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-emerald-700">Auto</span>;
   }
-  return <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-yellow-800">Auto</span>;
+  return <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-300">Auto</span>;
 }
 
 function hasDisplayValue(value: DraftValue) {
@@ -118,6 +118,36 @@ export function ReviewScreen(props: ReviewScreenProps) {
   const [pushResult, setPushResult] = useState<{ success: boolean; message: string; warning?: string } | null>(null);
   const [isActionDropdownOpen, setIsActionDropdownOpen] = useState(false);
   const [primaryAction, setPrimaryAction] = useState<"push" | "autofill">("push");
+
+  // ── DB pill (copy-rule override) state ───────────────────────────────────
+  const [dbPillLoading, setDbPillLoading] = useState<Record<number, boolean>>({});
+  const [dbPillToast, setDbPillToast] = useState<{ row: number; message: string; error: boolean } | null>(null);
+  const [copyGlowRow, setCopyGlowRow] = useState<number | null>(null);
+
+  async function handleUseCopyRule(rowNum: number) {
+    const runId = run.manifest?.run_id;
+    if (!runId) return;
+    setDbPillLoading((prev) => ({ ...prev, [rowNum]: true }));
+    setDbPillToast(null);
+    try {
+      setCopyGlowRow(rowNum);
+      const result = await useCopyRuleForRow(runId, rowNum);
+      setDraft(`sec32_1.1_outgoing_${rowNum}_amount`, result.amount);
+      setDbPillToast({ row: rowNum, message: `Applied: ${result.amount} (matched "${result.matched_rule}")`, error: false });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      const isNotFound = msg.includes("No copy price") || msg.includes("404");
+      setDbPillToast({
+        row: rowNum,
+        message: isNotFound ? "No copy price found for this authority." : msg,
+        error: true,
+      });
+    } finally {
+      setDbPillLoading((prev) => ({ ...prev, [rowNum]: false }));
+      window.setTimeout(() => setCopyGlowRow((prev) => (prev === rowNum ? null : prev)), 700);
+      window.setTimeout(() => setDbPillToast(null), 4000);
+    }
+  }
 
   const runIdRef = useRef(run.manifest?.run_id);
   useEffect(() => {
@@ -315,6 +345,11 @@ export function ReviewScreen(props: ReviewScreenProps) {
                           </div>
 
                           <div className="ml-7 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+                            {dbPillToast && (
+                            <div className={`px-3 py-2 text-xs font-medium ${dbPillToast.error ? "bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"}`}>
+                                {dbPillToast.message}
+                              </div>
+                            )}
                             <Table>
                               <TableHeader className="bg-muted/50">
                                 <TableRow className="hover:bg-transparent border-border">
@@ -331,6 +366,7 @@ export function ReviewScreen(props: ReviewScreenProps) {
                                   const amountValue = getDraft(amountId);
                                   const showAuthorityStatus = hasDisplayValue(authorityValue);
                                   const showAmountStatus = hasDisplayValue(amountValue);
+                                  const isDbLoading = dbPillLoading[row] ?? false;
                                   return (
                                     <TableRow key={row} className="border-border hover:bg-accent/30 transition-colors">
                                       <TableCell className="p-2 align-top">
@@ -343,14 +379,27 @@ export function ReviewScreen(props: ReviewScreenProps) {
                                       </TableCell>
                                       <TableCell className="p-2 align-top">
                                         <div className="space-y-2 min-w-[140px]">
-                                          <div className="flex items-center justify-between gap-2">
+                                          <div className="flex items-center gap-1.5">
                                             {showAmountStatus ? <StatusPill item={fields[amountId]} /> : <span />}
+                                            {showAuthorityStatus && (
+                                              <button
+                                                onClick={() => handleUseCopyRule(row)}
+                                                disabled={isDbLoading}
+                                                title="Apply copy rule price for this authority"
+                                                className={[
+                                                  "rounded-full px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                                                  "bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-violet-500/20 dark:text-violet-300 dark:hover:bg-violet-500/30",
+                                                  copyGlowRow === row ? "ring-2 ring-violet-400/70 shadow-[0_0_18px_rgba(139,92,246,0.5)]" : "",
+                                                ].join(" ")}
+                                              >
+                                                {isDbLoading ? "..." : "COPY"}
+                                              </button>
+                                            )}
                                           </div>
                                           <Input id={amountId} value={textValue(amountId)} onChange={(e) => setDraft(amountId, e.target.value)} placeholder="$0.00" className="h-9 border-transparent bg-transparent focus:bg-card focus:border-border shadow-none text-sm" />
-                                          {/* {showAmountStatus ? <span className="text-[0.68rem] font-semibold text-slate-400 uppercase tracking-wider px-1">annually</span> : null} */}
                                         </div>
                                       </TableCell>
-                                      <TableCell className="p-2"><Input value="N/A" disabled className="h-9 border-transparent bg-muted text-muted-foreground shadow-none text-sm" /></TableCell>
+                                      <TableCell className="p-2"><Input value="0.00" disabled className="h-9 border-transparent bg-muted text-muted-foreground shadow-none text-sm" /></TableCell>
                                     </TableRow>
                                   );
                                 })}
@@ -485,23 +534,23 @@ export function ReviewScreen(props: ReviewScreenProps) {
                   </div>
                 ) : renderGeneric()}
                 {currentItems.filter((item) => item.needs_review).length > 0 ? (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50/80 overflow-hidden">
+                  <div className="rounded-2xl border border-orange-200 bg-orange-50/90 overflow-hidden dark:border-orange-400/35 dark:bg-orange-500/10">
                     <button
                       onClick={() => setReviewItemsCollapsed((c) => !c)}
-                      className="w-full flex items-center justify-between px-5 py-4 hover:bg-amber-100/60 transition-colors"
+                      className="w-full flex items-center justify-between px-5 py-4 hover:bg-orange-100/80 transition-colors dark:hover:bg-orange-500/15"
                     >
                       <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold uppercase tracking-wider text-amber-800">Review Items On This Tab</h4>
-                        <span className="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-900">{currentItems.filter((i) => i.needs_review).length}</span>
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-orange-900 dark:text-orange-200">Review Items On This Tab</h4>
+                        <span className="rounded-full bg-orange-200 px-2 py-0.5 text-xs font-bold text-orange-900 dark:bg-orange-400/25 dark:text-orange-200">{currentItems.filter((i) => i.needs_review).length}</span>
                       </div>
-                      {reviewItemsCollapsed ? <ChevronRight className="w-4 h-4 text-amber-700" /> : <ChevronDown className="w-4 h-4 text-amber-700" />}
+                      {reviewItemsCollapsed ? <ChevronRight className="w-4 h-4 text-orange-700 dark:text-orange-300" /> : <ChevronDown className="w-4 h-4 text-orange-700 dark:text-orange-300" />}
                     </button>
                     {!reviewItemsCollapsed && (
                       <div className="px-5 pb-5 grid gap-3">
                         {currentItems.filter((item) => item.needs_review).map((item) => (
                           <div key={item.question_id} className="rounded-xl bg-card px-4 py-3 shadow-sm">
                             <p className="text-sm font-semibold text-foreground">{item.label}</p>
-                            <p className="mt-1 text-xs text-amber-700">{item.review_reasons.join(", ")}</p>
+                            <p className="mt-1 text-xs text-orange-700 dark:text-orange-300">{item.review_reasons.join(", ")}</p>
                           </div>
                         ))}
                       </div>

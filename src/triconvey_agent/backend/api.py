@@ -55,7 +55,7 @@ from triconvey_agent.backend.update_manager import check_for_updates, download_u
 from triconvey_agent.db.bootstrap import apply_runtime_migrations
 from triconvey_agent.copy_rules import find_best_copy_rule_match
 from triconvey_agent.backend.triconvey_import_utils import (
-    apply_multi_water_outgoing_rows,
+    build_priority_outgoing_rows,
     parse_amount_text,
     wait_for_triconvey_paths,
 )
@@ -305,7 +305,7 @@ async def _apply_copy_rule_fallbacks_to_run(
         return
 
     facts_by_path = facts_raw.get("facts", {}) if isinstance(facts_raw, dict) else {}
-    apply_multi_water_outgoing_rows(answers, facts_by_path, rules)
+    build_priority_outgoing_rows(answers, facts_by_path, rules)
     if not rules:
         answers_path.write_text(json.dumps(answers, indent=2, default=str), encoding="utf-8")
         return
@@ -322,12 +322,7 @@ async def _apply_copy_rule_fallbacks_to_run(
             authority_name = value
             break
     if not authority_name:
-        return
-
-    current_answer = answers.get("sec32_1.1_outgoing_2_amount") or {}
-    # Only skip if a human has already manually edited this value — DB still
-    # overrides any system-calculated amount.
-    if current_answer.get("human_edited"):
+        answers_path.write_text(json.dumps(answers, indent=2, default=str), encoding="utf-8")
         return
 
     match = find_best_copy_rule_match(
@@ -335,6 +330,26 @@ async def _apply_copy_rule_fallbacks_to_run(
         [(row.authority_name, row.annual_amount) for row in rules],
     )
     if match is None:
+        answers_path.write_text(json.dumps(answers, indent=2, default=str), encoding="utf-8")
+        return
+
+    # Find which row slot currently holds this water authority (dynamic — not hardcoded to row 2)
+    water_row_num: int | None = None
+    for row_num in range(1, 5):
+        auth_answer = answers.get(f"sec32_1.1_outgoing_{row_num}_authority") or {}
+        auth_val = str(auth_answer.get("human_value_json") or auth_answer.get("value_json") or "").strip()
+        if auth_val.lower() == authority_name.lower():
+            water_row_num = row_num
+            break
+    if water_row_num is None:
+        answers_path.write_text(json.dumps(answers, indent=2, default=str), encoding="utf-8")
+        return
+
+    amount_id = f"sec32_1.1_outgoing_{water_row_num}_amount"
+    current_answer = answers.get(amount_id) or {}
+    # Only skip if a human has already manually edited this value
+    if current_answer.get("human_edited"):
+        answers_path.write_text(json.dumps(answers, indent=2, default=str), encoding="utf-8")
         return
 
     formatted_amount = f"${match.annual_amount:,.2f}"
@@ -350,7 +365,7 @@ async def _apply_copy_rule_fallbacks_to_run(
     current_answer["confidence"] = max(float(current_answer.get("confidence") or 0.0), 0.86)
     current_answer["needs_review"] = False
     current_answer["review_reasons"] = []
-    answers["sec32_1.1_outgoing_2_amount"] = current_answer
+    answers[amount_id] = current_answer
     answers_path.write_text(json.dumps(answers, indent=2, default=str), encoding="utf-8")
 
 
@@ -394,7 +409,8 @@ async def _lifespan(app: FastAPI):
         from triconvey_agent.backend.settings import load_local_settings as _load_local_settings
 
         auto_launch = os.getenv("CONVEY_AUTO_LAUNCH_TRICONVEY_ON_START", "").strip().lower()
-        should_auto_launch = getattr(_sys, "frozen", False) or auto_launch in {"1", "true", "yes", "on"}
+        # Desktop default: do NOT auto-open TriConvey on startup unless explicitly enabled.
+        should_auto_launch = auto_launch in {"1", "true", "yes", "on"}
         if should_auto_launch:
             settings = _load_local_settings()
             triconvey_exe = str(settings.get("triconveyPath") or "").strip() or None
@@ -692,6 +708,89 @@ async def delete_copy_rule(
         raise HTTPException(status_code=404, detail="Copy rule not found.")
     await _nudge_sync_worker()
     return {"ok": True, "id": rule_id}
+
+
+@app.post("/api/runs/{run_id}/authority-rows/{row_num}/use-copy-rule")
+async def use_copy_rule_for_authority_row(
+    run_id: str,
+    row_num: int,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    if row_num not in (1, 2, 3, 4):
+        raise HTTPException(status_code=400, detail="row_num must be 1–4.")
+
+    run_dir = _resolve_run_dir(run_id)
+    answers_path = run_dir / "answers.json"
+    if not answers_path.exists():
+        raise HTTPException(status_code=404, detail="Run not found.")
+
+    try:
+        answers = json.loads(answers_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="Failed to read answers.") from exc
+
+    authority_id = f"sec32_1.1_outgoing_{row_num}_authority"
+    amount_id = f"sec32_1.1_outgoing_{row_num}_amount"
+
+    auth_answer = answers.get(authority_id) or {}
+    authority_name = str(
+        auth_answer.get("human_value_json") or auth_answer.get("value_json") or ""
+    ).strip()
+    if not authority_name:
+        raise HTTPException(status_code=404, detail="No copy price found for this authority.")
+
+    rules = await CopyRuleRepo.list_for_client(
+        session,
+        client_id=ctx.client.id,
+        rule_type="water_authority",
+        include_inactive=False,
+    )
+    if not rules:
+        raise HTTPException(status_code=404, detail="No copy price found for this authority.")
+
+    match = find_best_copy_rule_match(
+        authority_name,
+        [(row.authority_name, row.annual_amount) for row in rules],
+    )
+    if match is None:
+        raise HTTPException(status_code=404, detail="No copy price found for this authority.")
+
+    formatted_amount = f"${match.annual_amount:,.2f}"
+    current_answer = answers.get(amount_id) or {}
+    original_value = current_answer.get("human_value_json") or current_answer.get("value_json")
+    original_source = current_answer.get("source")
+
+    next_hints = dict(current_answer.get("presentation_hints") or {})
+    next_hints["copy_rule_manual_override"] = {
+        "original_value": original_value,
+        "original_source": original_source,
+        "matched_authority_name": match.authority_name,
+        "source_authority_name": authority_name,
+        "match_score": round(match.score, 4),
+        "matched_on": match.matched_on,
+        "overridden_by": ctx.user.email,
+    }
+
+    current_answer["value_json"] = formatted_amount
+    current_answer["presentation_hints"] = next_hints
+    current_answer["confidence"] = 1.0
+    current_answer["needs_review"] = False
+    current_answer["review_reasons"] = []
+    current_answer["source"] = "copy_rule_manual_override"
+    answers[amount_id] = current_answer
+
+    answers_path.write_text(json.dumps(answers, indent=2, default=str), encoding="utf-8")
+    await _nudge_sync_worker()
+
+    return {
+        "ok": True,
+        "row_num": row_num,
+        "authority_name": authority_name,
+        "matched_rule": match.authority_name,
+        "amount": formatted_amount,
+        "match_score": round(match.score, 4),
+    }
 
 
 # ---------------------------------------------------------------------------

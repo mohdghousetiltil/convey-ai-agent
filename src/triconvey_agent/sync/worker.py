@@ -231,7 +231,7 @@ async def start_sync_worker(client_id: uuid.UUID) -> SyncWorker | None:
         )
         return None
 
-    interval = int(os.getenv("CONVEY_SYNC_INTERVAL_SECONDS", "60"))
+    interval = int(os.getenv("CONVEY_SYNC_INTERVAL_SECONDS", "600"))
     batch = int(os.getenv("CONVEY_SYNC_BATCH_SIZE", "100"))
 
     worker = SyncWorker(
