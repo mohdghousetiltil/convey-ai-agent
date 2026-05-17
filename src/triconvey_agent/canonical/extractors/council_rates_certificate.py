@@ -6,6 +6,10 @@ municipal rates assessments issued by local councils.
 Annual amount extraction
 ------------------------
 Priority order for the annual amount:
+  0. "Rates & charges" section block (Whittlesea LIC)               (conf 0.98, rank 12)
+     Sums positive charge/levy rows between "Rates & charges" header
+     and "Balance of rates & charges due" footer; excludes payments,
+     balance, arrears, interest, adjustments, concessions, rebates.
   1. Amount paid + outstanding amount (Land Information Certificate)  (conf 0.97)
      Brimbank format: "Less Payments: -$X" + "Total Rates & Charges Due: $Y"
      Generic format:  "Amount Paid $X" + "Outstanding Amount $Y"
@@ -1112,6 +1116,102 @@ def _sum_current_charge_rows(text: str) -> tuple[float, str] | None:
     return None
 
 
+# ---------------------------------------------------------------------------
+# Whittlesea / LIC "Rates & charges" block parser.
+#
+# Layout:
+#   Rates & charges
+#   General rate                    1,655.04
+#   Food/Green waste bin charge        95.30
+#   ESVF Fixed charge                 136.00
+#   ESVF Variable Levy                121.10
+#   Waste Service Charge              208.80
+#   Waste Landfill Levy               105.85
+#   Balance of rates & charges due    580.52   ← STOP here
+#
+# Strategy: isolate everything between "Rates & charges" header and
+# "Balance of rates & charges due" (or any payment/balance footer),
+# then sum only positive charge/levy rows, excluding payments, balance,
+# arrears, interest, adjustments, concessions, and rebates.
+# ---------------------------------------------------------------------------
+
+_RATES_AND_CHARGES_BLOCK_START_RE = re.compile(
+    r"^\s*Rates\s*(?:&|and)\s*charges\s*$",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+_RATES_AND_CHARGES_BLOCK_STOP_RE = re.compile(
+    r"Balance\s+of\s+rates"
+    r"|Balance\s+(?:due|owing|outstanding|payable)"
+    r"|Total\s+(?:rates?\s*(?:&|and)\s*charges?\s+)?due"
+    r"|Payments?\s+(?:received|made)"
+    r"|Less\s+payments?"
+    r"|Amount\s+(?:due|owing|payable)"
+    r"|Overdue",
+    re.IGNORECASE,
+)
+
+_EXCLUDE_RATES_BLOCK_LABELS_RE = re.compile(
+    r"\b(?:payment|paid|balance|arrears|interest|concession|rebate|discount|"
+    r"waiver|remission|adjustment|credit|overpayment|other)\b",
+    re.IGNORECASE,
+)
+
+_INCLUDE_RATES_BLOCK_LABELS_RE = re.compile(
+    r"\b(?:rate|rates|charge|charges|levy|levies|waste|garbage|recycling|"
+    r"general|municipal|esvf|emergency\s+services?|environmental|"
+    r"infrastructure|fire\s+services?|landfill|bin|green)\b",
+    re.IGNORECASE,
+)
+
+
+def _sum_rates_and_charges_block(text: str) -> tuple[float, str] | None:
+    """Sum charge rows in a 'Rates & charges' section, stopping at the balance footer.
+
+    Designed for Whittlesea LIC and similar documents where a clear section
+    header separates annual declared charges from balance/payment lines.
+    Excludes Payments, Balance, Arrears, Interest, Adjustments, Concessions.
+    Requires ≥ 2 matched rows.
+    """
+    m_start = _RATES_AND_CHARGES_BLOCK_START_RE.search(text)
+    if not m_start:
+        return None
+
+    body = text[m_start.end():]
+
+    m_stop = _RATES_AND_CHARGES_BLOCK_STOP_RE.search(body)
+    if m_stop:
+        body = body[: m_stop.start()]
+
+    total = 0.0
+    rows: list[str] = []
+    seen: set[str] = set()
+
+    for m in _CHARGE_ROW_LINE_RE.finditer(body):
+        label = _compact(m.group(1))
+        key = label.lower()
+        if key in seen:
+            continue
+        if _EXCLUDE_RATES_BLOCK_LABELS_RE.search(label):
+            continue
+        if not _INCLUDE_RATES_BLOCK_LABELS_RE.search(label):
+            continue
+        try:
+            val = _parse_dollar(m.group(2))
+        except ValueError:
+            continue
+        if val <= 0:
+            continue
+        seen.add(key)
+        total += val
+        rows.append(f"{label} ${val:,.2f}")
+
+    if len(rows) < 2 or total <= 0:
+        return None
+
+    return round(total, 2), "; ".join(rows)
+
+
 # "TOTAL CHARGES $1,807.40" — an explicit charge total line on the document.
 # Higher confidence than row-summing because the council computed it directly.
 _TOTAL_CHARGES_RE = re.compile(
@@ -1712,6 +1812,7 @@ _BALANCE_IMMUNE_SOURCES = frozenset({
     "scrambled_levied_balance_block", "stacked_charge_block", "current_levied_matrix_row",
     "moneyrow_annual_total_row", "moneyrow_charge_rows",
     "date_levied_verified_by_paid_due",
+    "rates_and_charges_block",
 })
 
 
@@ -1773,6 +1874,12 @@ def _collect_all_candidates(text: str, section: str) -> list[_Candidate]:
     lb = _sum_levied_balance_block(section)
     if lb:
         _add(lb[0], "levied_balance_block", 0.97, lb[1])
+
+    # 1f. "Rates & charges" explicit section block (Whittlesea LIC and similar)
+    # Rank 12 / conf 0.98 — sums declared charge rows, stops before balance footer.
+    rac_block = _sum_rates_and_charges_block(section)
+    if rac_block:
+        _add(rac_block[0], "rates_and_charges_block", 0.98, rac_block[1])
 
     # 2a. Row-normalized current levied/annual total row.
     moneyrow_total = _sum_moneyrow_annual_total(money_rows)
@@ -1971,6 +2078,7 @@ def _priority_score(c: _Candidate) -> float:
         "current_rates_date_levied_block": 11,
         "current_rates_levied_line": 11,
         "date_levied_verified_by_paid_due": 11,
+        "rates_and_charges_block": 12,
         "omni_structured_rows": 8,
     }
     base = _SOURCE_RANK.get(c.source, 3) * 0.1 + c.confidence
@@ -2168,6 +2276,7 @@ def _extract_annual_amount(doc: Document, text: str, ai_client=None) -> list[Fac
         "levied_outstanding_table",
         "scrambled_levied_balance_block",
         "levied_balance_block",
+        "rates_and_charges_block",
     }
     _WEAK_CONFLICT_SOURCES = {
         "inline_charge_rows",
@@ -2241,6 +2350,8 @@ def _extract_annual_amount(doc: Document, text: str, ai_client=None) -> list[Fac
         note_parts.append("WARNING: best candidate matches a balance/outstanding value.")
     if llm_used:
         note_parts.append("LLM row classifier used for arbitration.")
+    if best.source in _BALANCE_IMMUNE_SOURCES and not conflict and not best.from_balance:
+        note_parts.append(f"verified_by_rule:{best.source}; skip_ai_review=true")
 
     facts = [
         _make_fact(
@@ -2330,6 +2441,7 @@ def _extract_annual_amount_v2(doc: Document, ai_client=None) -> list[Fact]:
         "current_rates_levied_line",
         "zero_adjustments_total_due",
         "date_levied_verified_by_paid_due",
+        "rates_and_charges_block",
     }
     weak_conflict_sources = {
         "inline_charge_rows",
@@ -2401,7 +2513,12 @@ def _extract_annual_amount_v2(doc: Document, ai_client=None) -> list[Fact]:
         for row in money_rows
     )
     charge_sum = next((c for c in valid if c.source == "moneyrow_charge_rows"), None)
-    if charge_sum and best.source != "moneyrow_charge_rows" and abs(best.value - charge_sum.value) > 1.0:
+    if (
+        charge_sum
+        and best.source != "moneyrow_charge_rows"
+        and best.source not in strong_structural_sources  # structural winner is authoritative
+        and abs(best.value - charge_sum.value) > 1.0
+    ):
         conflict = True
         final_conf = min(final_conf, 0.78)
         disagreement = (
@@ -2428,6 +2545,8 @@ def _extract_annual_amount_v2(doc: Document, ai_client=None) -> list[Fact]:
         note_parts.append("WARNING: detected multi-amount table rows with unknown structure.")
     if llm_used:
         note_parts.append("LLM row classifier used for arbitration.")
+    if best.source in _BALANCE_IMMUNE_SOURCES and not conflict and not best.from_balance:
+        note_parts.append(f"verified_by_rule:{best.source}; skip_ai_review=true")
 
     facts = [
         _make_fact(
@@ -2781,6 +2900,13 @@ def _extract_annual_amount_v3(doc: Document, ai_client=None) -> list[Fact]:
                         conflict_note = f"{conflict_note}; {disagreement}".strip("; ")
                         llm_used = True
 
+    print(
+        "[Council Debug]",
+        "best=", best.source, best.value,
+        "conflict=", conflict,
+        "conflict_note=", conflict_note,
+        "valid=", [(c.source, c.value, c.confidence) for c in valid[:6]],
+    )
     final_conf = best.confidence
     if conflict:
         final_conf = min(final_conf, 0.78)
@@ -2796,7 +2922,7 @@ def _extract_annual_amount_v3(doc: Document, ai_client=None) -> list[Fact]:
     if (
         charge_sum
         and best.source != "moneyrow_charge_rows"
-        and not (best.source.startswith("explicit_subtotal") or best.source == "total_charges_line")
+        and best.source not in strong_structural_sources  # structural winner is authoritative
         and abs(best.value - charge_sum.value) > 1.0
     ):
         conflict = True

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AnswerUpdatePayload, ChatAnswerPayload, ReviewFieldItem, ReviewRunPayload, UpdateStatusPayload, pushS32ToSmokeball, useCopyRuleForRow } from "../lib/api";
+import { AnswerUpdatePayload, ChatAnswerPayload, ReviewFieldItem, ReviewRunPayload, SmokeballMatterSuggestion, UpdateStatusPayload, pushS32ToSmokeball, suggestSmokeballMatters, useCopyRuleForRow } from "../lib/api";
 import { Header } from "./Header";
 
 type HistoryTurn = { role: "user" | "assistant"; content: string };
@@ -118,6 +118,9 @@ export function ReviewScreen(props: ReviewScreenProps) {
   const [pushResult, setPushResult] = useState<{ success: boolean; message: string; warning?: string } | null>(null);
   const [isActionDropdownOpen, setIsActionDropdownOpen] = useState(false);
   const [primaryAction, setPrimaryAction] = useState<"push" | "autofill">("push");
+  const [matterSuggestions, setMatterSuggestions] = useState<SmokeballMatterSuggestion[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestDebug, setSuggestDebug] = useState<{ phrase: string; db_exists: boolean; error: string | null } | null>(null);
 
   // ── DB pill (copy-rule override) state ───────────────────────────────────
   const [dbPillLoading, setDbPillLoading] = useState<Record<number, boolean>>({});
@@ -165,6 +168,31 @@ export function ReviewScreen(props: ReviewScreenProps) {
     setReviewItemsCollapsed(true);
   }, [activeTab]);
 
+  // Auto-suggest Smokeball matters when dialog opens (by volume/folio)
+  useEffect(() => {
+    if (!pushDialogOpen) { setMatterSuggestions([]); setSuggestDebug(null); return; }
+    const vf = run.matter.volume_folio || "";
+    const m = vf.match(/Volume\s+(\S+)\s+Folio\s+(\S+)/i);
+    if (!m) return;
+    const [, vol, fol] = m;
+    setSuggestionsLoading(true);
+    setSuggestDebug(null);
+    suggestSmokeballMatters(vol, fol)
+      .then((resp) => {
+        setMatterSuggestions(Array.isArray(resp?.results) ? resp.results : []);
+        setSuggestDebug({
+          phrase: resp?.phrase ?? `Volume ${vol} Folio ${fol}`,
+          db_exists: resp?.db_exists ?? false,
+          error: resp?.error ?? null,
+        });
+      })
+      .catch((err: unknown) => {
+        setMatterSuggestions([]);
+        setSuggestDebug({ phrase: `Volume ${vol} Folio ${fol}`, db_exists: false, error: err instanceof Error ? err.message : "Request failed" });
+      })
+      .finally(() => setSuggestionsLoading(false));
+  }, [pushDialogOpen, run.matter.volume_folio]);
+
   const pages = [
     { id: "page-1", label: "Sec 32 (1)", tab: "Sec. 32 (1)" },
     { id: "page-2", label: "Sec 32 (2)", tab: "Sec. 32 (2)" },
@@ -201,7 +229,7 @@ export function ReviewScreen(props: ReviewScreenProps) {
     // Include volume_folio so title parsing works
     if (run.matter.volume_folio) allAnswers["volume_folio"] = run.matter.volume_folio;
     try {
-      const result = await pushS32ToSmokeball(pushMatterNumber.trim(), allAnswers);
+      const result = await pushS32ToSmokeball(pushMatterNumber.trim(), allAnswers, run.manifest.run_id);
       setPushResult({
         success: true,
         message: `Pushed ${result.fields_pushed} field${result.fields_pushed !== 1 ? "s" : ""} via ${result.method?.replace(/_/g, " ")}`,
@@ -252,7 +280,7 @@ export function ReviewScreen(props: ReviewScreenProps) {
   );
 
   return (
-    <div className="flex h-screen bg-background font-sans text-foreground overflow-hidden">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-violet-50/15 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 font-sans text-foreground overflow-hidden">
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header
           onBack={onBack}
@@ -344,14 +372,14 @@ export function ReviewScreen(props: ReviewScreenProps) {
                             <Label className="text-[0.9rem] font-medium text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer"><FieldLabel text="Their amounts are:" item={fields["policy_1_amounts_are_checked"]} /></Label>
                           </div>
 
-                          <div className="ml-7 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+                          <div className="ml-7 overflow-hidden rounded-xl border border-white/50 dark:border-white/8 shadow-lg review-authority-glass">
                             {dbPillToast && (
                             <div className={`px-3 py-2 text-xs font-medium ${dbPillToast.error ? "bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"}`}>
                                 {dbPillToast.message}
                               </div>
                             )}
                             <Table>
-                              <TableHeader className="bg-muted/50">
+                              <TableHeader className="review-authority-thead">
                                 <TableRow className="hover:bg-transparent border-border">
                                   <TableHead className="w-[40%] font-bold text-foreground text-xs uppercase tracking-wider">Authority</TableHead>
                                   <TableHead className="font-bold text-foreground text-xs uppercase tracking-wider">Amount</TableHead>
@@ -381,7 +409,7 @@ export function ReviewScreen(props: ReviewScreenProps) {
                                         <div className="space-y-2 min-w-[140px]">
                                           <div className="flex items-center gap-1.5">
                                             {showAmountStatus ? <StatusPill item={fields[amountId]} /> : <span />}
-                                            {showAuthorityStatus && (
+                                            {showAuthorityStatus && row === 2 && (
                                               <button
                                                 onClick={() => handleUseCopyRule(row)}
                                                 disabled={isDbLoading}
@@ -516,6 +544,85 @@ export function ReviewScreen(props: ReviewScreenProps) {
                       </div>
                     </div>
                   </div>
+                ) : activeTab === "page-5" ? (
+                  <div className="space-y-10">
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-bold text-foreground border-l-4 border-primary pl-3">9. Title</h3>
+                      <div className="grid gap-4 ml-1">
+                        <div className="flex items-start space-x-3 group">
+                          <Checkbox id="sec32_9_vendor_right_to_sell" checked={boolValue("sec32_9_vendor_right_to_sell")} onCheckedChange={(checked) => setDraft("sec32_9_vendor_right_to_sell", Boolean(checked))} className="mt-0.5 border-border data-checked:bg-primary data-checked:border-primary" />
+                          <Label className="text-[0.9rem] font-medium text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer">
+                            <FieldLabel text="Evidence of the vendor's right or power to sell (where the vendor is not the registered proprietor) or the owner in fee simple." item={fields["sec32_9_vendor_right_to_sell"]} />
+                          </Label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-bold text-foreground border-l-4 border-primary pl-3">10. Subdivision</h3>
+                      <div className="space-y-6 ml-1">
+                        <div className="space-y-3">
+                          <h4 className="text-[0.95rem] font-bold text-foreground">10.1 Unregistered Subdivision</h4>
+                          <div className="flex items-start space-x-3 group">
+                            <Checkbox id="sec32_10.1_unreg_plan_certified_copy" checked={boolValue("sec32_10.1_unreg_plan_certified_copy")} onCheckedChange={(checked) => setDraft("sec32_10.1_unreg_plan_certified_copy", Boolean(checked))} className="mt-0.5 border-border data-checked:bg-primary data-checked:border-primary" />
+                            <Label className="text-[0.9rem] font-medium text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer">
+                              <FieldLabel text="Attached is a copy of the plan of subdivision certified by relevant authority if the plan is not yet registered." item={fields["sec32_10.1_unreg_plan_certified_copy"]} />
+                            </Label>
+                          </div>
+                          <div className="flex items-start space-x-3 group">
+                            <Checkbox id="sec32_10.1_unreg_plan_latest_copy" checked={boolValue("sec32_10.1_unreg_plan_latest_copy")} onCheckedChange={(checked) => setDraft("sec32_10.1_unreg_plan_latest_copy", Boolean(checked))} className="mt-0.5 border-border data-checked:bg-primary data-checked:border-primary" />
+                            <Label className="text-[0.9rem] font-medium text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer">
+                              <FieldLabel text="Attached is a copy of the latest version of the plan if the plan of subdivision has not yet been certified." item={fields["sec32_10.1_unreg_plan_latest_copy"]} />
+                            </Label>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <h4 className="text-[0.95rem] font-bold text-foreground">10.2 Staged Subdivision</h4>
+                          <div className="flex items-start space-x-3 group">
+                            <Checkbox id="sec32_10.2_staged_plan_first_stage_copy" checked={boolValue("sec32_10.2_staged_plan_first_stage_copy")} onCheckedChange={(checked) => setDraft("sec32_10.2_staged_plan_first_stage_copy", Boolean(checked))} className="mt-0.5 border-border data-checked:bg-primary data-checked:border-primary" />
+                            <Label className="text-[0.9rem] font-medium text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer">
+                              <FieldLabel text="Attached is a copy of the plan for the first stage if the land is in the second or subsequent stage." item={fields["sec32_10.2_staged_plan_first_stage_copy"]} />
+                            </Label>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[0.9rem] font-medium text-foreground">
+                              <FieldLabel text="Requirements in a statement of compliance re the stage in which the land is included that have not been complied with are as follows:" item={fields["sec32_10.2_staged_requirements_not_complied"]} />
+                            </Label>
+                            <Textarea id="sec32_10.2_staged_requirements_not_complied" value={textValue("sec32_10.2_staged_requirements_not_complied")} onChange={(e) => setDraft("sec32_10.2_staged_requirements_not_complied", e.target.value)} className="min-h-[92px] max-w-5xl bg-card border-border focus:ring-1 focus:ring-primary text-sm" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[0.9rem] font-medium text-foreground">
+                              <FieldLabel text="Proposals re subsequent stages that are known to the vendor are as follows:" item={fields["sec32_10.2_staged_proposals_subsequent_stages"]} />
+                            </Label>
+                            <Textarea id="sec32_10.2_staged_proposals_subsequent_stages" value={textValue("sec32_10.2_staged_proposals_subsequent_stages")} onChange={(e) => setDraft("sec32_10.2_staged_proposals_subsequent_stages", e.target.value)} className="min-h-[92px] max-w-5xl bg-card border-border focus:ring-1 focus:ring-primary text-sm" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[0.9rem] font-medium text-foreground">
+                              <FieldLabel text="Contents of any permit under the Planning and Environment Act authorising the staged subdivision are as follows:" item={fields["sec32_10.2_staged_permit_contents"]} />
+                            </Label>
+                            <Textarea id="sec32_10.2_staged_permit_contents" value={textValue("sec32_10.2_staged_permit_contents")} onChange={(e) => setDraft("sec32_10.2_staged_permit_contents", e.target.value)} className="min-h-[92px] max-w-5xl bg-card border-border focus:ring-1 focus:ring-primary text-sm" />
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <h4 className="text-[0.95rem] font-bold text-foreground">10.3 Further Plan of Subdivision</h4>
+                          <div className="flex items-start space-x-3 group">
+                            <Checkbox id="sec32_10.3_further_plan_certified_copy" checked={boolValue("sec32_10.3_further_plan_certified_copy")} onCheckedChange={(checked) => setDraft("sec32_10.3_further_plan_certified_copy", Boolean(checked))} className="mt-0.5 border-border data-checked:bg-primary data-checked:border-primary" />
+                            <Label className="text-[0.9rem] font-medium text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer">
+                              <FieldLabel text="Attached is a copy of the plan which has been certified by the relevant authority (if the later plan has not been registered)." item={fields["sec32_10.3_further_plan_certified_copy"]} />
+                            </Label>
+                          </div>
+                          <div className="flex items-start space-x-3 group">
+                            <Checkbox id="sec32_10.3_further_plan_latest_copy" checked={boolValue("sec32_10.3_further_plan_latest_copy")} onCheckedChange={(checked) => setDraft("sec32_10.3_further_plan_latest_copy", Boolean(checked))} className="mt-0.5 border-border data-checked:bg-primary data-checked:border-primary" />
+                            <Label className="text-[0.9rem] font-medium text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer">
+                              <FieldLabel text="Attached is a copy of the latest version of the plan (if the later plan has not yet been certified)." item={fields["sec32_10.3_further_plan_latest_copy"]} />
+                            </Label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ) : activeTab === "page-6" ? (
                   <div className="space-y-10">
                     <div className="space-y-6">
@@ -593,7 +700,7 @@ export function ReviewScreen(props: ReviewScreenProps) {
                       <button
                         onClick={() => { setPushResult(null); setPushDialogOpen(true); }}
                         disabled={isSaving || isAutofilling}
-                        className="h-full px-6 text-sm font-bold text-emerald-600 transition-all hover:bg-emerald-50/50 active:scale-[0.98] disabled:opacity-50 flex items-center gap-2"
+                        className="h-full px-6 text-sm font-bold text-emerald-600 transition-all hover:bg-emerald-500/10 dark:hover:bg-emerald-500/15 active:scale-[0.98] disabled:opacity-50 flex items-center gap-2"
                       >
                         <Upload className="w-4 h-4" />
                         Push to Smokeball
@@ -610,7 +717,7 @@ export function ReviewScreen(props: ReviewScreenProps) {
                     
                     <div className={[
                       "w-[1px] h-6 transition-colors",
-                      primaryAction === "push" ? "bg-emerald-500" : "bg-white/20"
+                      primaryAction === "push" ? "bg-emerald-500" : "bg-foreground/20"
                     ].join(" ")} />
 
                     <button
@@ -619,7 +726,7 @@ export function ReviewScreen(props: ReviewScreenProps) {
                       className={[
                         "h-full px-3 transition-all active:scale-[0.98] disabled:opacity-50",
                         primaryAction === "push" 
-                          ? "bg-card text-emerald-600 hover:bg-emerald-50/50" 
+                          ? "bg-card text-emerald-600 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/15" 
                           : "bg-foreground text-background hover:bg-foreground/90"
                       ].join(" ")}
                     >
@@ -695,6 +802,60 @@ export function ReviewScreen(props: ReviewScreenProps) {
                   <p className="text-xs text-muted-foreground mt-1">
                     Find this in Smokeball under Matters → Matter Number column.
                   </p>
+
+                  {/* Suggestions from local Smokeball DB */}
+                  {suggestionsLoading && (
+                    <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Searching local Smokeball database…
+                    </p>
+                  )}
+                  {!suggestionsLoading && matterSuggestions.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      <p className="text-xs text-muted-foreground font-medium">
+                        Matched {matterSuggestions.length === 1 ? "matter" : "matters"} in Smokeball — click to use:
+                      </p>
+                      {matterSuggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          onClick={() => s.MatterNumber && setPushMatterNumber(s.MatterNumber)}
+                          className="w-full text-left rounded-lg border border-border hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30 px-3 py-2 transition-colors group"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400 group-hover:underline">
+                              {s.MatterNumber ?? "—"}
+                            </span>
+                            {s.Status && (
+                              <span className="text-xs text-muted-foreground border border-border rounded-full px-2 py-0.5 shrink-0">
+                                {s.Status}
+                              </span>
+                            )}
+                          </div>
+                          {s.Client && (
+                            <div className="text-xs text-muted-foreground mt-0.5 truncate">{s.Client}</div>
+                          )}
+                          {s.Description && (
+                            <div className="text-xs text-muted-foreground/70 truncate">{s.Description}</div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {!suggestionsLoading && matterSuggestions.length === 0 && suggestDebug && (
+                    <div className="mt-2 space-y-0.5 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground font-mono">
+                      {!suggestDebug.db_exists ? (
+                        <p className="text-amber-600 dark:text-amber-400 font-semibold">
+                          ⚠ Smokeball DB not found at expected path
+                        </p>
+                      ) : suggestDebug.error ? (
+                        <p className="text-rose-600 dark:text-rose-400 font-semibold">
+                          ✕ DB error: {suggestDebug.error}
+                        </p>
+                      ) : (
+                        <p>No match found</p>
+                      )}
+                      <p className="text-muted-foreground/70">Searched: {suggestDebug.phrase}</p>
+                    </div>
+                  )}
                 </div>
 
                 {pushResult && (
@@ -761,6 +922,22 @@ export function ReviewScreen(props: ReviewScreenProps) {
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        .review-authority-glass {
+          background: rgba(255,255,255,0.68);
+          backdrop-filter: blur(20px) saturate(160%);
+          -webkit-backdrop-filter: blur(20px) saturate(160%);
+        }
+        .dark .review-authority-glass {
+          background: rgba(15,23,42,0.52);
+          border-color: rgba(255,255,255,0.07) !important;
+        }
+        .review-authority-thead {
+          background: rgba(255,255,255,0.45);
+          backdrop-filter: blur(12px);
+        }
+        .dark .review-authority-thead {
+          background: rgba(30,41,59,0.40);
+        }
       `}</style>
     </div>
   );

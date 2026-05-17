@@ -1341,5 +1341,6429 @@
     "accepted": false,
     "verifier_supported": null,
     "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-15T03:24:22.711662",
+    "file": "VIC- Enquiry - Monash- Land Information Certificate.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=stacked_charge_block=$1,198.25",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "stacked_charge_block",
+        "$1,198.25"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$890.90"
+      ],
+      [
+        "inline_charge_rows",
+        "$890.90"
+      ],
+      [
+        "adjustments_plus_balance",
+        "$1,198.25"
+      ]
+    ],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-15T03:43:53.464788",
+    "file": "VIC- Enquiry - Westernport Water- Water Information Statement - 12348-453.pdf",
+    "doc_type": "water",
+    "called": true,
+    "reason": "conflict=False suspicious=True best=none=?",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Brought Forward/Arrears $0.0",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.0",
+            "column": "amount",
+            "meaning": "outstanding"
+          }
+        ],
+        "evidence": "Brought Forward/Arrears $0.0"
+      },
+      {
+        "label": "Waterways and Drainage Charge 01/07/2025 to 30/06/2 026 $68.60",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 68.6,
+            "raw": "$68.60",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waterways and Drainage Charge 01/07/2025 to 30/06/2 026 $68.60"
+      },
+      {
+        "label": "Sewer Vacant Land Not Connected 19/04/2026 to 18/07 /2026 $89.82",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 89.82,
+            "raw": "$89.82",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Sewer Vacant Land Not Connected 19/04/2026 to 18/07 /2026 $89.82"
+      },
+      {
+        "label": "Water Vacant Land Not Connected 19/04/2026 to 18/07 /2026 $56.60",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 56.6,
+            "raw": "$56.60",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Water Vacant Land Not Connected 19/04/2026 to 18/07 /2026 $56.60"
+      },
+      {
+        "label": "Payments -$215.02",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -215.02,
+            "raw": "-$215.02",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$215.02"
+      },
+      {
+        "label": "Total Outstanding $0.00",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "outstanding"
+          }
+        ],
+        "evidence": "Total Outstanding $0.00"
+      },
+      {
+        "label": "BALANCE AT DATE OF ISSUE $0.00",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "BALANCE AT DATE OF ISSUE $0.00"
+      }
+    ],
+    "ai_candidate": "$215.02",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-15T03:44:01.842774",
+    "file": "Vendor Instruction Form-David Low.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=2",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Water rates",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 832.37,
+            "raw": "$832.37",
+            "column": "Water rates",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Water rates $832.37"
+      }
+    ],
+    "ai_candidate": "$832.37",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-15T04:04:50.236541",
+    "file": "VIC- Enquiry - Westernport Water- Water Information Statement - 12348-453.pdf",
+    "doc_type": "water",
+    "called": true,
+    "reason": "conflict=False suspicious=True best=none=?",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "BroughtForward/Arrears $0.0",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.0",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Brought Forward/Arrears $0.0"
+      },
+      {
+        "label": "Waterways and Drainage Charge 01/07/2025 to 30/06/2026 $68.60",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 68.6,
+            "raw": "$68.60",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waterways and Drainage Charge 01/07/2025 to 30/06/2026 $68.60"
+      },
+      {
+        "label": "Sewer Vacant Land Not Connected 19/04/2026 to 18/07 /2026 $89.82",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 89.82,
+            "raw": "$89.82",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Sewer Vacant Land Not Connected 19/04/2026 to 18/07 /2026 $89.82"
+      },
+      {
+        "label": "Water Vacant Land Not Connected 19/04/2026 to 18/07 /2026 $56.60",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 56.6,
+            "raw": "$56.60",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Water Vacant Land Not Connected 19/04/2026 to 18/07 /2026 $56.60"
+      },
+      {
+        "label": "Payments -$215.02",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -215.02,
+            "raw": "-$215.02",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$215.02"
+      },
+      {
+        "label": "Total Outstanding $0.00",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Total Outstanding $0.00"
+      },
+      {
+        "label": "BALANCE AT DATE OF ISSUE $0.00",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "BALANCE AT DATE OF ISSUE $0.00"
+      }
+    ],
+    "ai_candidate": "$215.02",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-15T04:05:07.485794",
+    "file": "Vendor Instruction Form-David Low.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=2",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Water rates",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 832.37,
+            "raw": "$832.37",
+            "column": "Water rates",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Water rates $832.37"
+      }
+    ],
+    "ai_candidate": "$832.37",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-15T04:14:36.645383",
+    "file": "VIC- Enquiry - Westernport Water- Water Information Statement - 12348-453.pdf",
+    "doc_type": "water",
+    "called": true,
+    "reason": "conflict=False suspicious=True best=none=?",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Brought Forward/Arrears",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.0",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Brought Forward/Arrears $0.0"
+      },
+      {
+        "label": "Waterways and Drainage Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 68.6,
+            "raw": "$68.60",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waterways and Drainage Charge 01/07/2025 to 30/06/2 026 $68.60"
+      },
+      {
+        "label": "Sewer Vacant Land Not Connected",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 89.82,
+            "raw": "$89.82",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Sewer Vacant Land Not Connected 19/04/2026 to 18/07 /2026 $89.82"
+      },
+      {
+        "label": "Water Vacant Land Not Connected",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 56.6,
+            "raw": "$56.60",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Water Vacant Land Not Connected 19/04/2026 to 18/07 /2026 $56.60"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -215.02,
+            "raw": "-$215.02",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$215.02"
+      },
+      {
+        "label": "Total Outstanding",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Total Outstanding $0.00"
+      },
+      {
+        "label": "BALANCE AT DATE OF ISSUE",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "BALANCE AT DATE OF ISSUE $0.00"
+      }
+    ],
+    "ai_candidate": "$215.02",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T05:56:32.247349",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=moneyrow_charge_rows=$667.05",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Rates and charges General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Rates and charges General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments -$1,742.09",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$580.00",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "Document shows annual_total $580.00 and charge sum $2,322.09, neither matches $667.05."
+  },
+  {
+    "timestamp": "2026-05-16T06:15:08.973119",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "General rate",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "Food/Green waste bin charge",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "ESVF Fixed charge (Res)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "ESVF Variable Levy (Res)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "Waste Service Charge (Res/Rural)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "Waste Landfill Levy Res/Rural",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Arrears to 30/06/2025",
+            "meaning": "outstanding"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Interest to 02/04/2026",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Other adjustments",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Less Concessions",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Sustainable land management rebate",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "$-1,742.09",
+            "column": "Payments",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "Balance of rates & charges due",
+            "meaning": "outstanding"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "Total rates, charges and other monies due",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$580.00",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "annual_total row shows $580.00, which differs from the summed charges of $2,322.09"
+  },
+  {
+    "timestamp": "2026-05-16T06:25:32.733351",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Rates and charges General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$2,322.09",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T06:32:27.624704",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due:",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$2,322.09",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T06:37:08.182694",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Rates and charges General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Rates and charges General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Special rates & charges nil",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Special rates & charges nil $0.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$2,322.09",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T06:47:41.725333",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "outstanding"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "outstanding"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$580.00",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "annual_total row shows $580.00, which differs from $2,322.09"
+  },
+  {
+    "timestamp": "2026-05-16T06:51:32.355871",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Rates and charges General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Rates and charges General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "$1,742.09",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$2,322.09",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T06:58:50.281597",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "outstanding"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$580.00",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "annual_total row shows $580.00, which differs from the sum of charge rows ($2,322.09)"
+  },
+  {
+    "timestamp": "2026-05-16T07:02:18.319998",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Rates and charges General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Rates and charges General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "Amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "Amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "Amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$580.00",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "The charge rows sum to $2,322.09, but the explicit annual_total row shows $580.00, indicating a different amount due."
+  },
+  {
+    "timestamp": "2026-05-16T07:11:33.842618",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "General rate   $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge   $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res)   $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res)   $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural)   $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural   $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "outstanding"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less  Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less  Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due:",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$580.00",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "Annual total row shows $580.00, which differs from sum of charge rows $2,322.09"
+  },
+  {
+    "timestamp": "2026-05-16T07:17:59.069340",
+    "file": "2026-03 2298 - VIC Cert - Whittlesea  Land Information Certificate - 9195 740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "General rate",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Rates and charges General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "Food/Green waste bin charge",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "ESVF Fixed charge (Res)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "ESVF Variable Levy (Res)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "Waste Service Charge (Res/Rural)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "Waste Landfill Levy Res/Rural",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Arrears to 30/06/2025",
+            "meaning": "outstanding"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Interest to 02/04/2026",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Other adjustments",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Less Concessions",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Sustainable land management rebate",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "$1,742.09",
+            "column": "Payments",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "Balance of rates & charges due",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "Total rates, charges and other monies due",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$2,322.09",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T07:18:39.916012",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740 - Copy.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "General rate",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "Food/Green waste bin charge",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "ESVF Fixed charge (Res)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "ESVF Variable Levy (Res)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "Waste Service Charge (Res/Rural)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "Waste Landfill Levy Res/Rural",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Arrears to 30/06/2025",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Interest to 02/04/2026",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Other adjustments",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Less Concessions",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Sustainable land management rebate",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "Payments",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "Balance of rates & charges due",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "Total rates, charges and other monies due",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$580.00",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "annual_total row shows $580.00, which differs from the summed charge amount of $2,322.09"
+  },
+  {
+    "timestamp": "2026-05-16T07:26:31.289734",
+    "file": "2026-03 2298 - VIC Cert - Whittlesea  Land Information Certificate - 9195 740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.0,
+            "raw": "$1,655.04",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Rates and charges General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$580.00",
+    "accepted": true,
+    "verifier_supported": true,
+    "verifier_reason": ""
+  },
+  {
+    "timestamp": "2026-05-16T07:27:15.004041",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740 - Copy.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Rates and charges General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "General rate",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Rates and charges General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "Food/Green waste bin charge",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "ESVF Fixed charge (Res)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "ESVF Variable Levy (Res)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "Waste Service Charge (Res/Rural)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "Waste Landfill Levy Res/Rural",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Arrears to 30/06/2025",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Interest to 02/04/2026",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Other adjustments",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Less Concessions",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Sustainable land management rebate",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "Payments",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "Balance of rates & charges due",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "Total rates, charges and other monies due",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$2,322.09",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T07:32:56.766410",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "General rate",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "Food/Green waste bin charge",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "ESVF Fixed charge (Res)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "ESVF Variable Levy (Res)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "Waste Service Charge (Res/Rural)",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "Waste Landfill Levy Res/Rural",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Arrears to 30/06/2025",
+            "meaning": "outstanding"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Interest to 02/04/2026",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Other adjustments",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Less Concessions",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Sustainable land management rebate",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "$1,742.09",
+            "column": "Payments",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "Balance of rates & charges due",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "Total rates, charges and other monies due",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$580.00",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "The sum of the charge rows is $2,322.09, but the annual_total row indicates a different amount of $580.00."
+  },
+  {
+    "timestamp": "2026-05-16T07:51:53.702237",
+    "file": "2026-03 2298 - VIC Cert - Whittlesea  Land Information Certificate - 9195 740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Rates and charges General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Rates and charges General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "outstanding"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "$1,742.09",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "outstanding"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Property debts",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Property debts"
+      },
+      {
+        "label": "Other debtor amounts",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Other debtor amounts"
+      },
+      {
+        "label": "Special rates & charges nil",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Special rates & charges nil"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$580.00",
+    "accepted": true,
+    "verifier_supported": true,
+    "verifier_reason": "The sum of the listed charge rows (general rate $1,655.04 + food/green waste $95.30 + ESVF fixed $136.00 + ESVF variable $121.10 + waste service $208.80 + waste landfill $105.85) equals $2,322.09, matching the extracted amount. No contradictory annual_total for the rates themselves is present; the $"
+  },
+  {
+    "timestamp": "2026-05-16T07:52:21.443191",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740 - Copy.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Rates and charges General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Rates and charges General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$580.00",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "Charge rows sum to $2,322.09, but an explicit annual_total row lists $580.00, creating a conflict per criteria."
+  },
+  {
+    "timestamp": "2026-05-16T07:52:52.476583",
+    "file": "VIC- Enquiry - Whittlesea- Land Information Certificate - 9195-740.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=rates_and_charges_block=$2,322.09",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "rates_and_charges_block",
+        "$2,322.09"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$667.05"
+      ],
+      [
+        "inline_charge_rows",
+        "$2,322.09"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "General rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 1655.04,
+            "raw": "$1,655.04",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "General rate $1,655.04"
+      },
+      {
+        "label": "Food/Green waste bin charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 95.3,
+            "raw": "$95.30",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Food/Green waste bin charge $95.30"
+      },
+      {
+        "label": "ESVF Fixed charge (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Fixed charge (Res) $136.00"
+      },
+      {
+        "label": "ESVF Variable Levy (Res)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 121.1,
+            "raw": "$121.10",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF Variable Levy (Res) $121.10"
+      },
+      {
+        "label": "Waste Service Charge (Res/Rural)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 208.8,
+            "raw": "$208.80",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Service Charge (Res/Rural) $208.80"
+      },
+      {
+        "label": "Waste Landfill Levy Res/Rural",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 105.85,
+            "raw": "$105.85",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Waste Landfill Levy Res/Rural $105.85"
+      },
+      {
+        "label": "Arrears to 30/06/2025",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Arrears to 30/06/2025 $0.00"
+      },
+      {
+        "label": "Interest to 02/04/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 02/04/2026 $0.00"
+      },
+      {
+        "label": "Other adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other adjustments $0.00"
+      },
+      {
+        "label": "Less Concessions",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Concessions $0.00"
+      },
+      {
+        "label": "Sustainable land management rebate",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Sustainable land management rebate $0.00"
+      },
+      {
+        "label": "Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1742.09,
+            "raw": "-$1,742.09",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Payments -$1,742.09"
+      },
+      {
+        "label": "Balance of rates & charges due",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Balance of rates & charges due: $580.00"
+      },
+      {
+        "label": "Total rates, charges and other monies due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 580.0,
+            "raw": "$580.00",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total rates, charges and other monies due $580.00"
+      }
+    ],
+    "ai_candidate": "$580.00",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "annual_total $580.00 differs from sum of charge rows $2,322.09"
+  },
+  {
+    "timestamp": "2026-05-16T08:05:02.017761",
+    "file": "Vendor Instruction Form-Franz De Los Reyes.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=4",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Council rates",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 1448.09,
+            "raw": "$1,448.09",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Council Brimbank City Council Council rates $1,448.09"
+      },
+      {
+        "label": "Water rates",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 640.0,
+            "raw": "$640.00",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Water Authority Greater West Water Water rates $640.00"
+      }
+    ],
+    "ai_candidate": "$1,448.09",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T08:05:38.510556",
+    "file": "VIC- Enquiry - Brimbank- Land Information Certificate.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=date_levied_scan=$1,716.75",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "date_levied_scan",
+        "$1,716.75"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$881.46"
+      ],
+      [
+        "inline_charge_rows",
+        "$1,236.07"
+      ],
+      [
+        "paid_plus_outstanding",
+        "$1,716.75"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Residential Flats/Units Rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 835.29,
+            "raw": "$835.29",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Residential Flats/Units Rate Date Levied 01/07/2025 $835.29"
+      },
+      {
+        "label": "Municipal Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 86.52,
+            "raw": "$86.52",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Municipal Charge Date Levied 01/07/2025 $86.52"
+      },
+      {
+        "label": "140ltr Environmental Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 369.47,
+            "raw": "$369.47",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "140ltr Environmental Charge Date Levied 01/07/2025 $369.47"
+      },
+      {
+        "label": "240ltr Green Waste Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 111.21,
+            "raw": "$111.21",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "240ltr Green Waste Charge Date Levied 01/07/2025 $111.21"
+      },
+      {
+        "label": "Public Amenities Cleansing Levy",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 96.08,
+            "raw": "$96.08",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Public Amenities Cleansing Levy Date Levied 01/07/2025 $96.08"
+      },
+      {
+        "label": "ESVF - Residential (Fixed)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF - Residential (Fixed) Date Levied 01/07/2025 $136.00"
+      },
+      {
+        "label": "ESVF - Residential (Variable)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 82.18,
+            "raw": "$82.18",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF - Residential (Variable) Date Levied 01/07/2025 $82.18"
+      },
+      {
+        "label": "Rate Arrears to 30/06/2025",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Rate Arrears to 30/06/2025: $0.00"
+      },
+      {
+        "label": "Interest to 23/03/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 23/03/2026: $0.00"
+      },
+      {
+        "label": "Other Monies",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Other Monies: $0.00"
+      },
+      {
+        "label": "Less Rebates",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Rebates: $0.00"
+      },
+      {
+        "label": "Less Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1208.97,
+            "raw": "-$1,208.97",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Less Payments: -$1,208.97"
+      },
+      {
+        "label": "Less Other Adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Less Other Adjustments: $0.00"
+      },
+      {
+        "label": "Total Rates & Charges Due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 507.78,
+            "raw": "$507.78",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total Rates & Charges Due: $507.78"
+      },
+      {
+        "label": "Additional Monies Owed: Debtor Balance Owing Special Charge",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Additional Monies Owed: Debtor Balance Owing Special Charge: nil nil"
+      },
+      {
+        "label": "TOTAL DUE",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 507.78,
+            "raw": "$507.78",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "TOTAL DUE: $507.78"
+      }
+    ],
+    "ai_candidate": "$507.78",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "annual_total row shows $507.78, which differs from $1,716.75"
+  },
+  {
+    "timestamp": "2026-05-16T08:05:50.758296",
+    "file": "VIC- Certificate - Owners Corporation Basic Report - 1-PS502358G.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Total",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 300.0,
+            "raw": "$300.00",
+            "column": "Levied",
+            "meaning": "levied"
+          },
+          {
+            "value": 300.0,
+            "raw": "$300.00",
+            "column": "Balance",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Total 300.00 300.00"
+      }
+    ],
+    "ai_candidate": "$300.00",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T08:05:53.937458",
+    "file": "VIC- Certificate - Register Search Statement (Copy of Title) Volume 10688 Folio 989.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T08:06:03.167221",
+    "file": "2026-03 2273 - VIC Cert - Register Search Statement (Copy of Title) Volume 10688 Folio 989.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T08:06:31.033941",
+    "file": "2026-03 2273 - VIC Cert - Brimbank  Land Information Certificate.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=date_levied_scan=$1,716.75",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "date_levied_scan",
+        "$1,716.75"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$881.46"
+      ],
+      [
+        "inline_charge_rows",
+        "$1,236.07"
+      ],
+      [
+        "paid_plus_outstanding",
+        "$1,716.75"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Residential Flats/Units Rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 835.29,
+            "raw": "$835.29",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Residential Flats/Units Rate Date Levied 01/07/2025 $835.29"
+      },
+      {
+        "label": "Municipal Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 86.52,
+            "raw": "$86.52",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Municipal Charge Date Levied 01/07/2025 $86.52"
+      },
+      {
+        "label": "140ltr Environmental Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 369.47,
+            "raw": "$369.47",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "140ltr Environmental Charge Date Levied 01/07/2025 $369.47"
+      },
+      {
+        "label": "240ltr Green Waste Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 111.21,
+            "raw": "$111.21",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "240ltr Green Waste Charge Date Levied 01/07/2025 $111.21"
+      },
+      {
+        "label": "Public Amenities Cleansing Levy",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 96.08,
+            "raw": "$96.08",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Public Amenities Cleansing Levy Date Levied 01/07/2025 $96.08"
+      },
+      {
+        "label": "ESVF - Residential (Fixed)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF - Residential (Fixed) Date Levied 01/07/2025 $136.00"
+      },
+      {
+        "label": "ESVF - Residential (Variable)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 82.18,
+            "raw": "$82.18",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF - Residential (Variable) Date Levied 01/07/2025 $82.18"
+      },
+      {
+        "label": "Rate Arrears to 30/06/2025",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Rate Arrears to 30/06/2025: $0.00"
+      },
+      {
+        "label": "Interest to 23/03/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 23/03/2026: $0.00"
+      },
+      {
+        "label": "Other Monies",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Other Monies: $0.00"
+      },
+      {
+        "label": "Less Rebates",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Rebates: $0.00"
+      },
+      {
+        "label": "Less Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1208.97,
+            "raw": "$-1,208.97",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Less Payments: -$1,208.97"
+      },
+      {
+        "label": "Less Other Adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Less Other Adjustments: $0.00"
+      },
+      {
+        "label": "Total Rates & Charges Due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 507.78,
+            "raw": "$507.78",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total Rates & Charges Due: $507.78"
+      },
+      {
+        "label": "TOTAL DUE",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 507.78,
+            "raw": "$507.78",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "TOTAL DUE: $507.78"
+      }
+    ],
+    "ai_candidate": "$507.78",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "Annual total row shows $507.78, which differs from the sum of charge rows ($1,716.75)."
+  },
+  {
+    "timestamp": "2026-05-16T08:06:53.285354",
+    "file": "2026-03 2273 - VIC OC Basic - Owners Corporation Basic Report - 1 PS502358G.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T08:17:59.837577",
+    "file": "VIC- Enquiry - Brimbank- Land Information Certificate.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=date_levied_scan=$1,716.75",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "date_levied_scan",
+        "$1,716.75"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$881.46"
+      ],
+      [
+        "inline_charge_rows",
+        "$1,236.07"
+      ],
+      [
+        "paid_plus_outstanding",
+        "$1,716.75"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Residential Flats/Units Rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 835.29,
+            "raw": "$835.29",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Residential Flats/Units Rate Date Levied 01/07/2025 $835.29"
+      },
+      {
+        "label": "Municipal Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 86.52,
+            "raw": "$86.52",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Municipal Charge Date Levied 01/07/2025 $86.52"
+      },
+      {
+        "label": "140ltr Environmental Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 369.47,
+            "raw": "$369.47",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "140ltr Environmental Charge Date Levied 01/07/2025 $369.47"
+      },
+      {
+        "label": "240ltr Green Waste Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 111.21,
+            "raw": "$111.21",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "240ltr Green Waste Charge Date Levied 01/07/2025 $111.21"
+      },
+      {
+        "label": "Public Amenities Cleansing Levy",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 96.08,
+            "raw": "$96.08",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Public Amenities Cleansing Levy Date Levied 01/07/2025 $96.08"
+      },
+      {
+        "label": "ESVF - Residential (Fixed)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF - Residential (Fixed) Date Levied 01/07/2025 $136.00"
+      },
+      {
+        "label": "ESVF - Residential (Variable)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 82.18,
+            "raw": "$82.18",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF - Residential (Variable) Date Levied 01/07/2025 $82.18"
+      },
+      {
+        "label": "Rate Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Rate Arrears to 30/06/2025: $0.00"
+      },
+      {
+        "label": "Interest to 23/03/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 23/03/2026: $0.00"
+      },
+      {
+        "label": "Other Monies",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Other Monies: $0.00"
+      },
+      {
+        "label": "Less Rebates",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Rebates: $0.00"
+      },
+      {
+        "label": "Less Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1208.97,
+            "raw": "-$1,208.97",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Less Payments: -$1,208.97"
+      },
+      {
+        "label": "Less Other Adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Less Other Adjustments: $0.00"
+      },
+      {
+        "label": "Total Rates & Charges Due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 507.78,
+            "raw": "$507.78",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total Rates & Charges Due: $507.78"
+      },
+      {
+        "label": "TOTAL DUE",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 507.78,
+            "raw": "$507.78",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "TOTAL DUE: $507.78"
+      }
+    ],
+    "ai_candidate": "$507.78",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "The sum of the charge rows is $1,716.75, but the annual total is $507.78, which is materially different."
+  },
+  {
+    "timestamp": "2026-05-16T08:18:09.918398",
+    "file": "VIC- Certificate - Owners Corporation Basic Report - 1-PS502358G.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T08:18:12.595464",
+    "file": "VIC- Certificate - Register Search Statement (Copy of Title) Volume 10688 Folio 989.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T08:18:23.682491",
+    "file": "2026-03 2273 - VIC Cert - Register Search Statement (Copy of Title) Volume 10688 Folio 989.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T08:18:55.430280",
+    "file": "2026-03 2273 - VIC Cert - Brimbank  Land Information Certificate.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=date_levied_scan=$1,716.75",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "date_levied_scan",
+        "$1,716.75"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$881.46"
+      ],
+      [
+        "inline_charge_rows",
+        "$1,236.07"
+      ],
+      [
+        "paid_plus_outstanding",
+        "$1,716.75"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Residential Flats/Units Rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 835.29,
+            "raw": "$835.29",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Residential Flats/Units Rate Date Levied 01/07/2025 $835.29"
+      },
+      {
+        "label": "Municipal Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 86.52,
+            "raw": "$86.52",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Municipal Charge Date Levied 01/07/2025 $86.52"
+      },
+      {
+        "label": "140ltr Environmental Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 369.47,
+            "raw": "$369.47",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "140ltr Environmental Charge Date Levied 01/07/2025 $369.47"
+      },
+      {
+        "label": "240ltr Green Waste Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 111.21,
+            "raw": "$111.21",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "240ltr Green Waste Charge Date Levied 01/07/2025 $111.21"
+      },
+      {
+        "label": "Public Amenities Cleansing Levy",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 96.08,
+            "raw": "$96.08",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Public Amenities Cleansing Levy Date Levied 01/07/2025 $96.08"
+      },
+      {
+        "label": "ESVF - Residential (Fixed)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF - Residential (Fixed) Date Levied 01/07/2025 $136.00"
+      },
+      {
+        "label": "ESVF - Residential (Variable)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 82.18,
+            "raw": "$82.18",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF - Residential (Variable) Date Levied 01/07/2025 $82.18"
+      },
+      {
+        "label": "Rate Arrears to 30/06/2025",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Rate Arrears to 30/06/2025: $0.00"
+      },
+      {
+        "label": "Interest to 23/03/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 23/03/2026: $0.00"
+      },
+      {
+        "label": "Other Monies",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Other Monies: $0.00"
+      },
+      {
+        "label": "Less Rebates",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Rebates: $0.00"
+      },
+      {
+        "label": "Less Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1208.97,
+            "raw": "-$1,208.97",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Less Payments: -$1,208.97"
+      },
+      {
+        "label": "Less Other Adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Less Other Adjustments: $0.00"
+      },
+      {
+        "label": "Total Rates & Charges Due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 507.78,
+            "raw": "$507.78",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total Rates & Charges Due: $507.78"
+      },
+      {
+        "label": "Additional Monies Owed",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Additional Monies Owed: Debtor Balance Owing Special Charge: nil nil"
+      },
+      {
+        "label": "TOTAL DUE",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 507.78,
+            "raw": "$507.78",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "TOTAL DUE: $507.78"
+      }
+    ],
+    "ai_candidate": "$507.78",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "Charge rows sum to $1,716.75 but the explicit annual_total row shows $507.78, which is the correct annual council rates amount after payments."
+  },
+  {
+    "timestamp": "2026-05-16T08:25:53.137354",
+    "file": "VIC- Certificate - Register Search Statement (Copy of Title) Volume 8720 Folio 644.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T08:26:12.369144",
+    "file": "VIC- Certificate - Owners Corporation Basic Report - RP000299.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Common Property",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Common Property 0 0"
+      },
+      {
+        "label": "Lot 1",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 53.0,
+            "raw": "$53.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 53.0,
+            "raw": "$53.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 1 53 53"
+      },
+      {
+        "label": "Lot 2",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 52.0,
+            "raw": "$52.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 52.0,
+            "raw": "$52.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 2 52 52"
+      },
+      {
+        "label": "Lot 3",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 52.0,
+            "raw": "$52.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 52.0,
+            "raw": "$52.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 3 52 52"
+      },
+      {
+        "label": "Lot 4",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 52.0,
+            "raw": "$52.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 52.0,
+            "raw": "$52.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 4 52 52"
+      },
+      {
+        "label": "Lot 5",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 52.0,
+            "raw": "$52.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 52.0,
+            "raw": "$52.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 5 52 52"
+      },
+      {
+        "label": "Lot 6",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 49.0,
+            "raw": "$49.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 49.0,
+            "raw": "$49.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 6 49 49"
+      },
+      {
+        "label": "Lot 7",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 49.0,
+            "raw": "$49.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 49.0,
+            "raw": "$49.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 7 49 49"
+      },
+      {
+        "label": "Lot 8",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 49.0,
+            "raw": "$49.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 49.0,
+            "raw": "$49.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 8 49 49"
+      },
+      {
+        "label": "Lot 9",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 9 1 1"
+      },
+      {
+        "label": "Lot 10",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 10 1 1"
+      },
+      {
+        "label": "Lot 11",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 11 1 1"
+      },
+      {
+        "label": "Lot 12",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 12 1 1"
+      },
+      {
+        "label": "Lot 13",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 13 1 1"
+      },
+      {
+        "label": "Lot 14",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 14 1 1"
+      },
+      {
+        "label": "Lot 15",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 15 1 1"
+      },
+      {
+        "label": "Lot 16",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 1.0,
+            "raw": "$1.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Lot 16 1 1"
+      },
+      {
+        "label": "Total",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 416.0,
+            "raw": "$416.00",
+            "column": "Entitlement",
+            "meaning": "unknown"
+          },
+          {
+            "value": 416.0,
+            "raw": "$416.00",
+            "column": "Liability",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Total 416.00 416.00"
+      }
+    ],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T08:26:33.287249",
+    "file": "Asbestos Inspection Report from OC dated 18-11-2014.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T09:34:36.634538",
+    "file": "VIC- Enquiry - Brimbank- Land Information Certificate.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=date_levied_scan=$1,716.75",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "date_levied_scan",
+        "$1,716.75"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$881.46"
+      ],
+      [
+        "inline_charge_rows",
+        "$1,236.07"
+      ],
+      [
+        "paid_plus_outstanding",
+        "$1,716.75"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Residential Flats/Units Rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 835.29,
+            "raw": "$835.29",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Residential Flats/Units Rate Date Levied 01/07/2025 $835.29"
+      },
+      {
+        "label": "Municipal Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 86.52,
+            "raw": "$86.52",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Municipal Charge Date Levied 01/07/2025 $86.52"
+      },
+      {
+        "label": "140ltr Environmental Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 369.47,
+            "raw": "$369.47",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "140ltr Environmental Charge Date Levied 01/07/2025 $369.47"
+      },
+      {
+        "label": "240ltr Green Waste Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 111.21,
+            "raw": "$111.21",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "240ltr Green Waste Charge Date Levied 01/07/2025 $111.21"
+      },
+      {
+        "label": "Public Amenities Cleansing Levy",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 96.08,
+            "raw": "$96.08",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Public Amenities Cleansing Levy Date Levied 01/07/2025 $96.08"
+      },
+      {
+        "label": "ESVF - Residential (Fixed)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF - Residential (Fixed) Date Levied 01/07/2025 $136.00"
+      },
+      {
+        "label": "ESVF - Residential (Variable)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 82.18,
+            "raw": "$82.18",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF - Residential (Variable) Date Levied 01/07/2025 $82.18"
+      },
+      {
+        "label": "Rate Arrears to 30/06/2025:",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Rate Arrears to 30/06/2025: $0.00"
+      },
+      {
+        "label": "Interest to 23/03/2026:",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 23/03/2026: $0.00"
+      },
+      {
+        "label": "Other Monies:",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Amount",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Other Monies: $0.00"
+      },
+      {
+        "label": "Less Rebates:",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Rebates: $0.00"
+      },
+      {
+        "label": "Less Payments:",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1208.97,
+            "raw": "-$1,208.97",
+            "column": "Amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Less Payments: -$1,208.97"
+      },
+      {
+        "label": "Less Other Adjustments:",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "Amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Less Other Adjustments: $0.00"
+      },
+      {
+        "label": "Total Rates & Charges Due:",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 507.78,
+            "raw": "$507.78",
+            "column": "Total",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total Rates & Charges Due: $507.78"
+      },
+      {
+        "label": "Debtor Balance Owing Special Charge:",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "levied",
+            "meaning": "balance"
+          },
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "balance",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Debtor Balance Owing Special Charge: nil nil"
+      },
+      {
+        "label": "TOTAL DUE:",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 507.78,
+            "raw": "$507.78",
+            "column": "Total",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "TOTAL DUE: $507.78"
+      }
+    ],
+    "ai_candidate": "$507.78",
+    "accepted": true,
+    "verifier_supported": true,
+    "verifier_reason": "The sum of all charge rows (Residential Flats/Units Rate $835.29 + Municipal Charge $86.52 + 140ltr Environmental Charge $369.47 + 240ltr Green Waste Charge $111.21 + Public Amenities Cleansing Levy $96.08 + ESVF - Residential (Fixed) $136.00 + ESVF - Residential (Variable) $82.18 = $1,716.75, match"
+  },
+  {
+    "timestamp": "2026-05-16T09:35:07.123548",
+    "file": "VIC- Certificate - Owners Corporation Basic Report - 1-PS502358G.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Lot 1",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 100.0,
+            "raw": "100",
+            "column": "Entitlement",
+            "meaning": "current_charge"
+          },
+          {
+            "value": 100.0,
+            "raw": "100",
+            "column": "Liability",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Lot 1 100 100"
+      },
+      {
+        "label": "Lot 2",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 100.0,
+            "raw": "100",
+            "column": "Entitlement",
+            "meaning": "current_charge"
+          },
+          {
+            "value": 100.0,
+            "raw": "100",
+            "column": "Liability",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Lot 2 100 100"
+      },
+      {
+        "label": "Lot 3",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 100.0,
+            "raw": "100",
+            "column": "Entitlement",
+            "meaning": "current_charge"
+          },
+          {
+            "value": 100.0,
+            "raw": "100",
+            "column": "Liability",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Lot 3 100 100"
+      },
+      {
+        "label": "Total",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 300.0,
+            "raw": "300.00",
+            "column": "Entitlement",
+            "meaning": "annual_total"
+          },
+          {
+            "value": 300.0,
+            "raw": "300.00",
+            "column": "Liability",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total 300.00 300.00"
+      }
+    ],
+    "ai_candidate": "$300.00",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T09:35:11.364448",
+    "file": "VIC- Certificate - Register Search Statement (Copy of Title) Volume 10688 Folio 989.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T09:35:22.312593",
+    "file": "2026-03 2273 - VIC Cert - Register Search Statement (Copy of Title) Volume 10688 Folio 989.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [],
+    "ai_candidate": null,
+    "accepted": false,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T09:35:57.384935",
+    "file": "2026-03 2273 - VIC Cert - Brimbank  Land Information Certificate.pdf",
+    "doc_type": "council",
+    "called": true,
+    "reason": "conflict=True suspicious=False single_weak=False disagrees_with_total_due=False from_balance=False lower_than_balance=False unknown_table=False best=date_levied_scan=$1,716.75",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [
+      [
+        "date_levied_scan",
+        "$1,716.75"
+      ],
+      [
+        "moneyrow_charge_rows",
+        "$881.46"
+      ],
+      [
+        "inline_charge_rows",
+        "$1,236.07"
+      ],
+      [
+        "paid_plus_outstanding",
+        "$1,716.75"
+      ]
+    ],
+    "ai_rows": [
+      {
+        "label": "Residential Flats/Units Rate",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 835.29,
+            "raw": "$835.29",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Residential Flats/Units Rate Date Levied 01/07/2025 $835.29"
+      },
+      {
+        "label": "Municipal Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 86.52,
+            "raw": "$86.52",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Municipal Charge Date Levied 01/07/2025 $86.52"
+      },
+      {
+        "label": "140ltr Environmental Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 369.47,
+            "raw": "$369.47",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "140ltr Environmental Charge Date Levied 01/07/2025 $369.47"
+      },
+      {
+        "label": "240ltr Green Waste Charge",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 111.21,
+            "raw": "$111.21",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "240ltr Green Waste Charge Date Levied 01/07/2025 $111.21"
+      },
+      {
+        "label": "Public Amenities Cleansing Levy",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 96.08,
+            "raw": "$96.08",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Public Amenities Cleansing Levy Date Levied 01/07/2025 $96.08"
+      },
+      {
+        "label": "ESVF - Residential (Fixed)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 136.0,
+            "raw": "$136.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF - Residential (Fixed) Date Levied 01/07/2025 $136.00"
+      },
+      {
+        "label": "ESVF - Residential (Variable)",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 82.18,
+            "raw": "$82.18",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "ESVF - Residential (Variable) Date Levied 01/07/2025 $82.18"
+      },
+      {
+        "label": "Rate Arrears to 30/06/2025",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Rate Arrears to 30/06/2025: $0.00"
+      },
+      {
+        "label": "Interest to 23/03/2026",
+        "row_type": "interest",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "interest"
+          }
+        ],
+        "evidence": "Interest to 23/03/2026: $0.00"
+      },
+      {
+        "label": "Other Monies",
+        "row_type": "unknown",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "unknown"
+          }
+        ],
+        "evidence": "Other Monies: $0.00"
+      },
+      {
+        "label": "Less Rebates",
+        "row_type": "rebate",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "rebate"
+          }
+        ],
+        "evidence": "Less Rebates: $0.00"
+      },
+      {
+        "label": "Less Payments",
+        "row_type": "payment",
+        "cells": [
+          {
+            "value": -1208.97,
+            "raw": "-$1,208.97",
+            "column": "amount",
+            "meaning": "payment"
+          }
+        ],
+        "evidence": "Less Payments: -$1,208.97"
+      },
+      {
+        "label": "Less Other Adjustments",
+        "row_type": "adjustment",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "$0.00",
+            "column": "amount",
+            "meaning": "adjustment"
+          }
+        ],
+        "evidence": "Less Other Adjustments: $0.00"
+      },
+      {
+        "label": "Total Rates & Charges Due",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 507.78,
+            "raw": "$507.78",
+            "column": "amount",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total Rates & Charges Due: $507.78"
+      },
+      {
+        "label": "Debtor Balance Owing",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 0.0,
+            "raw": "nil",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "Debtor Balance Owing Special Charge: nil nil"
+      },
+      {
+        "label": "TOTAL DUE",
+        "row_type": "balance",
+        "cells": [
+          {
+            "value": 507.78,
+            "raw": "$507.78",
+            "column": "amount",
+            "meaning": "balance"
+          }
+        ],
+        "evidence": "TOTAL DUE: $507.78"
+      }
+    ],
+    "ai_candidate": "$507.78",
+    "accepted": true,
+    "verifier_supported": false,
+    "verifier_reason": "annual_total row shows $507.78, which differs from $1,716.75"
+  },
+  {
+    "timestamp": "2026-05-16T09:36:15.016037",
+    "file": "2026-03 2273 - VIC OC Basic - Owners Corporation Basic Report - 1 PS502358G.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=0",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Lot 1",
+        "row_type": "valuation",
+        "cells": [
+          {
+            "value": 100.0,
+            "raw": "100 100",
+            "column": "100 100",
+            "meaning": "valuation"
+          }
+        ],
+        "evidence": "Lot 1 100 100"
+      },
+      {
+        "label": "Lot 2",
+        "row_type": "valuation",
+        "cells": [
+          {
+            "value": 100.0,
+            "raw": "100 100",
+            "column": "100 100",
+            "meaning": "valuation"
+          }
+        ],
+        "evidence": "Lot 2 100 100"
+      },
+      {
+        "label": "Lot 3",
+        "row_type": "valuation",
+        "cells": [
+          {
+            "value": 100.0,
+            "raw": "100 100",
+            "column": "100 100",
+            "meaning": "valuation"
+          }
+        ],
+        "evidence": "Lot 3 100 100"
+      },
+      {
+        "label": "Total",
+        "row_type": "annual_total",
+        "cells": [
+          {
+            "value": 300.0,
+            "raw": "300.00 300.00",
+            "column": "300.00 300.00",
+            "meaning": "annual_total"
+          }
+        ],
+        "evidence": "Total 300.00 300.00"
+      }
+    ],
+    "ai_candidate": "$300.00",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
+  },
+  {
+    "timestamp": "2026-05-16T09:49:02.233873",
+    "file": "Vendor Instruction Form-Mark Showell.pdf",
+    "doc_type": "oc",
+    "called": true,
+    "reason": "winner=none candidates=3",
+    "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "rule_candidates": [],
+    "ai_rows": [
+      {
+        "label": "Council Ballarat Council rates",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 2717.02,
+            "raw": "$2,717.02",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Council Ballarat Council rates $2,717.02"
+      },
+      {
+        "label": "Water Authority Central Highlands water Water rates",
+        "row_type": "charge",
+        "cells": [
+          {
+            "value": 793.0,
+            "raw": "$793.00",
+            "column": "amount",
+            "meaning": "current_charge"
+          }
+        ],
+        "evidence": "Water Authority Central Highlands water Water rates $793.00"
+      }
+    ],
+    "ai_candidate": "$3,510.02",
+    "accepted": true,
+    "verifier_supported": null,
+    "verifier_reason": null
   }
 ]

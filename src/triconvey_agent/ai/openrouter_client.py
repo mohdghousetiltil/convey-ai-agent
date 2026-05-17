@@ -13,12 +13,18 @@ OPENROUTER_TIMEOUT   — optional, seconds (default 45)
 from __future__ import annotations
 
 import os
+import time
 
 import requests
 
 from triconvey_agent.ai.client import AIResult
 
-_DEFAULT_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b:free"
+_DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
+_FALLBACK_MODELS = [
+    "inclusionai/ring-2.6-1t:free",
+    "openai/gpt-4o-mini",
+]
+_FALLBACK_DELAY_SECONDS = 2
 _API_URL = "https://openrouter.ai/api/v1/chat/completions"
 _SYSTEM_PROMPT = (
     "You are a document table perception agent for Australian conveyancing documents. "
@@ -57,7 +63,10 @@ class OpenRouterClient:
     # ------------------------------------------------------------------
 
     def complete(self, prompt: str, *, image_data_url: str | None = None) -> AIResult:
-        """Send a completion request to OpenRouter.
+        """Send a completion request to OpenRouter with automatic fallback.
+
+        Tries the configured model first, then each fallback in order with a
+        ``_FALLBACK_DELAY_SECONDS`` pause between attempts.
 
         Parameters
         ----------
@@ -67,6 +76,29 @@ class OpenRouterClient:
             Optional base64-encoded data URL ("data:image/png;base64,…")
             for multimodal models.  Ignored for text-only models.
         """
+        models_to_try = [self.model] + _FALLBACK_MODELS
+        last_exc: Exception | None = None
+
+        for attempt, model in enumerate(models_to_try):
+            if attempt > 0:
+                time.sleep(_FALLBACK_DELAY_SECONDS)
+            try:
+                return self._complete_with_model(prompt, model=model, image_data_url=image_data_url)
+            except Exception as exc:
+                last_exc = exc
+                continue
+
+        raise RuntimeError(
+            f"All OpenRouter models failed. Last error: {last_exc}"
+        ) from last_exc
+
+    def _complete_with_model(
+        self,
+        prompt: str,
+        *,
+        model: str,
+        image_data_url: str | None = None,
+    ) -> AIResult:
         content: list[dict] = [{"type": "text", "text": prompt}]
         if image_data_url:
             content.append(
@@ -74,7 +106,7 @@ class OpenRouterClient:
             )
 
         payload = {
-            "model": self.model,
+            "model": model,
             "messages": [
                 {"role": "system", "content": _SYSTEM_PROMPT},
                 {"role": "user", "content": content},
@@ -106,10 +138,10 @@ class OpenRouterClient:
                 f"OpenRouter response missing choices/message: {data}"
             ) from exc
 
-        content = msg.get("content")
-        if isinstance(content, list):
+        body = msg.get("content")
+        if isinstance(body, list):
             text_parts: list[str] = []
-            for part in content:
+            for part in body:
                 if isinstance(part, dict):
                     if part.get("type") == "text":
                         text_parts.append(str(part.get("text") or ""))
@@ -117,9 +149,9 @@ class OpenRouterClient:
                         text_parts.append(str(part.get("text") or ""))
                 elif isinstance(part, str):
                     text_parts.append(part)
-            content = "\n".join(x for x in text_parts if x.strip())
+            body = "\n".join(x for x in text_parts if x.strip())
 
-        if content is None:
+        if body is None:
             reasoning = msg.get("reasoning")
             raise RuntimeError(
                 "OpenRouter returned null content. "
@@ -127,7 +159,7 @@ class OpenRouterClient:
                 f"model={data.get('model')}; reasoning_preview={str(reasoning)[:300]!r}"
             )
 
-        raw = str(content).strip()
+        raw = str(body).strip()
         if not raw:
             raise RuntimeError(f"OpenRouter returned empty content: {data}")
 

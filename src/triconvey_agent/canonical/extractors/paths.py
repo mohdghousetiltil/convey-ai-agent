@@ -96,6 +96,7 @@ RATES_VACANT_LAND_TAX_PAYABLE = "rates.land_tax.vacant_residential_payable"
 RATES_OWNERS_CORPORATION = "rates.owners_corporation.exists"
 
 # Water authority certificate (Yarra Valley Water etc.)
+RATES_WATER_UNIT_NUMBER = "rates.water.unit_number"
 RATES_WATER_CERTIFICATE_NUMBER = "rates.water.certificate_number"
 RATES_WATER_ACCOUNT_NUMBER = "rates.water.account_number"
 RATES_WATER_PROPERTY_NUMBER = "rates.water.property_number"
@@ -245,6 +246,9 @@ TITLE_DIAGRAM_LOCATION = "title.diagram_location"
 TITLE_ECT_CONTROLLER = "title.ect_controller"
 TITLE_ECT_EFFECTIVE_FROM = "title.ect_effective_from"
 TITLE_STREET_ADDRESS = "title.street_address"
+
+TITLE_HAS_OWNERS_CORPORATION = "title.has_owners_corporation"
+TITLE_OWNERS_CORPORATION_NAMES = "title.owners_corporation_names"
 
 # ---------------------------------------------------------------------------
 # Rates: water certificate annualisation

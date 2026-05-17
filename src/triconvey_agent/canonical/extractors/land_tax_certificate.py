@@ -86,6 +86,21 @@ _LOT_PLAN_VF_RE = re.compile(
 _TAX_PAYABLE_RE = re.compile(
     r"Tax Payable\s*\n\s*(\$[\d,]+\.\d{2})", re.IGNORECASE
 )
+# Matches the Proportional Tax column in a "Current Land Tax YYYY" row.
+# Table layout: "Current Land Tax  YYYY  $ProportionalTax  $X  $X"
+# Captures the first dollar amount (Proportional Tax). Used as an override when it
+# differs from the Tax Payable summary field captured by _TAX_PAYABLE_RE.
+_PROPORTIONAL_TAX_RE = re.compile(
+    r"Current Land Tax\s+.*?\b\d{4}\s+(\$[\d,]+\.\d{2})\s+\$[\d,]+\.\d{2}\s+\$[\d,]+\.\d{2}",
+    re.IGNORECASE | re.DOTALL,
+)
+# Matches "Land Tax of $2,025.00 has been assessed" in the Comments section.
+# This is the assessed amount on SRO certificates where the table layout
+# doesn't expose Proportional Tax as a parseable column.
+_ASSESSED_LAND_TAX_RE = re.compile(
+    r"Land Tax of (\$[\d,]+\.\d{2}) has been assessed",
+    re.IGNORECASE,
+)
 # Matches "Land Tax = $1,515.00" (or without $) in the "For Information Only"
 # calculation section.  Used when Volume/Folio is absent (incomplete certificate).
 _LAND_TAX_VALUE_RE = re.compile(
@@ -211,17 +226,41 @@ def _extract_tax_amounts(doc: Document, text: str) -> list[Fact]:
         land_tax_amount = "$" + m.group(1)
         land_tax_quote = _compact(m.group(0))
 
+    proportional_amount: str | None = None
+    proportional_quote: str | None = None
+    if m := _PROPORTIONAL_TAX_RE.search(text):
+        proportional_amount = m.group(1)
+        proportional_quote = _compact(m.group(0))
+    elif m := _ASSESSED_LAND_TAX_RE.search(text):
+        proportional_amount = m.group(1)
+        proportional_quote = _compact(m.group(0))
+
     # --- Decision logic ---
-    # IF Volume and Folio are both present → Tax Payable is the operative amount
+    # 0. Proportional Tax override: when the Current Land Tax row's Proportional Tax
+    #    differs from the Tax Payable summary field, use Proportional Tax — the summary
+    #    field ($0.00) reflects full-year exemption while Proportional Tax reflects the
+    #    actual apportioned liability for this property.
+    # 1. IF Volume and Folio are both present → Tax Payable is the operative amount
     #    (includes $0.00 when the property is exempt or cleared).
-    # IF Volume or Folio is absent → certificate is incomplete; use the
+    # 2. IF Volume or Folio is absent → certificate is incomplete; use the
     #    "Land Tax = $X" calculation figure from the For-Information-Only section.
     # Fallback: use whichever field was found.
     tax_amount: str | None
     tax_quote: str | None
     note: str
 
-    if vf_complete and payable_amount is not None:
+    if (
+        payable_amount is not None
+        and proportional_amount is not None
+        and payable_amount != proportional_amount
+    ):
+        tax_amount = proportional_amount
+        tax_quote = proportional_quote
+        note = (
+            "Tax Payable and Proportional Tax differ — using Proportional Tax "
+            "as the state revenue land tax amount."
+        )
+    elif vf_complete and payable_amount is not None:
         tax_amount = payable_amount
         tax_quote = payable_quote
         note = "Volume/Folio present — using Tax Payable as state revenue land tax amount."

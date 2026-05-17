@@ -139,6 +139,7 @@ STRONG_STRUCTURAL_SOURCES = frozenset({
     "current_rates_levied_line",
     "date_levied_verified_by_paid_due",
     "zero_adjustments_total_due",
+    "rates_and_charges_block",
     # water-specific
     "explicit_annual",
     "gww_annual_column",

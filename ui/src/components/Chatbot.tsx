@@ -675,6 +675,8 @@ function ThinkingIndicator({
 
   const stages: AgentStage[] = useMemo(() => {
     if (phase === "uploading") return UPLOAD_STAGES;
+    // For plain questions (no file upload), use simple stages regardless of context
+    if (phase === "thinking") return DASHBOARD_STAGES;
     return chatContext === "dashboard" ? DASHBOARD_STAGES : MATTER_STAGES;
   }, [phase, chatContext]);
 
@@ -731,6 +733,8 @@ function MessageBubble({
   onApplyPatch,
   onDismissPatch,
   onEdit,
+  onConfirmReview,
+  onDismissReview,
   suppressMotion,
 }: {
   msg: Message;
@@ -1280,18 +1284,14 @@ export function Chatbot({
     }
   };
 
-  const handleSuggestionPillClick = async (pillId: (typeof MATTER_SUGGESTION_PILLS)[number]["id"]) => {
-    if (pillId === "update-matter") {
-      await handleUpdateMatterFromPendingFiles();
-      return;
-    }
-    if (pillId === "process-again") {
-      await handleProcessAgain();
-      return;
-    }
-    if (pillId === "authority-logic") {
-      await handleSend("Tell me the logic behind authorities amount. Explain in detail how each authority amount was found, combined, and calculated from the uploaded documents, with document support.");
-    }
+  const PILL_LABELS: Record<(typeof MATTER_SUGGESTION_PILLS)[number]["id"], string> = {
+    "update-matter": "Update the Matter",
+    "process-again": "Process Again",
+    "authority-logic": "Tell me the logic behind authorities amount. Explain in detail how each authority amount was found, combined, and calculated from the uploaded documents, with document support.",
+  };
+
+  const handleSuggestionPillClick = (pillId: (typeof MATTER_SUGGESTION_PILLS)[number]["id"]) => {
+    setInput(PILL_LABELS[pillId]);
   };
 
   const handleSend = async (text?: string) => {
@@ -1787,6 +1787,16 @@ export function Chatbot({
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
+        .chatbot-glass-panel {
+          background: rgba(255,255,255,0.72);
+          backdrop-filter: blur(24px) saturate(160%);
+          -webkit-backdrop-filter: blur(24px) saturate(160%);
+          border-left-color: rgba(255,255,255,0.40);
+        }
+        .dark .chatbot-glass-panel {
+          background: rgba(10,15,30,0.65);
+          border-left-color: rgba(255,255,255,0.07);
+        }
       `}</style>
     </>
   );
@@ -1797,7 +1807,7 @@ export function Chatbot({
         onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
         onDragLeave={(e) => { e.stopPropagation(); if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragging(false); }}
         onDrop={(e) => { e.stopPropagation(); void handleDrop(e); }}
-        className="relative z-10 flex h-full shrink-0 flex-col overflow-hidden border-l border-border bg-card shadow-2xl"
+        className="chatbot-glass-panel relative z-10 flex h-full shrink-0 flex-col overflow-hidden border-l shadow-2xl"
         style={{ width: isOpen ? panelWidth : 0, opacity: isOpen ? 1 : 0 }}
       >
         {isDragging && (
@@ -1822,7 +1832,7 @@ export function Chatbot({
       onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
       onDragLeave={(e) => { e.stopPropagation(); if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragging(false); }}
       onDrop={(e) => { e.stopPropagation(); void handleDrop(e); }}
-      className="relative z-10 flex h-full shrink-0 flex-col overflow-hidden border-l border-border bg-card shadow-2xl"
+      className="chatbot-glass-panel relative z-10 flex h-full shrink-0 flex-col overflow-hidden border-l shadow-2xl"
     >
       {isDragging && (
         <div className="absolute inset-0 z-[110] flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm">

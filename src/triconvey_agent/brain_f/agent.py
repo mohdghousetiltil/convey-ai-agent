@@ -70,13 +70,15 @@ class BrainFAgent:
         if self._provider == "anthropic":
             self._client = _make_anthropic_client()
         elif self._provider == "google":
-            # Google uses MultiModelClient.
-            # Do not silently fall back to OpenAI; that produces confusing 404s like
-            # "model_not_found" for Gemini models and ignores the user's provider choice.
             from triconvey_agent.ai.multi_client import MultiModelClient
-
             self._client = MultiModelClient(provider="google", model=self._model)
+        elif self._provider == "openrouter":
+            from triconvey_agent.ai.multi_client import MultiModelClient
+            self._client = MultiModelClient(provider="openrouter", model=self._model)
         else:
+            # "openai" branch — fall back to OpenRouter-via-OpenAI if no key.
+            if not os.getenv("OPENAI_API_KEY") and self._model.startswith(("gpt-", "o1", "o3", "o4", "chatgpt")):
+                self._model = "nvidia/nemotron-3-super-120b-a12b:free"
             self._client = _make_openai_client()
 
     def ask(
@@ -132,6 +134,7 @@ class BrainFAgent:
                 vector_memories=vector_memories or [],
             )
         else:
+            # "openai" and "openrouter" both use the OpenAI-compatible loop.
             result = self._ask_openai(
                 question, merged_history, system, pending_patches, reasoning_steps, max_rounds,
                 vector_memories=vector_memories or [],
@@ -379,9 +382,21 @@ def _make_anthropic_client():
 def _make_openai_client():
     from openai import OpenAI
     api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise ValueError("OPENAI_API_KEY is not set. Add it in Settings.")
-    return OpenAI(api_key=api_key)
+    if api_key:
+        return OpenAI(api_key=api_key)
+
+    # Fallback: use OpenRouter with the same OpenAI-compatible API
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    if not openrouter_key:
+        raise ValueError("Neither OPENAI_API_KEY nor OPENROUTER_API_KEY is set. Add one in Settings.")
+    return OpenAI(
+        api_key=openrouter_key,
+        base_url="https://openrouter.ai/api/v1",
+        default_headers={
+            "HTTP-Referer": "https://triconvey.com.au",
+            "X-Title": "TriConvey",
+        },
+    )
 
 
 def _new_session_id() -> str:

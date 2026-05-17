@@ -48,7 +48,11 @@ async def _init_backend() -> str:
     if dsn and not dsn.startswith("sqlite"):
         try:
             import asyncpg
-            pool = await asyncpg.create_pool(dsn, min_size=1, max_size=5, command_timeout=10)
+            # asyncpg only accepts "postgresql://" or "postgres://".
+            # Strip SQLAlchemy dialect suffixes like "+asyncpg" before connecting.
+            asyncpg_dsn = dsn.replace("postgresql+asyncpg://", "postgresql://", 1) \
+                             .replace("postgres+asyncpg://", "postgres://", 1)
+            pool = await asyncpg.create_pool(asyncpg_dsn, min_size=1, max_size=5, command_timeout=10)
             # Check pgvector is available
             async with pool.acquire() as conn:
                 await conn.execute("SELECT 1 FROM pg_extension WHERE extname='vector'")

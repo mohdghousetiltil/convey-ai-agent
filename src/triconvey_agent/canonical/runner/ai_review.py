@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from triconvey_agent.ai.client import AIClient
+
+logger = logging.getLogger(__name__)
 
 
 def extract_json_dict(raw_text: str) -> dict | None:
@@ -106,6 +109,58 @@ def _review_one_answer(qid: str, answer, question, ai_client: AIClient) -> tuple
     return qid, suggestion
 
 
+_SKIP_AI_REVIEW_QUESTION_IDS = frozenset({
+    # Council rates — extracted deterministically by rule; AI adds no value.
+    "sec32_1.1_outgoing_1_authority",
+    "sec32_1.1_outgoing_1_amount",
+})
+
+_SKIP_AI_REVIEW_SOURCES = frozenset({
+    "rates_and_charges_block",
+    "current_rates_date_levied_block",
+    "current_rates_levied_line",
+    "explicit_subtotal[0]",
+    "explicit_subtotal[1]",
+    "explicit_subtotal[2]",
+    "explicit_subtotal[3]",
+    "total_charges_line",
+})
+
+
+def should_skip_ai_review(answer) -> bool:
+    """Return True when AI review would add no value for this answer."""
+    # High-confidence rule-based answers don't need AI verification.
+    if getattr(answer, "confidence", 0.0) >= 0.97:
+        return True
+
+    # No value and no evidence — AI has nothing to work with.
+    # This covers: "no facts found", "no candidate evidence", policy-default
+    # questions, vendor-form fields, and human_review placeholders that were
+    # never populated from uploaded documents.
+    evidence = getattr(answer, "evidence", []) or []
+    if answer.value is None and not evidence:
+        return True
+
+    # Skip hardcoded / policy / injected answers (evidence present but not real docs)
+    for source in evidence:
+        file_name = (getattr(source, "file", "") or "").lower()
+        quote = (getattr(source, "quote", "") or "").lower()
+
+        if any(token in file_name for token in ["policy", "hardcoded", "system", "injected"]):
+            return True
+
+        if any(token in quote for token in [
+            "policy facts injected",
+            "hardcoded",
+            "default answer",
+            "injected policy",
+            "copy rule",
+        ]):
+            return True
+
+    return False
+
+
 def run_ai_review(answers: dict, registry: dict, ai_client: AIClient) -> dict[str, dict]:
     started = time.perf_counter()
     review_targets: list[tuple[str, object, object]] = []
@@ -119,12 +174,48 @@ def run_ai_review(answers: dict, registry: dict, ai_client: AIClient) -> dict[st
         # the rule-based extractor could not pick a winner.
         if not answer.needs_review:
             continue
+        if qid in _SKIP_AI_REVIEW_QUESTION_IDS:
+            continue
+        if should_skip_ai_review(answer):
+            logger.info(
+                "[AI Review] skipped %s: confidence=%s reasons=%s",
+                qid,
+                getattr(answer, "confidence", None),
+                getattr(answer, "review_reasons", []),
+            )
+            continue
         review_targets.append((qid, answer, question))
 
     suggestions: dict[str, dict] = {}
     if not review_targets:
         return suggestions
 
+    logger.info(
+        "[AI Review] reviewing %d/%d field(s): %s",
+        len(review_targets),
+        len(answers),
+        [qid for qid, _, _ in review_targets],
+    )
+    print(
+        "  [AI Review] Queue:",
+        [
+            {
+                "qid": qid,
+                "value": answer.value,
+                "confidence": answer.confidence,
+                "needs_review": answer.needs_review,
+                "reasons": getattr(answer, "review_reasons", []),
+                "evidence": [
+                    {
+                        "file": getattr(src, "file", None),
+                        "quote": getattr(src, "quote", None),
+                    }
+                    for src in getattr(answer, "evidence", []) or []
+                ],
+            }
+            for qid, answer, _ in review_targets
+        ],
+    )
     print(f"  [AI Review] Reviewing {len(review_targets)} field(s)...")
     max_workers = min(
         len(review_targets),

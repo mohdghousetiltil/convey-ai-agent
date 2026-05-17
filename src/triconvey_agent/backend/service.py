@@ -130,9 +130,12 @@ def build_review_run(
 
     if progress_callback:
         progress_callback(5.0, "Extracting facts")
+    # Run the main pipeline without AI so the UI gets fast answers immediately.
+    # A background thread runs the omni AI extraction in parallel and writes
+    # ai_enhanced_answers.json when done — the UI then offers "Activate AI answers".
     store, total_facts = extract_fact_store(
         doc_paths, target_dir,
-        ai_client=_make_omni_client(),
+        ai_client=None,
         copy_rules=copy_rules or [],
     )
 
@@ -195,6 +198,18 @@ def build_review_run(
         encoding="utf-8",
     )
     print(f"\n[Time] Review run total: {_format_elapsed(time.perf_counter() - overall_started)}")
+
+    # Launch background AI enhancement — runs omni extraction in parallel.
+    # When complete, writes ai_enhanced_answers.json + updates manifest with ai_enhanced=true.
+    omni_client = _make_omni_client()
+    if omni_client is not None:
+        t = threading.Thread(
+            target=_run_ai_enhancement_background,
+            args=(target_dir, doc_paths, copy_rules or []),
+            daemon=True,
+            name=f"ai-enhance-{target_dir.name}",
+        )
+        t.start()
 
     # === Optional pre-warm so the UI is fully ready on first load ===
     # This intentionally re-reads documents to build the corpus/RAG/Brain-F assets.
@@ -738,6 +753,80 @@ def _provider_from_model(model: str) -> str:
     return "openai"
 
 
+_AI_ENHANCEMENT_TIMEOUT_SECONDS = 120  # 2 min primary window
+_AI_ENHANCEMENT_GRACE_SECONDS = 30    # +30s grace before giving up
+
+
+def _run_ai_enhancement_background(
+    run_dir: Path,
+    doc_paths: list[Path],
+    copy_rules: list[tuple[str, float]],
+) -> None:
+    """Background thread: re-run extraction with AI, write ai_enhanced_answers.json.
+
+    Enforces a hard timeout of 120 + 30 = 150 seconds total.
+    On success writes ai_enhanced_answers.json and sets ai_enhanced=true in manifest.
+    On timeout or failure, exits silently — the run keeps its non-AI answers.
+    """
+    import concurrent.futures as _cf
+
+    def _do_ai_extraction() -> dict | None:
+        omni = _make_omni_client()
+        if omni is None:
+            return None
+        try:
+            ai_store, _ = extract_fact_store(
+                doc_paths, run_dir,
+                ai_client=omni,
+                copy_rules=copy_rules,
+            )
+        except Exception as exc:
+            LOG.warning("ai_enhancement: fact extraction failed — %s", exc)
+            return None
+
+        registry = load_question_registry()
+        try:
+            ai_answers = answer_all_questions(registry.values(), ai_store, ai_client=None)
+            _apply_answer_fallbacks(ai_answers, ai_store)
+        except Exception as exc:
+            LOG.warning("ai_enhancement: answering failed — %s", exc)
+            return None
+
+        return {q_id: ans.model_dump() if hasattr(ans, "model_dump") else vars(ans)
+                for q_id, ans in ai_answers.items()}
+
+    total_timeout = _AI_ENHANCEMENT_TIMEOUT_SECONDS + _AI_ENHANCEMENT_GRACE_SECONDS
+    with _cf.ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(_do_ai_extraction)
+        try:
+            ai_answers = future.result(timeout=total_timeout)
+        except _cf.TimeoutError:
+            LOG.warning("ai_enhancement: timed out after %ss — keeping non-AI answers", total_timeout)
+            future.cancel()
+            return
+        except Exception as exc:
+            LOG.warning("ai_enhancement: unexpected error — %s", exc)
+            return
+
+    if not ai_answers:
+        return
+
+    try:
+        (run_dir / "ai_enhanced_answers.json").write_text(
+            json.dumps(ai_answers, indent=2, default=str),
+            encoding="utf-8",
+        )
+        # Update manifest to signal the UI
+        manifest_path = run_dir / "manifest.json"
+        if manifest_path.exists():
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["ai_enhanced"] = True
+            manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        LOG.info("ai_enhancement: complete for run %s", run_dir.name)
+    except Exception as exc:
+        LOG.warning("ai_enhancement: failed to write results — %s", exc)
+
+
 def _make_omni_client() -> OpenRouterClient | None:
     """Return an OpenRouterClient when OPENROUTER_API_KEY is set, else None."""
     try:
@@ -1025,7 +1114,7 @@ def _build_ai_execution_plan(
     if normalized_ai_mode not in _AI_MODE_CHOICES:
         normalized_ai_mode = "cost_efficient"
 
-    has_openai = bool(os.getenv("OPENAI_API_KEY"))
+    has_openai = bool(os.getenv("OPENAI_API_KEY") or os.getenv("OPENROUTER_API_KEY"))
     has_anthropic = bool(os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY"))
     has_google = bool(os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"))
 
@@ -1312,10 +1401,27 @@ def _load_fact_store(run_dir: Path) -> FactStoreImpl:
         return FactStoreImpl()
 
 
+_VENDOR_EXTRACTORS = frozenset({"rule:vendor_form_v2", "rule:vendor_form_v1", "ai:doc_extractor:vendor_form"})
+
+
+def _is_vendor_fact(fact: Fact) -> bool:
+    return fact.extractor in _VENDOR_EXTRACTORS
+
+
 def _collect_water_rows_from_store(store: FactStoreImpl) -> list[tuple[str, str]]:
-    """Return (authority_name, formatted_amount) for each water document in the store."""
+    """Return (authority_name, formatted_amount) for each water document in the store.
+
+    Vendor-form facts are excluded when any real water certificate fact exists,
+    so the vendor file never creates a spurious extra row.
+    """
     authority_facts = store.get_all("rates.water.authority_name")
     amount_facts = store.get_all("rates.water.annual_amount")
+
+    # If any certificate-backed fact exists, drop all vendor-only facts.
+    has_certificate = any(not _is_vendor_fact(f) for f in authority_facts + amount_facts)
+    if has_certificate:
+        authority_facts = [f for f in authority_facts if not _is_vendor_fact(f)]
+        amount_facts = [f for f in amount_facts if not _is_vendor_fact(f)]
 
     def _best_by_file(facts: list[Fact]) -> dict[str, Fact]:
         result: dict[str, Fact] = {}
@@ -1329,17 +1435,44 @@ def _collect_water_rows_from_store(store: FactStoreImpl) -> list[tuple[str, str]
     auth_by_file = _best_by_file(authority_facts)
     amt_by_file = _best_by_file(amount_facts)
 
+    # Build file -> unit number mapping from the dedicated unit_number facts
+    # extracted by the water authority extractor.
+    unit_number_facts = store.get_all("rates.water.unit_number")
+    file_to_unit: dict[str, str] = {}
+    for f in unit_number_facts:
+        src_file = (f.sources[0].file if f.sources else "") or ""
+        if src_file:
+            file_to_unit[src_file] = str(f.value).strip()
+
+    def _file_sort_key(fname: str) -> tuple[int, int, str]:
+        # Unit files sort first (by unit number numerically), then non-unit files alphabetically.
+        unit = file_to_unit.get(fname)
+        if unit is not None:
+            try:
+                return (0, int(unit), fname)
+            except ValueError:
+                return (0, 0, fname)
+        return (1, 0, fname)
+
     rows: list[tuple[str, str]] = []
     seen: set[tuple[str, str]] = set()
-    for file_name in sorted(set(auth_by_file) | set(amt_by_file)):
+    for file_name in sorted(set(auth_by_file) | set(amt_by_file), key=_file_sort_key):
         auth_fact = auth_by_file.get(file_name)
         amt_fact = amt_by_file.get(file_name)
         auth_name = str(auth_fact.value if auth_fact else "").strip()
         if not auth_name:
             continue
-        amt_raw = str(amt_fact.value if amt_fact else "").strip()
+        # Skip files that have a water authority name mention but no actual amount
+        # (e.g. planning reports that name the water authority without any charges).
+        if amt_fact is None:
+            continue
+        amt_raw = str(amt_fact.value).strip()
         parsed = _parse_amount_like(amt_raw) if amt_raw else None
         amt_str = f"${parsed:,.2f}" if parsed is not None else "$0.00"
+        # For unit properties, format as "Unit - N - {authority} - annually"
+        unit_no = file_to_unit.get(file_name)
+        if unit_no:
+            auth_name = f"Unit - {unit_no} - {auth_name} - annually"
         key = (auth_name.lower(), amt_str)
         if key in seen:
             continue

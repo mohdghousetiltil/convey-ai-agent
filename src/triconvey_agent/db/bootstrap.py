@@ -70,6 +70,16 @@ async def apply_schema() -> None:
     LOG.info("Schema applied.")
 
 
+def _is_missing_extension_error(exc: BaseException) -> bool:
+    """True when the error is a PostgreSQL 'extension not available' failure."""
+    msg = str(exc)
+    return (
+        "FeatureNotSupportedError" in msg
+        or "extension" in msg.lower() and "not available" in msg.lower()
+        or "feature_not_supported" in msg.lower()
+    )
+
+
 async def apply_runtime_migrations() -> None:
     engine = get_engine()
     migrations = _load_migration_sql_files()
@@ -84,7 +94,14 @@ async def apply_runtime_migrations() -> None:
                     await conn.execute(text(statement))
             LOG.info("Applied migration %s", name)
         except Exception as exc:
-            LOG.warning("Skipping migration %s (not supported in this environment): %s", name, exc)
+            if _is_missing_extension_error(exc):
+                LOG.info(
+                    "Migration %s skipped — optional PostgreSQL extension not installed "
+                    "(feature disabled, everything else works normally).",
+                    name,
+                )
+            else:
+                LOG.warning("Skipping migration %s (not supported in this environment): %s", name, exc)
 
 
 def _split_sql(sql: str) -> list[str]:

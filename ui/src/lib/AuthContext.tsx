@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const oauthResumeInFlight = useRef(false);
-  const applyLoginPayload = useCallback((payload: LoginPayload) => {
+  const applyLoginPayload = useCallback((payload: LoginPayload | import("./api").PersistedAuthState) => {
     saveAuth(payload.access_token, payload.user);
     setUser(payload.user);
     setToken(payload.access_token);

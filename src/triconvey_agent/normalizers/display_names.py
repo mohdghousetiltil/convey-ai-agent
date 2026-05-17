@@ -144,6 +144,11 @@ WATER_AUTHORITY_DISPLAY_NAME_MAP = {
     # Goulburn Valley Water
     "goulburn valley water": "Goulburn Valley Water",
     "goulburn-murray water": "Goulburn-Murray Water",
+    # Greater Western Water (includes "Greater West Water" OCR/naming variant)
+    "greater western water": "Greater Western Water",
+    "greater western water corporation": "Greater Western Water",
+    "greater west water": "Greater Western Water",
+    "greater west water corporation": "Greater Western Water",
     # Western Water
     "western water": "Western Water",
     "western region water corporation": "Western Water",

@@ -48,27 +48,44 @@ class MultiModelResponse:
 # ---------------------------------------------------------------------------
 
 
+_OPENROUTER_EMBED_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2:free"
+_OPENROUTER_CHAT_DEFAULT = "nvidia/nemotron-3-super-120b-a12b:free"
+
+
 class MultiModelClient:
-    """Unified AI client for OpenAI, Anthropic, and Google Gemini."""
+    """Unified AI client for OpenAI, Anthropic, Google Gemini, and OpenRouter."""
 
     BEST_MODELS: dict[str, str] = {
         "openai": "gpt-4o",
         "anthropic": "claude-sonnet-4-5",
         "google": "gemini-1.5-pro",
+        "openrouter": _OPENROUTER_CHAT_DEFAULT,
     }
 
     def __init__(
         self,
-        provider: str = "openai",
+        provider: str = "openrouter",
         model: str | None = None,
         api_key: str | None = None,
     ) -> None:
-        self.model = model or self.BEST_MODELS.get(provider.lower(), "gpt-4o")
-        # Auto-detect provider from model name so Claude models always use Anthropic
-        # even if the caller passes provider="openai".
-        self.provider = self._detect_provider(self.model, provider.lower())
+        resolved_provider = self._detect_default_provider() if provider == "openrouter" and not model else provider.lower()
+        self.model = model or self.BEST_MODELS.get(resolved_provider, _OPENROUTER_CHAT_DEFAULT)
+        # Auto-detect provider from model name so Claude models always use Anthropic etc.
+        self.provider = self._detect_provider(self.model, resolved_provider)
         self._api_key = api_key
         self._client = self._build_client()
+
+    @staticmethod
+    def _detect_default_provider() -> str:
+        """Return the best available provider based on which API keys are set."""
+        if os.getenv("OPENAI_API_KEY"):
+            return "openai"
+        if os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY"):
+            return "anthropic"
+        if os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"):
+            return "google"
+        # Default: OpenRouter (works with OPENROUTER_API_KEY or even without for :free models)
+        return "openrouter"
 
     @staticmethod
     def _detect_provider(model: str, preferred: str) -> str:
@@ -79,6 +96,8 @@ class MultiModelClient:
             return "openai"
         if m.startswith("gemini"):
             return "google"
+        if "/" in m or preferred == "openrouter":
+            return "openrouter"
         return preferred
 
     # ------------------------------------------------------------------ #
@@ -103,6 +122,7 @@ class MultiModelClient:
                 messages, system=system, tools=tools, max_tokens=max_tokens
             )
         else:
+            # Both "openai" and "openrouter" use the OpenAI-compatible client.
             return self._chat_openai(
                 messages, system=system, tools=tools, max_tokens=max_tokens
             )
@@ -111,16 +131,25 @@ class MultiModelClient:
         """
         Generate an embedding vector (always _EMBED_DIM = 1536 dims).
 
-        Strategy:
-          1. If OPENAI_API_KEY is available → text-embedding-3-small (native 1536).
-          2. Otherwise → sentence-transformers all-MiniLM-L6-v2 (384), zero-padded.
+        Priority:
+          1. OpenAI text-embedding-3-small  (if OPENAI_API_KEY set)
+          2. OpenRouter nvidia/llama-nemotron-embed-vl-1b-v2:free  (if OPENROUTER_API_KEY set)
+          3. sentence-transformers all-MiniLM-L6-v2 (384-dim, zero-padded to 1536)
         """
         openai_key = os.getenv("OPENAI_API_KEY") or ""
         if openai_key:
             try:
                 return self._embed_openai(text, api_key=openai_key)
             except Exception as exc:
-                LOG.warning("OpenAI embed failed, falling back to local: %s", exc)
+                LOG.warning("OpenAI embed failed, trying OpenRouter: %s", exc)
+
+        openrouter_key = os.getenv("OPENROUTER_API_KEY") or ""
+        if openrouter_key:
+            try:
+                return self._embed_openrouter(text, api_key=openrouter_key)
+            except Exception as exc:
+                LOG.warning("OpenRouter embed failed, falling back to local: %s", exc)
+
         return self._embed_local(text)
 
     # ------------------------------------------------------------------ #
@@ -132,15 +161,42 @@ class MultiModelClient:
             return self._build_anthropic()
         elif self.provider == "google":
             return self._build_google()
+        elif self.provider == "openrouter":
+            return self._build_openrouter()
         else:
             return self._build_openai()
 
     def _build_openai(self) -> Any:
         from openai import OpenAI
         key = self._api_key or os.getenv("OPENAI_API_KEY")
+        if key:
+            return OpenAI(api_key=key)
+        # Fallback: use OpenRouter with the OpenAI-compatible API
+        openrouter_key = os.getenv("OPENROUTER_API_KEY")
+        if not openrouter_key:
+            raise ValueError("Neither OPENAI_API_KEY nor OPENROUTER_API_KEY is set. Add one in Settings.")
+        return OpenAI(
+            api_key=openrouter_key,
+            base_url="https://openrouter.ai/api/v1",
+            default_headers={
+                "HTTP-Referer": "https://triconvey.com.au",
+                "X-Title": "TriConvey",
+            },
+        )
+
+    def _build_openrouter(self) -> Any:
+        from openai import OpenAI
+        key = self._api_key or os.getenv("OPENROUTER_API_KEY")
         if not key:
-            raise ValueError("OPENAI_API_KEY is not set. Add it in Settings.")
-        return OpenAI(api_key=key)
+            raise ValueError("OPENROUTER_API_KEY is not set. Add it in Settings.")
+        return OpenAI(
+            api_key=key,
+            base_url="https://openrouter.ai/api/v1",
+            default_headers={
+                "HTTP-Referer": "https://triconvey.com.au",
+                "X-Title": "TriConvey Matter Agent",
+            },
+        )
 
     def _build_anthropic(self) -> Any:
         import anthropic
@@ -340,6 +396,31 @@ class MultiModelClient:
             input=text[:8191],
         )
         return resp.data[0].embedding  # 1536 dims natively
+
+    def _embed_openrouter(self, text: str, api_key: str) -> list[float]:
+        """Embed via OpenRouter using the free Nemotron embed model.
+
+        OpenRouter's /embeddings endpoint is OpenAI-compatible.
+        The model may return dimensions != 1536, so we pad/truncate to _EMBED_DIM.
+        """
+        import httpx
+        resp = httpx.post(
+            "https://openrouter.ai/api/v1/embeddings",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "HTTP-Referer": "https://triconvey.com.au",
+                "X-Title": "TriConvey Matter Agent",
+                "Content-Type": "application/json",
+            },
+            json={"model": _OPENROUTER_EMBED_MODEL, "input": text[:8191]},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        vec: list[float] = resp.json()["data"][0]["embedding"]
+        # Normalise to the canonical _EMBED_DIM regardless of model output size.
+        if len(vec) < _EMBED_DIM:
+            vec = vec + [0.0] * (_EMBED_DIM - len(vec))
+        return vec[:_EMBED_DIM]
 
     def _embed_local(self, text: str) -> list[float]:
         """Sentence-transformers fallback, zero-padded to _EMBED_DIM."""

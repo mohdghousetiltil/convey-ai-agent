@@ -59,9 +59,14 @@ _CLASSIFIER: list[tuple[list[str], str]] = [
     (["council land information", "land information certificate"], "council_land_info_cert"),
     # Insurance
     (["racv", "insurance policy"], "insurance_doc"),
-    # Water — handled by water extractor; grab date here only if water extractor missed
+    # Water — primary date from water_authority_certificate_v2; this is a fallback
     (["water information statement", "water encumbrance", "enquiry - yarra valley water",
-      "enquiry - south east water", "enquiry - barwon water"], "water_cert"),
+      "enquiry - south east water", "enquiry - barwon water",
+      "enquiry - greater western water", "enquiry - greater west water",
+      "enquiry - city west water", "enquiry - south east water",
+      "enquiry - coliban water", "enquiry - barwon water",
+      "enquiry - westernport water", "greater western water",
+      "greater west water"], "water_cert"),
     # SRO land tax — handled by land_tax extractor; date fallback here
     (["land tax certificate", "state revenue office"], "land_tax_cert"),
     # VIC Title — handled by vic_title extractor; date fallback here
@@ -88,8 +93,8 @@ _TYPE_TO_DATE_PATH: dict[str, str | None] = {
     "council_land_info_cert": P.DOCS_COUNCIL_LAND_INFO_CERT_DATE,
     "council_building_approval_cert": P.DOCS_COUNCIL_BUILDING_APPROVAL_CERT_DATE,
     "insurance_doc":    None,
-    # These have dedicated extractors that emit dates — skip here to avoid conflicts
-    "water_cert":       None,
+    # Water: v2 extractor is primary (conf 0.92); generic fallback at 0.75
+    "water_cert":       P.DOCS_WATER_CERT_DATE,
     "land_tax_cert":    None,
     "vic_title":        P.DOCS_VIC_TITLE_SEARCH_DATE,  # vic_title extractor uses title.produced_at
     "vendor_form":      None,
@@ -174,6 +179,23 @@ _MONTH_MAP = {
     "jun": "06", "jul": "07", "aug": "08", "sep": "09",
     "sept": "09", "oct": "10", "nov": "11", "dec": "12",
 }
+
+# Owner Builder / report-specific labeled dates.
+# Covers "DATE OF REPORT: 9th April 2026", "DATE OF INSPECTION: 9th April 2026",
+# "Report Date:", "Assessment Date:", "Inspection Date:", etc.
+_MONTH_NAMES = (
+    r"January|February|March|April|May|June|July|August|September|October|November|December"
+    r"|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec"
+)
+_DATE_REPORT_LABELED_RE = re.compile(
+    r"(?:DATE\s+OF\s+REPORT|DATE\s+OF\s+INSPECTION|Report\s+Date"
+    r"|Generated(?:\s+on)?|Date\s+of\s+Assessment|Certificate\s+Issued"
+    r"|Date\s+of\s+Issue|Period\s+of\s+Cover\s+(?:from|start)"
+    r"|Assessment\s+Date|Inspection\s+Date|Application\s+(?:Received|Date))\s*[:\-]?\s*"
+    r"(\d{1,2}(?:st|nd|rd|th)?[\s\-/]+" + _MONTH_NAMES + r"[\s\-/]+\d{4}"
+    r"|\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4})",
+    re.IGNORECASE,
+)
 
 # "Created at 16 March 2026 05:02 PM" (Detailed Property Report)
 _DATE_CREATED_AT_RE = re.compile(
@@ -281,6 +303,29 @@ def _extract_date(text: str, filename: str) -> str | None:
     m = _DATE_ISSUE_DDMMYYYY_RE.search(text)
     if m:
         return m.group(1)
+
+    # Priority 1a — report/inspection labeled dates (Owner Builder, assessment reports).
+    # Runs early so "DATE OF REPORT: 9th April 2026" beats generic bare-date patterns.
+    m = _DATE_REPORT_LABELED_RE.search(text)
+    if m:
+        raw = m.group(1).strip()
+        # Numeric: DD/MM/YYYY or DD-MM-YYYY
+        nm = re.match(r"(\d{1,2})[/\-](\d{1,2})[/\-](\d{2,4})", raw)
+        if nm:
+            d, mo, y = int(nm.group(1)), int(nm.group(2)), int(nm.group(3))
+            y = y + 2000 if y < 100 else y
+            if 2020 <= y <= 2035:
+                return f"{d:02d}/{mo:02d}/{y}"
+        # Word date: strip optional ordinal suffix ("9th" → "9"), then parse
+        wm = re.match(
+            r"(\d{1,2})(?:st|nd|rd|th)?[\s\-/]+([A-Za-z]{3,9})[\s\-/]+(\d{4})",
+            raw, re.IGNORECASE,
+        )
+        if wm:
+            d_s, mon_s, y_s = wm.group(1), wm.group(2), wm.group(3)
+            mon_num = _MONTH_MAP.get(mon_s.lower())
+            if mon_num and 2020 <= int(y_s) <= 2035:
+                return f"{int(d_s):02d}/{mon_num}/{y_s}"
 
     m = _DATE_OF_AGREEMENT_RE.search(text)
     if m:
@@ -440,10 +485,12 @@ def extract_generic_doc_meta_facts(doc: Document) -> list[Fact]:
     if doc_type is not None:
         date_path = _TYPE_TO_DATE_PATH.get(doc_type)
         if date_path and date_str:
+            # Water cert date: dedicated extractor runs at 0.92; this is a fallback only
+            conf = 0.72 if doc_type == "water_cert" else 0.90
             facts.append(
                 _make_fact(
                     doc, date_path, date_str, f"date={date_str} from {filename}",
-                    confidence=0.90,
+                    confidence=conf,
                     notes=f"auto-extracted from {doc_type} document",
                 )
             )

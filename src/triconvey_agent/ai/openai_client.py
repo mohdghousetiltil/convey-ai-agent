@@ -50,8 +50,6 @@ class OpenAIResponsesClient:
     def __init__(self, api_key: str | None = None, model: str = "gpt-4o") -> None:
         load_dotenv()
         resolved_api_key = api_key or os.getenv("OPENAI_API_KEY")
-        if not resolved_api_key:
-            raise ValueError("OPENAI_API_KEY is not set.")
 
         try:
             from openai import OpenAI
@@ -61,8 +59,27 @@ class OpenAIResponsesClient:
                 "\"python -m pip install openai\" and try again."
             ) from exc
 
-        self._client = OpenAI(api_key=resolved_api_key)
-        self._model = model
+        if resolved_api_key:
+            self._client = OpenAI(api_key=resolved_api_key)
+            self._model = model
+        else:
+            # Fall back to OpenRouter using the OpenAI-compatible endpoint.
+            openrouter_key = os.getenv("OPENROUTER_API_KEY")
+            if not openrouter_key:
+                raise ValueError("Neither OPENAI_API_KEY nor OPENROUTER_API_KEY is set.")
+            self._client = OpenAI(
+                api_key=openrouter_key,
+                base_url="https://openrouter.ai/api/v1",
+                default_headers={
+                    "HTTP-Referer": "https://triconvey.com.au",
+                    "X-Title": "TriConvey",
+                },
+            )
+            # Swap OpenAI model names to a compatible free OpenRouter model.
+            if model.startswith(("gpt-", "o1", "o3", "o4", "chatgpt")):
+                self._model = "nvidia/nemotron-3-super-120b-a12b:free"
+            else:
+                self._model = model
 
     def complete(self, prompt: str) -> AIResult:
         if openai_runtime_disabled():

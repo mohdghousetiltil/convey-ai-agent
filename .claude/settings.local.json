@@ -100,7 +100,9 @@
       "Bash(.venv\\\\Scripts\\\\pip install *)",
       "Bash(python -c \"from triconvey_agent.ingest.pdf_loader import load_document; from triconvey_agent.ingest.word_loader import load_word_document; from triconvey_agent.schemas.documents import InputFileType; print\\('InputFileType.WORD =', InputFileType.WORD\\); print\\('load_document OK'\\); print\\('load_word_document OK'\\)\")",
       "Read(//mnt/c/Users/moham/projects/**)",
-      "PowerShell(cd C:\\\\Users\\\\moham\\\\projects\\\\triconvey-agent; python test_oc.py 2>&1 | Where-Object { $_ -match \"Scenario|WINNER|Blocks|Cand|notes\" })"
+      "PowerShell(cd C:\\\\Users\\\\moham\\\\projects\\\\triconvey-agent; python test_oc.py 2>&1 | Where-Object { $_ -match \"Scenario|WINNER|Blocks|Cand|notes\" })",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m pytest tests/canonical/test_water_authority_v2_extractor.py::TestSubtotalExclusion::test_subtotal_not_in_breakdown -v -s 2>&1)",
+      "PowerShell(uv run python -c \"import ast; ast.parse\\(open\\('src/triconvey_agent/canonical/extractors/council_rates_certificate.py'\\).read\\(\\)\\); print\\('OK'\\)\")"
     ]
   }
 }

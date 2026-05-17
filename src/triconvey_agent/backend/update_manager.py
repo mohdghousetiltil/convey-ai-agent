@@ -162,6 +162,74 @@ def check_for_updates(
     )
 
 
+def download_current_version_installer(
+    *,
+    current_version: str,
+    update_repository: str | None = None,
+    runtime: AppRuntimePaths | None = None,
+    timeout_seconds: float = 120.0,
+) -> dict[str, Any]:
+    """Download the installer for the currently installed version (reinstall).
+
+    Fetches the GitHub release whose tag matches current_version exactly,
+    then downloads its installer asset.  Falls back to the latest release
+    if no exact tag match is found.
+    """
+    repo = _normalize_repo(update_repository or DEFAULT_UPDATE_REPOSITORY)
+    if not repo:
+        raise ValueError("Update repository is not configured.")
+
+    # Try to find the release that matches the current version tag.
+    tag = f"v{current_version}" if not current_version.startswith("v") else current_version
+    release: dict[str, Any] | None = None
+    with httpx.Client(timeout=30.0, follow_redirects=True, headers=_headers()) as client:
+        # First attempt: exact tag
+        resp = client.get(f"{GITHUB_API_BASE}/repos/{repo}/releases/tags/{tag}")
+        if resp.status_code == 200:
+            release = resp.json()
+        else:
+            # Fallback: list recent releases and pick closest match
+            resp2 = client.get(f"{GITHUB_API_BASE}/repos/{repo}/releases")
+            resp2.raise_for_status()
+            releases = list(resp2.json() or [])
+            release = next(
+                (r for r in releases if r.get("tag_name", "").lstrip("v") == current_version.lstrip("v")),
+                releases[0] if releases else None,
+            )
+
+    if not release:
+        raise ValueError(f"No GitHub release found for version {current_version}.")
+
+    installer_asset = select_installer_asset(list(release.get("assets") or []))
+    if not installer_asset:
+        raise ValueError("No installer asset found in this release.")
+
+    download_url = str(installer_asset.get("browser_download_url") or "").strip()
+    asset_name = str(installer_asset.get("name") or "").strip()
+    release_version = str(release.get("tag_name") or current_version).lstrip("v")
+
+    runtime = ensure_runtime_dirs(runtime or get_runtime_paths())
+    updates_dir = runtime.local_app_dir / "updates"
+    updates_dir.mkdir(parents=True, exist_ok=True)
+    target = updates_dir / f"ConveyAgent-Setup-{release_version}.exe"
+    temp_target = target.with_suffix(".download")
+
+    with httpx.stream("GET", download_url, follow_redirects=True, timeout=timeout_seconds, headers=_headers()) as response:
+        response.raise_for_status()
+        with temp_target.open("wb") as handle:
+            for chunk in response.iter_bytes():
+                if chunk:
+                    handle.write(chunk)
+
+    temp_target.replace(target)
+    return {
+        "installer_path": str(target),
+        "installer_name": asset_name,
+        "latest_version": release_version,
+        "downloaded_at": datetime.now(UTC).isoformat(),
+    }
+
+
 def download_update_installer(
     release_payload: dict[str, Any],
     *,

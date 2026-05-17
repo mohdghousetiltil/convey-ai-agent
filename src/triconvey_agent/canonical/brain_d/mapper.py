@@ -81,6 +81,9 @@ def _normalize_payload(question_id: str, payload: Any) -> Any:
         "sec32_3.4_responsible_authority",
     }:
         name = str(payload)
+        # Unit water authority format "Unit - N - {authority} - annually" — pass through as-is.
+        if name.strip().lower().startswith("unit - "):
+            return name.strip()
         # Water authorities take priority — check before applying council suffix logic.
         if name.strip().lower() in WATER_AUTHORITY_DISPLAY_NAME_MAP:
             return normalize_water_authority_display_name(name)

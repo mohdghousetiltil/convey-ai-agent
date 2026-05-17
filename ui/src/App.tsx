@@ -22,9 +22,12 @@ import {
   type CloudSyncStatusPayload,
   continueAutofillJob,
   createRun,
+  deleteRun,
   downloadUpdateInstaller,
+  reinstallCurrentVersion,
   getAppInfo,
   getAutofillJob,
+  activateAiAnswers,
   getAllRuns,
   getRecentRuns,
   getRun,
@@ -44,7 +47,9 @@ type LocalSettingsForm = {
   openAiApiKey: string;
   anthropicApiKey: string;
   googleApiKey: string;
-  aiProvider: "openai" | "anthropic" | "google" | "hybrid";
+  openRouterApiKey: string;
+  aiProvider: "openai" | "anthropic" | "google" | "hybrid" | "openrouter";
+  aiMode: "cost_efficient" | "all_time_best" | "turbo";
   defaultModelName: string;
   triconveyPath: string;
   preferredAutofillFields: string[];
@@ -195,8 +200,10 @@ function AppContent() {
     openAiApiKey: "",
     anthropicApiKey: "",
     googleApiKey: "",
-    aiProvider: "openai",
-    defaultModelName: "gpt-4.1-mini",
+    openRouterApiKey: "",
+    aiProvider: "openrouter",
+    aiMode: "cost_efficient",
+    defaultModelName: "nvidia/nemotron-3-super-120b-a12b:free",
     triconveyPath: "",
     preferredAutofillFields: [],
     updateRepository: "",
@@ -243,10 +250,14 @@ function AppContent() {
   const [isLoadingAllRuns, setIsLoadingAllRuns] = useState(false);
   const [isReanalysing, setIsReanalysing] = useState(false);
   const [showQuickSetup, setShowQuickSetup] = useState(false);
+  const [pendingDropFiles, setPendingDropFiles] = useState<File[]>([]);
+  const [isDashboardDragOver, setIsDashboardDragOver] = useState(false);
   
   const [loadingRunId, setLoadingRunId] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [loadingStatusHeading, setLoadingStatusHeading] = useState<string>("");
+  const [aiEnhancedReady, setAiEnhancedReady] = useState(false);
+  const [activatingAi, setActivatingAi] = useState(false);
   const [backgroundRunWatchId, setBackgroundRunWatchId] = useState<string | null>(null);
 
   const maybeStartBackgroundUpdateDownload = async (status: UpdateStatusPayload | null) => {
@@ -287,7 +298,7 @@ function AppContent() {
         // Merge localStorage theme as fallback if backend doesn't have it yet
         const lsTheme = localStorage.getItem("convey:theme") as "light" | "dark" | "auto" | null;
         const initialTheme = lsTheme ?? nextSettings.theme ?? "light";
-        const merged = { ...nextSettings, theme: initialTheme } as typeof nextSettings;
+        const merged: LocalSettingsForm = { googleApiKey: "", openRouterApiKey: "", aiMode: "cost_efficient", ...nextSettings, theme: initialTheme };
         setSettings(merged);
         loadedSettings = merged;
         if (merged.theme) localStorage.setItem("convey:theme", merged.theme);
@@ -357,7 +368,7 @@ function AppContent() {
         const current = await getRun(loadingRunId);
         if (!isActive) return;
 
-        if (current.status === "completed" || current.status === "complete") {
+        if (current.status === "completed" || (current.status as string) === "complete") {
           setRun(current);
           setActiveRunId(loadingRunId);
           if (user) upsertRecentRun(user.user_id, current);
@@ -389,6 +400,49 @@ function AppContent() {
       if (timer) clearTimeout(timer);
     };
   }, [loadingRunId, loadingKind, user, navigate]);
+
+  // Poll for background AI enhancement completion on the active run
+  useEffect(() => {
+    if (!activeRunId || !run || run.ai_enhanced || aiEnhancedReady) return;
+    let isActive = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const poll = async () => {
+      try {
+        const current = await getRun(activeRunId);
+        if (!isActive) return;
+        if (current.ai_enhanced) {
+          setAiEnhancedReady(true);
+          return;
+        }
+      } catch { /* ignore transient errors */ }
+      if (isActive) timer = setTimeout(poll, 5000);
+    };
+    timer = setTimeout(poll, 5000);
+    return () => {
+      isActive = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [activeRunId, run, aiEnhancedReady]);
+
+  // Reset AI enhancement state when run changes
+  useEffect(() => {
+    setAiEnhancedReady(run?.ai_enhanced ?? false);
+    setActivatingAi(false);
+  }, [run?.manifest?.run_id]);
+
+  const handleActivateAi = async () => {
+    if (!activeRunId || activatingAi) return;
+    setActivatingAi(true);
+    try {
+      const updated = await activateAiAnswers(activeRunId);
+      setRun(updated);
+      setAiEnhancedReady(false);
+    } catch (e) {
+      console.error("Failed to activate AI answers:", e);
+    } finally {
+      setActivatingAi(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -650,6 +704,7 @@ function AppContent() {
   }
 
   const handleUploadComplete = async (files: File[]) => {
+    setPendingDropFiles([]);
     setUploadError("");
     setAutofillJob(null);
     setLoadingMessage("Extracting Section 32 answers, review flags, and autofill actions...");
@@ -806,7 +861,7 @@ function AppContent() {
 
   const handleSaveSettings = async (nextSettings: LocalSettingsForm) => {
     const saved = await saveSettings(nextSettings);
-    const merged = { ...saved, theme: nextSettings.theme ?? saved.theme ?? "light" };
+    const merged: LocalSettingsForm = { googleApiKey: "", openRouterApiKey: "", aiMode: "cost_efficient", ...saved, theme: nextSettings.theme ?? saved.theme ?? "light" };
     setSettings(merged);
     localStorage.setItem(firstRunKey(user.user_id), "true");
     localStorage.setItem("convey:theme", merged.theme);
@@ -918,6 +973,32 @@ function AppContent() {
     }
   };
 
+  const handleReinstallCurrentVersion = async () => {
+    if (installingUpdate) return;
+    setInstallingUpdate(true);
+    setUpdateError("");
+    try {
+      const payload = await reinstallCurrentVersion({
+        updateRepository: settings.updateRepository || undefined,
+      });
+      const installerPath = payload.download.installer_path;
+      const bridge = window as unknown as DesktopBridge;
+      const launchInstaller = bridge.pywebview?.api?.launch_installer;
+      if (launchInstaller && installerPath) {
+        await Promise.resolve(launchInstaller(installerPath));
+        bridge.pywebview?.api?.close_app?.();
+        return;
+      }
+      if (updateStatus?.release_url) {
+        window.open(updateStatus.release_url, "_blank", "noopener,noreferrer");
+      }
+    } catch (error) {
+      setUpdateError(error instanceof Error ? error.message : "Could not download the reinstall package.");
+    } finally {
+      setInstallingUpdate(false);
+    }
+  };
+
   const userInitials = user.name
     ? user.name.split(" ").map((name) => name[0]).join("").slice(0, 2).toUpperCase()
     : (user.email?.[0] ?? "?").toUpperCase();
@@ -932,7 +1013,68 @@ function AppContent() {
   const handleProcessNew = () => {
     setRun(null);
     setUploadError("");
+    setPendingDropFiles([]);
     goUpload();
+  };
+
+  const handleDashboardDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDashboardDragOver(false);
+
+    const dropped = Array.from(e.dataTransfer.files);
+    const plainText = e.dataTransfer.getData("text/plain");
+    const uriList = e.dataTransfer.getData("text/uri-list");
+    const htmlText = e.dataTransfer.getData("text/html");
+
+    // Collect local paths from .path property on File objects (PyWebView/desktop drops)
+    const filePaths: string[] = [];
+    for (const f of dropped) {
+      const p = (f as File & { path?: string }).path;
+      if (p && p.trim()) filePaths.push(p.trim());
+    }
+
+    // Extract paths from text data (TriConvey reference drops)
+    const textPaths: string[] = [];
+    for (const raw of [plainText, uriList, htmlText]) {
+      if (!raw) continue;
+      for (const match of raw.matchAll(/file:\/\/\/[^\s"'<>]+/gi)) textPaths.push(match[0]);
+      for (const match of raw.matchAll(/@?[A-Za-z]:\\[^\r\n"<>|?*]+/g)) textPaths.push(match[0].replace(/^@+/, ""));
+    }
+
+    setRun(null);
+    setUploadError("");
+
+    // If we have desktop file paths, create a reference file that UploadScreen resolves
+    if (filePaths.length > 0) {
+      const refContent = JSON.stringify({ LocalPaths: filePaths }, null, 2);
+      const stamp = Math.abs(filePaths.join("").split("").reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0));
+      const refFile = new File([refContent], `triconvey-drop-${stamp}.json`, { type: "application/json", lastModified: stamp });
+      setPendingDropFiles([refFile]);
+      navigate("/analysis/upload", { replace: false });
+      return;
+    }
+
+    if (textPaths.length > 0) {
+      const refContent = JSON.stringify({ LocalPaths: textPaths }, null, 2);
+      const stamp = Math.abs(textPaths.join("").split("").reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0));
+      const refFile = new File([refContent], `triconvey-drop-${stamp}.json`, { type: "application/json", lastModified: stamp });
+      setPendingDropFiles([refFile]);
+      navigate("/analysis/upload", { replace: false });
+      return;
+    }
+
+    // Check for TriConvey matter payload in text/plain
+    if (plainText?.trim().includes('"MatterId"')) {
+      const stamp = Date.now();
+      const refFile = new File([plainText.trim()], `triconvey-drop-${stamp}.json`, { type: "application/json", lastModified: stamp });
+      setPendingDropFiles([refFile]);
+      navigate("/analysis/upload", { replace: false });
+      return;
+    }
+
+    if (!dropped.length) return;
+    setPendingDropFiles(dropped);
+    navigate("/analysis/upload", { replace: false });
   };
 
   const handleViewRun = (runId: string) => {
@@ -1062,6 +1204,24 @@ function AppContent() {
       <Route
         path="/dashboard"
         element={
+          <div
+            className="relative h-full min-h-screen"
+            onDragOver={(e) => { e.preventDefault(); setIsDashboardDragOver(true); }}
+            onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDashboardDragOver(false); }}
+            onDragEnd={() => setIsDashboardDragOver(false)}
+            onDrop={handleDashboardDrop}
+          >
+            {isDashboardDragOver && (
+              <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-blue-500/10 backdrop-blur-[1px]">
+                <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-blue-400 bg-white/90 px-12 py-10 shadow-2xl dark:bg-slate-900/90">
+                  <svg className="h-12 w-12 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  <p className="text-lg font-semibold text-blue-700 dark:text-blue-300">Drop files to upload</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">PDF and Word documents supported</p>
+                </div>
+              </div>
+            )}
           <DashboardScreen
             userName={user.name}
             userInitials={userInitials}
@@ -1090,6 +1250,18 @@ function AppContent() {
             cloudSyncStatus={cloudSyncStatus}
             onProcessNew={handleProcessNew}
             onViewRun={handleViewRun}
+            onDeleteRun={async (runId) => {
+              await deleteRun(runId);
+              setRecentRuns((prev) => {
+                const next = prev.filter((r) => r.run_id !== runId);
+                if (user) saveRecentRuns(user.user_id, next);
+                return next;
+              });
+              if (activeRunId === runId) {
+                setActiveRunId(null);
+                setRun(null);
+              }
+            }}
             onProfile={goProfile}
             onSettings={goSettings}
             onPolicy={goPolicy}
@@ -1107,6 +1279,7 @@ function AppContent() {
             onDismissQuickSetup={handleDismissQuickSetup}
             onBrowseTriconveyPath={() => void handleBrowseTriconveyPath()}
           />
+          </div>
         }
       />
       <Route
@@ -1123,6 +1296,8 @@ function AppContent() {
             onUploadComplete={handleUploadComplete}
             errorMessage={uploadError}
             onResolveTriconveyReference={resolveTriconveyReference}
+            initialFiles={pendingDropFiles.length ? pendingDropFiles : undefined}
+            key={pendingDropFiles.length ? pendingDropFiles.map(f => f.name).join(",") : "upload"}
           />
         }
       />
@@ -1174,6 +1349,7 @@ function AppContent() {
             isInstallingUpdate={installingUpdate}
             onCheckForUpdates={() => void handleCheckForUpdates(true)}
             onInstallUpdate={() => void handleDownloadAndInstallUpdate()}
+            onReinstallCurrentVersion={() => void handleReinstallCurrentVersion()}
             onBrowseTriconveyPath={() => void handleBrowseTriconveyPath()}
             onOpenLocalDataDir={() => void handleOpenLocalDataDir()}
             onThemePreview={applyThemePreference}
@@ -1209,6 +1385,7 @@ function AppContent() {
             isInstallingUpdate={installingUpdate}
             onCheckForUpdates={() => void handleCheckForUpdates(true)}
             onInstallUpdate={() => void handleDownloadAndInstallUpdate()}
+            onReinstallCurrentVersion={() => void handleReinstallCurrentVersion()}
           />
         }
       />

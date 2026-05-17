@@ -106,16 +106,18 @@ _ENCUMBRANCES_BLOCK_RE = re.compile(
 )
 
 # A typed encumbrance entry: TYPE, dealing number, date.
-# Dealing number shape: 2+ uppercase letters then digits (e.g. BA088550M,
-# PS826454D). This excludes the word "Section" which appears in NOTICE
-# headers like "NOTICE Section 47(2) Heritage Act 1995".
+# Dealing number shapes:
+#   [A-Z]{1,3}\d+[A-Z]?  covers AW439698S, BA088550M, H496232 (single-letter prefix)
+#   \d{4,}[A-Z]?         covers pure-numeric instruments like 1489008
+# Two-letter minimum was historically used to exclude "Section 47" noise; we
+# now rely on the keyword anchor (MORTGAGE|COVENANT|…) to prevent false matches.
 _ENCUMBRANCE_HEAD_RE = re.compile(
     r"(MORTGAGE|COVENANT|CAVEAT|AGREEMENT|SECTION 173 AGREEMENT|NOTICE)"
-    r"(?:\s+([A-Z]{2,}\d+[A-Z]?|\d{5,}[A-Z]?)\b)?"
+    r"(?:\s+([A-Z]{1,3}\d+[A-Z]?|\d{4,}[A-Z]?)\b)?"
     r"(?:\s+(\d{2}/\d{2}/\d{4}))?",
 )
 
-_DEALING_IN_BODY_RE = re.compile(r"\b([A-Z]{2,}\d+[A-Z]?|\d{5,}[A-Z]?)\s+(\d{2}/\d{2}/\d{4})\b")
+_DEALING_IN_BODY_RE = re.compile(r"\b([A-Z]{1,3}\d+[A-Z]?|\d{4,}[A-Z]?)\s+(\d{2}/\d{2}/\d{4})\b")
 
 _DIAGRAM_LOCATION_RE = re.compile(
     r"\n[ \t]*DIAGRAM LOCATION[ \t]*\n(.+?)\n[ \t]*ACTIVITY IN THE LAST",
@@ -130,6 +132,14 @@ _STREET_ADDRESS_RE = re.compile(
 _ECT_CONTROL_RE = re.compile(
     r"eCT Control\s+(.+?)\s+Effective from\s+(\d{2}/\d{2}/\d{4})",
     re.IGNORECASE | re.DOTALL,
+)
+
+# Owners Corporations section — page 2 of the title.
+# Matches: "The land in this folio is affected by\n  OWNERS CORPORATION 1 PLAN NO. PS723695D"
+_OWNERS_CORP_SECTION_RE = re.compile(
+    r"OWNERS\s+CORPORATIONS?\s+The\s+land\s+in\s+this\s+folio\s+is\s+affected\s+by\s+"
+    r"((?:OWNERS\s+CORPORATION\s+\S+(?:\s+PLAN\s+NO\.\s+\S+)?\s*)+)",
+    re.IGNORECASE,
 )
 
 
@@ -182,9 +192,10 @@ def _extract_volume_folio(doc: Document, text: str) -> list[Fact]:
     m = _VOLUME_FOLIO_RE.search(text)
     if not m:
         return []
-    volume, folio = m.group(1), m.group(2)
+    volume = m.group(1)
+    folio = m.group(2)
     quote = m.group(0)
-    combined = f"VOLUME {volume} FOLIO {folio}"
+    combined = f"Volume {volume} Folio {folio}"
     return [
         _make_fact(doc, P.TITLE_VOLUME_FOLIO, combined, quote, confidence=0.99),
         _make_fact(doc, P.TITLE_VOLUME, volume, quote, confidence=0.99),
@@ -219,7 +230,23 @@ def _extract_land_description(doc: Document, text: str) -> list[Fact]:
 
     if plan_match := _PLAN_RE.search(description):
         plan_type = _compact(plan_match.group(1))
-        plan_number = _normalize_plan_number(plan_type, _compact(plan_match.group(2)))
+        raw_num = _compact(plan_match.group(2))
+        plan_number = _normalize_plan_number(plan_type, raw_num)
+
+        # If the raw number had no prefix (e.g. "121955"), the normalizer
+        # guesses PS.  Cross-check with "Created by instrument LP121955" —
+        # if the instrument carries a more specific prefix for the same
+        # numeric value, use that instead (LP beats PS for licensed plans).
+        if not any(raw_num.upper().startswith(p) for p in _KNOWN_PLAN_PREFIXES):
+            instr_m = _CREATED_BY_RE.search(text)
+            if instr_m:
+                instr = instr_m.group(1).upper()
+                instr_digits = re.sub(r"[^0-9]", "", instr)
+                raw_digits = re.sub(r"[^0-9]", "", raw_num)
+                if raw_digits and instr_digits == raw_digits and any(
+                    instr.startswith(p) for p in _KNOWN_PLAN_PREFIXES
+                ):
+                    plan_number = instr
         facts.append(
             _make_fact(doc, P.TITLE_PLAN_TYPE, plan_type, quote)
         )
@@ -412,6 +439,24 @@ def _extract_street_address(doc: Document, text: str) -> list[Fact]:
     ]
 
 
+def _extract_owners_corporations(doc: Document, text: str) -> list[Fact]:
+    m = _OWNERS_CORP_SECTION_RE.search(text)
+    if not m:
+        return []
+    names_block = _compact(m.group(1))
+    quote = _compact(m.group(0))
+    # Collect individual OC identifiers (e.g. "OWNERS CORPORATION 1 PLAN NO. PS723695D")
+    oc_entries = re.findall(
+        r"OWNERS\s+CORPORATION\s+(\S+(?:\s+PLAN\s+NO\.\s+\S+)?)",
+        names_block,
+        re.IGNORECASE,
+    )
+    return [
+        _make_fact(doc, P.TITLE_HAS_OWNERS_CORPORATION, True, quote, confidence=0.99),
+        _make_fact(doc, P.TITLE_OWNERS_CORPORATION_NAMES, oc_entries, quote, confidence=0.99),
+    ]
+
+
 def _extract_ect_control(doc: Document, text: str) -> list[Fact]:
     m = _ECT_CONTROL_RE.search(text)
     if not m:
@@ -455,4 +500,13 @@ def extract_vic_title_facts(doc: Document) -> list[Fact]:
     facts.extend(_extract_diagram_location(doc, text))
     facts.extend(_extract_street_address(doc, text))
     facts.extend(_extract_ect_control(doc, text))
+    oc_facts = _extract_owners_corporations(doc, text)
+    facts.extend(oc_facts)
+    # If this is a valid RSS (has Volume/Folio) but no OC section found, emit explicit False
+    # so vendor-form fallback cannot wrongly tick the OC checkbox.
+    has_oc_fact = any(f.path == P.TITLE_HAS_OWNERS_CORPORATION for f in oc_facts)
+    if not has_oc_fact and _VOLUME_FOLIO_RE.search(text):
+        facts.append(
+            _make_fact(doc, P.TITLE_HAS_OWNERS_CORPORATION, False, "no OWNERS CORPORATIONS section found", confidence=0.95)
+        )
     return facts

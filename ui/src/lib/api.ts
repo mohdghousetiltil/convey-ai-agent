@@ -59,6 +59,8 @@ export interface ReviewRunPayload {
   progress_pct?: number;
   progress_status?: string;
   error_message?: string;
+  ai_enhanced?: boolean;
+  ai_activated?: boolean;
   client_name: string;
   matter: {
     client_name: string;
@@ -215,7 +217,9 @@ export interface LocalSettingsPayload {
   language: string;
   openAiApiKey: string;
   anthropicApiKey: string;
-  aiProvider: "openai" | "anthropic" | "hybrid";
+  googleApiKey?: string;
+  openRouterApiKey?: string;
+  aiProvider: "openai" | "anthropic" | "hybrid" | "google" | "openrouter";
   aiMode: "cost_efficient" | "all_time_best" | "turbo";
   defaultModelName: string;
   triconveyPath: string;
@@ -883,7 +887,7 @@ export async function createRun(
   const body = new FormData();
   for (const file of files) body.append("files", file);
   body.append("use_ai_review", String(options?.useAiReview ?? false));
-  body.append("model", options?.model ?? "gpt-4.1-mini");
+  body.append("model", options?.model ?? "nvidia/nemotron-3-super-120b-a12b:free");
   if (options?.triconveyExe) body.append("triconvey_exe", options.triconveyExe);
   if (options?.reanalyseRunId) body.append("reanalyse_run_id", options.reanalyseRunId);
   return apiRequest<ReviewRunPayload>("/runs", { method: "POST", body });
@@ -893,12 +897,20 @@ export async function getRun(runId: string): Promise<ReviewRunPayload> {
   return apiRequest<ReviewRunPayload>(`/runs/${runId}`);
 }
 
+export async function activateAiAnswers(runId: string): Promise<ReviewRunPayload> {
+  return apiRequest<ReviewRunPayload>(`/runs/${runId}/activate-ai`, { method: "POST" });
+}
+
 export async function getRecentRuns(limit = 10): Promise<RecentRunPayload[]> {
   return apiRequest<RecentRunPayload[]>(`/runs/recent?limit=${encodeURIComponent(String(limit))}`);
 }
 
 export async function getAllRuns(): Promise<RecentRunPayload[]> {
   return apiRequest<RecentRunPayload[]>(`/runs/recent?limit=1000`);
+}
+
+export async function deleteRun(runId: string): Promise<void> {
+  await apiRequest<null>(`/runs/${runId}`, { method: "DELETE" });
 }
 
 export async function saveAnswers(
@@ -966,6 +978,7 @@ export async function askRunQuestion(
     history?: Array<{ role: "user" | "assistant"; content: string }>;
     mode?: "quick" | "standard" | "thorough";
     aiMode?: "cost_efficient" | "all_time_best" | "turbo";
+    sessionId?: string;
     signal?: AbortSignal;
   },
 ): Promise<ChatAnswerPayload> {
@@ -1215,6 +1228,18 @@ export async function downloadUpdateInstaller(options?: {
   });
 }
 
+export async function reinstallCurrentVersion(options?: {
+  updateRepository?: string;
+}): Promise<UpdateDownloadPayload> {
+  return apiRequest<UpdateDownloadPayload>("/app/update/reinstall", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      update_repository: options?.updateRepository ?? null,
+    }),
+  });
+}
+
 export async function downloadBrainELogs(runId: string): Promise<void> {
   const { blob, filename } = await apiRequestBlob(`/runs/${runId}/brain-e-logs`, {
     method: "GET",
@@ -1256,13 +1281,42 @@ export interface SmokeballMatter {
  */
 export async function pushS32ToSmokeball(
   matterNumber: string,
-  answers: Record<string, unknown>
+  answers: Record<string, unknown>,
+  runId?: string,
 ): Promise<SmokeballPushResult> {
   return apiRequest<SmokeballPushResult>("/smokeball/push-s32", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ matter_number: matterNumber, answers }),
+    body: JSON.stringify({ matter_number: matterNumber, answers, run_id: runId ?? null }),
   });
+}
+
+export interface SmokeballMatterSuggestion {
+  MatterNumber: string | null;
+  Client: string | null;
+  OtherSide: string | null;
+  Description: string | null;
+  Status: string | null;
+  DateOpened: string;
+}
+
+export interface SmokeballSuggestResponse {
+  phrase: string;
+  db_exists: boolean;
+  error: string | null;
+  results: SmokeballMatterSuggestion[];
+}
+
+/**
+ * Search the local Smokeball SQLite DB for matters matching a volume/folio pair.
+ * Does NOT require triConvey.exe to be running.
+ */
+export async function suggestSmokeballMatters(
+  volume: string,
+  folio: string,
+): Promise<SmokeballSuggestResponse> {
+  const params = new URLSearchParams({ volume, folio });
+  return apiRequest<SmokeballSuggestResponse>(`/smokeball/suggest-matter?${params}`);
 }
 
 /**

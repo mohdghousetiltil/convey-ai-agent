@@ -6,6 +6,7 @@ load_dotenv()
 
 import asyncio
 import logging
+import sqlite3
 from functools import partial
 import base64
 import json
@@ -955,6 +956,27 @@ def post_update_check(
     )
 
 
+@app.post("/api/app/update/reinstall")
+def post_reinstall_current(
+    body: UpdateInstallRequest,
+    ctx: AuthContext = Depends(require_auth),
+) -> dict[str, Any]:
+    """Download and launch the installer for the currently installed version."""
+    from triconvey_agent.backend.update_manager import download_current_version_installer
+    settings = load_local_settings(user_id=str(ctx.user.id))
+    try:
+        download = download_current_version_installer(
+            current_version=get_app_version(),
+            update_repository=body.update_repository or settings.get("updateRepository"),
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return {
+        "release": {"current_version": get_app_version()},
+        "download": download,
+    }
+
+
 @app.post("/api/app/update/download")
 def post_update_download(
     body: UpdateInstallRequest,
@@ -998,7 +1020,7 @@ def ui_index() -> FileResponse:
 async def create_run(background_tasks: BackgroundTasks, 
     files: list[UploadFile] = File(default=[]),
     use_ai_review: bool = Form(False),
-    model: str = Form("gpt-4.1-mini"),
+    model: str = Form("nvidia/nemotron-3-super-120b-a12b:free"),
     triconvey_exe: str | None = Form(None),
     reanalyse_run_id: str | None = Form(None),
     ctx: AuthContext = Depends(require_auth),
@@ -1351,6 +1373,55 @@ async def get_run(
         payload["status"] = "completed" if run_row.status in {"complete", "completed"} else run_row.status
         payload["progress_pct"] = 100.0
         payload["progress_status"] = "Complete"
+    # Signal UI when background AI enhancement has finished
+    payload["ai_enhanced"] = (run_dir / "ai_enhanced_answers.json").exists()
+    return payload
+
+
+@app.delete("/api/runs/{run_id}", status_code=204)
+async def delete_run(
+    run_id: str,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Delete a run record from DB and remove its local files."""
+    import uuid as _uuid
+    import shutil as _shutil
+
+    try:
+        run_uuid = _uuid.UUID(run_id)
+        run_row = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid, user_id=ctx.user.id)
+        if run_row:
+            await session.delete(run_row)
+            await session.commit()
+    except Exception:
+        pass
+
+    runtime = ensure_runtime_dirs()
+    run_dir = runtime.ui_runs_dir / run_id
+    if run_dir.exists() and run_dir.is_dir():
+        try:
+            _shutil.rmtree(run_dir)
+        except Exception:
+            pass
+
+
+@app.post("/api/runs/{run_id}/activate-ai")
+async def activate_ai_answers(
+    run_id: str,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Replace answers.json with ai_enhanced_answers.json and reload the run payload."""
+    import shutil as _shutil
+    run_dir = _resolve_run_dir(run_id)
+    enhanced = run_dir / "ai_enhanced_answers.json"
+    if not enhanced.exists():
+        raise HTTPException(status_code=404, detail="AI-enhanced answers not ready yet.")
+    _shutil.copy2(enhanced, run_dir / "answers.json")
+    payload = load_run_payload(run_dir)
+    payload["ai_enhanced"] = True
+    payload["ai_activated"] = True
     return payload
 
 
@@ -1435,16 +1506,15 @@ async def chat_about_run(
         user_id = str(ctx.user.id)
         session_id = body.session_id or str(uuid4())
 
+        ai_provider = _resolve_ai_provider(saved_settings)
+
         # ── Feature 4: retrieve vector memory context ──────────────────
         vector_memories: list[dict] = []
         try:
             from triconvey_agent.ai.multi_client import MultiModelClient
             from triconvey_agent.memory.vector_store import search_memory as _search_memory
 
-            mc = MultiModelClient(
-                provider=saved_settings.get("aiProvider", "openai"),
-                model=model,
-            )
+            mc = MultiModelClient(provider=ai_provider, model=model)
             query_embedding = mc.embed(body.question)
             vector_memories = await _search_memory(user_id, query_embedding, limit=5)
         except Exception as _mem_exc:
@@ -1455,7 +1525,7 @@ async def chat_about_run(
             question=body.question,
             model=model,
             history=history,
-            ai_provider=saved_settings.get("aiProvider", "openai"),
+            ai_provider=ai_provider,
             ai_mode=body.aiMode or saved_settings.get("aiMode", "cost_efficient"),
             mode=body.mode or "standard",
             session_id=session_id,
@@ -1468,10 +1538,7 @@ async def chat_about_run(
             from triconvey_agent.memory.vector_store import save_memory as _save_memory
 
             exchange_text = f"Q: {body.question}\nA: {result.get('answer', '')}"
-            mc2 = MultiModelClient(
-                provider=saved_settings.get("aiProvider", "openai"),
-                model=model,
-            )
+            mc2 = MultiModelClient(provider=ai_provider, model=model)
             exchange_embedding = mc2.embed(exchange_text)
             await _save_memory(user_id, session_id, exchange_text, exchange_embedding)
         except Exception as _save_exc:
@@ -2252,12 +2319,14 @@ def _smokeball_debug(event: str, **fields: Any) -> None:
 class SmokeballPushRequest(BaseModel):
     matter_number: str
     answers: dict[str, Any] = Field(default_factory=dict)
+    run_id: str | None = None
 
 
 @app.post("/api/smokeball/push-s32")
 async def push_s32_to_smokeball(
     body: SmokeballPushRequest,
     ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
 ) -> dict[str, Any]:
     """Push Section 32 conveyancing fields directly into Smokeball/TriConvey."""
     # Apply client policy filter — only push fields that are starred in custom policy.
@@ -2295,6 +2364,69 @@ async def push_s32_to_smokeball(
     if not result.get("success"):
         raise HTTPException(status_code=502, detail=result.get("error", "Push failed"))
 
+    if body.run_id:
+        import uuid as _uuid
+        try:
+            run_uuid = _uuid.UUID(body.run_id)
+            run_row = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid, user_id=ctx.user.id)
+            if run_row:
+                run_row.status = "smokeball_pushed"
+                await session.commit()
+        except Exception:
+            pass
+
+    # Auto-save water authority copy rules after a successful push.
+    # All 4 outgoing rows are checked; only council / land tax / owners corp names are excluded.
+    try:
+        import re as _re
+
+        _NON_WATER = (
+            "land tax", "state revenue", "owners corporation", "owner corporation",
+            "council", "shire", "city of ", "town of ",
+        )
+
+        def _is_non_water(name: str) -> bool:
+            n = name.strip().lower()
+            return any(kw in n for kw in _NON_WATER)
+
+        def _parse_dollar(value: Any) -> float | None:
+            if value is None:
+                return None
+            s = _re.sub(r"[^\d.]", "", str(value))
+            try:
+                return float(s) if s else None
+            except ValueError:
+                return None
+
+        def _get_val(ans: Any) -> Any:
+            if isinstance(ans, dict):
+                return ans.get("human_value_json") or ans.get("value_json") or ans.get("value")
+            return ans
+
+        changed_by = str(ctx.user.id)
+        for row_num in range(1, 5):  # all rows
+            auth_key = f"sec32_1.1_outgoing_{row_num}_authority"
+            amt_key = f"sec32_1.1_outgoing_{row_num}_amount"
+            auth_answer = body.answers.get(auth_key)
+            amt_answer = body.answers.get(amt_key)
+            if not auth_answer:
+                continue
+            auth_name = str(_get_val(auth_answer) or "").strip()
+            amt_raw = _get_val(amt_answer)
+            amount = _parse_dollar(amt_raw)
+            if not auth_name or _is_non_water(auth_name) or amount is None or amount <= 0:
+                continue
+            await CopyRuleRepo.upsert_water_authority(
+                session,
+                client_id=ctx.client.id,
+                authority_name=auth_name,
+                annual_amount=amount,
+                changed_by=changed_by,
+            )
+        await session.commit()
+    except Exception:
+        LOG.exception("auto-save water copy rules failed (non-fatal)")
+
     return result
 
 
@@ -2324,6 +2456,98 @@ async def list_smokeball_matters(
         raise HTTPException(status_code=500, detail=str(exc))
 
     return matters
+
+
+@app.get("/api/smokeball/suggest-matter")
+async def suggest_smokeball_matter(
+    volume: str = "",
+    folio: str = "",
+    ctx: AuthContext = Depends(require_auth),
+) -> dict[str, Any]:
+    """Search the local Smokeball SQLite DB for matters matching a volume/folio pair.
+
+    Response shape:
+      { phrase: str, db_exists: bool, error: str|null, results: [...] }
+    """
+    volume = volume.strip()
+    folio = folio.strip()
+    if not volume or not folio:
+        return {"phrase": "", "db_exists": False, "error": None, "results": []}
+
+    GRAPHQL_ENTITIES_DB = Path(r"C:\Program Files\Smokeball\dataAu\graphql-entities.db")
+    MATTER_TYPE = "MatterManagement.BrowseMatters.Online.Desktop.Models.OnlineMatterEntity"
+
+    # Smokeball stores volume/folio as "Volume XXXX Folio XXX" — title case, no leading zeros.
+    try:
+        vol_norm = str(int(volume))
+    except ValueError:
+        vol_norm = volume
+
+    search_phrase = f"Volume {vol_norm} Folio {folio}"
+
+    def _query() -> dict:
+        if not GRAPHQL_ENTITIES_DB.exists():
+            _smokeball_debug("suggest_matter_db_missing", path=str(GRAPHQL_ENTITIES_DB))
+            return {"phrase": search_phrase, "db_exists": False, "error": f"DB not found: {GRAPHQL_ENTITIES_DB}", "results": []}
+        try:
+            uri = f"file:{GRAPHQL_ENTITIES_DB}?mode=ro"
+            with sqlite3.connect(uri, uri=True, timeout=3) as conn:
+                conn.row_factory = sqlite3.Row
+                cur = conn.execute(
+                    """
+                    SELECT Value FROM entities
+                    WHERE Type = ?
+                      AND Value LIKE '%' || ? || '%'
+                    LIMIT 10
+                    """,
+                    (MATTER_TYPE, search_phrase),
+                )
+                results: list[dict] = []
+                for row in cur.fetchall():
+                    try:
+                        data = json.loads(row["Value"])
+                    except Exception:
+                        continue
+                    results.append({
+                        "MatterNumber": data.get("MatterNumber") or None,
+                        "Client":       data.get("ClientDisplay"),
+                        "OtherSide":    data.get("OtherSideDisplay"),
+                        "Description":  data.get("DescriptionAutomation"),
+                        "Status":       data.get("Status"),
+                        "DateOpened":   (data.get("DateOpened") or "")[:10],
+                    })
+                _smokeball_debug("suggest_matter_result", phrase=search_phrase, count=len(results))
+                return {"phrase": search_phrase, "db_exists": True, "error": None, "results": results}
+        except Exception as exc:
+            _smokeball_debug("suggest_matter_db_error", error=repr(exc))
+            LOG.warning("suggest_smokeball_matter DB error: %s", exc)
+            return {"phrase": search_phrase, "db_exists": True, "error": str(exc), "results": []}
+
+    try:
+        payload = await asyncio.get_event_loop().run_in_executor(None, _query)
+    except Exception as exc:
+        LOG.exception("suggest_smokeball_matter failed")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    return payload
+
+
+def _resolve_ai_provider(saved_settings: dict[str, Any]) -> str:
+    """Return the AI provider to use for chat/embeddings.
+
+    Uses the user's saved preference when set, otherwise auto-detects based on
+    which API keys are available — defaulting to OpenRouter when nothing is configured.
+    """
+    configured = saved_settings.get("aiProvider", "")
+    if configured and configured != "openai":
+        # Explicit non-openai preference (anthropic / google / openrouter).
+        return configured
+    # If configured as "openai", verify the key actually exists.
+    if configured == "openai" and os.getenv("OPENAI_API_KEY"):
+        return "openai"
+    # Auto-detect.
+    from triconvey_agent.ai.multi_client import MultiModelClient
+    return MultiModelClient._detect_default_provider()
 
 
 def _resolve_run_dir(run_id: str) -> Path:
@@ -3119,15 +3343,20 @@ async def _persist_run_to_db(
     # 2. Insert document metadata rows (one per uploaded file).
     #    The pipeline output doesn't expose individual file metadata directly,
     #    so we read the manifest's document list from disk if available.
+    raw_facts: dict = {}
     try:
         run_dir = Path(payload.get("run_dir", ""))
         facts_path = run_dir / "facts.json"
         if facts_path.exists():
             import json as _json
-
             raw_facts = _json.loads(facts_path.read_text(encoding="utf-8"))
-            docs_meta = raw_facts.get("documents", [])
-            if docs_meta:
+    except Exception as exc:
+        LOG.warning("Could not read facts.json: %s", exc)
+
+    if raw_facts:
+        docs_meta = raw_facts.get("documents", [])
+        if docs_meta:
+            try:
                 doc_rows = [
                     {
                         "filename": d.get("file", "unknown"),
@@ -3141,8 +3370,12 @@ async def _persist_run_to_db(
                     for d in docs_meta
                 ]
                 await DocumentRepo.create_batch(session, run_id=run_uuid, documents=doc_rows)
+            except Exception as exc:
+                LOG.warning("Could not persist document rows to DB: %s", exc)
+                await session.rollback()
 
-            # 3. Insert facts (winning facts only to keep DB lean; full facts in JSON).
+        # 3. Insert facts (winning facts only to keep DB lean; full facts in JSON).
+        try:
             facts_dict: dict[str, list[dict[str, Any]]] = raw_facts.get("facts", {})
             fact_rows: list[dict[str, Any]] = []
             for path_key, path_facts in facts_dict.items():
@@ -3171,9 +3404,9 @@ async def _persist_run_to_db(
                     })
             if fact_rows:
                 await FactRepo.bulk_insert(session, run_id=run_uuid, facts=fact_rows)
-
-    except Exception as exc:
-        LOG.warning("Could not read facts.json for DB persistence: %s", exc)
+        except Exception as exc:
+            LOG.warning("Could not persist facts to DB: %s", exc)
+            await session.rollback()
 
     # 4. Insert answers (all tabs flattened).
     try:
@@ -3205,6 +3438,7 @@ async def _persist_run_to_db(
             )
     except Exception as exc:
         LOG.warning("Could not persist answers to DB: %s", exc)
+        await session.rollback()
 
 
 def _is_uuid(value: str) -> bool:

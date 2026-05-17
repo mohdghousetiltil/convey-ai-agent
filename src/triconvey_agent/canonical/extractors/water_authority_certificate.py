@@ -74,6 +74,8 @@ _AUTHORITY_ALIASES: dict[str, str] = {
     "central highlands region water corporation": "Central Highlands Water",
     "grampians wimmera mallee water corporation": "GWMWater",
     "greater western water corporation": "Greater Western Water",
+    "greater west water": "Greater Western Water",
+    "greater west water corporation": "Greater Western Water",
 }
 
 # ---------------------------------------------------------------------------
@@ -993,6 +995,31 @@ def _candidate_to_facts(doc: Document, winner: WaterCandidate) -> list[Fact]:
 # ---------------------------------------------------------------------------
 
 
+# Matches unit addresses like "1/14 BELL ST", "UNIT 3/14 BELL ST",
+# "Property Address: 1/14 BELL STREET", or bare "Unit 3/14" anywhere in text.
+_UNIT_ADDR_RE = re.compile(
+    r"(?:"
+    r"(?:Property\s+Address[:\s]+|Address[:\s]+)"   # labelled
+    r"|(?:^|\s)"                                      # or start/whitespace
+    r")"
+    r"(?:UNIT\s+)?(\d+)\s*/\s*\d+",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def _extract_unit_number(doc: Document, text: str) -> list[Fact]:
+    """Return a unit_number fact when the property is a strata/unit address."""
+    for m in _UNIT_ADDR_RE.finditer(text):
+        unit_no = m.group(1).strip()
+        if unit_no and int(unit_no) > 0:
+            return [_make_fact(
+                doc, P.RATES_WATER_UNIT_NUMBER, unit_no, m.group(0).strip(),
+                confidence=0.95,
+                notes=f"Unit {unit_no} detected from address in water authority document",
+            )]
+    return []
+
+
 def _extract_authority(doc: Document, text: str) -> list[Fact]:
     """Return authority name fact, normalising raw document wording to canonical name."""
     text_lower = text.lower()
@@ -1201,6 +1228,7 @@ def extract_water_authority_certificate_facts(
     authority_name: str | None = str(auth_facts[0].value) if auth_facts else None
 
     # --- Non-amount facts ---
+    facts.extend(_extract_unit_number(doc, text))
     facts.extend(_extract_certificate_number(doc, text))
     facts.extend(_extract_property_row(doc, text))
     facts.extend(_extract_outstanding(doc, text))

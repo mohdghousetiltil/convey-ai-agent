@@ -521,14 +521,102 @@ questions:
     tab: "Sec. 32 (4)"
     label: "Attached is a current owners corporation certificate (s151)"
     fact_paths:
+      - title.has_owners_corporation
       - rates.owners_corporation.exists
     answer_strategy: deterministic
     value_transform: direct
     expected_type: bool
     description: |
-      Check when an active OC certificate has been obtained and attached.
-      Source: rates.owners_corporation.exists (True = active OC → tick this).
-      Mutually exclusive with 'Owners Corporation is inactive'.
+      Tick when the title PDF lists an active Owners Corporation (section headed
+      "OWNERS CORPORATIONS / The land in this folio is affected by ...").
+      Primary source: title.has_owners_corporation (from Register Search Statement).
+      Fallback: rates.owners_corporation.exists (vendor form).
+      Never tick "Owners Corporation is inactive" — leave that field blank always.
+
+  # ===========================================================================
+  # Sec. 32 (5) — Title + Subdivision
+  # ===========================================================================
+
+  - id: sec32_9_vendor_right_to_sell
+    tab: "Sec. 32 (5)"
+    label: "9. Title - Evidence of vendor's right or power to sell"
+    fact_paths:
+      - policy.tab5.title.vendor_right_to_sell
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  - id: sec32_10.1_unreg_plan_certified_copy
+    tab: "Sec. 32 (5)"
+    label: "10.1 Unregistered Subdivision - Attached certified plan copy"
+    fact_paths:
+      - policy.tab5.subdivision.unregistered.certified_plan_attached
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  - id: sec32_10.1_unreg_plan_latest_copy
+    tab: "Sec. 32 (5)"
+    label: "10.1 Unregistered Subdivision - Attached latest plan copy (not yet certified)"
+    fact_paths:
+      - policy.tab5.subdivision.unregistered.latest_plan_attached
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  - id: sec32_10.2_staged_plan_first_stage_copy
+    tab: "Sec. 32 (5)"
+    label: "10.2 Staged Subdivision - Attached first stage plan copy"
+    fact_paths:
+      - policy.tab5.subdivision.staged.first_stage_plan_attached
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  - id: sec32_10.2_staged_requirements_not_complied
+    tab: "Sec. 32 (5)"
+    label: "10.2 Staged Subdivision - Requirements not complied with (statement of compliance)"
+    fact_paths:
+      - policy.tab5.subdivision.staged.requirements_not_complied_text
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+
+  - id: sec32_10.2_staged_proposals_subsequent_stages
+    tab: "Sec. 32 (5)"
+    label: "10.2 Staged Subdivision - Proposals re subsequent stages"
+    fact_paths:
+      - policy.tab5.subdivision.staged.subsequent_stage_proposals_text
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+
+  - id: sec32_10.2_staged_permit_contents
+    tab: "Sec. 32 (5)"
+    label: "10.2 Staged Subdivision - Permit contents (Planning and Environment Act)"
+    fact_paths:
+      - policy.tab5.subdivision.staged.permit_contents_text
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: string
+
+  - id: sec32_10.3_further_plan_certified_copy
+    tab: "Sec. 32 (5)"
+    label: "10.3 Further Plan of Subdivision - Attached certified plan copy"
+    fact_paths:
+      - policy.tab5.subdivision.further_plan.certified_plan_attached
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
+
+  - id: sec32_10.3_further_plan_latest_copy
+    tab: "Sec. 32 (5)"
+    label: "10.3 Further Plan of Subdivision - Attached latest plan copy (not yet certified)"
+    fact_paths:
+      - policy.tab5.subdivision.further_plan.latest_plan_attached
+    answer_strategy: deterministic
+    value_transform: direct
+    expected_type: bool
 
   # ===========================================================================
   # Vendor form booleans (used for internal routing and Sec. 32 checks)

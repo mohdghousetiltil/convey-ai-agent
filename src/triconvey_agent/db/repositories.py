@@ -711,6 +711,7 @@ class FactRepo:
             fact_sources.extend(FactSource(fact_id=fact.id, **s) for s in sources)
         if fact_sources:
             session.add_all(fact_sources)
+            await session.flush()
         return fact_rows
 
     @staticmethod
@@ -1219,6 +1220,94 @@ class CopyRuleRepo:
             },
         )
         return row
+
+    @staticmethod
+    @staticmethod
+    async def upsert_water_authority(
+        session: AsyncSession,
+        *,
+        client_id: uuid.UUID,
+        authority_name: str,
+        annual_amount: float,
+        changed_by: str,
+    ) -> CopyRule:
+        """Create or update a water-authority copy rule by exact authority name.
+
+        If an active rule with the same authority_name already exists, its amount
+        is updated in-place (and the change is enqueued for cloud sync).
+        Otherwise a new rule is created.
+        """
+        from sqlalchemy import func as _func
+
+        stmt = (
+            select(CopyRule)
+            .where(
+                CopyRule.client_id == client_id,
+                CopyRule.rule_type == "water_authority",
+                _func.lower(CopyRule.authority_name) == authority_name.strip().lower(),
+            )
+            .limit(1)
+        )
+        q = await session.execute(stmt)
+        existing = q.scalar_one_or_none()
+
+        if existing:
+            if existing.annual_amount == float(annual_amount) and existing.is_active:
+                return existing
+            before = {
+                "authority_name": existing.authority_name,
+                "annual_amount": existing.annual_amount,
+                "notes": existing.notes,
+                "is_active": existing.is_active,
+            }
+            existing.annual_amount = float(annual_amount)
+            existing.is_active = True
+            existing.updated_by = changed_by
+            existing.updated_at = _now()
+            await session.flush()
+            session.add(
+                CopyRuleAudit(
+                    copy_rule_id=existing.id,
+                    change_type="UPDATE",
+                    changed_by=changed_by,
+                    old_authority_name=before["authority_name"],
+                    old_annual_amount=before["annual_amount"],
+                    old_is_active=before["is_active"],
+                    old_notes=before["notes"],
+                    new_authority_name=existing.authority_name,
+                    new_annual_amount=existing.annual_amount,
+                    new_is_active=existing.is_active,
+                    new_notes=existing.notes,
+                )
+            )
+            await _enqueue_sync(
+                session,
+                client_id=client_id,
+                entity_type="copy_rule",
+                entity_id=existing.id,
+                operation="UPSERT",
+                payload={
+                    "rule_type": existing.rule_type,
+                    "authority_name": existing.authority_name,
+                    "annual_amount": existing.annual_amount,
+                    "notes": existing.notes,
+                    "is_active": existing.is_active,
+                    "updated_by": existing.updated_by,
+                    "updated_at": existing.updated_at.isoformat() if existing.updated_at else None,
+                },
+            )
+            return existing
+
+        return await CopyRuleRepo.create(
+            session,
+            client_id=client_id,
+            rule_type="water_authority",
+            authority_name=authority_name.strip(),
+            annual_amount=float(annual_amount),
+            notes="Auto-saved after Smokeball push",
+            is_active=True,
+            changed_by=changed_by,
+        )
 
     @staticmethod
     async def soft_delete(

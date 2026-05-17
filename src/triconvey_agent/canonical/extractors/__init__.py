@@ -24,9 +24,9 @@ from triconvey_agent.canonical.extractors.vic_title import (
     EXTRACTOR_NAME as VIC_TITLE_EXTRACTOR_NAME,
     extract_vic_title_facts,
 )
-from triconvey_agent.canonical.extractors.water_authority_certificate import (
+from triconvey_agent.canonical.extractors.water_authority_certificate_v2 import (
     EXTRACTOR_NAME as WATER_AUTHORITY_EXTRACTOR_NAME,
-    extract_water_authority_certificate_facts,
+    extract_water_authority_certificate_facts_v2 as extract_water_authority_certificate_facts,
 )
 from triconvey_agent.canonical.extractors.generic_doc_meta import (
     EXTRACTOR_NAME as GENERIC_META_EXTRACTOR_NAME,

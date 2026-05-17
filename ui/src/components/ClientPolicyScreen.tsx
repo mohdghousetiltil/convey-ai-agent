@@ -28,7 +28,7 @@ export interface SettingsForm {
   language: string;
   openAiApiKey: string;
   anthropicApiKey: string;
-  aiProvider: "openai" | "anthropic" | "hybrid";
+  aiProvider: "openai" | "anthropic" | "hybrid" | "google" | "openrouter";
   aiMode?: "cost_efficient" | "all_time_best" | "turbo";
   defaultModelName: string;
   triconveyPath: string;
@@ -519,7 +519,7 @@ export function ClientPolicyScreen({
             onClick={option.action}
             className="group relative cursor-pointer"
           >
-            <div className="h-full rounded-[2.5rem] border border-slate-200 dark:border-border bg-white dark:bg-card p-8 transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-200 dark:hover:shadow-none">
+            <div className="h-full rounded-[2.5rem] policy-glass border p-8 transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-200/60 dark:hover:shadow-violet-900/20">
               <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border ${option.color} transition-transform group-hover:scale-110`}>
                 <option.icon className="h-7 w-7" />
               </div>
@@ -894,7 +894,15 @@ export function ClientPolicyScreen({
   );
 
   return (
-    <div className="min-h-screen overflow-hidden bg-slate-50 dark:bg-background font-sans text-foreground">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-violet-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 font-sans text-foreground">
+      <style>{`
+        .policy-orb-1 { position:fixed; top:-15%; left:-10%; width:55%; height:55%; background:radial-gradient(circle, rgba(139,92,246,0.10) 0%, transparent 70%); pointer-events:none; z-index:0; }
+        .policy-orb-2 { position:fixed; bottom:-10%; right:-5%; width:45%; height:45%; background:radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%); pointer-events:none; z-index:0; }
+        .policy-glass { background:rgba(255,255,255,0.72) !important; backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%); border-color:rgba(255,255,255,0.55) !important; }
+        .dark .policy-glass { background:rgba(15,23,42,0.55) !important; border-color:rgba(255,255,255,0.08) !important; }
+      `}</style>
+      <div className="policy-orb-1" />
+      <div className="policy-orb-2" />
       <Header
         onBack={currentSubView === "menu" ? onBack : () => setCurrentSubView("menu")}
         onProfile={onProfile || (() => {})}
@@ -904,7 +912,7 @@ export function ClientPolicyScreen({
         title={currentSubView === "menu" ? "Custom Policy" : currentSubView === "configure" ? "Configure Rules" : "Copy Rules"}
       />
 
-      <main className="custom-scrollbar h-[calc(100vh-64px)] flex-1 overflow-y-auto px-6 py-6">
+      <main className="custom-scrollbar relative z-10 h-[calc(100vh-64px)] flex-1 overflow-y-auto px-6 py-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSubView}

@@ -120,21 +120,23 @@ def _strip_plan_prefix(plan_number: str, prefix: str) -> str:
 def _normalize_plan_num_key(num: str) -> str:
     """Normalize a plan number for deduplication.
 
-    Strips known letter prefixes and leading zeros so that
-    'LP009777' and '009777' both produce '9777' and are
-    treated as duplicates. The LP-prefixed display form wins
-    when both variants are present.
+    Strips ALL known letter prefixes and leading zeros so that
+    'LP121955', 'PS121955', and bare '121955' all produce '_121955'
+    and are treated as the same plan. The display form is chosen by
+    processing order (title-derived LP beats generic-meta PS).
     """
     s = str(num).strip().upper()
     for prefix in ("PS", "PC", "LP", "TP", "RP", "SP", "AL"):
         if s.startswith(prefix):
             rest = s[len(prefix):]
+            # Strip trailing alpha suffix for the key (e.g. PS826454D → 826454)
+            digits = re.sub(r"[^0-9]", "", rest)
             try:
-                return f"_{prefix}{int(rest)}"
+                return f"_{int(digits)}"
             except ValueError:
                 return s
     try:
-        return f"_{int(s)}"
+        return f"_{int(re.sub(r'[^0-9]', '', s))}"
     except ValueError:
         return s
 
@@ -324,7 +326,8 @@ def _plan_entries(store) -> list[str]:
             if dedup_key not in seen:
                 seen.add(dedup_key)
                 n = str(num).strip().upper()
-                full = n if n.startswith("PS") else f"PS{n}"
+                _PLAN_PREFIXES = ("PS", "PC", "LP", "TP", "RP", "SP", "AL")
+                full = n if any(n.startswith(p) for p in _PLAN_PREFIXES) else f"PS{n}"
                 lines.append(f"- Plan of Subdivision {full} dated {date}")
         except (json.JSONDecodeError, TypeError):
             pass
@@ -347,6 +350,37 @@ def _plan_entries(store) -> list[str]:
         except (json.JSONDecodeError, TypeError):
             pass
 
+    return lines
+
+
+def _mortgage_entries(store) -> list[str]:
+    """Build mortgage lines from title encumbrances."""
+    has_mortgage_fact, _ = store.get(P.TITLE_HAS_MORTGAGE)
+    if not has_mortgage_fact or not has_mortgage_fact.value:
+        return []
+
+    count = _get_value(store, P.TITLE_ENCUMBRANCE_COUNT) or 0
+    try:
+        count = int(count)
+    except (TypeError, ValueError):
+        count = 0
+
+    lines: list[str] = []
+    seen: set[str] = set()
+    for idx in range(count):
+        enc_type = _pick_fact_value(store, P.title_encumbrance(idx, "type"))
+        if str(enc_type).upper() != "MORTGAGE":
+            continue
+        enc_number = _pick_fact_value(store, P.title_encumbrance(idx, "number")) or _REVIEW_PLACEHOLDER
+        enc_date = _pick_fact_value(store, P.title_encumbrance(idx, "date")) or _REVIEW_PLACEHOLDER
+        key = f"{enc_number}/{enc_date}"
+        if key in seen:
+            continue
+        seen.add(key)
+        lines.append(f"- Mortgage {enc_number} dated {_clean_date(str(enc_date))}")
+
+    if not lines:
+        lines.append(f"- Mortgage {_REVIEW_PLACEHOLDER} dated {_REVIEW_PLACEHOLDER}")
     return lines
 
 
@@ -467,6 +501,7 @@ def _water_entries(store) -> list[str]:
     their own attachment line.
     """
     _PREFERRED_WATER_EXTRACTORS = (
+        "rule:water_authority_certificate_v2",
         "rule:water_authority_certificate_v1",
         "ai:doc_extractor:water_authority_certificate_v1",
         "ai:doc_extractor:water_authority_certificate",
@@ -550,19 +585,26 @@ def build_attachments_text(store) -> str:  # type: ignore[type-arg]
     # 3. Plan of Subdivision + Plan of Consolidation
     lines.extend(_plan_entries(store))
 
-    # 4. Covenant (if applicable)
+    # 4. Mortgage (if applicable)
+    lines.extend(_mortgage_entries(store))
+
+    # 4b. Covenant (if applicable)
     lines.extend(_covenant_entries(store))
 
     # 4b. Section 173 agreements on title
     lines.extend(_section_173_entries(store))
 
     # 5. Owners Corporation documents
+    title_has_oc_fact, _ = store.get(P.TITLE_HAS_OWNERS_CORPORATION)
+    title_explicitly_no_oc = (
+        title_has_oc_fact is not None and title_has_oc_fact.value is False
+    )
     oc_exists_fact, _ = store.get(P.RATES_OWNERS_CORPORATION)
     oc_exists = bool(oc_exists_fact.value) if oc_exists_fact else False
     has_oc_basic = _has_fact(store, P.DOCS_OC_BASIC_REPORT_DATE)
     has_oc_cert = _has_fact(store, P.DOCS_OC_CERT_DATE)
 
-    if oc_exists or has_oc_basic or has_oc_cert:
+    if not title_explicitly_no_oc and (oc_exists or has_oc_basic or has_oc_cert):
         oc_basic_date = _date_from_path(store, P.DOCS_OC_BASIC_REPORT_DATE)
         if has_oc_basic or oc_basic_date != _REVIEW_PLACEHOLDER:
             lines.append(_line_with_optional_date("Owners Corporation Basic Report", oc_basic_date))

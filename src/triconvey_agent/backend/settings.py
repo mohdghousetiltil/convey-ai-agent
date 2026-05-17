@@ -12,9 +12,10 @@ DEFAULT_LOCAL_SETTINGS = {
     "language": "English",
     "openAiApiKey": "",
     "anthropicApiKey": "",
-    "googleApiKey": "",              # Feature 1: Google Gemini API key
-    "aiProvider": "openai",          # "openai" | "anthropic" | "google" | "hybrid"
-    "defaultModelName": "gpt-4.1-mini",
+    "googleApiKey": "",
+    "openRouterApiKey": "",
+    "aiProvider": "openrouter",
+    "defaultModelName": "nvidia/nemotron-3-super-120b-a12b:free",
     "triconveyPath": "",
     "preferredAutofillFields": [],
     "updateRepository": DEFAULT_UPDATE_REPOSITORY,
@@ -67,9 +68,13 @@ def apply_local_settings_env(paths: AppRuntimePaths | None = None) -> None:
     if anthropic_key:
         os.environ["ANTHROPIC_API_KEY"] = anthropic_key
 
-    google_key = env_values.get("GOOGLE_API_KEY", "").strip()  # Feature 1
+    google_key = env_values.get("GOOGLE_API_KEY", "").strip()
     if google_key:
         os.environ["GOOGLE_API_KEY"] = google_key
+
+    openrouter_key = env_values.get("OPENROUTER_API_KEY", "").strip()
+    if openrouter_key:
+        os.environ["OPENROUTER_API_KEY"] = openrouter_key
 
     cloud_sync_url = env_values.get("CONVEY_CLOUD_SYNC_URL", "").strip()
     if cloud_sync_url:
@@ -132,6 +137,7 @@ def load_local_settings(paths: AppRuntimePaths | None = None, user_id: str | Non
     payload["openAiApiKey"] = env_values.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY", "")
     payload["anthropicApiKey"] = env_values.get("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY", "")
     payload["googleApiKey"] = env_values.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY", "")
+    payload["openRouterApiKey"] = env_values.get("OPENROUTER_API_KEY") or os.getenv("OPENROUTER_API_KEY", "")
     return payload
 
 
@@ -160,7 +166,8 @@ def save_local_settings(
         "language": str(settings.get("language") or current["language"] or DEFAULT_LOCAL_SETTINGS["language"]),
         "openAiApiKey": str(settings.get("openAiApiKey") or ""),
         "anthropicApiKey": str(settings.get("anthropicApiKey") or ""),
-        "googleApiKey": str(settings.get("googleApiKey") or ""),  # Feature 1
+        "googleApiKey": str(settings.get("googleApiKey") or ""),
+        "openRouterApiKey": str(settings.get("openRouterApiKey") or ""),
         "aiProvider": str(settings.get("aiProvider") or current["aiProvider"] or DEFAULT_LOCAL_SETTINGS["aiProvider"]),
         "defaultModelName": str(settings.get("defaultModelName") or current["defaultModelName"] or DEFAULT_LOCAL_SETTINGS["defaultModelName"]),
         "triconveyPath": str(settings.get("triconveyPath") or current["triconveyPath"] or ""),
@@ -203,7 +210,8 @@ def save_local_settings(
     env_values = _parse_env_file(runtime.env_file)
     env_values["OPENAI_API_KEY"] = merged["openAiApiKey"]
     env_values["ANTHROPIC_API_KEY"] = merged["anthropicApiKey"]
-    env_values["GOOGLE_API_KEY"] = merged["googleApiKey"]   # Feature 1
+    env_values["GOOGLE_API_KEY"] = merged["googleApiKey"]
+    env_values["OPENROUTER_API_KEY"] = merged["openRouterApiKey"]
     _write_env_file(runtime.env_file, env_values)
 
     if merged["openAiApiKey"]:
@@ -216,10 +224,15 @@ def save_local_settings(
     else:
         os.environ.pop("ANTHROPIC_API_KEY", None)
 
-    if merged["googleApiKey"]:           # Feature 1
+    if merged["googleApiKey"]:
         os.environ["GOOGLE_API_KEY"] = merged["googleApiKey"]
     else:
         os.environ.pop("GOOGLE_API_KEY", None)
+
+    if merged["openRouterApiKey"]:
+        os.environ["OPENROUTER_API_KEY"] = merged["openRouterApiKey"]
+    else:
+        os.environ.pop("OPENROUTER_API_KEY", None)
 
     return merged
 

@@ -41,6 +41,13 @@ const GOOGLE_MODELS = [
   { id: "gemini-3.1-pro", label: "Gemini 3.1 Pro", badge: "Smart" },
 ] as const;
 
+const OPENROUTER_MODELS = [
+  { id: "nvidia/nemotron-3-super-120b-a12b:free", label: "Nemotron 120B (Free)", badge: "Default" },
+  { id: "nvidia/nemotron-super-49b-v1:free", label: "Nemotron 49B (Free)", badge: "Fast" },
+  { id: "openai/gpt-4o-mini", label: "GPT-4o Mini (OR)", badge: "Smart" },
+  { id: "anthropic/claude-sonnet-4-5", label: "Claude Sonnet 4.5 (OR)", badge: "Balanced" },
+] as const;
+
 const MULTIMODEL_MODELS = [
   { id: "gpt4o-claude-sonnet", label: "gpt-4o + claude-sonnet-4.1", badge: "Balanced" },
   { id: "gpt4o-gemini-pro", label: "gpt-4o + gemini-3.1-pro", badge: "Broad" },
@@ -65,7 +72,8 @@ interface SettingsForm {
   openAiApiKey: string;
   anthropicApiKey: string;
   googleApiKey: string;
-  aiProvider: "openai" | "anthropic" | "google" | "hybrid";
+  openRouterApiKey?: string;
+  aiProvider: "openai" | "anthropic" | "google" | "hybrid" | "openrouter";
   defaultModelName: string;
   triconveyPath: string;
   preferredAutofillFields: string[];
@@ -93,6 +101,7 @@ interface SettingsScreenProps {
   isInstallingUpdate: boolean;
   onCheckForUpdates: () => void;
   onInstallUpdate: () => void;
+  onReinstallCurrentVersion: () => void;
   onBrowseTriconveyPath: () => void;
   onOpenLocalDataDir: () => void;
 }
@@ -113,6 +122,7 @@ export function SettingsScreen({
   isInstallingUpdate,
   onCheckForUpdates,
   onInstallUpdate,
+  onReinstallCurrentVersion,
   onBrowseTriconveyPath,
   onOpenLocalDataDir,
   onThemePreview,
@@ -138,9 +148,11 @@ export function SettingsScreen({
         ? GOOGLE_MODELS
         : form.aiProvider === "hybrid"
           ? MULTIMODEL_MODELS
-          : OPENAI_MODELS;
+          : form.aiProvider === "openrouter"
+            ? OPENROUTER_MODELS
+            : OPENAI_MODELS;
 
-  function handleProviderChange(provider: "openai" | "anthropic" | "google" | "hybrid") {
+  function handleProviderChange(provider: "openai" | "anthropic" | "google" | "hybrid" | "openrouter") {
     const defaultModel =
       provider === "anthropic"
         ? ANTHROPIC_MODELS[1].id
@@ -148,7 +160,9 @@ export function SettingsScreen({
           ? GOOGLE_MODELS[0].id
           : provider === "hybrid"
             ? MULTIMODEL_MODELS[0].id
-            : OPENAI_MODELS[2].id;
+            : provider === "openrouter"
+              ? OPENROUTER_MODELS[0].id
+              : OPENAI_MODELS[2].id;
     setForm((prev) => ({ ...prev, aiProvider: provider, defaultModelName: defaultModel }));
   }
 
@@ -166,7 +180,17 @@ export function SettingsScreen({
   }
 
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-violet-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 font-sans overflow-hidden">
+      <style>{`
+        .settings-orb-1 { position:fixed; top:-15%; left:-10%; width:55%; height:55%; background:radial-gradient(circle, rgba(139,92,246,0.10) 0%, transparent 70%); pointer-events:none; z-index:0; }
+        .settings-orb-2 { position:fixed; bottom:-10%; right:-5%; width:45%; height:45%; background:radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%); pointer-events:none; z-index:0; }
+        .settings-glass { background:rgba(255,255,255,0.70) !important; backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%); border-color:rgba(255,255,255,0.55) !important; }
+        .dark .settings-glass { background:rgba(15,23,42,0.55) !important; border-color:rgba(255,255,255,0.08) !important; }
+        .settings-stat { background:rgba(255,255,255,0.50); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.4); border-radius:0.75rem; }
+        .dark .settings-stat { background:rgba(30,41,59,0.45); border-color:rgba(255,255,255,0.07); }
+      `}</style>
+      <div className="settings-orb-1" />
+      <div className="settings-orb-2" />
       <Header
         onBack={onBack}
         userInitials={userInitials}
@@ -176,9 +200,9 @@ export function SettingsScreen({
         onLogout={onLogout}
       />
 
-      <main className="mx-auto grid max-w-7xl grid-cols-[280px_minmax(0,1fr)] gap-6 p-6">
+      <main className="relative z-10 mx-auto grid max-w-7xl grid-cols-[280px_minmax(0,1fr)] gap-6 p-6">
         <aside className="sticky top-24 h-fit space-y-4">
-          <Card className="overflow-hidden border-border shadow-sm">
+          <Card className="settings-glass overflow-hidden border shadow-sm">
             <CardContent className="space-y-4 p-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -191,7 +215,7 @@ export function SettingsScreen({
               </div>
 
               <div className="grid gap-2 text-[0.78rem]">
-                <div className="rounded-xl bg-muted px-3 py-2">
+                <div className="settings-stat px-3 py-2">
                   <p className="font-semibold text-foreground">Provider</p>
                   <p className="text-muted-foreground">
                     {form.aiProvider === "openai"
@@ -203,15 +227,15 @@ export function SettingsScreen({
                           : "MultiModel"}
                   </p>
                 </div>
-                <div className="rounded-xl bg-muted px-3 py-2">
+                <div className="settings-stat px-3 py-2">
                   <p className="font-semibold text-foreground">Model</p>
                   <p className="break-all text-muted-foreground">{form.defaultModelName}</p>
                 </div>
-                <div className="rounded-xl bg-muted px-3 py-2">
+                <div className="settings-stat px-3 py-2">
                   <p className="font-semibold text-foreground">Language</p>
                   <p className="text-muted-foreground">{form.language}</p>
                 </div>
-                <div className="rounded-xl bg-muted px-3 py-2">
+                <div className="settings-stat px-3 py-2">
                   <p className="font-semibold text-foreground">App version</p>
                   <p className="text-muted-foreground">{appInfo?.version ?? "0.0.125"}</p>
                 </div>
@@ -219,7 +243,7 @@ export function SettingsScreen({
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden border-border shadow-sm">
+          <Card className="settings-glass overflow-hidden border shadow-sm">
             <CardContent className="space-y-3 p-5 text-[0.78rem] text-muted-foreground">
               <div className="flex items-center gap-2 font-semibold text-foreground">
                 <Shield className="h-4 w-4 text-emerald-500" />
@@ -235,7 +259,7 @@ export function SettingsScreen({
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           <section className="space-y-4">
             <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">General</h2>
-            <Card className="border-border shadow-sm">
+            <Card className="settings-glass border shadow-sm">
               <CardContent className="grid gap-6 p-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -275,7 +299,7 @@ export function SettingsScreen({
           {/* Theme toggle */}
           <section className="space-y-4">
             <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Appearance</h2>
-            <Card className="border-border shadow-sm">
+            <Card className="settings-glass border shadow-sm">
               <CardContent className="p-6">
                 <div className="space-y-3">
                   <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -315,24 +339,27 @@ export function SettingsScreen({
 
           <section className="space-y-4">
             <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">AI Provider</h2>
-            <Card className="border-border shadow-sm">
+            <Card className="settings-glass border shadow-sm">
               <CardContent className="space-y-6 p-6">
                 <div className="grid gap-4 md:grid-cols-2">
-                  {(["openai", "anthropic", "google", "hybrid"] as const).map((provider) => {
+                  {(["openrouter", "openai", "anthropic", "google", "hybrid"] as const).map((provider) => {
                     const active = form.aiProvider === provider;
                     const labels: Record<string, string> = {
+                      openrouter: "OpenRouter",
                       openai: "OpenAI",
                       anthropic: "Anthropic",
                       google: "Google Gemini",
                       hybrid: "MultiModel",
                     };
                     const descriptions: Record<string, string> = {
+                      openrouter: "Free & paid models via OpenRouter (default)",
                       openai: "Parallel OpenAI reviewers",
                       anthropic: "Parallel Claude reviewers",
                       google: "Google Gemini 3.1 Pro / Flash",
                       hybrid: "Cross-check synthesis with multiple providers",
                     };
                     const apiKeyUrls: Record<string, string> = {
+                      openrouter: "https://openrouter.ai/settings/keys",
                       openai: "https://platform.openai.com/settings/organization/api-keys",
                       anthropic: "https://platform.claude.com/settings/keys",
                       google: "https://aistudio.google.com/app/api-keys",
@@ -371,7 +398,21 @@ export function SettingsScreen({
                   })}
                 </div>
 
-                <div className="grid gap-4 lg:grid-cols-3">
+                <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+                  <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <KeyRound className="h-4 w-4 text-sky-500" />
+                      OpenRouter API key
+                    </div>
+                    <Input
+                      type="password"
+                      value={form.openRouterApiKey ?? ""}
+                      onChange={(e) => setForm((prev) => ({ ...prev, openRouterApiKey: e.target.value }))}
+                      placeholder="sk-or-..."
+                      className="h-11 border-border bg-card"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Stored in secure env file. Free models available.</p>
+                  </div>
                   <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4">
                     <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                       <KeyRound className="h-4 w-4 text-violet-500" />
@@ -450,7 +491,7 @@ export function SettingsScreen({
 
           <section className="space-y-4">
             <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Desktop Behaviour</h2>
-            <Card className="border-border shadow-sm">
+            <Card className="settings-glass border shadow-sm">
               <CardContent className="grid gap-4 p-6 md:grid-cols-2">
                 <div className="rounded-2xl border border-border bg-muted/50 p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -515,6 +556,17 @@ export function SettingsScreen({
                       >
                         <Download className="mr-2 h-4 w-4" />
                         {isInstallingUpdate ? "Preparing..." : "Install update"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-10 rounded-xl border-border/60 text-muted-foreground hover:text-foreground"
+                        disabled={isInstallingUpdate}
+                        onClick={onReinstallCurrentVersion}
+                        title="Re-download and run the installer for the currently installed version"
+                      >
+                        <FolderOpen className="mr-2 h-4 w-4" />
+                        Reinstall current
                       </Button>
                     </div>
                   </div>

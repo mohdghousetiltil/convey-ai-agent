@@ -978,3 +978,158 @@ ts=2026-05-03T15:26:17.979756+00:00 | event=require_auth_ok | path=/api/settings
 ts=2026-05-03T15:26:21.245666+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
 ts=2026-05-03T15:26:34.959276+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
 ts=2026-05-03T15:28:40.510960+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T02:15:47.067195+00:00 | event=require_auth_invalid_token | path=/api/app/info | detail=Invalid token: Signature verification failed.
+ts=2026-05-15T02:15:47.071795+00:00 | event=require_auth_invalid_token | path=/api/triconvey/resolve-reference | detail=Invalid token: Signature verification failed.
+ts=2026-05-15T02:16:49.526750+00:00 | event=remote_login_start
+ts=2026-05-15T02:16:50.329971+00:00 | event=remote_login_start
+ts=2026-05-15T02:16:53.166327+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T02:16:53.271628+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T02:16:53.546822+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T02:16:53.773443+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T02:16:53.909630+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T02:16:55.337959+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:23:45.408176+00:00 | event=remote_login_start
+ts=2026-05-15T03:23:46.070874+00:00 | event=remote_login_start
+ts=2026-05-15T03:23:48.769432+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:23:48.974310+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:23:49.242419+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:23:50.459573+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:23:50.572293+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:43:51.170476+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:43:51.604856+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:43:52.041297+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:43:57.275185+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:43:57.612263+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:43:57.871449+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:44:07.919611+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T03:44:19.773404+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T04:14:01.786978+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T04:24:10.989035+00:00 | event=remote_login_start
+ts=2026-05-15T04:24:14.221057+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T04:24:14.404777+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T04:24:14.632110+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T14:13:25.109264+00:00 | event=remote_login_start
+ts=2026-05-15T14:13:26.951172+00:00 | event=remote_login_start
+ts=2026-05-15T14:13:30.292221+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T14:13:30.557915+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T14:13:30.596199+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T14:13:30.942207+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T14:13:31.095216+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T14:40:44.587538+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T15:24:25.945220+00:00 | event=remote_login_start
+ts=2026-05-15T15:24:29.320598+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T15:24:29.524410+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-15T15:24:29.910351+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T05:54:10.465624+00:00 | event=remote_login_start
+ts=2026-05-16T05:54:11.403427+00:00 | event=remote_login_start
+ts=2026-05-16T05:54:15.271131+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T05:54:15.491799+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T05:54:15.787655+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T05:54:16.032195+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T05:54:16.045552+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T06:12:17.529327+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T06:45:40.846738+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T06:54:39.020717+00:00 | event=remote_login_start
+ts=2026-05-16T06:54:40.346185+00:00 | event=remote_login_start
+ts=2026-05-16T06:54:44.259205+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T06:54:44.658150+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T06:54:45.190173+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T06:54:45.293761+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T06:54:45.510925+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T07:12:52.305747+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T07:12:52.774413+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T07:12:53.424881+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T08:00:41.952812+00:00 | event=remote_login_start
+ts=2026-05-16T08:00:46.651613+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T08:00:47.103908+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T08:00:47.711033+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T08:07:08.308240+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T08:07:09.487964+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T08:07:11.018711+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T08:08:16.838322+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T08:13:43.948241+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T09:16:28.805341+00:00 | event=remote_login_start
+ts=2026-05-16T09:16:32.907066+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T09:16:33.183267+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T09:16:33.745813+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T10:11:18.658038+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T10:11:19.237359+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T10:13:16.023550+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T10:14:58.071033+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T10:18:31.558712+00:00 | event=remote_login_start
+ts=2026-05-16T10:18:34.988395+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T10:18:35.181902+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T10:18:35.598088+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T10:27:11.408204+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T10:27:14.981090+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T10:36:25.861032+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T10:36:41.224376+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-16T10:36:55.159747+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T04:43:02.897897+00:00 | event=remote_login_start
+ts=2026-05-17T04:43:07.900143+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T04:43:08.032862+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T04:43:08.281252+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T07:18:26.824670+00:00 | event=remote_login_start
+ts=2026-05-17T07:18:30.622249+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T07:18:30.759996+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T07:18:31.069992+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T07:51:49.420789+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T07:57:44.915335+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T07:57:45.299922+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T07:57:45.334374+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T07:57:45.819732+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:02.733932+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:03.546998+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:04.438481+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:07.271374+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:09.874274+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:14.632228+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:14.690857+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:18.437338+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:18.452662+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:22.740152+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:22.790381+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:27.729593+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:33.900185+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:34.141607+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:01:59.821531+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:02:00.414629+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:02:01.461208+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:02:04.492512+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:02:07.095071+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:02:10.362052+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:06:51.376984+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:10:00.174650+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:12:27.388049+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:12:28.016499+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:12:28.710320+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:12:31.346844+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:12:34.613773+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:12:36.656819+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:12:42.257715+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:12:42.274707+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:12:44.663181+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:12:44.737296+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:12:45.682629+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:12:45.716703+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:13:12.547079+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:16:48.547759+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:16:49.027570+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:16:49.072491+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:16:51.388496+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:16:51.406410+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:16:52.224049+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:27:28.426087+00:00 | event=remote_login_start
+ts=2026-05-17T08:27:32.189852+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:27:32.459843+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:27:35.279431+00:00 | event=remote_login_start
+ts=2026-05-17T08:27:37.000432+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:27:40.111389+00:00 | event=remote_login_commit_ok | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:27:40.446152+00:00 | event=require_auth_ok | path=/api/auth/whoami | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:27:48.753642+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:39:35.325637+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T08:46:49.979066+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T09:16:16.207389+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T09:16:16.611371+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T09:16:16.624914+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com
+ts=2026-05-17T09:16:16.947774+00:00 | event=require_auth_ok | path=/api/settings | email=mohammed@datamatically.com | client_slug=datamatically-com

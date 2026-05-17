@@ -1,6 +1,6 @@
 import React from "react";
-import { motion } from "motion/react";
-import { ArrowRight, Bot, CheckCircle2, Clock, Download, FolderOpen, KeyRound, Plus, Sparkles, Timer, Wand2, X, Zap } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { AlertTriangle, Bot, CheckCircle2, Clock, Download, FolderOpen, KeyRound, Plus, Sparkles, Timer, Trash2, Wand2, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { CloudSyncStatusPayload, UpdateStatusPayload } from "../lib/api";
@@ -35,6 +35,7 @@ interface DashboardScreenProps {
   onLogout?: () => void;
   onAskAssistant: Parameters<typeof Chatbot>[0]["onAsk"];
   onApplyPatch?: Parameters<typeof Chatbot>[0]["onApplyPatch"];
+  onDeleteRun?: (runId: string) => Promise<void>;
   activeRunId?: string;
   onInstallUpdate?: () => void;
   isInstallingUpdate?: boolean;
@@ -44,7 +45,7 @@ interface DashboardScreenProps {
     openAiApiKey: string;
     anthropicApiKey: string;
     googleApiKey: string;
-    aiProvider: "openai" | "anthropic" | "google" | "hybrid";
+    aiProvider: "openai" | "anthropic" | "google" | "hybrid" | "openrouter";
     defaultModelName: string;
     triconveyPath: string;
     preferredAutofillFields: string[];
@@ -80,9 +81,16 @@ function formatDate(iso?: string) {
 function getStatusBadge(status?: string) {
   switch ((status || "").toLowerCase()) {
     case "complete":
+    case "completed":
       return {
         label: "Ready",
         className: "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400",
+        icon: CheckCircle2,
+      };
+    case "smokeball_pushed":
+      return {
+        label: "Completed",
+        className: "border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400",
         icon: CheckCircle2,
       };
     case "pending":
@@ -125,6 +133,7 @@ export function DashboardScreen({
   onLogout,
   onAskAssistant,
   onApplyPatch,
+  onDeleteRun,
   activeRunId,
   onInstallUpdate,
   isInstallingUpdate,
@@ -138,6 +147,25 @@ export function DashboardScreen({
   const [isChatOpen, setIsChatOpen] = React.useState(false);
   const [showAllRuns, setShowAllRuns] = React.useState(false);
   const INITIAL_RUN_LIMIT = 10;
+
+  // Right-click context menu state
+  const [contextMenu, setContextMenu] = React.useState<{ runId: string; x: number; y: number } | null>(null);
+  const [deleteModal, setDeleteModal] = React.useState<{ runId: string; clientName: string } | null>(null);
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const contextMenuRef = React.useRef<HTMLDivElement>(null);
+
+  // Close context menu on outside click or Escape
+  React.useEffect(() => {
+    if (!contextMenu) return;
+    const handleClick = () => setContextMenu(null);
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") setContextMenu(null); };
+    window.addEventListener("mousedown", handleClick);
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      window.removeEventListener("mousedown", handleClick);
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, [contextMenu]);
   
   const [greeting, setGreeting] = React.useState("");
   const name = userName?.trim() ? userName.trim() : "there";
@@ -203,7 +231,58 @@ export function DashboardScreen({
             : "Systems operational";
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background font-sans text-foreground">
+    <div className="flex h-screen flex-col overflow-hidden font-sans text-foreground" style={{ background: "var(--dashboard-bg, linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 30%, #f5f0ff 60%, #e0f2fe 100%))" }}>
+      <style>{`
+        :root {
+          --dashboard-bg: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 30%, #f5f0ff 60%, #e0f2fe 100%);
+        }
+        .dark {
+          --dashboard-bg: linear-gradient(135deg, #0a0f1e 0%, #0d1b2e 30%, #130d2b 60%, #061828 100%);
+        }
+        .glass-card {
+          background: rgba(255,255,255,0.65);
+          backdrop-filter: blur(20px) saturate(160%);
+          -webkit-backdrop-filter: blur(20px) saturate(160%);
+          border: 1px solid rgba(255,255,255,0.5);
+          box-shadow: 0 4px 32px rgba(99,102,241,0.07), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .dark .glass-card {
+          background: rgba(15,23,42,0.55);
+          border: 1px solid rgba(255,255,255,0.07);
+          box-shadow: 0 4px 32px rgba(0,0,0,0.35), 0 1.5px 6px rgba(0,0,0,0.2);
+        }
+        .glass-table-row {
+          transition: background 180ms ease;
+        }
+        .glass-table-row:hover {
+          background: rgba(99,102,241,0.06);
+        }
+        .dark .glass-table-row:hover {
+          background: rgba(99,102,241,0.1);
+        }
+        .glass-thead {
+          background: rgba(241,245,255,0.7);
+          backdrop-filter: blur(12px);
+        }
+        .dark .glass-thead {
+          background: rgba(15,23,42,0.6);
+        }
+        .orb-1 {
+          position: fixed; width: 520px; height: 520px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+          top: -120px; right: -100px; pointer-events: none; z-index: 0;
+        }
+        .orb-2 {
+          position: fixed; width: 400px; height: 400px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%);
+          bottom: 40px; left: -80px; pointer-events: none; z-index: 0;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.4); border-radius: 10px; }
+      `}</style>
+      <div className="orb-1" />
+      <div className="orb-2" />
       <Header
         userInitials={userInitials}
         onProfile={onProfile}
@@ -215,14 +294,14 @@ export function DashboardScreen({
         onChatToggle={() => setIsChatOpen((value) => !value)}
       />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="relative z-10 flex flex-1 overflow-hidden">
         <main className="custom-scrollbar flex-1 overflow-y-auto p-8">
           <div className="mx-auto max-w-7xl space-y-10">
             <div className="flex items-center gap-3">
               <motion.div
                 initial={{ opacity: 0, x: -18 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="inline-flex items-center gap-2 rounded-full border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400"
+                className="inline-flex items-center gap-2 rounded-full border border-emerald-200/60 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-900/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 backdrop-blur-sm"
               >
                 <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
                 {cloudLabel}
@@ -278,12 +357,12 @@ export function DashboardScreen({
 
             <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
               <div>
-                <h2 className="text-4xl font-serif italic text-foreground">{greeting}</h2>
-                <p className="mt-1 text-lg text-muted-foreground">Review recent matters or start a new Section 32 analysis.</p>
+                <h2 className="text-4xl font-serif italic text-foreground/90">{greeting}</h2>
+                <p className="mt-1 text-lg text-muted-foreground/80">Review recent matters or start a new Section 32 analysis.</p>
               </div>
               <Button
                 onClick={onProcessNew}
-                className="group h-14 rounded-2xl bg-primary px-8 text-lg font-bold text-white shadow-xl shadow-primary/20 transition-all active:scale-95 md:hover:scale-105"
+                className="group h-14 rounded-2xl bg-primary/90 px-8 text-lg font-bold text-white shadow-xl shadow-primary/25 backdrop-blur-sm transition-all active:scale-95 md:hover:scale-105 md:hover:shadow-primary/40"
               >
                 <Plus className="mr-3 h-6 w-6 transition-transform group-hover:rotate-90" />
                 New Section 32
@@ -306,20 +385,20 @@ export function DashboardScreen({
                 ) : null}
               </div>
 
-              <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+              <div className="overflow-hidden rounded-3xl glass-card">
                 {isLoadingRuns ? (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
-                        <tr className="border-b border-border bg-muted/50">
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Client & address</th>
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Vol/Folio</th>
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Created</th>
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Time taken</th>
-                          <th className="px-8 py-5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</th>
+                        <tr className="border-b border-border/40 glass-thead">
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Client & address</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Vol/Folio</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Created</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Time taken</th>
+                          <th className="px-8 py-5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border">
+                      <tbody className="divide-y divide-border/30">
                         {Array.from({ length: 3 }).map((_, i) => (
                           <tr key={i} className="animate-pulse">
                             <td className="px-8 py-6">
@@ -348,23 +427,28 @@ export function DashboardScreen({
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
-                        <tr className="border-b border-border bg-muted/50">
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Client & address</th>
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Vol/Folio</th>
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Created</th>
-                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Time taken</th>
-                          <th className="px-8 py-5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</th>
+                        <tr className="border-b border-border/40 glass-thead">
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Client & address</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Vol/Folio</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Created</th>
+                          <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Time taken</th>
+                          <th className="px-8 py-5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border">
+                      <tbody className="divide-y divide-border/30">
                         {(showAllRuns ? recentRuns : recentRuns.slice(0, INITIAL_RUN_LIMIT)).map((run) => {
                           const badge = getStatusBadge(run.status);
                           const StatusIcon = badge.icon;
+                          const isDeleting = deletingId === run.run_id;
                           return (
                           <tr
                             key={run.run_id}
                             onClick={() => onViewRun(run.run_id)}
-                            className="group cursor-pointer transition-colors hover:bg-muted/50"
+                            onContextMenu={onDeleteRun ? (e) => {
+                              e.preventDefault();
+                              setContextMenu({ runId: run.run_id, x: e.clientX, y: e.clientY });
+                            } : undefined}
+                            className={`group glass-table-row cursor-pointer select-none ${isDeleting ? "opacity-40 pointer-events-none" : ""}`}
                           >
                             <td className="px-8 py-6">
                               <div className="flex flex-col">
@@ -375,7 +459,7 @@ export function DashboardScreen({
                               </div>
                             </td>
                             <td className="px-8 py-6">
-                              <span className="rounded-lg border border-border bg-muted px-3 py-1.5 font-mono text-xs text-muted-foreground">
+                              <span className="rounded-lg border border-border/50 bg-muted/60 px-3 py-1.5 font-mono text-xs text-muted-foreground">
                                 {run.volume_folio || "-"}
                               </span>
                             </td>
@@ -403,7 +487,7 @@ export function DashboardScreen({
                       </tbody>
                     </table>
                     {!showAllRuns && recentRuns.length > INITIAL_RUN_LIMIT ? (
-                      <div className="border-t border-border px-8 py-4 text-center">
+                      <div className="border-t border-border/30 px-8 py-4 text-center">
                         <button
                           onClick={async () => {
                             if (onLoadAllRuns) await onLoadAllRuns();
@@ -416,7 +500,7 @@ export function DashboardScreen({
                         </button>
                       </div>
                     ) : showAllRuns && recentRuns.length > INITIAL_RUN_LIMIT ? (
-                      <div className="border-t border-border px-8 py-4 text-center">
+                      <div className="border-t border-border/30 px-8 py-4 text-center">
                         <button
                           onClick={() => setShowAllRuns(false)}
                           className="text-sm font-semibold text-muted-foreground hover:underline"
@@ -468,16 +552,18 @@ export function DashboardScreen({
                       AI provider
                     </div>
                     <div className="mt-3 grid gap-2">
-                      {(["openai", "anthropic", "hybrid"] as const).map((provider) => (
+                      {(["openrouter", "openai", "anthropic", "hybrid"] as const).map((provider) => (
                         <button
                           key={provider}
                           onClick={() => setQuickSetupForm((current) => current ? ({
                             ...current,
                             aiProvider: provider,
                             defaultModelName:
-                              provider === "anthropic" || provider === "hybrid"
-                                ? "claude-sonnet-4-6"
-                                : "gpt-4.1-mini",
+                              provider === "openrouter"
+                                ? "nvidia/nemotron-3-super-120b-a12b:free"
+                                : provider === "anthropic" || provider === "hybrid"
+                                  ? "claude-sonnet-4-6"
+                                  : "gpt-4.1-mini",
                           }) : current)}
                           className={[
                             "rounded-xl border px-3 py-2 text-left text-sm transition-colors",
@@ -486,7 +572,7 @@ export function DashboardScreen({
                               : "border-border bg-card text-foreground hover:border-primary/40",
                           ].join(" ")}
                         >
-                          {provider === "openai" ? "OpenAI" : provider === "anthropic" ? "Anthropic" : "OpenAI + Claude"}
+                          {provider === "openrouter" ? "OpenRouter (Free)" : provider === "openai" ? "OpenAI" : provider === "anthropic" ? "Anthropic" : "OpenAI + Claude"}
                         </button>
                       ))}
                     </div>
@@ -500,23 +586,26 @@ export function DashboardScreen({
                     <Input
                       type="password"
                       value={
-                        quickSetupForm.aiProvider === "anthropic" || quickSetupForm.aiProvider === "hybrid"
-                          ? quickSetupForm.anthropicApiKey
-                          : quickSetupForm.openAiApiKey
+                        quickSetupForm.aiProvider === "openrouter"
+                          ? (quickSetupForm as typeof quickSetupForm & { openRouterApiKey?: string }).openRouterApiKey ?? ""
+                          : quickSetupForm.aiProvider === "anthropic" || quickSetupForm.aiProvider === "hybrid"
+                            ? quickSetupForm.anthropicApiKey
+                            : quickSetupForm.openAiApiKey
                       }
                       onChange={(event) =>
-                        setQuickSetupForm((current) =>
-                          current
-                            ? quickSetupForm.aiProvider === "anthropic" || quickSetupForm.aiProvider === "hybrid"
-                              ? { ...current, anthropicApiKey: event.target.value }
-                              : { ...current, openAiApiKey: event.target.value }
-                            : current,
-                        )
+                        setQuickSetupForm((current) => {
+                          if (!current) return current;
+                          if (current.aiProvider === "openrouter") return { ...current, openRouterApiKey: event.target.value } as typeof current;
+                          if (current.aiProvider === "anthropic" || current.aiProvider === "hybrid") return { ...current, anthropicApiKey: event.target.value };
+                          return { ...current, openAiApiKey: event.target.value };
+                        })
                       }
                       placeholder={
-                        quickSetupForm.aiProvider === "anthropic" || quickSetupForm.aiProvider === "hybrid"
-                          ? "sk-ant-..."
-                          : "sk-..."
+                        quickSetupForm.aiProvider === "openrouter"
+                          ? "sk-or-... (free models available)"
+                          : quickSetupForm.aiProvider === "anthropic" || quickSetupForm.aiProvider === "hybrid"
+                            ? "sk-ant-..."
+                            : "sk-..."
                       }
                       className="mt-3 h-11 border-border bg-card"
                     />
@@ -603,11 +692,100 @@ export function DashboardScreen({
         />
       </div>
 
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-      `}</style>
+      {/* Right-click context menu */}
+      <AnimatePresence>
+        {contextMenu && (
+          <motion.div
+            ref={contextMenuRef}
+            key="ctx-menu"
+            initial={{ opacity: 0, scale: 0.94, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: -4 }}
+            transition={{ duration: 0.12, ease: "easeOut" }}
+            onMouseDown={(e) => e.stopPropagation()}
+            style={{ position: "fixed", left: contextMenu.x, top: contextMenu.y, zIndex: 9999 }}
+            className="min-w-[160px] overflow-hidden rounded-xl border border-border/60 bg-white/90 shadow-2xl shadow-black/15 backdrop-blur-xl dark:bg-slate-900/90 dark:border-white/10"
+          >
+            <div className="p-1">
+              <button
+                onClick={() => {
+                  const run = recentRuns.find((r) => r.run_id === contextMenu.runId);
+                  setDeleteModal({ runId: contextMenu.runId, clientName: run?.client_name || "this matter" });
+                  setContextMenu(null);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete matter
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirmation modal */}
+      <AnimatePresence>
+        {deleteModal && (
+          <motion.div
+            key="delete-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/30 backdrop-blur-[2px]"
+            onMouseDown={() => setDeleteModal(null)}
+          >
+            <motion.div
+              key="delete-modal"
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="w-full max-w-sm overflow-hidden rounded-2xl border border-border/60 bg-white/95 shadow-2xl shadow-black/20 backdrop-blur-xl dark:bg-slate-900/95 dark:border-white/10"
+            >
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-900/30">
+                    <AlertTriangle className="h-5 w-5 text-rose-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-foreground">Delete matter?</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">{deleteModal.clientName}</span> and all associated files will be permanently removed from this device. This cannot be undone.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-2 border-t border-border/40 px-6 py-4">
+                <button
+                  onClick={() => setDeleteModal(null)}
+                  className="rounded-xl border border-border/60 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={!!deletingId}
+                  onClick={async () => {
+                    if (!onDeleteRun || !deleteModal) return;
+                    setDeletingId(deleteModal.runId);
+                    try {
+                      await onDeleteRun(deleteModal.runId);
+                      setDeleteModal(null);
+                    } finally {
+                      setDeletingId(null);
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-rose-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-rose-600 disabled:opacity-60"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {deletingId ? "Deleting…" : "Delete permanently"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
