@@ -39,6 +39,7 @@ from triconvey_agent.app_meta import (
     APP_PUBLISHER,
     DEFAULT_CLOUD_BACKEND_URL,
     DEFAULT_CLOUD_SYNC_URL,
+    DEFAULT_OPENROUTER_MODEL,
     get_app_version,
 )
 from triconvey_agent.auth.deps import AuthContext, require_auth
@@ -1020,7 +1021,7 @@ def ui_index() -> FileResponse:
 async def create_run(background_tasks: BackgroundTasks, 
     files: list[UploadFile] = File(default=[]),
     use_ai_review: bool = Form(False),
-    model: str = Form("nvidia/nemotron-3-super-120b-a12b:free"),
+    model: str = Form(DEFAULT_OPENROUTER_MODEL),
     triconvey_exe: str | None = Form(None),
     reanalyse_run_id: str | None = Form(None),
     ctx: AuthContext = Depends(require_auth),

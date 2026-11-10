@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
+from triconvey_agent.app_meta import DEFAULT_OPENROUTER_MODEL
 from triconvey_agent.backend.runtime import AppRuntimePaths, ensure_runtime_dirs, get_runtime_paths
 from triconvey_agent.backend.settings import load_local_settings, save_local_settings
 
@@ -39,7 +40,7 @@ class TestBackendSettings(unittest.TestCase):
                 {
                     "language": "English",
                     "openAiApiKey": "sk-test",
-                    "defaultModelName": "gpt-4.1-mini",
+                    "defaultModelName": "anthropic/claude-opus-5.5",
                     "triconveyPath": r"C:\Program Files\TriConvey\TriConvey.exe",
                 },
                 runtime,
@@ -49,7 +50,7 @@ class TestBackendSettings(unittest.TestCase):
 
             self.assertEqual(saved["openAiApiKey"], "sk-test")
             self.assertEqual(loaded["openAiApiKey"], "sk-test")
-            self.assertEqual(loaded["defaultModelName"], "gpt-4.1-mini")
+            self.assertEqual(loaded["defaultModelName"], DEFAULT_OPENROUTER_MODEL)
             self.assertTrue(runtime.env_file.exists())
             self.assertTrue(runtime.settings_file.exists())
         finally:

@@ -2,7 +2,6 @@ import React from "react";
 import { motion } from "motion/react";
 import {
   Bell,
-  Bot,
   Download,
   FolderOpen,
   Globe,
@@ -19,53 +18,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { AppInfoPayload, UpdateStatusPayload } from "../lib/api";
 import { Header } from "./Header";
-
-const OPENAI_MODELS = [
-  { id: "gpt-4.1-mini", label: "gpt 4.1 mini", badge: "Fast" },
-  { id: "gpt-5.4", label: "gpt 5.4", badge: "Next-gen" },
-  { id: "gpt-4.1", label: "gpt 4.1", badge: "Latest" },
-  { id: "gpt-4o", label: "gpt 4o", badge: "Smart" },
-] as const;
-
-const ANTHROPIC_MODELS = [
-  { id: "claude-opus-4.1", label: "claude opus 4.1", badge: "Most capable" },
-  { id: "claude-sonnet-4.1", label: "claude sonnet 4.1", badge: "Balanced" },
-  { id: "claude-haiku-4.5", label: "claude haiku 4.5", badge: "Fastest" },
-] as const;
-
-// Feature 1: Google Gemini models
-const GOOGLE_MODELS = [
-  { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash", badge: "Fast" },
-  { id: "gemini-3.1-flash", label: "Gemini 3.1 Flash", badge: "Fast" },
-  { id: "gemini-3-deep-think", label: "Gemini 3 Deep Think", badge: "Reasoning" },
-  { id: "gemini-3.1-pro", label: "Gemini 3.1 Pro", badge: "Smart" },
-] as const;
-
-const OPENROUTER_MODELS = [
-  { id: "nvidia/nemotron-3-super-120b-a12b:free", label: "Nemotron 120B (Free)", badge: "Default" },
-  { id: "nvidia/nemotron-super-49b-v1:free", label: "Nemotron 49B (Free)", badge: "Fast" },
-  { id: "openai/gpt-4o-mini", label: "GPT-4o Mini (OR)", badge: "Smart" },
-  { id: "anthropic/claude-sonnet-4-5", label: "Claude Sonnet 4.5 (OR)", badge: "Balanced" },
-] as const;
-
-const MULTIMODEL_MODELS = [
-  { id: "gpt4o-claude-sonnet", label: "gpt-4o + claude-sonnet-4.1", badge: "Balanced" },
-  { id: "gpt4o-gemini-pro", label: "gpt-4o + gemini-3.1-pro", badge: "Broad" },
-  { id: "all-pro-models", label: "gpt-4o + claude-opus + gemini-pro", badge: "Maximum" },
-] as const;
-
-const BADGE_COLORS: Record<string, string> = {
-  Latest: "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400",
-  Smart: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
-  Fast: "bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400",
-  Fastest: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
-  Reasoning: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
-  "Most capable": "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400",
-  Balanced: "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400",
-  "Next-gen": "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400",
-  Broad: "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400",
-  Maximum: "bg-foreground text-background",
-};
 
 interface SettingsForm {
   language: string;
@@ -138,30 +90,8 @@ export function SettingsScreen({
     setForm({ ...settings, anthropicApiKey: settings.anthropicApiKey || "", googleApiKey: settings.googleApiKey || "" });
   }, [settings]);
 
-  // Feature 1: pick model list based on provider
-  const models =
-    form.aiProvider === "anthropic"
-      ? ANTHROPIC_MODELS
-      : form.aiProvider === "google"
-        ? GOOGLE_MODELS
-        : form.aiProvider === "hybrid"
-          ? MULTIMODEL_MODELS
-          : form.aiProvider === "openrouter"
-            ? OPENROUTER_MODELS
-            : OPENAI_MODELS;
-
   function handleProviderChange(provider: "openai" | "anthropic" | "google" | "hybrid" | "openrouter") {
-    const defaultModel =
-      provider === "anthropic"
-        ? ANTHROPIC_MODELS[1].id
-        : provider === "google"
-          ? GOOGLE_MODELS[0].id
-          : provider === "hybrid"
-            ? MULTIMODEL_MODELS[0].id
-            : provider === "openrouter"
-              ? OPENROUTER_MODELS[0].id
-              : OPENAI_MODELS[2].id;
-    setForm((prev) => ({ ...prev, aiProvider: provider, defaultModelName: defaultModel }));
+    setForm((prev) => ({ ...prev, aiProvider: provider }));
   }
 
   async function handleSave() {
@@ -223,10 +153,6 @@ export function SettingsScreen({
                           ? "Google Gemini"
                           : "MultiModel"}
                   </p>
-                </div>
-                <div className="settings-stat px-3 py-2">
-                  <p className="font-semibold text-foreground">Model</p>
-                  <p className="break-all text-muted-foreground">{form.defaultModelName}</p>
                 </div>
                 <div className="settings-stat px-3 py-2">
                   <p className="font-semibold text-foreground">Language</p>
@@ -349,10 +275,10 @@ export function SettingsScreen({
                       hybrid: "MultiModel",
                     };
                     const descriptions: Record<string, string> = {
-                      openrouter: "Free & paid models via OpenRouter (default)",
+                      openrouter: "Recommended",
                       openai: "Parallel OpenAI reviewers",
                       anthropic: "Parallel Claude reviewers",
-                      google: "Google Gemini 3.1 Pro / Flash",
+                      google: "Google Gemini",
                       hybrid: "Cross-check synthesis with multiple providers",
                     };
                     const apiKeyUrls: Record<string, string> = {
@@ -408,7 +334,7 @@ export function SettingsScreen({
                       placeholder="sk-or-..."
                       className="h-11 border-border bg-card"
                     />
-                    <p className="text-[10px] text-muted-foreground">Stored in secure env file. Free models available.</p>
+                    <p className="text-[10px] text-muted-foreground">Stored in secure env file.</p>
                   </div>
                   <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4">
                     <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -448,38 +374,6 @@ export function SettingsScreen({
                       placeholder="AIza..."
                       className="h-11 border-border bg-card"
                     />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                    <Bot className="h-4 w-4 text-muted-foreground" />
-                    Default model
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    {models.map((model) => {
-                      const active = form.defaultModelName === model.id;
-                      return (
-                        <button
-                          key={model.id}
-                          onClick={() => setForm((prev) => ({ ...prev, defaultModelName: model.id }))}
-                          className={[
-                            "rounded-2xl border-2 px-4 py-3 text-left transition-all",
-                            active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40",
-                          ].join(" ")}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div>
-                              <p className={["text-sm font-semibold", active ? "text-primary" : "text-foreground"].join(" ")}>{model.label}</p>
-                              <p className="mt-0.5 text-[10px] text-muted-foreground">{model.id}</p>
-                            </div>
-                            <span className={["rounded-full px-2 py-0.5 text-[10px] font-bold", BADGE_COLORS[model.badge] ?? "bg-muted text-muted-foreground"].join(" ")}>
-                              {model.badge}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
                   </div>
                 </div>
               </CardContent>

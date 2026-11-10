@@ -555,12 +555,6 @@ export function DashboardScreen({
                           onClick={() => setQuickSetupForm((current) => current ? ({
                             ...current,
                             aiProvider: provider,
-                            defaultModelName:
-                              provider === "openrouter"
-                                ? "nvidia/nemotron-3-super-120b-a12b:free"
-                                : provider === "anthropic" || provider === "hybrid"
-                                  ? "claude-sonnet-4-6"
-                                  : "gpt-4.1-mini",
                           }) : current)}
                           className={[
                             "rounded-xl border px-3 py-2 text-left text-sm transition-colors",
@@ -569,7 +563,7 @@ export function DashboardScreen({
                               : "border-border bg-card text-foreground hover:border-primary/40",
                           ].join(" ")}
                         >
-                          {provider === "openrouter" ? "OpenRouter (Free)" : provider === "openai" ? "OpenAI" : provider === "anthropic" ? "Anthropic" : "OpenAI + Claude"}
+                          {provider === "openrouter" ? "OpenRouter" : provider === "openai" ? "OpenAI" : provider === "anthropic" ? "Anthropic" : "OpenAI + Claude"}
                         </button>
                       ))}
                     </div>

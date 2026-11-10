@@ -9,6 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from triconvey_agent.ai.client import AIResult
+from triconvey_agent.app_meta import DEFAULT_OPENROUTER_MODEL
 
 
 # Timed backoff: rate-limit errors pause OpenAI for 60 s then retry.
@@ -59,7 +60,8 @@ class OpenAIResponsesClient:
                 "\"python -m pip install openai\" and try again."
             ) from exc
 
-        if resolved_api_key:
+        # A "/" marks an OpenRouter id, which the OpenAI API would reject.
+        if resolved_api_key and "/" not in model:
             self._client = OpenAI(api_key=resolved_api_key)
             self._model = model
         else:
@@ -75,9 +77,9 @@ class OpenAIResponsesClient:
                     "X-Title": "TriConvey",
                 },
             )
-            # Swap OpenAI model names to a compatible free OpenRouter model.
+            # Swap OpenAI model names to an OpenRouter equivalent.
             if model.startswith(("gpt-", "o1", "o3", "o4", "chatgpt")):
-                self._model = "nvidia/nemotron-3-super-120b-a12b:free"
+                self._model = DEFAULT_OPENROUTER_MODEL
             else:
                 self._model = model
 

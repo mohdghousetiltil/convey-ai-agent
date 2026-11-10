@@ -888,6 +888,8 @@ def _infer_provider(model: str, preferred: str) -> str:
         return "openai"
     if m.startswith("gemini"):
         return "google"
+    if "/" in m:
+        return "openrouter"
     return preferred
 
 

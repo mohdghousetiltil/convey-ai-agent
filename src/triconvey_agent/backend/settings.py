@@ -5,7 +5,11 @@ import os
 from pathlib import Path
 from typing import Any
 
-from triconvey_agent.app_meta import DEFAULT_UPDATE_REPOSITORY
+from triconvey_agent.app_meta import (
+    DEFAULT_OPENROUTER_MODEL,
+    DEFAULT_UPDATE_REPOSITORY,
+    model_for_provider,
+)
 from triconvey_agent.backend.runtime import AppRuntimePaths, ensure_runtime_dirs, get_runtime_paths
 
 DEFAULT_LOCAL_SETTINGS = {
@@ -15,7 +19,7 @@ DEFAULT_LOCAL_SETTINGS = {
     "googleApiKey": "",
     "openRouterApiKey": "",
     "aiProvider": "openrouter",
-    "defaultModelName": "nvidia/nemotron-3-super-120b-a12b:free",
+    "defaultModelName": DEFAULT_OPENROUTER_MODEL,
     "triconveyPath": "",
     "preferredAutofillFields": [],
     "updateRepository": DEFAULT_UPDATE_REPOSITORY,
@@ -120,9 +124,10 @@ def load_local_settings(paths: AppRuntimePaths | None = None, user_id: str | Non
             raw = json.loads(runtime.settings_file.read_text(encoding="utf-8"))
             if isinstance(raw, dict):
                 payload["language"] = str(raw.get("language") or payload["language"])
-                payload["defaultModelName"] = str(raw.get("defaultModelName") or payload["defaultModelName"])
                 payload["triconveyPath"] = str(raw.get("triconveyPath") or payload["triconveyPath"])
                 payload["aiProvider"] = str(raw.get("aiProvider") or payload["aiProvider"])
+                # Any model saved by an older version is ignored on purpose.
+                payload["defaultModelName"] = model_for_provider(payload["aiProvider"])
                 payload["updateRepository"] = DEFAULT_UPDATE_REPOSITORY
                 payload["includePrereleaseUpdates"] = bool(raw.get("includePrereleaseUpdates", payload["includePrereleaseUpdates"]))
                 payload["autoCheckForUpdates"] = bool(raw.get("autoCheckForUpdates", payload["autoCheckForUpdates"]))
@@ -179,7 +184,9 @@ def save_local_settings(
         "googleApiKey": str(settings.get("googleApiKey") or ""),
         "openRouterApiKey": str(settings.get("openRouterApiKey") or ""),
         "aiProvider": str(settings.get("aiProvider") or current["aiProvider"] or DEFAULT_LOCAL_SETTINGS["aiProvider"]),
-        "defaultModelName": str(settings.get("defaultModelName") or current["defaultModelName"] or DEFAULT_LOCAL_SETTINGS["defaultModelName"]),
+        "defaultModelName": model_for_provider(
+            str(settings.get("aiProvider") or current["aiProvider"] or DEFAULT_LOCAL_SETTINGS["aiProvider"])
+        ),
         "triconveyPath": str(settings.get("triconveyPath") or current["triconveyPath"] or ""),
         "updateRepository": DEFAULT_UPDATE_REPOSITORY,
         "includePrereleaseUpdates": bool(settings.get("includePrereleaseUpdates", current.get("includePrereleaseUpdates", DEFAULT_LOCAL_SETTINGS["includePrereleaseUpdates"]))),

@@ -9,7 +9,7 @@ Storage: {run_dir}/rag_index.json
     "embeddings": [[float, ...], ...]   # null if embedding is not available
   }
 
-Embedding: OpenAI text-embedding-3-small (falls back to TF-IDF keyword matching
+Embedding: text-embedding-3-large via OpenAI or OpenRouter (falls back to TF-IDF keyword matching
 when no OpenAI key is available or the API call fails).
 """
 from __future__ import annotations
@@ -23,10 +23,16 @@ from pathlib import Path
 from typing import Any
 
 from triconvey_agent.ai.openai_client import openai_runtime_disabled
+from triconvey_agent.app_meta import (
+    EMBEDDING_DIMENSIONS,
+    OPENAI_EMBEDDING_MODEL,
+    OPENROUTER_EMBEDDING_MODEL,
+)
 
 LOG = logging.getLogger(__name__)
 
-_EMBED_MODEL = "text-embedding-3-small"
+# Stored in each index. Vectors from a different model cannot be compared.
+_INDEX_EMBEDDING_ID = f"{OPENAI_EMBEDDING_MODEL}@{EMBEDDING_DIMENSIONS}"
 _CHUNK_SIZE = 400       # characters per chunk
 _CHUNK_OVERLAP = 80     # overlap between consecutive chunks
 _TOP_K_DEFAULT = 6
@@ -84,17 +90,31 @@ def _chunk_text(text: str, filename: str, page_hint: int = 0) -> list[dict[str, 
 # Embedding
 # ---------------------------------------------------------------------------
 
+def _embeddings_available() -> bool:
+    has_openai = bool(os.environ.get("OPENAI_API_KEY")) and not openai_runtime_disabled()
+    return has_openai or bool(os.environ.get("OPENROUTER_API_KEY"))
+
+
 def _embed_texts(texts: list[str]) -> list[list[float]] | None:
-    """Embed texts using OpenAI API. Returns None on failure."""
-    api_key = os.environ.get("OPENAI_API_KEY", "")
-    if not api_key or openai_runtime_disabled():
+    """Embed texts through OpenAI, or OpenRouter without a key. Returns None on failure."""
+    if not _embeddings_available():
         return None
     try:
         import openai
-        client = openai.OpenAI(api_key=api_key)
+        api_key = os.environ.get("OPENAI_API_KEY", "")
+        if api_key and not openai_runtime_disabled():
+            client = openai.OpenAI(api_key=api_key)
+            model = OPENAI_EMBEDDING_MODEL
+        else:
+            client = openai.OpenAI(
+                api_key=os.environ["OPENROUTER_API_KEY"],
+                base_url="https://openrouter.ai/api/v1",
+            )
+            model = OPENROUTER_EMBEDDING_MODEL
         response = client.embeddings.create(
-            model=_EMBED_MODEL,
+            model=model,
             input=texts,
+            dimensions=EMBEDDING_DIMENSIONS,
             encoding_format="float",
         )
         return [item.embedding for item in response.data]
@@ -184,7 +204,7 @@ def build_rag_index(
     embeddings: list[list[float] | None] = []
     batch_size = 100
     texts = [c["text"] for c in all_chunks]
-    embed_available = bool(os.environ.get("OPENAI_API_KEY"))
+    embed_available = _embeddings_available()
 
     if embed_available:
         for i in range(0, len(texts), batch_size):
@@ -202,6 +222,7 @@ def build_rag_index(
         "chunks": all_chunks,
         "embeddings": embeddings,
         "has_embeddings": embed_available and any(e is not None for e in embeddings),
+        "embedding_model": _INDEX_EMBEDDING_ID,
     }
     index_path.write_text(json.dumps(index, ensure_ascii=False), encoding="utf-8")
     LOG.info("RAG index built: %d chunks, embeddings=%s", len(all_chunks), embed_available)
@@ -238,7 +259,11 @@ def append_to_rag_index(doc_path: Path, run_dir: Path) -> None:
         return
 
     new_embeddings: list[list[float] | None] = []
-    if os.environ.get("OPENAI_API_KEY"):
+    # Only embed when the whole index can use the same model. Otherwise the
+    # earlier chunks would score zero against the new ones.
+    if not existing["chunks"]:
+        existing["embedding_model"] = _INDEX_EMBEDDING_ID
+    if _embeddings_available() and existing.get("embedding_model") == _INDEX_EMBEDDING_ID:
         result = _embed_texts([c["text"] for c in new_chunks])
         new_embeddings = result if result else [None] * len(new_chunks)
     else:
@@ -270,7 +295,9 @@ def retrieve(query: str, run_dir: Path, top_k: int = _TOP_K_DEFAULT) -> list[dic
 
     chunks: list[dict[str, Any]] = index.get("chunks", [])
     embeddings: list[Any] = index.get("embeddings", [])
-    has_embeddings: bool = index.get("has_embeddings", False)
+    has_embeddings: bool = (
+        index.get("has_embeddings", False) and index.get("embedding_model") == _INDEX_EMBEDDING_ID
+    )
 
     if not chunks:
         return []

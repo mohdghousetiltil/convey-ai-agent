@@ -196,7 +196,7 @@ function AppContent() {
     openRouterApiKey: "",
     aiProvider: "openrouter",
     aiMode: "cost_efficient",
-    defaultModelName: "nvidia/nemotron-3-super-120b-a12b:free",
+    defaultModelName: "anthropic/claude-haiku-5.5",
     triconveyPath: "",
     preferredAutofillFields: [],
     updateRepository: "",

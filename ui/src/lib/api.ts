@@ -379,7 +379,7 @@ export async function createRun(
   const body = new FormData();
   for (const file of files) body.append("files", file);
   body.append("use_ai_review", String(options?.useAiReview ?? false));
-  body.append("model", options?.model ?? "nvidia/nemotron-3-super-120b-a12b:free");
+  body.append("model", options?.model ?? "anthropic/claude-haiku-5.5");
   if (options?.triconveyExe) body.append("triconvey_exe", options.triconveyExe);
   if (options?.reanalyseRunId) body.append("reanalyse_run_id", options.reanalyseRunId);
   return apiRequest<ReviewRunPayload>("/runs", { method: "POST", body });
