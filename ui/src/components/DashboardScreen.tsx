@@ -32,7 +32,6 @@ interface DashboardScreenProps {
   onSettings?: () => void;
   onPolicy?: () => void;
   onAbout?: () => void;
-  onLogout?: () => void;
   onAskAssistant: Parameters<typeof Chatbot>[0]["onAsk"];
   onApplyPatch?: Parameters<typeof Chatbot>[0]["onApplyPatch"];
   onDeleteRun?: (runId: string) => Promise<void>;
@@ -130,7 +129,6 @@ export function DashboardScreen({
   onSettings,
   onPolicy,
   onAbout,
-  onLogout,
   onAskAssistant,
   onApplyPatch,
   onDeleteRun,
@@ -288,7 +286,6 @@ export function DashboardScreen({
         onProfile={onProfile}
         onSettings={onSettings}
         onPolicy={onPolicy}
-        onLogout={onLogout}
         showChatToggle
         isChatOpen={isChatOpen}
         onChatToggle={() => setIsChatOpen((value) => !value)}

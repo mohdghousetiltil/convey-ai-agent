@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { AppInfoPayload, UpdateStatusPayload } from "@/lib/api";
+import { AppInfoPayload, UpdateStatusPayload } from "../lib/api";
 import { Header } from "./Header";
 
 const OPENAI_MODELS = [
@@ -91,7 +91,6 @@ interface SettingsScreenProps {
   onSettings?: () => void;
   onPolicy?: () => void;
   onAbout?: () => void;
-  onLogout?: () => void;
   settings: SettingsForm;
   onSaveSettings: (settings: SettingsForm) => Promise<void> | void;
   onThemePreview?: (theme: "light" | "dark" | "auto") => void;
@@ -113,7 +112,6 @@ export function SettingsScreen({
   onSettings,
   onPolicy,
   onAbout,
-  onLogout,
   settings,
   onSaveSettings,
   appInfo,
@@ -197,7 +195,6 @@ export function SettingsScreen({
         onProfile={onProfile}
         onSettings={onSettings}
         onPolicy={onPolicy}
-        onLogout={onLogout}
       />
 
       <main className="relative z-10 mx-auto grid max-w-7xl grid-cols-[280px_minmax(0,1fr)] gap-6 p-6">

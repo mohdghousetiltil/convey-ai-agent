@@ -11,7 +11,6 @@ interface UploadPageProps {
   onSettings?: () => void;
   onPolicy?: () => void;
   onAbout?: () => void;
-  onLogout?: () => void;
   onUploadComplete: (files: File[]) => void | Promise<void>;
   onResolveTriconveyReference?: (payloadText: string) => Promise<{ resolved: Array<{ name: string; path: string }>; display_name: string; subtitle: string }>;
   errorMessage?: string;
@@ -117,7 +116,6 @@ export function UploadScreen({
   onSettings,
   onPolicy,
   onAbout,
-  onLogout,
   onUploadComplete,
   onResolveTriconveyReference,
   errorMessage,
@@ -309,7 +307,6 @@ export function UploadScreen({
         onProfile={onProfile}
         onSettings={onSettings}
         onPolicy={onPolicy}
-        onLogout={onLogout}
       />
 
       <div className="relative z-10 flex flex-1 items-center justify-center p-6">

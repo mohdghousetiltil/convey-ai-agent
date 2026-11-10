@@ -76,6 +76,16 @@ def apply_local_settings_env(paths: AppRuntimePaths | None = None) -> None:
     if openrouter_key:
         os.environ["OPENROUTER_API_KEY"] = openrouter_key
 
+    # Bundled developer key — silent fallback when client has no key configured
+    if not os.environ.get("OPENROUTER_API_KEY"):
+        try:
+            from triconvey_agent.backend._bundled import get_bundled_openrouter_key
+            _fallback = get_bundled_openrouter_key()
+            if _fallback:
+                os.environ["OPENROUTER_API_KEY"] = _fallback
+        except Exception:
+            pass
+
     cloud_sync_url = env_values.get("CONVEY_CLOUD_SYNC_URL", "").strip()
     if cloud_sync_url:
         os.environ["CONVEY_CLOUD_SYNC_URL"] = cloud_sync_url

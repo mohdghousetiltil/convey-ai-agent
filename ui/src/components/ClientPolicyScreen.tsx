@@ -21,7 +21,7 @@ import {
   listCopyRules,
   updateCopyRule,
   type CopyRulePayload,
-} from "@/lib/api";
+} from "../lib/api";
 import { Header } from "./Header";
 
 export interface SettingsForm {
@@ -45,7 +45,6 @@ interface ClientPolicyScreenProps {
   onProfile?: () => void;
   onSettings?: () => void;
   onAbout?: () => void;
-  onLogout?: () => void;
   settings: SettingsForm;
   onSaveSettings: (settings: SettingsForm) => Promise<void> | void;
 }
@@ -294,7 +293,6 @@ export function ClientPolicyScreen({
   onBack,
   onProfile,
   onSettings,
-  onLogout,
   settings,
   onSaveSettings,
 }: ClientPolicyScreenProps) {
@@ -908,7 +906,6 @@ export function ClientPolicyScreen({
         onProfile={onProfile || (() => {})}
         onSettings={onSettings || (() => {})}
         onPolicy={() => {}}
-        onLogout={onLogout || (() => {})}
         title={currentSubView === "menu" ? "Custom Policy" : currentSubView === "configure" ? "Configure Rules" : "Copy Rules"}
       />
 

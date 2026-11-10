@@ -1,5 +1,6 @@
 .env
 .env.example
+src/triconvey_agent/backend/_bundled.py
 .local_app/*
 .venv*
 *.pdf

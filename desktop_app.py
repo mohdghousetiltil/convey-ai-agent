@@ -339,8 +339,7 @@ def _find_open_port() -> int:
                 return port
         except OSError:
             continue
-    # Last resort: let the OS pick any free port (OAuth callbacks won't work
-    # unless OAUTH_REDIRECT_BASE is manually configured to match).
+    # Last resort: let the OS pick any free port.
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(("127.0.0.1", 0))
         return int(sock.getsockname()[1])
@@ -352,16 +351,6 @@ class _DesktopApi:
     Methods here are callable from the frontend via:
         window.pywebview.api.methodName(args)
     """
-
-    def open_browser(self, url: str) -> None:
-        """Open a URL in the user's default system browser.
-
-        Used for OAuth flows: pywebview blocks window.open() popups, so we
-        open the provider URL in the real browser and poll the backend for
-        the result instead of using postMessage.
-        """
-        import webbrowser
-        webbrowser.open(url)
 
     def _window(self):
         windows = getattr(webview, "windows", [])
@@ -437,60 +426,6 @@ def _run_server(host: str, port: int) -> None:
     )
 
 
-def _run_ipv6_relay(ipv4_port: int) -> None:
-    """Relay TCP from [::1]:{port} → 127.0.0.1:{port}.
-
-    On Windows, 'localhost' often resolves to ::1 (IPv6) rather than 127.0.0.1.
-    The OAuth redirect URI uses 'localhost', so without this relay the system
-    browser's callback request hits ::1 and gets 'connection refused' because
-    uvicorn only binds to 127.0.0.1.  This relay makes both addresses work.
-    """
-    import asyncio
-
-    async def _pipe(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
-        try:
-            while True:
-                chunk = await reader.read(65536)
-                if not chunk:
-                    break
-                writer.write(chunk)
-                await writer.drain()
-        except Exception:
-            pass
-        finally:
-            try:
-                writer.close()
-            except Exception:
-                pass
-
-    async def _relay(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
-        try:
-            remote_reader, remote_writer = await asyncio.open_connection("127.0.0.1", ipv4_port)
-            await asyncio.gather(_pipe(reader, remote_writer), _pipe(remote_reader, writer))
-        except Exception:
-            pass
-        finally:
-            try:
-                writer.close()
-            except Exception:
-                pass
-
-    async def _serve() -> None:
-        try:
-            server = await asyncio.start_server(_relay, "::1", ipv4_port)
-            async with server:
-                await server.serve_forever()
-        except Exception:
-            pass  # IPv6 unavailable or port taken — silently skip
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        loop.run_until_complete(_serve())
-    finally:
-        loop.close()
-
-
 def main() -> None:
     debug_log_path = _setup_debug_logging()
     if debug_log_path:
@@ -504,22 +439,8 @@ def main() -> None:
     host = "127.0.0.1"
     port = _find_open_port()
 
-    # Tell the OAuth module which port we're on BEFORE starting uvicorn.
-    # Always override any .env value here: the desktop launcher is the source
-    # of truth for the active loopback port, and a stale fixed value can cause
-    # the browser callback to complete against a different backend instance.
-    #
-    # Use `localhost` for the redirect URI even though uvicorn binds to
-    # 127.0.0.1. OAuth providers require an exact redirect URI match, and the
-    # Azure app registration is configured for localhost.
-    os.environ["OAUTH_REDIRECT_BASE"] = f"http://localhost:{port}"
-
     server_thread = threading.Thread(target=_run_server, args=(host, port), daemon=True)
     server_thread.start()
-    # Relay ::1:{port} → 127.0.0.1:{port} so OAuth callbacks work even when
-    # Windows resolves 'localhost' to the IPv6 loopback address.
-    relay_thread = threading.Thread(target=_run_ipv6_relay, args=(port,), daemon=True)
-    relay_thread.start()
     _wait_for_server(host, port)
 
     webview.create_window(
@@ -531,7 +452,7 @@ def main() -> None:
         height=940,
         text_select=True,
     )
-    # Persist WebView2 user data (localStorage, cookies) so login survives app restarts.
+    # Persist WebView2 user data (localStorage, cookies) so app state survives restarts.
     local_app_data = os.environ.get("LOCALAPPDATA", "")
     _webview_data_dir = str(Path(local_app_data) / "TriConveyAgent" / "webview_data") if local_app_data else None
     webview.start(storage_path=_webview_data_dir)

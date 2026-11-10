@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { HashRouter, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
+import { HashRouter, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { DashboardScreen } from "./components/DashboardScreen";
 import type { RecentRun } from "./components/DashboardScreen";
 import { UploadScreen } from "./components/UploadScreen";
@@ -9,8 +9,7 @@ import { SettingsScreen } from "./components/SettingsScreen";
 import { ProfileScreen } from "./components/ProfileScreen";
 import { AboutScreen } from "./components/AboutScreen";
 import { ClientPolicyScreen } from "./components/ClientPolicyScreen";
-import { LoginScreen } from "./components/LoginScreen";
-import { AuthProvider, useAuth } from "./lib/AuthContext";
+import { UserProvider, useUser } from "./lib/UserContext";
 import {
   askRunQuestion,
   type AppInfoPayload,
@@ -128,11 +127,6 @@ function upsertRecentRun(userId: string, run: ReviewRunPayload): RecentRun[] {
   return merged;
 }
 
-function clearPersistedWorkflowState(userId: string) {
-  localStorage.removeItem(activeRunKey(userId));
-  localStorage.removeItem(activeAutofillJobKey(userId));
-}
-
 function applyResolvedTheme(dark: boolean) {
   const html = document.documentElement;
   html.classList.add("theme-transitioning");
@@ -182,18 +176,17 @@ function applyThemePreference(theme: "light" | "dark" | "auto") {
 
 export default function App() {
   return (
-    <AuthProvider>
+    <UserProvider>
       <HashRouter>
         <AppContent />
       </HashRouter>
-    </AuthProvider>
+    </UserProvider>
   );
 }
 
 function AppContent() {
-  const { user, isLoading, logout } = useAuth();
+  const user = useUser();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [settings, setSettings] = useState<LocalSettingsForm>({
     language: "English",
@@ -281,13 +274,6 @@ function AppContent() {
   };
 
   useEffect(() => {
-    if (!user) {
-      setAppInfo(null);
-      setCloudSyncStatus(null);
-      setShowQuickSetup(false);
-      return;
-    }
-
     void (async () => {
       let hasOnboarded = localStorage.getItem(firstRunKey(user.user_id)) === "true";
       const dismissedThisSession = sessionStorage.getItem(sessionDismissKey(user.user_id)) === "true";
@@ -371,7 +357,7 @@ function AppContent() {
         if (current.status === "completed" || (current.status as string) === "complete") {
           setRun(current);
           setActiveRunId(loadingRunId);
-          if (user) upsertRecentRun(user.user_id, current);
+          upsertRecentRun(user.user_id, current);
           setLoadingKind(null);
           setLoadingRunId(null);
           navigate(`/analysis/${loadingRunId}`, { replace: true });
@@ -445,17 +431,6 @@ function AppContent() {
   };
 
   useEffect(() => {
-    if (!user) {
-      setRun(null);
-      setActiveRunId(null);
-      setRecentRuns([]);
-      setAutofillJob(null);
-      setAutofilling(false);
-      setLoadingKind(null);
-      setUploadError("");
-      return;
-    }
-
     const savedRunId = localStorage.getItem(activeRunKey(user.user_id));
     const savedJobId = localStorage.getItem(activeAutofillJobKey(user.user_id));
     setActiveRunId(savedRunId);
@@ -502,8 +477,6 @@ function AppContent() {
   }, [navigate, user]);
 
   useEffect(() => {
-    if (!user) return;
-
     if (run?.manifest.run_id) {
       localStorage.setItem(activeRunKey(user.user_id), run.manifest.run_id);
       setActiveRunId(run.manifest.run_id);
@@ -516,8 +489,6 @@ function AppContent() {
   }, [run, user]);
 
   useEffect(() => {
-    if (!user) return;
-
     if (autofillJob?.job_id) {
       localStorage.setItem(activeAutofillJobKey(user.user_id), autofillJob.job_id);
       return;
@@ -588,43 +559,7 @@ function AppContent() {
   }, [autofillJob, navigate]);
 
   useEffect(() => {
-    if (isLoading || user) return;
-
-    if (location.pathname && location.pathname !== "/login") {
-      try {
-        sessionStorage.setItem("convey:returnTo", `${location.pathname}${location.search ?? ""}`);
-      } catch {
-        // Ignore session storage failures.
-      }
-    }
-  }, [isLoading, location.pathname, location.search, user]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const target = (() => {
-      try {
-        return sessionStorage.getItem("convey:returnTo");
-      } catch {
-        return null;
-      }
-    })();
-
-    if (target) {
-      try {
-        sessionStorage.removeItem("convey:returnTo");
-      } catch {
-        // Ignore session storage failures.
-      }
-    }
-
-    if (location.pathname === "/login" || location.pathname === "/") {
-      navigate(target && target !== "/login" ? target : "/dashboard", { replace: true });
-    }
-  }, [location.pathname, navigate, user]);
-
-  useEffect(() => {
-    if (!backgroundRunWatchId || !user) return;
+    if (!backgroundRunWatchId) return;
     let cancelled = false;
     let timer: number | undefined;
 
@@ -677,31 +612,6 @@ function AppContent() {
       if (timer) window.clearTimeout(timer);
     };
   }, [backgroundRunWatchId, user]);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <svg
-          className="h-8 w-8 animate-spin text-slate-400"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <Routes>
-        <Route path="/login" element={<LoginScreen />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    );
-  }
 
   const handleUploadComplete = async (files: File[]) => {
     setPendingDropFiles([]);
@@ -821,17 +731,6 @@ function AppContent() {
     }
   };
 
-  const handleLogout = async () => {
-    clearPersistedWorkflowState(user.user_id);
-    setRun(null);
-    setUploadError("");
-    setAutofillJob(null);
-    setAutofilling(false);
-    setLoadingKind(null);
-    await logout();
-    navigate("/login", { replace: true });
-  };
-
   const handleAskAssistant = async (
     question: string,
     history: Array<{ role: "user" | "assistant"; content: string }>,
@@ -870,7 +769,6 @@ function AppContent() {
   };
 
   const handleDismissQuickSetup = () => {
-    if (!user) return;
     sessionStorage.setItem(sessionDismissKey(user.user_id), "true");
     setShowQuickSetup(false);
   };
@@ -1150,7 +1048,6 @@ function AppContent() {
         onSettings={goSettings}
         onAbout={goAbout}
         onPolicy={goPolicy}
-        onLogout={handleLogout}
         onSaveReview={handleSaveReview}
         onAutofill={handleAutofill}
         onAskAssistant={handleAskAssistant}
@@ -1254,7 +1151,7 @@ function AppContent() {
               await deleteRun(runId);
               setRecentRuns((prev) => {
                 const next = prev.filter((r) => r.run_id !== runId);
-                if (user) saveRecentRuns(user.user_id, next);
+                saveRecentRuns(user.user_id, next);
                 return next;
               });
               if (activeRunId === runId) {
@@ -1266,7 +1163,6 @@ function AppContent() {
             onSettings={goSettings}
             onPolicy={goPolicy}
             onAbout={goAbout}
-            onLogout={() => void handleLogout()}
             onAskAssistant={handleDashboardAskAssistant}
             onApplyPatch={handleApplyPatch}
             activeRunId={activeRunId ?? undefined}
@@ -1292,7 +1188,6 @@ function AppContent() {
             onSettings={goSettings}
             onPolicy={goPolicy}
             onAbout={goAbout}
-            onLogout={() => void handleLogout()}
             onUploadComplete={handleUploadComplete}
             errorMessage={uploadError}
             onResolveTriconveyReference={resolveTriconveyReference}
@@ -1340,7 +1235,6 @@ function AppContent() {
             onSettings={goSettings}
             onPolicy={goPolicy}
             onAbout={goAbout}
-            onLogout={() => void handleLogout()}
             settings={settings}
             onSaveSettings={handleSaveSettings}
             appInfo={appInfo}
@@ -1364,7 +1258,6 @@ function AppContent() {
             onSettings={goSettings}
             onPolicy={goPolicy}
             onAbout={goAbout}
-            onLogout={() => void handleLogout()}
           />
         }
       />
@@ -1377,7 +1270,6 @@ function AppContent() {
             onProfile={goProfile}
             onSettings={goSettings}
             onPolicy={goPolicy}
-            onLogout={() => void handleLogout()}
             appInfo={appInfo}
             updateStatus={updateStatus}
             updateMessage={updateError}
@@ -1398,7 +1290,6 @@ function AppContent() {
             onProfile={goProfile}
             onSettings={goSettings}
             onAbout={goAbout}
-            onLogout={() => void handleLogout()}
             settings={settings}
             onSaveSettings={handleSaveSettings}
           />
