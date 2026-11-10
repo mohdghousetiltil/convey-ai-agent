@@ -5,7 +5,6 @@ import {
   Download,
   FolderOpen,
   Globe,
-  KeyRound,
   Monitor,
   Moon,
   RefreshCw,
@@ -90,10 +89,6 @@ export function SettingsScreen({
     setForm({ ...settings, anthropicApiKey: settings.anthropicApiKey || "", googleApiKey: settings.googleApiKey || "" });
   }, [settings]);
 
-  function handleProviderChange(provider: "openai" | "anthropic" | "google" | "hybrid" | "openrouter") {
-    setForm((prev) => ({ ...prev, aiProvider: provider }));
-  }
-
   async function handleSave() {
     if (isSaving) return;
     setIsSaving(true);
@@ -143,18 +138,6 @@ export function SettingsScreen({
 
               <div className="grid gap-2 text-[0.78rem]">
                 <div className="settings-stat px-3 py-2">
-                  <p className="font-semibold text-foreground">Provider</p>
-                  <p className="text-muted-foreground">
-                    {form.aiProvider === "openai"
-                      ? "OpenAI"
-                      : form.aiProvider === "anthropic"
-                        ? "Anthropic"
-                        : form.aiProvider === "google"
-                          ? "Google Gemini"
-                          : "MultiModel"}
-                  </p>
-                </div>
-                <div className="settings-stat px-3 py-2">
                   <p className="font-semibold text-foreground">Language</p>
                   <p className="text-muted-foreground">{form.language}</p>
                 </div>
@@ -172,7 +155,6 @@ export function SettingsScreen({
                 <Shield className="h-4 w-4 text-emerald-500" />
                 Storage notes
               </div>
-              <p>API keys are stored locally on this machine.</p>
               <p>Desktop autofill uses the saved Convey executable path when available.</p>
               <p>These settings are machine-local and are not intended for the shared run database.</p>
             </CardContent>
@@ -261,126 +243,6 @@ export function SettingsScreen({
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">AI Provider</h2>
-            <Card className="settings-glass border shadow-sm">
-              <CardContent className="space-y-6 p-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {(["openrouter", "openai", "anthropic", "google", "hybrid"] as const).map((provider) => {
-                    const active = form.aiProvider === provider;
-                    const labels: Record<string, string> = {
-                      openrouter: "OpenRouter",
-                      openai: "OpenAI",
-                      anthropic: "Anthropic",
-                      google: "Google Gemini",
-                      hybrid: "MultiModel",
-                    };
-                    const descriptions: Record<string, string> = {
-                      openrouter: "Recommended",
-                      openai: "Parallel OpenAI reviewers",
-                      anthropic: "Parallel Claude reviewers",
-                      google: "Google Gemini",
-                      hybrid: "Cross-check synthesis with multiple providers",
-                    };
-                    const apiKeyUrls: Record<string, string> = {
-                      openrouter: "https://openrouter.ai/settings/keys",
-                      openai: "https://platform.openai.com/settings/organization/api-keys",
-                      anthropic: "https://platform.claude.com/settings/keys",
-                      google: "https://aistudio.google.com/app/api-keys",
-                    };
-                    return (
-                      <button
-                        key={provider}
-                        onClick={() => handleProviderChange(provider)}
-                        className={[
-                          "group relative rounded-2xl border-2 p-5 text-left transition-all",
-                          active ? "border-primary bg-primary/8 shadow-sm" : "border-border bg-muted hover:border-primary/40",
-                        ].join(" ")}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="space-y-1">
-                            <p className="text-sm font-bold capitalize text-foreground">{labels[provider]}</p>
-                            <p className="text-xs text-muted-foreground">{descriptions[provider]}</p>
-                            {apiKeyUrls[provider] && (
-                              <a
-                                href={apiKeyUrls[provider]}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="mt-2 inline-block text-[10px] font-bold text-primary hover:underline"
-                              >
-                                Get API Key →
-                              </a>
-                            )}
-                          </div>
-                          <div className={["rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wider", active ? "bg-primary text-white" : "bg-card text-muted-foreground border border-border"].join(" ")}>
-                            {active ? "Active" : "Available"}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-                  <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <KeyRound className="h-4 w-4 text-sky-500" />
-                      OpenRouter API key
-                    </div>
-                    <Input
-                      type="password"
-                      value={form.openRouterApiKey ?? ""}
-                      onChange={(e) => setForm((prev) => ({ ...prev, openRouterApiKey: e.target.value }))}
-                      placeholder="sk-or-..."
-                      className="h-11 border-border bg-card"
-                    />
-                    <p className="text-[10px] text-muted-foreground">Stored in secure env file.</p>
-                  </div>
-                  <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <KeyRound className="h-4 w-4 text-violet-500" />
-                      OpenAI API key
-                    </div>
-                    <Input
-                      type="password"
-                      value={form.openAiApiKey}
-                      onChange={(e) => setForm((prev) => ({ ...prev, openAiApiKey: e.target.value }))}
-                      placeholder="sk-..."
-                      className="h-11 border-border bg-card"
-                    />
-                  </div>
-                  <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <KeyRound className="h-4 w-4 text-orange-500" />
-                      Anthropic API key
-                    </div>
-                    <Input
-                      type="password"
-                      value={form.anthropicApiKey}
-                      onChange={(e) => setForm((prev) => ({ ...prev, anthropicApiKey: e.target.value }))}
-                      placeholder="sk-ant-..."
-                      className="h-11 border-border bg-card"
-                    />
-                  </div>
-                  <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <KeyRound className="h-4 w-4 text-green-500" />
-                      Google API key
-                    </div>
-                    <Input
-                      type="password"
-                      value={form.googleApiKey}
-                      onChange={(e) => setForm((prev) => ({ ...prev, googleApiKey: e.target.value }))}
-                      placeholder="AIza..."
-                      className="h-11 border-border bg-card"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          <section className="space-y-4">
             <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Desktop Behaviour</h2>
             <Card className="settings-glass border shadow-sm">
               <CardContent className="grid gap-4 p-6 md:grid-cols-2">
@@ -389,7 +251,7 @@ export function SettingsScreen({
                     <Shield className="h-4 w-4 text-emerald-500" />
                     Security
                   </div>
-                  <p className="mt-2 text-sm text-muted-foreground">API keys stay local to this desktop setup unless you choose to move them to a managed cloud backend later.</p>
+                  <p className="mt-2 text-sm text-muted-foreground">Your settings stay local to this desktop.</p>
                 </div>
                 <div className="rounded-2xl border border-border bg-muted/50 p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground">

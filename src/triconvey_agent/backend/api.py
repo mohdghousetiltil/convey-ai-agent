@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import asyncio
+import concurrent.futures
 import logging
 import sqlite3
 from functools import partial
@@ -1201,12 +1202,20 @@ async def _run_analysis_pipeline_background(
 
     factory = get_session_factory()
 
+    progress_updates: list[concurrent.futures.Future[None]] = []
+
     def progress_callback(pct: float, status: str):
-        # Fire-and-forget DB update for progress.
-        asyncio.run_coroutine_threadsafe(
-            _update_run_progress_async(factory, client_id, run_uuid, pct, status),
-            loop
+        progress_updates.append(
+            asyncio.run_coroutine_threadsafe(
+                _update_run_progress_async(factory, client_id, run_uuid, pct, status),
+                loop,
+            )
         )
+
+    async def finish_progress_updates() -> None:
+        # A progress write landing after the final status would mark the run
+        # as still running forever, so let them all finish first.
+        await asyncio.gather(*(asyncio.wrap_future(update) for update in progress_updates), return_exceptions=True)
 
     # Fetch copy rules before entering the sync executor so Brain A can inject
     # the DB price into the fact store before Brain D runs.
@@ -1229,6 +1238,7 @@ async def _run_analysis_pipeline_background(
             copy_rules=water_copy_rules,
         )
         payload: dict[str, Any] = await loop.run_in_executor(None, pipeline_fn)
+        await finish_progress_updates()
         LOG.info("Pipeline complete for run %s; starting DB persistence", run_uuid)
 
         # 2) Persist to DB.
@@ -1244,6 +1254,7 @@ async def _run_analysis_pipeline_background(
 
     except Exception as exc:
         LOG.exception("Background analysis pipeline failed for run %s", run_uuid)
+        await finish_progress_updates()
         async with factory() as session:
             await session.rollback()
             await RunRepo.update_status(

@@ -16,26 +16,14 @@ DEFAULT_CLOUD_BACKEND_URL = "https://convey-ai-agent-production.up.railway.app"
 DEFAULT_CLOUD_SYNC_URL = f"{DEFAULT_CLOUD_BACKEND_URL}/api/sync"
 
 # AI models. OpenRouter is the default route, so these are the ids that matter most.
-# The app chooses the model; there is no user-facing picker.
+# The app always runs on this model; there is no provider or model choice.
 DEFAULT_OPENROUTER_MODEL = "anthropic/claude-haiku-5.5"
-_PROVIDER_MODELS = {
-    "openrouter": DEFAULT_OPENROUTER_MODEL,
-    "openai": "gpt-4.1-mini",
-    "anthropic": "claude-haiku-5-5",
-    "google": "gemini-2.5-flash",
-    "hybrid": "gpt-4.1-mini",
-}
 
 # One embedding model on both routes, so vectors stay comparable. 1536 dimensions
 # matches the vector(1536) column in the memories table.
 OPENAI_EMBEDDING_MODEL = "text-embedding-3-large"
 OPENROUTER_EMBEDDING_MODEL = "openai/text-embedding-3-large"
 EMBEDDING_DIMENSIONS = 1536
-
-
-def model_for_provider(provider: str) -> str:
-    """Return the model the app uses for a provider."""
-    return _PROVIDER_MODELS.get((provider or "").strip().lower(), DEFAULT_OPENROUTER_MODEL)
 
 
 def get_app_version() -> str:

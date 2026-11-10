@@ -70,7 +70,7 @@ export function AboutScreen({
   onInstallUpdate,
   onReinstallCurrentVersion,
 }: AboutScreenProps) {
-  const version = appInfo?.version || "0.0.213";
+  const version = appInfo?.version || "0.0.214";
   const publisher = appInfo?.publisher || "Convey Agent";
 
   return (

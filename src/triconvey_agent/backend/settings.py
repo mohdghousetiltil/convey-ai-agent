@@ -8,7 +8,6 @@ from typing import Any
 from triconvey_agent.app_meta import (
     DEFAULT_OPENROUTER_MODEL,
     DEFAULT_UPDATE_REPOSITORY,
-    model_for_provider,
 )
 from triconvey_agent.backend.runtime import AppRuntimePaths, ensure_runtime_dirs, get_runtime_paths
 
@@ -125,9 +124,6 @@ def load_local_settings(paths: AppRuntimePaths | None = None, user_id: str | Non
             if isinstance(raw, dict):
                 payload["language"] = str(raw.get("language") or payload["language"])
                 payload["triconveyPath"] = str(raw.get("triconveyPath") or payload["triconveyPath"])
-                payload["aiProvider"] = str(raw.get("aiProvider") or payload["aiProvider"])
-                # Any model saved by an older version is ignored on purpose.
-                payload["defaultModelName"] = model_for_provider(payload["aiProvider"])
                 payload["updateRepository"] = DEFAULT_UPDATE_REPOSITORY
                 payload["includePrereleaseUpdates"] = bool(raw.get("includePrereleaseUpdates", payload["includePrereleaseUpdates"]))
                 payload["autoCheckForUpdates"] = bool(raw.get("autoCheckForUpdates", payload["autoCheckForUpdates"]))
@@ -183,10 +179,9 @@ def save_local_settings(
         "anthropicApiKey": str(settings.get("anthropicApiKey") or ""),
         "googleApiKey": str(settings.get("googleApiKey") or ""),
         "openRouterApiKey": str(settings.get("openRouterApiKey") or ""),
-        "aiProvider": str(settings.get("aiProvider") or current["aiProvider"] or DEFAULT_LOCAL_SETTINGS["aiProvider"]),
-        "defaultModelName": model_for_provider(
-            str(settings.get("aiProvider") or current["aiProvider"] or DEFAULT_LOCAL_SETTINGS["aiProvider"])
-        ),
+        # Provider and model are fixed; values saved by older versions are ignored.
+        "aiProvider": DEFAULT_LOCAL_SETTINGS["aiProvider"],
+        "defaultModelName": DEFAULT_OPENROUTER_MODEL,
         "triconveyPath": str(settings.get("triconveyPath") or current["triconveyPath"] or ""),
         "updateRepository": DEFAULT_UPDATE_REPOSITORY,
         "includePrereleaseUpdates": bool(settings.get("includePrereleaseUpdates", current.get("includePrereleaseUpdates", DEFAULT_LOCAL_SETTINGS["includePrereleaseUpdates"]))),
