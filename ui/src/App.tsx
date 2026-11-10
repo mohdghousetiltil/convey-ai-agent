@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { HashRouter, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import { HashRouter, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { DashboardScreen } from "./components/DashboardScreen";
 import type { RecentRun } from "./components/DashboardScreen";
-import { UploadScreen } from "./components/UploadScreen";
-import { LoadingScreen } from "./components/LoadingScreen";
 import { ReviewScreen } from "./components/ReviewScreen";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { ProfileScreen } from "./components/ProfileScreen";
 import { AboutScreen } from "./components/AboutScreen";
 import { ClientPolicyScreen } from "./components/ClientPolicyScreen";
-import { LoginScreen } from "./components/LoginScreen";
-import { AuthProvider, useAuth } from "./lib/AuthContext";
+import { UserProvider, useUser } from "./lib/UserContext";
 import {
   askRunQuestion,
   type AppInfoPayload,
@@ -20,7 +18,6 @@ import {
   cancelAutofillJob,
   checkForUpdates,
   type CloudSyncStatusPayload,
-  continueAutofillJob,
   createRun,
   deleteRun,
   downloadUpdateInstaller,
@@ -70,6 +67,21 @@ type DesktopBridge = {
     };
   };
 };
+
+function notifyDesktop(title: string, body: string) {
+  if (typeof window === "undefined" || !("Notification" in window)) return;
+  if (Notification.permission === "granted") {
+    new Notification(title, { body });
+  } else if (Notification.permission !== "denied") {
+    void Notification.requestPermission().then((permission) => {
+      if (permission === "granted") new Notification(title, { body });
+    });
+  }
+}
+
+function isOnDashboard() {
+  return window.location.hash.startsWith("#/dashboard");
+}
 
 function firstRunKey(userId: string) {
   return `convey:onboarded:${userId}`;
@@ -128,11 +140,6 @@ function upsertRecentRun(userId: string, run: ReviewRunPayload): RecentRun[] {
   return merged;
 }
 
-function clearPersistedWorkflowState(userId: string) {
-  localStorage.removeItem(activeRunKey(userId));
-  localStorage.removeItem(activeAutofillJobKey(userId));
-}
-
 function applyResolvedTheme(dark: boolean) {
   const html = document.documentElement;
   html.classList.add("theme-transitioning");
@@ -182,18 +189,17 @@ function applyThemePreference(theme: "light" | "dark" | "auto") {
 
 export default function App() {
   return (
-    <AuthProvider>
+    <UserProvider>
       <HashRouter>
         <AppContent />
       </HashRouter>
-    </AuthProvider>
+    </UserProvider>
   );
 }
 
 function AppContent() {
-  const { user, isLoading, logout } = useAuth();
+  const user = useUser();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [settings, setSettings] = useState<LocalSettingsForm>({
     language: "English",
@@ -203,7 +209,7 @@ function AppContent() {
     openRouterApiKey: "",
     aiProvider: "openrouter",
     aiMode: "cost_efficient",
-    defaultModelName: "nvidia/nemotron-3-super-120b-a12b:free",
+    defaultModelName: "anthropic/claude-haiku-5.5",
     triconveyPath: "",
     preferredAutofillFields: [],
     updateRepository: "",
@@ -231,7 +237,6 @@ function AppContent() {
   const [run, setRun] = useState<ReviewRunPayload | null>(null);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [recentRuns, setRecentRuns] = useState<RecentRun[]>([]);
-  const [loadingMessage, setLoadingMessage] = useState("Extracting Section 32 answers, review flags, and autofill actions...");
   const [loadingKind, setLoadingKind] = useState<LoadingKind>(null);
   const [uploadError, setUploadError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -250,9 +255,6 @@ function AppContent() {
   const [isLoadingAllRuns, setIsLoadingAllRuns] = useState(false);
   const [isReanalysing, setIsReanalysing] = useState(false);
   const [showQuickSetup, setShowQuickSetup] = useState(false);
-  const [pendingDropFiles, setPendingDropFiles] = useState<File[]>([]);
-  const [isDashboardDragOver, setIsDashboardDragOver] = useState(false);
-  
   const [loadingRunId, setLoadingRunId] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [loadingStatusHeading, setLoadingStatusHeading] = useState<string>("");
@@ -281,13 +283,6 @@ function AppContent() {
   };
 
   useEffect(() => {
-    if (!user) {
-      setAppInfo(null);
-      setCloudSyncStatus(null);
-      setShowQuickSetup(false);
-      return;
-    }
-
     void (async () => {
       let hasOnboarded = localStorage.getItem(firstRunKey(user.user_id)) === "true";
       const dismissedThisSession = sessionStorage.getItem(sessionDismissKey(user.user_id)) === "true";
@@ -369,17 +364,23 @@ function AppContent() {
         if (!isActive) return;
 
         if (current.status === "completed" || (current.status as string) === "complete") {
-          setRun(current);
-          setActiveRunId(loadingRunId);
-          if (user) upsertRecentRun(user.user_id, current);
           setLoadingKind(null);
           setLoadingRunId(null);
-          navigate(`/analysis/${loadingRunId}`, { replace: true });
+          // Open the matter only if the user is still waiting for it here.
+          if (isOnDashboard()) {
+            setRun(current);
+            setActiveRunId(loadingRunId);
+            upsertRecentRun(user.user_id, current);
+            navigate(`/analysis/${loadingRunId}`);
+          } else {
+            setRecentRuns(upsertRecentRun(user.user_id, current));
+            notifyDesktop("Matter ready", "Your documents have been reviewed.");
+          }
         } else if (current.status === "failed") {
-          setUploadError(current.error_message || "Analysis failed.");
+          setUploadError(current.error_message || "We couldn't finish reviewing these documents. Try again, or remove any file that won't open.");
           setLoadingKind(null);
           setLoadingRunId(null);
-          navigate("/analysis/upload", { replace: true });
+          if (!isOnDashboard()) notifyDesktop("Review failed", "Open the dashboard to see what went wrong.");
         } else {
           // current.status === "running" or "pending"
           setLoadingProgress(current.progress_pct ?? 0);
@@ -445,17 +446,6 @@ function AppContent() {
   };
 
   useEffect(() => {
-    if (!user) {
-      setRun(null);
-      setActiveRunId(null);
-      setRecentRuns([]);
-      setAutofillJob(null);
-      setAutofilling(false);
-      setLoadingKind(null);
-      setUploadError("");
-      return;
-    }
-
     const savedRunId = localStorage.getItem(activeRunKey(user.user_id));
     const savedJobId = localStorage.getItem(activeAutofillJobKey(user.user_id));
     setActiveRunId(savedRunId);
@@ -475,7 +465,6 @@ function AppContent() {
         if (["queued", "running", "cancelling", "awaiting_user"].includes(savedJob.status)) {
           setAutofilling(true);
           setLoadingKind(null);
-          setLoadingMessage(savedJob.manual_action?.message || "Autofill in progress...");
           if (savedRunId) {
             navigate(`/analysis/${savedRunId}`, { replace: true });
           }
@@ -502,8 +491,6 @@ function AppContent() {
   }, [navigate, user]);
 
   useEffect(() => {
-    if (!user) return;
-
     if (run?.manifest.run_id) {
       localStorage.setItem(activeRunKey(user.user_id), run.manifest.run_id);
       setActiveRunId(run.manifest.run_id);
@@ -516,8 +503,6 @@ function AppContent() {
   }, [run, user]);
 
   useEffect(() => {
-    if (!user) return;
-
     if (autofillJob?.job_id) {
       localStorage.setItem(activeAutofillJobKey(user.user_id), autofillJob.job_id);
       return;
@@ -562,11 +547,6 @@ function AppContent() {
           return;
         }
 
-        if (nextJob.status === "awaiting_user") {
-          setLoadingMessage(nextJob.manual_action?.message || "Please open Property Details in Convey, then press Continue.");
-          return;
-        }
-
         if (nextJob.status === "failed") {
           setUploadError(nextJob.error || "Autofill failed.");
           setAutofilling(false);
@@ -588,60 +568,9 @@ function AppContent() {
   }, [autofillJob, navigate]);
 
   useEffect(() => {
-    if (isLoading || user) return;
-
-    if (location.pathname && location.pathname !== "/login") {
-      try {
-        sessionStorage.setItem("convey:returnTo", `${location.pathname}${location.search ?? ""}`);
-      } catch {
-        // Ignore session storage failures.
-      }
-    }
-  }, [isLoading, location.pathname, location.search, user]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const target = (() => {
-      try {
-        return sessionStorage.getItem("convey:returnTo");
-      } catch {
-        return null;
-      }
-    })();
-
-    if (target) {
-      try {
-        sessionStorage.removeItem("convey:returnTo");
-      } catch {
-        // Ignore session storage failures.
-      }
-    }
-
-    if (location.pathname === "/login" || location.pathname === "/") {
-      navigate(target && target !== "/login" ? target : "/dashboard", { replace: true });
-    }
-  }, [location.pathname, navigate, user]);
-
-  useEffect(() => {
-    if (!backgroundRunWatchId || !user) return;
+    if (!backgroundRunWatchId) return;
     let cancelled = false;
     let timer: number | undefined;
-
-    const maybeNotify = (title: string, body: string) => {
-      if (typeof window === "undefined" || !("Notification" in window)) return;
-      if (Notification.permission === "granted") {
-        new Notification(title, { body });
-        return;
-      }
-      if (Notification.permission !== "denied") {
-        void Notification.requestPermission().then((permission) => {
-          if (permission === "granted") {
-            new Notification(title, { body });
-          }
-        });
-      }
-    };
 
     const pollBackground = async () => {
       try {
@@ -649,7 +578,7 @@ function AppContent() {
         if (cancelled) return;
         const status = String(current.status || "").toLowerCase();
         if (status === "completed" || status === "complete") {
-          maybeNotify("Analysis complete", "Your matter processing has finished.");
+          notifyDesktop("Matter ready", "Your documents have been reviewed.");
           setBackgroundRunWatchId(null);
           const nextRecent = await getRecentRuns(10);
           if (!cancelled) {
@@ -659,7 +588,7 @@ function AppContent() {
           return;
         }
         if (status === "failed") {
-          maybeNotify("Analysis failed", "The background analysis run failed.");
+          notifyDesktop("Review failed", "A background review could not finish.");
           setBackgroundRunWatchId(null);
           return;
         }
@@ -678,38 +607,12 @@ function AppContent() {
     };
   }, [backgroundRunWatchId, user]);
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <svg
-          className="h-8 w-8 animate-spin text-slate-400"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <Routes>
-        <Route path="/login" element={<LoginScreen />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    );
-  }
-
   const handleUploadComplete = async (files: File[]) => {
-    setPendingDropFiles([]);
+    setRun(null);
     setUploadError("");
     setAutofillJob(null);
-    setLoadingMessage("Extracting Section 32 answers, review flags, and autofill actions...");
+    setLoadingProgress(0);
     setLoadingKind("analysis");
-    navigate("/analysis/loading", { replace: true });
 
     try {
       const result = await createRun(files, {
@@ -726,14 +629,13 @@ function AppContent() {
     } catch (error) {
       const message =
         error instanceof TypeError && error.message === "Failed to fetch"
-          ? "Could not reach the local backend. Restart the app/backend and try again."
+          ? "Can't reach Convey Agent's local service. Restart the app and try again."
           : error instanceof Error
             ? error.message
-            : "Failed to analyze the uploaded PDFs.";
+            : "We couldn't start this review. Try again, or remove any file that won't open.";
       setUploadError(message);
       setLoadingKind(null);
       setLoadingRunId(null);
-      navigate("/analysis/upload", { replace: true });
     }
   };
 
@@ -752,7 +654,6 @@ function AppContent() {
     if (!run || autofilling) return;
     setAutofilling(true);
     setLoadingKind(null);
-    setLoadingMessage("Autofill in progress...");
     try {
       const savedRun = Object.keys(updates).length ? await saveAnswers(run.manifest.run_id, updates) : run;
       setRun(savedRun);
@@ -805,31 +706,7 @@ function AppContent() {
     setLoadingRunId(null);
     setLoadingProgress(0);
     setLoadingStatusHeading("");
-    navigate("/dashboard", { replace: true });
-  };
-
-  const handleContinueAutofill = async () => {
-    if (!autofillJob) return;
-    try {
-      const job = await continueAutofillJob(autofillJob.job_id);
-      setAutofillJob(job);
-    } catch (error) {
-      setUploadError(error instanceof Error ? error.message : "Could not continue autofill.");
-      setLoadingKind(null);
-      setAutofilling(false);
-      navigate("/dashboard", { replace: true });
-    }
-  };
-
-  const handleLogout = async () => {
-    clearPersistedWorkflowState(user.user_id);
-    setRun(null);
-    setUploadError("");
-    setAutofillJob(null);
-    setAutofilling(false);
-    setLoadingKind(null);
-    await logout();
-    navigate("/login", { replace: true });
+    void getRecentRuns(10).then(setRecentRuns).catch(() => undefined);
   };
 
   const handleAskAssistant = async (
@@ -870,7 +747,6 @@ function AppContent() {
   };
 
   const handleDismissQuickSetup = () => {
-    if (!user) return;
     sessionStorage.setItem(sessionDismissKey(user.user_id), "true");
     setShowQuickSetup(false);
   };
@@ -1008,74 +884,6 @@ function AppContent() {
   const goSettings = () => navigate("/settings");
   const goPolicy = () => navigate("/policy");
   const goAbout = () => navigate("/about");
-  const goUpload = () => navigate("/analysis/upload");
-
-  const handleProcessNew = () => {
-    setRun(null);
-    setUploadError("");
-    setPendingDropFiles([]);
-    goUpload();
-  };
-
-  const handleDashboardDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDashboardDragOver(false);
-
-    const dropped = Array.from(e.dataTransfer.files);
-    const plainText = e.dataTransfer.getData("text/plain");
-    const uriList = e.dataTransfer.getData("text/uri-list");
-    const htmlText = e.dataTransfer.getData("text/html");
-
-    // Collect local paths from .path property on File objects (PyWebView/desktop drops)
-    const filePaths: string[] = [];
-    for (const f of dropped) {
-      const p = (f as File & { path?: string }).path;
-      if (p && p.trim()) filePaths.push(p.trim());
-    }
-
-    // Extract paths from text data (TriConvey reference drops)
-    const textPaths: string[] = [];
-    for (const raw of [plainText, uriList, htmlText]) {
-      if (!raw) continue;
-      for (const match of raw.matchAll(/file:\/\/\/[^\s"'<>]+/gi)) textPaths.push(match[0]);
-      for (const match of raw.matchAll(/@?[A-Za-z]:\\[^\r\n"<>|?*]+/g)) textPaths.push(match[0].replace(/^@+/, ""));
-    }
-
-    setRun(null);
-    setUploadError("");
-
-    // If we have desktop file paths, create a reference file that UploadScreen resolves
-    if (filePaths.length > 0) {
-      const refContent = JSON.stringify({ LocalPaths: filePaths }, null, 2);
-      const stamp = Math.abs(filePaths.join("").split("").reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0));
-      const refFile = new File([refContent], `triconvey-drop-${stamp}.json`, { type: "application/json", lastModified: stamp });
-      setPendingDropFiles([refFile]);
-      navigate("/analysis/upload", { replace: false });
-      return;
-    }
-
-    if (textPaths.length > 0) {
-      const refContent = JSON.stringify({ LocalPaths: textPaths }, null, 2);
-      const stamp = Math.abs(textPaths.join("").split("").reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0));
-      const refFile = new File([refContent], `triconvey-drop-${stamp}.json`, { type: "application/json", lastModified: stamp });
-      setPendingDropFiles([refFile]);
-      navigate("/analysis/upload", { replace: false });
-      return;
-    }
-
-    // Check for TriConvey matter payload in text/plain
-    if (plainText?.trim().includes('"MatterId"')) {
-      const stamp = Date.now();
-      const refFile = new File([plainText.trim()], `triconvey-drop-${stamp}.json`, { type: "application/json", lastModified: stamp });
-      setPendingDropFiles([refFile]);
-      navigate("/analysis/upload", { replace: false });
-      return;
-    }
-
-    if (!dropped.length) return;
-    setPendingDropFiles(dropped);
-    navigate("/analysis/upload", { replace: false });
-  };
 
   const handleViewRun = (runId: string) => {
     setUploadError("");
@@ -1135,11 +943,16 @@ function AppContent() {
     }, [runId, user.user_id]);
 
     if (!runId) {
-      return <Navigate to="/analysis/upload" replace />;
+      return <Navigate to="/dashboard" replace />;
     }
 
     if (loadingRun || !run || run.manifest.run_id !== runId) {
-      return <LoadingScreen message="Loading matter workspace..." cancellable={false} />;
+      return (
+        <div role="status" className="flex min-h-screen items-center justify-center gap-3 bg-background text-sm text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" />
+          Opening matter...
+        </div>
+      );
     }
 
     return (
@@ -1150,7 +963,6 @@ function AppContent() {
         onSettings={goSettings}
         onAbout={goAbout}
         onPolicy={goPolicy}
-        onLogout={handleLogout}
         onSaveReview={handleSaveReview}
         onAutofill={handleAutofill}
         onAskAssistant={handleAskAssistant}
@@ -1167,9 +979,9 @@ function AppContent() {
         }}
         onReviewAgain={async () => {
           if (!run) return;
-          setLoadingMessage("Re-analysing matter documents...");
+          setLoadingProgress(0);
           setLoadingKind("analysis");
-          navigate("/analysis/loading", { replace: true });
+          navigate("/dashboard");
           
           try {
             const result = await createRun([], {
@@ -1204,24 +1016,6 @@ function AppContent() {
       <Route
         path="/dashboard"
         element={
-          <div
-            className="relative h-full min-h-screen"
-            onDragOver={(e) => { e.preventDefault(); setIsDashboardDragOver(true); }}
-            onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDashboardDragOver(false); }}
-            onDragEnd={() => setIsDashboardDragOver(false)}
-            onDrop={handleDashboardDrop}
-          >
-            {isDashboardDragOver && (
-              <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-blue-500/10 backdrop-blur-[1px]">
-                <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-blue-400 bg-white/90 px-12 py-10 shadow-2xl dark:bg-slate-900/90">
-                  <svg className="h-12 w-12 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                  </svg>
-                  <p className="text-lg font-semibold text-blue-700 dark:text-blue-300">Drop files to upload</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">PDF and Word documents supported</p>
-                </div>
-              </div>
-            )}
           <DashboardScreen
             userName={user.name}
             userInitials={userInitials}
@@ -1248,13 +1042,18 @@ function AppContent() {
             isLoadingAllRuns={isLoadingAllRuns}
             updateStatus={updateStatus}
             cloudSyncStatus={cloudSyncStatus}
-            onProcessNew={handleProcessNew}
+            onStartReview={(files) => void handleUploadComplete(files)}
+            isAnalysing={loadingKind === "analysis"}
+            analysisProgress={loadingProgress}
+            onRunInBackground={handleCancelAnalysis}
+            errorMessage={uploadError}
+            onDismissError={() => setUploadError("")}
             onViewRun={handleViewRun}
             onDeleteRun={async (runId) => {
               await deleteRun(runId);
               setRecentRuns((prev) => {
                 const next = prev.filter((r) => r.run_id !== runId);
-                if (user) saveRecentRuns(user.user_id, next);
+                saveRecentRuns(user.user_id, next);
                 return next;
               });
               if (activeRunId === runId) {
@@ -1266,7 +1065,6 @@ function AppContent() {
             onSettings={goSettings}
             onPolicy={goPolicy}
             onAbout={goAbout}
-            onLogout={() => void handleLogout()}
             onAskAssistant={handleDashboardAskAssistant}
             onApplyPatch={handleApplyPatch}
             activeRunId={activeRunId ?? undefined}
@@ -1279,54 +1077,6 @@ function AppContent() {
             onDismissQuickSetup={handleDismissQuickSetup}
             onBrowseTriconveyPath={() => void handleBrowseTriconveyPath()}
           />
-          </div>
-        }
-      />
-      <Route
-        path="/analysis/upload"
-        element={
-          <UploadScreen
-            onBack={goDashboard}
-            userInitials={userInitials}
-            onProfile={goProfile}
-            onSettings={goSettings}
-            onPolicy={goPolicy}
-            onAbout={goAbout}
-            onLogout={() => void handleLogout()}
-            onUploadComplete={handleUploadComplete}
-            errorMessage={uploadError}
-            onResolveTriconveyReference={resolveTriconveyReference}
-            initialFiles={pendingDropFiles.length ? pendingDropFiles : undefined}
-            key={pendingDropFiles.length ? pendingDropFiles.map(f => f.name).join(",") : "upload"}
-          />
-        }
-      />
-      <Route
-        path="/analysis/loading"
-        element={
-          loadingKind ? (
-            <LoadingScreen
-              message={loadingMessage}
-              progress={loadingProgress}
-              statusHeading={loadingStatusHeading}
-              cancellable={loadingKind === "analysis" || Boolean(autofillJob && ["queued", "running", "cancelling", "awaiting_user"].includes(autofillJob.status))}
-              onCancel={loadingKind === "analysis" ? handleCancelAnalysis : handleCancelAutofill}
-              cancelLabel={
-                loadingKind === "analysis"
-                  ? "Stop processing"
-                  : (autofillJob?.status === "cancelling" ? "Cancelling..." : "Cancel")
-              }
-              cancelHint={
-                loadingKind === "analysis"
-                  ? "Stops this screen only. Processing continues in the background and uploaded files are kept."
-                  : "Cancelling autofill keeps your uploaded files and current matter."
-              }
-              actionLabel={autofillJob?.status === "awaiting_user" ? (autofillJob.manual_action?.cta || "Continue") : undefined}
-              onAction={autofillJob?.status === "awaiting_user" ? handleContinueAutofill : undefined}
-            />
-          ) : (
-            <Navigate to="/dashboard" replace />
-          )
         }
       />
       <Route path="/analysis/:runId" element={<AnalysisRunRoute />} />
@@ -1340,7 +1090,6 @@ function AppContent() {
             onSettings={goSettings}
             onPolicy={goPolicy}
             onAbout={goAbout}
-            onLogout={() => void handleLogout()}
             settings={settings}
             onSaveSettings={handleSaveSettings}
             appInfo={appInfo}
@@ -1364,7 +1113,6 @@ function AppContent() {
             onSettings={goSettings}
             onPolicy={goPolicy}
             onAbout={goAbout}
-            onLogout={() => void handleLogout()}
           />
         }
       />
@@ -1377,7 +1125,6 @@ function AppContent() {
             onProfile={goProfile}
             onSettings={goSettings}
             onPolicy={goPolicy}
-            onLogout={() => void handleLogout()}
             appInfo={appInfo}
             updateStatus={updateStatus}
             updateMessage={updateError}
@@ -1398,7 +1145,6 @@ function AppContent() {
             onProfile={goProfile}
             onSettings={goSettings}
             onAbout={goAbout}
-            onLogout={() => void handleLogout()}
             settings={settings}
             onSaveSettings={handleSaveSettings}
           />

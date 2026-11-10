@@ -2,11 +2,9 @@ import React from "react";
 import { motion } from "motion/react";
 import {
   Bell,
-  Bot,
   Download,
   FolderOpen,
   Globe,
-  KeyRound,
   Monitor,
   Moon,
   RefreshCw,
@@ -17,55 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { AppInfoPayload, UpdateStatusPayload } from "@/lib/api";
+import { AppInfoPayload, UpdateStatusPayload } from "../lib/api";
 import { Header } from "./Header";
-
-const OPENAI_MODELS = [
-  { id: "gpt-4.1-mini", label: "gpt 4.1 mini", badge: "Fast" },
-  { id: "gpt-5.4", label: "gpt 5.4", badge: "Next-gen" },
-  { id: "gpt-4.1", label: "gpt 4.1", badge: "Latest" },
-  { id: "gpt-4o", label: "gpt 4o", badge: "Smart" },
-] as const;
-
-const ANTHROPIC_MODELS = [
-  { id: "claude-opus-4.1", label: "claude opus 4.1", badge: "Most capable" },
-  { id: "claude-sonnet-4.1", label: "claude sonnet 4.1", badge: "Balanced" },
-  { id: "claude-haiku-4.5", label: "claude haiku 4.5", badge: "Fastest" },
-] as const;
-
-// Feature 1: Google Gemini models
-const GOOGLE_MODELS = [
-  { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash", badge: "Fast" },
-  { id: "gemini-3.1-flash", label: "Gemini 3.1 Flash", badge: "Fast" },
-  { id: "gemini-3-deep-think", label: "Gemini 3 Deep Think", badge: "Reasoning" },
-  { id: "gemini-3.1-pro", label: "Gemini 3.1 Pro", badge: "Smart" },
-] as const;
-
-const OPENROUTER_MODELS = [
-  { id: "nvidia/nemotron-3-super-120b-a12b:free", label: "Nemotron 120B (Free)", badge: "Default" },
-  { id: "nvidia/nemotron-super-49b-v1:free", label: "Nemotron 49B (Free)", badge: "Fast" },
-  { id: "openai/gpt-4o-mini", label: "GPT-4o Mini (OR)", badge: "Smart" },
-  { id: "anthropic/claude-sonnet-4-5", label: "Claude Sonnet 4.5 (OR)", badge: "Balanced" },
-] as const;
-
-const MULTIMODEL_MODELS = [
-  { id: "gpt4o-claude-sonnet", label: "gpt-4o + claude-sonnet-4.1", badge: "Balanced" },
-  { id: "gpt4o-gemini-pro", label: "gpt-4o + gemini-3.1-pro", badge: "Broad" },
-  { id: "all-pro-models", label: "gpt-4o + claude-opus + gemini-pro", badge: "Maximum" },
-] as const;
-
-const BADGE_COLORS: Record<string, string> = {
-  Latest: "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400",
-  Smart: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
-  Fast: "bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400",
-  Fastest: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
-  Reasoning: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
-  "Most capable": "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400",
-  Balanced: "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400",
-  "Next-gen": "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400",
-  Broad: "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400",
-  Maximum: "bg-foreground text-background",
-};
 
 interface SettingsForm {
   language: string;
@@ -91,7 +42,6 @@ interface SettingsScreenProps {
   onSettings?: () => void;
   onPolicy?: () => void;
   onAbout?: () => void;
-  onLogout?: () => void;
   settings: SettingsForm;
   onSaveSettings: (settings: SettingsForm) => Promise<void> | void;
   onThemePreview?: (theme: "light" | "dark" | "auto") => void;
@@ -113,7 +63,6 @@ export function SettingsScreen({
   onSettings,
   onPolicy,
   onAbout,
-  onLogout,
   settings,
   onSaveSettings,
   appInfo,
@@ -139,32 +88,6 @@ export function SettingsScreen({
   React.useEffect(() => {
     setForm({ ...settings, anthropicApiKey: settings.anthropicApiKey || "", googleApiKey: settings.googleApiKey || "" });
   }, [settings]);
-
-  // Feature 1: pick model list based on provider
-  const models =
-    form.aiProvider === "anthropic"
-      ? ANTHROPIC_MODELS
-      : form.aiProvider === "google"
-        ? GOOGLE_MODELS
-        : form.aiProvider === "hybrid"
-          ? MULTIMODEL_MODELS
-          : form.aiProvider === "openrouter"
-            ? OPENROUTER_MODELS
-            : OPENAI_MODELS;
-
-  function handleProviderChange(provider: "openai" | "anthropic" | "google" | "hybrid" | "openrouter") {
-    const defaultModel =
-      provider === "anthropic"
-        ? ANTHROPIC_MODELS[1].id
-        : provider === "google"
-          ? GOOGLE_MODELS[0].id
-          : provider === "hybrid"
-            ? MULTIMODEL_MODELS[0].id
-            : provider === "openrouter"
-              ? OPENROUTER_MODELS[0].id
-              : OPENAI_MODELS[2].id;
-    setForm((prev) => ({ ...prev, aiProvider: provider, defaultModelName: defaultModel }));
-  }
 
   async function handleSave() {
     if (isSaving) return;
@@ -197,7 +120,6 @@ export function SettingsScreen({
         onProfile={onProfile}
         onSettings={onSettings}
         onPolicy={onPolicy}
-        onLogout={onLogout}
       />
 
       <main className="relative z-10 mx-auto grid max-w-7xl grid-cols-[280px_minmax(0,1fr)] gap-6 p-6">
@@ -216,22 +138,6 @@ export function SettingsScreen({
 
               <div className="grid gap-2 text-[0.78rem]">
                 <div className="settings-stat px-3 py-2">
-                  <p className="font-semibold text-foreground">Provider</p>
-                  <p className="text-muted-foreground">
-                    {form.aiProvider === "openai"
-                      ? "OpenAI"
-                      : form.aiProvider === "anthropic"
-                        ? "Anthropic"
-                        : form.aiProvider === "google"
-                          ? "Google Gemini"
-                          : "MultiModel"}
-                  </p>
-                </div>
-                <div className="settings-stat px-3 py-2">
-                  <p className="font-semibold text-foreground">Model</p>
-                  <p className="break-all text-muted-foreground">{form.defaultModelName}</p>
-                </div>
-                <div className="settings-stat px-3 py-2">
                   <p className="font-semibold text-foreground">Language</p>
                   <p className="text-muted-foreground">{form.language}</p>
                 </div>
@@ -249,7 +155,6 @@ export function SettingsScreen({
                 <Shield className="h-4 w-4 text-emerald-500" />
                 Storage notes
               </div>
-              <p>API keys are stored locally on this machine.</p>
               <p>Desktop autofill uses the saved Convey executable path when available.</p>
               <p>These settings are machine-local and are not intended for the shared run database.</p>
             </CardContent>
@@ -338,158 +243,6 @@ export function SettingsScreen({
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">AI Provider</h2>
-            <Card className="settings-glass border shadow-sm">
-              <CardContent className="space-y-6 p-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {(["openrouter", "openai", "anthropic", "google", "hybrid"] as const).map((provider) => {
-                    const active = form.aiProvider === provider;
-                    const labels: Record<string, string> = {
-                      openrouter: "OpenRouter",
-                      openai: "OpenAI",
-                      anthropic: "Anthropic",
-                      google: "Google Gemini",
-                      hybrid: "MultiModel",
-                    };
-                    const descriptions: Record<string, string> = {
-                      openrouter: "Free & paid models via OpenRouter (default)",
-                      openai: "Parallel OpenAI reviewers",
-                      anthropic: "Parallel Claude reviewers",
-                      google: "Google Gemini 3.1 Pro / Flash",
-                      hybrid: "Cross-check synthesis with multiple providers",
-                    };
-                    const apiKeyUrls: Record<string, string> = {
-                      openrouter: "https://openrouter.ai/settings/keys",
-                      openai: "https://platform.openai.com/settings/organization/api-keys",
-                      anthropic: "https://platform.claude.com/settings/keys",
-                      google: "https://aistudio.google.com/app/api-keys",
-                    };
-                    return (
-                      <button
-                        key={provider}
-                        onClick={() => handleProviderChange(provider)}
-                        className={[
-                          "group relative rounded-2xl border-2 p-5 text-left transition-all",
-                          active ? "border-primary bg-primary/8 shadow-sm" : "border-border bg-muted hover:border-primary/40",
-                        ].join(" ")}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="space-y-1">
-                            <p className="text-sm font-bold capitalize text-foreground">{labels[provider]}</p>
-                            <p className="text-xs text-muted-foreground">{descriptions[provider]}</p>
-                            {apiKeyUrls[provider] && (
-                              <a
-                                href={apiKeyUrls[provider]}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="mt-2 inline-block text-[10px] font-bold text-primary hover:underline"
-                              >
-                                Get API Key →
-                              </a>
-                            )}
-                          </div>
-                          <div className={["rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wider", active ? "bg-primary text-white" : "bg-card text-muted-foreground border border-border"].join(" ")}>
-                            {active ? "Active" : "Available"}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-                  <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <KeyRound className="h-4 w-4 text-sky-500" />
-                      OpenRouter API key
-                    </div>
-                    <Input
-                      type="password"
-                      value={form.openRouterApiKey ?? ""}
-                      onChange={(e) => setForm((prev) => ({ ...prev, openRouterApiKey: e.target.value }))}
-                      placeholder="sk-or-..."
-                      className="h-11 border-border bg-card"
-                    />
-                    <p className="text-[10px] text-muted-foreground">Stored in secure env file. Free models available.</p>
-                  </div>
-                  <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <KeyRound className="h-4 w-4 text-violet-500" />
-                      OpenAI API key
-                    </div>
-                    <Input
-                      type="password"
-                      value={form.openAiApiKey}
-                      onChange={(e) => setForm((prev) => ({ ...prev, openAiApiKey: e.target.value }))}
-                      placeholder="sk-..."
-                      className="h-11 border-border bg-card"
-                    />
-                  </div>
-                  <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <KeyRound className="h-4 w-4 text-orange-500" />
-                      Anthropic API key
-                    </div>
-                    <Input
-                      type="password"
-                      value={form.anthropicApiKey}
-                      onChange={(e) => setForm((prev) => ({ ...prev, anthropicApiKey: e.target.value }))}
-                      placeholder="sk-ant-..."
-                      className="h-11 border-border bg-card"
-                    />
-                  </div>
-                  <div className="space-y-2 rounded-2xl border border-border bg-muted/50 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <KeyRound className="h-4 w-4 text-green-500" />
-                      Google API key
-                    </div>
-                    <Input
-                      type="password"
-                      value={form.googleApiKey}
-                      onChange={(e) => setForm((prev) => ({ ...prev, googleApiKey: e.target.value }))}
-                      placeholder="AIza..."
-                      className="h-11 border-border bg-card"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                    <Bot className="h-4 w-4 text-muted-foreground" />
-                    Default model
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    {models.map((model) => {
-                      const active = form.defaultModelName === model.id;
-                      return (
-                        <button
-                          key={model.id}
-                          onClick={() => setForm((prev) => ({ ...prev, defaultModelName: model.id }))}
-                          className={[
-                            "rounded-2xl border-2 px-4 py-3 text-left transition-all",
-                            active ? "border-primary bg-primary/8" : "border-border bg-card hover:border-primary/40",
-                          ].join(" ")}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div>
-                              <p className={["text-sm font-semibold", active ? "text-primary" : "text-foreground"].join(" ")}>{model.label}</p>
-                              <p className="mt-0.5 text-[10px] text-muted-foreground">{model.id}</p>
-                            </div>
-                            <span className={["rounded-full px-2 py-0.5 text-[10px] font-bold", BADGE_COLORS[model.badge] ?? "bg-muted text-muted-foreground"].join(" ")}>
-                              {model.badge}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          <section className="space-y-4">
             <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Desktop Behaviour</h2>
             <Card className="settings-glass border shadow-sm">
               <CardContent className="grid gap-4 p-6 md:grid-cols-2">
@@ -498,7 +251,7 @@ export function SettingsScreen({
                     <Shield className="h-4 w-4 text-emerald-500" />
                     Security
                   </div>
-                  <p className="mt-2 text-sm text-muted-foreground">API keys stay local to this desktop setup unless you choose to move them to a managed cloud backend later.</p>
+                  <p className="mt-2 text-sm text-muted-foreground">Your settings stay local to this desktop.</p>
                 </div>
                 <div className="rounded-2xl border border-border bg-muted/50 p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground">

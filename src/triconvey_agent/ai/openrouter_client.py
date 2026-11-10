@@ -7,7 +7,7 @@ image, audio and video and is positioned for document-intelligence workflows.
 Environment variables
 ---------------------
 OPENROUTER_API_KEY   — required
-OPENROUTER_MODEL     — optional, defaults to nvidia/llama-3.1-nemotron-nano-8b-instruct
+OPENROUTER_MODEL     — optional, defaults to app_meta.DEFAULT_OPENROUTER_MODEL
 OPENROUTER_TIMEOUT   — optional, seconds (default 45)
 """
 from __future__ import annotations
@@ -18,11 +18,12 @@ import time
 import requests
 
 from triconvey_agent.ai.client import AIResult
+from triconvey_agent.app_meta import DEFAULT_OPENROUTER_MODEL
 
-_DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
+_DEFAULT_MODEL = DEFAULT_OPENROUTER_MODEL
 _FALLBACK_MODELS = [
-    "inclusionai/ring-2.6-1t:free",
-    "openai/gpt-4o-mini",
+    "openai/gpt-5.6-luna",
+    "nvidia/nemotron-3.5-super-vl",
 ]
 _FALLBACK_DELAY_SECONDS = 2
 _API_URL = "https://openrouter.ai/api/v1/chat/completions"

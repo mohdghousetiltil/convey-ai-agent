@@ -5,7 +5,10 @@ import os
 from pathlib import Path
 from typing import Any
 
-from triconvey_agent.app_meta import DEFAULT_UPDATE_REPOSITORY
+from triconvey_agent.app_meta import (
+    DEFAULT_OPENROUTER_MODEL,
+    DEFAULT_UPDATE_REPOSITORY,
+)
 from triconvey_agent.backend.runtime import AppRuntimePaths, ensure_runtime_dirs, get_runtime_paths
 
 DEFAULT_LOCAL_SETTINGS = {
@@ -15,7 +18,7 @@ DEFAULT_LOCAL_SETTINGS = {
     "googleApiKey": "",
     "openRouterApiKey": "",
     "aiProvider": "openrouter",
-    "defaultModelName": "nvidia/nemotron-3-super-120b-a12b:free",
+    "defaultModelName": DEFAULT_OPENROUTER_MODEL,
     "triconveyPath": "",
     "preferredAutofillFields": [],
     "updateRepository": DEFAULT_UPDATE_REPOSITORY,
@@ -76,6 +79,16 @@ def apply_local_settings_env(paths: AppRuntimePaths | None = None) -> None:
     if openrouter_key:
         os.environ["OPENROUTER_API_KEY"] = openrouter_key
 
+    # Bundled developer key — silent fallback when client has no key configured
+    if not os.environ.get("OPENROUTER_API_KEY"):
+        try:
+            from triconvey_agent.backend._bundled import get_bundled_openrouter_key
+            _fallback = get_bundled_openrouter_key()
+            if _fallback:
+                os.environ["OPENROUTER_API_KEY"] = _fallback
+        except Exception:
+            pass
+
     cloud_sync_url = env_values.get("CONVEY_CLOUD_SYNC_URL", "").strip()
     if cloud_sync_url:
         os.environ["CONVEY_CLOUD_SYNC_URL"] = cloud_sync_url
@@ -110,9 +123,7 @@ def load_local_settings(paths: AppRuntimePaths | None = None, user_id: str | Non
             raw = json.loads(runtime.settings_file.read_text(encoding="utf-8"))
             if isinstance(raw, dict):
                 payload["language"] = str(raw.get("language") or payload["language"])
-                payload["defaultModelName"] = str(raw.get("defaultModelName") or payload["defaultModelName"])
                 payload["triconveyPath"] = str(raw.get("triconveyPath") or payload["triconveyPath"])
-                payload["aiProvider"] = str(raw.get("aiProvider") or payload["aiProvider"])
                 payload["updateRepository"] = DEFAULT_UPDATE_REPOSITORY
                 payload["includePrereleaseUpdates"] = bool(raw.get("includePrereleaseUpdates", payload["includePrereleaseUpdates"]))
                 payload["autoCheckForUpdates"] = bool(raw.get("autoCheckForUpdates", payload["autoCheckForUpdates"]))
@@ -168,8 +179,9 @@ def save_local_settings(
         "anthropicApiKey": str(settings.get("anthropicApiKey") or ""),
         "googleApiKey": str(settings.get("googleApiKey") or ""),
         "openRouterApiKey": str(settings.get("openRouterApiKey") or ""),
-        "aiProvider": str(settings.get("aiProvider") or current["aiProvider"] or DEFAULT_LOCAL_SETTINGS["aiProvider"]),
-        "defaultModelName": str(settings.get("defaultModelName") or current["defaultModelName"] or DEFAULT_LOCAL_SETTINGS["defaultModelName"]),
+        # Provider and model are fixed; values saved by older versions are ignored.
+        "aiProvider": DEFAULT_LOCAL_SETTINGS["aiProvider"],
+        "defaultModelName": DEFAULT_OPENROUTER_MODEL,
         "triconveyPath": str(settings.get("triconveyPath") or current["triconveyPath"] or ""),
         "updateRepository": DEFAULT_UPDATE_REPOSITORY,
         "includePrereleaseUpdates": bool(settings.get("includePrereleaseUpdates", current.get("includePrereleaseUpdates", DEFAULT_LOCAL_SETTINGS["includePrereleaseUpdates"]))),

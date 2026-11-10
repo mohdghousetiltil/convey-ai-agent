@@ -18,7 +18,7 @@ What clients do:
 - download `ConveyAgent-Setup-<version>.exe`
 - double-click it
 - click through setup
-- sign in and finish setup inside the app
+- finish setup inside the app
 
 What clients do not need to do:
 
@@ -80,7 +80,7 @@ The installer:
 - closes the running app during update when needed
 - keeps `%LOCALAPPDATA%\TriConveyAgent` untouched
 
-On first sign-in, the app can collect setup values directly in the UI:
+On first launch, the app can collect setup values directly in the UI:
 
 - OpenAI API key
 - Anthropic API key

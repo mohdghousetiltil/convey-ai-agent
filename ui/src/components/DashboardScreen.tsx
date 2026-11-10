@@ -1,11 +1,13 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { AlertTriangle, Bot, CheckCircle2, Clock, Download, FolderOpen, KeyRound, Plus, Sparkles, Timer, Trash2, Wand2, X, Zap } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Download, FolderOpen, Sparkles, Timer, Trash2, Wand2, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { CloudSyncStatusPayload, UpdateStatusPayload } from "../lib/api";
+import { useMatterIntake } from "../lib/useMatterIntake";
 import { Chatbot } from "./Chatbot";
 import { Header } from "./Header";
+import { NewMatterPanel } from "./NewMatterPanel";
 
 export type RecentRun = {
   run_id: string;
@@ -26,13 +28,17 @@ interface DashboardScreenProps {
   isLoadingAllRuns?: boolean;
   updateStatus?: UpdateStatusPayload | null;
   cloudSyncStatus?: CloudSyncStatusPayload | null;
-  onProcessNew: () => void;
+  onStartReview: (files: File[]) => void;
+  isAnalysing?: boolean;
+  analysisProgress?: number;
+  onRunInBackground?: () => void;
+  errorMessage?: string;
+  onDismissError?: () => void;
   onViewRun: (runId: string) => void;
   onProfile?: () => void;
   onSettings?: () => void;
   onPolicy?: () => void;
   onAbout?: () => void;
-  onLogout?: () => void;
   onAskAssistant: Parameters<typeof Chatbot>[0]["onAsk"];
   onApplyPatch?: Parameters<typeof Chatbot>[0]["onApplyPatch"];
   onDeleteRun?: (runId: string) => Promise<void>;
@@ -124,13 +130,17 @@ export function DashboardScreen({
   isLoadingAllRuns,
   updateStatus,
   cloudSyncStatus,
-  onProcessNew,
+  onStartReview,
+  isAnalysing = false,
+  analysisProgress = 0,
+  onRunInBackground,
+  errorMessage,
+  onDismissError,
   onViewRun,
   onProfile,
   onSettings,
   onPolicy,
   onAbout,
-  onLogout,
   onAskAssistant,
   onApplyPatch,
   onDeleteRun,
@@ -145,6 +155,8 @@ export function DashboardScreen({
   onResolveTriconveyReference,
 }: DashboardScreenProps) {
   const [isChatOpen, setIsChatOpen] = React.useState(false);
+  const [isDraggingFiles, setIsDraggingFiles] = React.useState(false);
+  const intake = useMatterIntake(onResolveTriconveyReference);
   const [showAllRuns, setShowAllRuns] = React.useState(false);
   const INITIAL_RUN_LIMIT = 10;
 
@@ -167,37 +179,10 @@ export function DashboardScreen({
     };
   }, [contextMenu]);
   
-  const [greeting, setGreeting] = React.useState("");
-  const name = userName?.trim() ? userName.trim() : "there";
-
-  React.useEffect(() => {
-    const updateGreeting = () => {
-      const hour = new Date().getHours();
-      let timeGreeting = "";
-      
-      if (hour >= 5 && hour < 12) timeGreeting = "Good Morning";
-      else if (hour >= 12 && hour < 17) timeGreeting = "Good Afternoon";
-      else if (hour >= 17 && hour < 22) timeGreeting = "Good Evening";
-      else timeGreeting = "It's late night";
-
-      const variations = [
-        `${timeGreeting}, ${name}`,
-        `${timeGreeting}, ${name}`, // Weighted
-        `${name} returns!`,
-        `How's your day, ${name}?`,
-        `Nice to see you, ${name}`,
-        `Back in action, ${name}!`,
-        `Ready for more, ${name}?`
-      ];
-
-      const selected = variations[Math.floor(Math.random() * variations.length)];
-      setGreeting(selected);
-    };
-
-    updateGreeting();
-    const timer = setInterval(updateGreeting, 30 * 60 * 1000); // 30 mins
-    return () => clearInterval(timer);
-  }, [name]);
+  const hour = new Date().getHours();
+  const timeGreeting = hour >= 5 && hour < 12 ? "Good morning" : hour >= 12 && hour < 17 ? "Good afternoon" : "Good evening";
+  const displayName = userName?.trim();
+  const greeting = displayName && displayName !== "Local User" ? `${timeGreeting}, ${displayName}` : timeGreeting;
 
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -231,7 +216,30 @@ export function DashboardScreen({
             : "Systems operational";
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden font-sans text-foreground" style={{ background: "var(--dashboard-bg, linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 30%, #f5f0ff 60%, #e0f2fe 100%))" }}>
+    <div
+      className="flex h-screen flex-col overflow-hidden font-sans text-foreground"
+      style={{ background: "var(--dashboard-bg, linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 30%, #f5f0ff 60%, #e0f2fe 100%))" }}
+      onDragOver={(event) => {
+        event.preventDefault();
+        if (!isAnalysing) setIsDraggingFiles(true);
+      }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node)) setIsDraggingFiles(false);
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        setIsDraggingFiles(false);
+        if (!isAnalysing) intake.addFromDrop(event.dataTransfer);
+      }}
+    >
+      {isDraggingFiles ? (
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-primary/10 backdrop-blur-[1px]">
+          <div className="rounded-2xl border-2 border-dashed border-primary bg-card px-12 py-8 text-center shadow-2xl">
+            <p className="text-lg font-semibold text-foreground">Drop to add to this matter</p>
+            <p className="mt-1 text-sm text-muted-foreground">PDF and Word documents</p>
+          </div>
+        </div>
+      ) : null}
       <style>{`
         :root {
           --dashboard-bg: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 30%, #f5f0ff 60%, #e0f2fe 100%);
@@ -288,7 +296,6 @@ export function DashboardScreen({
         onProfile={onProfile}
         onSettings={onSettings}
         onPolicy={onPolicy}
-        onLogout={onLogout}
         showChatToggle
         isChatOpen={isChatOpen}
         onChatToggle={() => setIsChatOpen((value) => !value)}
@@ -296,7 +303,7 @@ export function DashboardScreen({
 
       <div className="relative z-10 flex flex-1 overflow-hidden">
         <main className="custom-scrollbar flex-1 overflow-y-auto p-8">
-          <div className="mx-auto max-w-7xl space-y-10">
+          <div className="mx-auto max-w-7xl space-y-6">
             <div className="flex items-center gap-3">
               <motion.div
                 initial={{ opacity: 0, x: -18 }}
@@ -355,19 +362,20 @@ export function DashboardScreen({
               ) : null}
             </div>
 
-            <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
-              <div>
-                <h2 className="text-4xl font-serif italic text-foreground/90">{greeting}</h2>
-                <p className="mt-1 text-lg text-muted-foreground/80">Review recent matters or start a new Section 32 analysis.</p>
-              </div>
-              <Button
-                onClick={onProcessNew}
-                className="group h-14 rounded-2xl bg-primary/90 px-8 text-lg font-bold text-white shadow-xl shadow-primary/25 backdrop-blur-sm transition-all active:scale-95 md:hover:scale-105 md:hover:shadow-primary/40"
-              >
-                <Plus className="mr-3 h-6 w-6 transition-transform group-hover:rotate-90" />
-                New Section 32
-              </Button>
-            </div>
+            <h2 className="text-3xl font-serif italic text-foreground/90">{greeting}</h2>
+
+            <NewMatterPanel
+              intake={intake}
+              isAnalysing={isAnalysing}
+              progress={analysisProgress}
+              onStartReview={onStartReview}
+              onRunInBackground={() => {
+                intake.clear();
+                onRunInBackground?.();
+              }}
+              errorMessage={errorMessage}
+              onDismissError={onDismissError}
+            />
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -375,14 +383,6 @@ export function DashboardScreen({
                   <Zap className="h-4 w-4 text-amber-500" />
                   Recent activity
                 </h3>
-                {recentRuns.length > 0 ? (
-                  <button
-                    onClick={onProcessNew}
-                    className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
-                  >
-                    {/* New matter <ArrowRight className="h-3 w-3" /> */}
-                  </button>
-                ) : null}
               </div>
 
               <div className="overflow-hidden rounded-3xl glass-card">
@@ -416,12 +416,8 @@ export function DashboardScreen({
                   </div>
                 ) : recentRuns.length === 0 ? (
                   <div className="p-10 text-center">
-                    <p className="text-base font-bold text-foreground">No recent matters yet.</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Start your first Section 32 upload to build activity history.</p>
-                    <Button onClick={onProcessNew} className="mt-6 h-11 rounded-xl px-5 font-bold bg-primary text-white">
-                      <Plus className="mr-2 h-4 w-4" />
-                      New Matter
-                    </Button>
+                    <p className="text-base font-bold text-foreground">No matters yet</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Matters you review will appear here.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -544,75 +540,7 @@ export function DashboardScreen({
                 </button>
               </div>
 
-              <div className="grid gap-6 px-6 py-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  <div className="rounded-2xl border border-border bg-muted/50 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <Bot className="h-4 w-4 text-blue-500" />
-                      AI provider
-                    </div>
-                    <div className="mt-3 grid gap-2">
-                      {(["openrouter", "openai", "anthropic", "hybrid"] as const).map((provider) => (
-                        <button
-                          key={provider}
-                          onClick={() => setQuickSetupForm((current) => current ? ({
-                            ...current,
-                            aiProvider: provider,
-                            defaultModelName:
-                              provider === "openrouter"
-                                ? "nvidia/nemotron-3-super-120b-a12b:free"
-                                : provider === "anthropic" || provider === "hybrid"
-                                  ? "claude-sonnet-4-6"
-                                  : "gpt-4.1-mini",
-                          }) : current)}
-                          className={[
-                            "rounded-xl border px-3 py-2 text-left text-sm transition-colors",
-                            quickSetupForm.aiProvider === provider
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-border bg-card text-foreground hover:border-primary/40",
-                          ].join(" ")}
-                        >
-                          {provider === "openrouter" ? "OpenRouter (Free)" : provider === "openai" ? "OpenAI" : provider === "anthropic" ? "Anthropic" : "OpenAI + Claude"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-border bg-muted/50 p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <KeyRound className="h-4 w-4 text-emerald-500" />
-                      API key
-                    </div>
-                    <Input
-                      type="password"
-                      value={
-                        quickSetupForm.aiProvider === "openrouter"
-                          ? (quickSetupForm as typeof quickSetupForm & { openRouterApiKey?: string }).openRouterApiKey ?? ""
-                          : quickSetupForm.aiProvider === "anthropic" || quickSetupForm.aiProvider === "hybrid"
-                            ? quickSetupForm.anthropicApiKey
-                            : quickSetupForm.openAiApiKey
-                      }
-                      onChange={(event) =>
-                        setQuickSetupForm((current) => {
-                          if (!current) return current;
-                          if (current.aiProvider === "openrouter") return { ...current, openRouterApiKey: event.target.value } as typeof current;
-                          if (current.aiProvider === "anthropic" || current.aiProvider === "hybrid") return { ...current, anthropicApiKey: event.target.value };
-                          return { ...current, openAiApiKey: event.target.value };
-                        })
-                      }
-                      placeholder={
-                        quickSetupForm.aiProvider === "openrouter"
-                          ? "sk-or-... (free models available)"
-                          : quickSetupForm.aiProvider === "anthropic" || quickSetupForm.aiProvider === "hybrid"
-                            ? "sk-ant-..."
-                            : "sk-..."
-                      }
-                      className="mt-3 h-11 border-border bg-card"
-                    />
-                    <p className="mt-2 text-xs text-muted-foreground">Stored locally on this desktop app.</p>
-                  </div>
-                </div>
-
+                            <div className="px-6 py-6">
                 <div className="space-y-4">
                   <div className="rounded-2xl border border-border bg-muted/50 p-4">
                     <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -638,10 +566,6 @@ export function DashboardScreen({
                   <div className="rounded-2xl border border-border bg-muted/50 p-4">
                     <p className="text-sm font-semibold text-foreground">What this sets up</p>
                     <div className="mt-3 space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        AI review and document Q&A
-                      </div>
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                         Convey autofill path

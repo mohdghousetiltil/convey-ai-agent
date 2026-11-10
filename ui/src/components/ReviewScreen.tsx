@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AlertCircle, Check, ChevronDown, ChevronRight, Copy, Loader2, Sparkles, Upload, X } from "lucide-react";
-import { useAuth } from "../lib/AuthContext";
+import { useUser } from "../lib/UserContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,7 +80,6 @@ interface ReviewScreenProps {
   onSettings: () => void;
   onAbout: () => void;
   onPolicy: () => void;
-  onLogout: () => void;
   onSaveReview: (updates: Record<string, AnswerUpdatePayload>) => Promise<void> | void;
   onAutofill: (updates: Record<string, AnswerUpdatePayload>) => Promise<void> | void;
   onCancelAutofill?: () => Promise<void> | void;
@@ -98,8 +97,8 @@ interface ReviewScreenProps {
 }
 
 export function ReviewScreen(props: ReviewScreenProps) {
-  const { run, onBack, onProfile, onSettings, onAbout, onPolicy, onLogout, onSaveReview, onAutofill, onCancelAutofill, onAskAssistant, onApplyPatch, onReviewAgain, onRunReprocessed, isSaving, isAutofilling, isReanalysing, errorMessage, onDismissError, updateStatus, onResolveTriconveyReference } = props;
-  const { user } = useAuth();
+  const { run, onBack, onProfile, onSettings, onAbout, onPolicy, onSaveReview, onAutofill, onCancelAutofill, onAskAssistant, onApplyPatch, onReviewAgain, onRunReprocessed, isSaving, isAutofilling, isReanalysing, errorMessage, onDismissError, updateStatus, onResolveTriconveyReference } = props;
+  const user = useUser();
   const userInitials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
     : (user?.email?.[0] ?? "?").toUpperCase();
@@ -288,7 +287,6 @@ export function ReviewScreen(props: ReviewScreenProps) {
           onProfile={onProfile}
           onSettings={onSettings}
           onPolicy={onPolicy}
-          onLogout={onLogout}
           showChatToggle
           isChatOpen={chatOpen}
           onChatToggle={() => setChatOpen((value) => !value)}

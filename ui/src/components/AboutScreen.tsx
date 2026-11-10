@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { Download, ExternalLink, Info, RefreshCw, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { AppInfoPayload, UpdateStatusPayload } from "@/lib/api";
+import type { AppInfoPayload, UpdateStatusPayload } from "../lib/api";
 import { Header } from "./Header";
 
 interface AboutScreenProps {
@@ -12,7 +12,6 @@ interface AboutScreenProps {
   onProfile?: () => void;
   onSettings?: () => void;
   onPolicy?: () => void;
-  onLogout?: () => void;
   appInfo: AppInfoPayload | null;
   updateStatus: UpdateStatusPayload | null;
   updateMessage: string;
@@ -62,7 +61,6 @@ export function AboutScreen({
   onProfile,
   onSettings,
   onPolicy,
-  onLogout,
   appInfo,
   updateStatus,
   updateMessage,
@@ -72,7 +70,7 @@ export function AboutScreen({
   onInstallUpdate,
   onReinstallCurrentVersion,
 }: AboutScreenProps) {
-  const version = appInfo?.version || "0.0.213";
+  const version = appInfo?.version || "0.0.214";
   const publisher = appInfo?.publisher || "Convey Agent";
 
   return (
@@ -93,7 +91,6 @@ export function AboutScreen({
         onProfile={onProfile}
         onSettings={onSettings}
         onPolicy={onPolicy}
-        onLogout={onLogout}
       />
 
       <main className="relative z-10 mx-auto max-w-6xl p-6">

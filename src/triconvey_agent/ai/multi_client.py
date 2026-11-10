@@ -18,9 +18,16 @@ import uuid as _uuid_mod
 from dataclasses import dataclass, field
 from typing import Any
 
+from triconvey_agent.app_meta import (
+    DEFAULT_OPENROUTER_MODEL,
+    EMBEDDING_DIMENSIONS,
+    OPENAI_EMBEDDING_MODEL,
+    OPENROUTER_EMBEDDING_MODEL,
+)
+
 LOG = logging.getLogger(__name__)
 
-_EMBED_DIM = 1536  # canonical embedding dimension
+_EMBED_DIM = EMBEDDING_DIMENSIONS  # canonical embedding dimension
 
 
 # ---------------------------------------------------------------------------
@@ -48,8 +55,8 @@ class MultiModelResponse:
 # ---------------------------------------------------------------------------
 
 
-_OPENROUTER_EMBED_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2:free"
-_OPENROUTER_CHAT_DEFAULT = "nvidia/nemotron-3-super-120b-a12b:free"
+_OPENROUTER_EMBED_MODEL = OPENROUTER_EMBEDDING_MODEL
+_OPENROUTER_CHAT_DEFAULT = DEFAULT_OPENROUTER_MODEL
 
 
 class MultiModelClient:
@@ -132,8 +139,8 @@ class MultiModelClient:
         Generate an embedding vector (always _EMBED_DIM = 1536 dims).
 
         Priority:
-          1. OpenAI text-embedding-3-small  (if OPENAI_API_KEY set)
-          2. OpenRouter nvidia/llama-nemotron-embed-vl-1b-v2:free  (if OPENROUTER_API_KEY set)
+          1. OpenAI text-embedding-3-large  (if OPENAI_API_KEY set)
+          2. The same model through OpenRouter  (if OPENROUTER_API_KEY set)
           3. sentence-transformers all-MiniLM-L6-v2 (384-dim, zero-padded to 1536)
         """
         openai_key = os.getenv("OPENAI_API_KEY") or ""
@@ -392,13 +399,14 @@ class MultiModelClient:
         from openai import OpenAI
         client = OpenAI(api_key=api_key)
         resp = client.embeddings.create(
-            model="text-embedding-3-small",
+            model=OPENAI_EMBEDDING_MODEL,
             input=text[:8191],
+            dimensions=_EMBED_DIM,
         )
-        return resp.data[0].embedding  # 1536 dims natively
+        return resp.data[0].embedding
 
     def _embed_openrouter(self, text: str, api_key: str) -> list[float]:
-        """Embed via OpenRouter using the free Nemotron embed model.
+        """Embed via OpenRouter.
 
         OpenRouter's /embeddings endpoint is OpenAI-compatible.
         The model may return dimensions != 1536, so we pad/truncate to _EMBED_DIM.
@@ -412,7 +420,7 @@ class MultiModelClient:
                 "X-Title": "TriConvey Matter Agent",
                 "Content-Type": "application/json",
             },
-            json={"model": _OPENROUTER_EMBED_MODEL, "input": text[:8191]},
+            json={"model": _OPENROUTER_EMBED_MODEL, "input": text[:8191], "dimensions": _EMBED_DIM},
             timeout=30,
         )
         resp.raise_for_status()

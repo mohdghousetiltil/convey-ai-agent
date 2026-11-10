@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { Mail, Shield, Building2, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useAuth } from "../lib/AuthContext";
+import { useUser } from "../lib/UserContext";
 import { Header } from "./Header";
 
 interface ProfileScreenProps {
@@ -11,11 +11,10 @@ interface ProfileScreenProps {
   onSettings?: () => void;
   onPolicy?: () => void;
   onAbout?: () => void;
-  onLogout?: () => void;
 }
 
-export function ProfileScreen({ onBack, onSettings, onPolicy, onAbout, onLogout }: ProfileScreenProps) {
-  const { user } = useAuth();
+export function ProfileScreen({ onBack, onSettings, onPolicy, onAbout }: ProfileScreenProps) {
+  const user = useUser();
 
   const displayName = user?.name || "Unknown User";
   const email = user?.email || "—";
@@ -35,7 +34,6 @@ export function ProfileScreen({ onBack, onSettings, onPolicy, onAbout, onLogout 
         userInitials={initials}
         onSettings={onSettings}
         onPolicy={onPolicy}
-        onLogout={onLogout}
       />
 
       <main className="max-w-3xl mx-auto p-8 space-y-8">

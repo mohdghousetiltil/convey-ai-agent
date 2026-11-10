@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronLeft, User, LogOut, Settings, Shield, MessageSquare } from "lucide-react";
+import { ChevronLeft, User, Settings, Shield, MessageSquare } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +15,6 @@ interface HeaderProps {
   onProfile?: () => void;
   onSettings?: () => void;
   onPolicy?: () => void;
-  onLogout?: () => void;
   userInitials?: string;
   isChatOpen?: boolean;
   onChatToggle?: () => void;
@@ -28,7 +27,6 @@ export function Header({
   onProfile,
   onSettings,
   onPolicy,
-  onLogout,
   userInitials = "JD",
   isChatOpen,
   onChatToggle,
@@ -95,15 +93,6 @@ export function Header({
                 <Shield className="mr-2 h-4 w-4" />
                 <span>Custom Policy</span>
               </DropdownMenuItem>
-            ) : null}
-            {onLogout ? (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={onLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Logout</span>
-                </DropdownMenuItem>
-              </>
             ) : null}
           </DropdownMenuContent>
         </DropdownMenu>

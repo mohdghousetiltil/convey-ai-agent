@@ -10,23 +10,36 @@ Usage in routes:
 
 Every API endpoint that touches tenant data MUST depend on `require_auth`
 (or `require_admin`) so that `client_id` is enforced server-side.
+
+The desktop app has no sign-in: requests arriving over loopback run as this
+install's local user. Any other caller, including the public cloud deployment
+of this same API, still needs a valid bearer token.
 """
 
 from __future__ import annotations
 
+import asyncio
+import ipaddress
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import Depends, Header, HTTPException, Request, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from triconvey_agent.auth.security import hash_token, verify_token
 from triconvey_agent.backend.runtime import ensure_runtime_dirs, get_runtime_paths
 from triconvey_agent.db.models import Client, User
 from triconvey_agent.db.repositories import ClientRepo, SessionRepo, UserRepo
-from triconvey_agent.db.session import get_session
+from triconvey_agent.db.session import get_session, get_session_factory
+
+_LOCAL_CLIENT_SLUG = "local"
+_LOCAL_CLIENT_NAME = "Local Workspace"
+_LOCAL_USER_EMAIL = "local@convey.local"
+_LOCAL_USER_NAME = "Local User"
+_local_identity_lock = asyncio.Lock()
 
 
 @dataclass(slots=True, frozen=True)
@@ -35,6 +48,64 @@ class AuthContext:
     client: Client
     token: str
     token_hash: str
+
+
+def _is_loopback_request(request: Request) -> bool:
+    host = request.client.host if request.client else ""
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+async def _find_local_identity(session: AsyncSession) -> tuple[User, Client] | None:
+    """Pick the install's user. The last person to sign in keeps their history."""
+    q = await session.execute(
+        select(User, Client)
+        .join(Client, User.client_id == Client.id)
+        .where(User.is_active.is_(True), Client.is_active.is_(True))
+        .order_by(User.last_login_at.desc().nulls_last(), User.created_at.asc())
+        .limit(1)
+    )
+    row = q.first()
+    return (row[0], row[1]) if row else None
+
+
+async def _resolve_local_identity(session: AsyncSession) -> tuple[User, Client]:
+    found = await _find_local_identity(session)
+    if found is not None:
+        return found
+
+    # First launch. Create the user in its own committed transaction so that
+    # concurrent requests see it instead of racing to insert a duplicate.
+    async with _local_identity_lock:
+        async with get_session_factory()() as setup_session:
+            if await _find_local_identity(setup_session) is None:
+                client = await ClientRepo.get_single_active(setup_session)
+                if client is None:
+                    client = await ClientRepo.ensure_local(
+                        setup_session,
+                        slug=_LOCAL_CLIENT_SLUG,
+                        name=_LOCAL_CLIENT_NAME,
+                    )
+                await UserRepo.upsert_oauth_user(
+                    setup_session,
+                    client_id=client.id,
+                    oauth_provider="local",
+                    oauth_subject="local-user",
+                    email=_LOCAL_USER_EMAIL,
+                    name=_LOCAL_USER_NAME,
+                    default_role="admin",
+                )
+                await setup_session.commit()
+
+    found = await _find_local_identity(session)
+    if found is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not set up the local workspace.",
+        )
+    return found
 
 
 def _auth_debug(event: str, **fields: Any) -> None:
@@ -73,6 +144,12 @@ async def require_auth(
     authorization: str | None = Header(default=None),
     session: AsyncSession = Depends(get_session),
 ) -> AuthContext:
+    if _is_loopback_request(request):
+        local_user, local_client = await _resolve_local_identity(session)
+        request.state.auth_user_id = str(local_user.id)
+        request.state.auth_client_id = str(local_client.id)
+        return AuthContext(user=local_user, client=local_client, token="", token_hash="")
+
     token = _extract_bearer(authorization)
     token_hash = hash_token(token)
 

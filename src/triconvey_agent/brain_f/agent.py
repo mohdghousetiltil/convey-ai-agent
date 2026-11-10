@@ -26,6 +26,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from triconvey_agent.app_meta import DEFAULT_OPENROUTER_MODEL
 from triconvey_agent.brain_f.memory import format_memory_for_prompt, load_document_memory
 from triconvey_agent.brain_f.prompts import CRITIC_PROMPT, build_system_prompt
 from triconvey_agent.brain_f.tools import TOOL_DEFINITIONS, dispatch_tool
@@ -78,7 +79,7 @@ class BrainFAgent:
         else:
             # "openai" branch — fall back to OpenRouter-via-OpenAI if no key.
             if not os.getenv("OPENAI_API_KEY") and self._model.startswith(("gpt-", "o1", "o3", "o4", "chatgpt")):
-                self._model = "nvidia/nemotron-3-super-120b-a12b:free"
+                self._model = DEFAULT_OPENROUTER_MODEL
             self._client = _make_openai_client()
 
     def ask(
