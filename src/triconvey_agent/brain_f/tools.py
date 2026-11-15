@@ -178,35 +178,54 @@ _BASE_TOOL_DEFINITIONS: list[dict[str, Any]] = [
     },
 ]
 
-_RAG_TOOL_DEFINITION: list[dict[str, Any]] = [
+_PAGE_TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
-        "name": "search_rag",
+        "name": "search_pages",
         "description": (
-            "Semantic search over all document text using the RAG index. "
-            "Returns the most relevant passages from across all uploaded documents. "
-            "Use this when get_facts returns nothing useful, or when you need verbatim "
-            "text from the documents to support an answer. "
-            "Prefer this over search_documents for accuracy — it uses embeddings when available."
+            "Find the pages that best answer a question, across every page of every uploaded "
+            "document, including long bundles. Returns file, page number, a relevance score and "
+            "a short snippet for each page, best first. It does not return full page text: call "
+            "read_page on the one to three most relevant pages. Use this whenever the pre-loaded "
+            "facts do not answer the question, or you need the exact wording or figures."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "Natural language query, e.g. 'building permit number and date' or 'bushfire prone area'.",
+                    "description": "What to look for, e.g. 'annual water service charges' or 'building permit number and date'.",
+                },
+                "file": {
+                    "type": "string",
+                    "description": "Optional exact filename to search within one document.",
                 },
                 "top_k": {
                     "type": "integer",
-                    "description": "Number of passages to return (default 6, max 12).",
+                    "description": "Number of pages to return (default 5, max 10).",
                 },
             },
             "required": ["query"],
         },
     },
+    {
+        "name": "read_page",
+        "description": (
+            "Read the full text of one page. Use the file and page from search_pages. "
+            "Read only the pages you need; do not read whole documents."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "file": {"type": "string", "description": "Exact filename from search_pages."},
+                "page": {"type": "integer", "description": "Page number, starting at 1."},
+            },
+            "required": ["file", "page"],
+        },
+    },
 ]
 
-# Public TOOL_DEFINITIONS merges base tools + Feature-3 agentic tools + RAG
-TOOL_DEFINITIONS: list[dict[str, Any]] = _BASE_TOOL_DEFINITIONS + AGENT_TOOL_DEFINITIONS + _RAG_TOOL_DEFINITION
+# Public TOOL_DEFINITIONS merges base tools + Feature-3 agentic tools + page retrieval
+TOOL_DEFINITIONS: list[dict[str, Any]] = _BASE_TOOL_DEFINITIONS + AGENT_TOOL_DEFINITIONS + _PAGE_TOOL_DEFINITIONS
 
 
 # ---------------------------------------------------------------------------
@@ -527,10 +546,17 @@ def dispatch_tool(
                 limit=int(tool_input.get("limit", 5)),
                 vector_memories=vector_memories,
             )
-        elif tool_name == "search_rag":
-            result = _handle_search_rag(
+        elif tool_name in {"search_pages", "search_rag"}:
+            result = _handle_search_pages(
                 query=tool_input.get("query", ""),
-                top_k=min(int(tool_input.get("top_k", 6)), 12),
+                top_k=max(1, min(int(tool_input.get("top_k", 5)), 10)),
+                file=tool_input.get("file") or None,
+                run_dir=run_dir,
+            )
+        elif tool_name == "read_page":
+            result = _handle_read_page(
+                file=str(tool_input.get("file", "")),
+                page=tool_input.get("page", 0),
                 run_dir=run_dir,
             )
         else:
@@ -541,17 +567,39 @@ def dispatch_tool(
     return json.dumps(result, default=str)
 
 
-def _handle_search_rag(query: str, top_k: int, run_dir: Any) -> dict[str, Any]:
-    """RAG semantic search using the pre-built embedding index."""
+def _handle_search_pages(query: str, top_k: int, file: str | None, run_dir: Any) -> dict[str, Any]:
+    """Page-level hybrid search over every uploaded document."""
     if not run_dir:
-        return {"results": [], "note": "No run directory available for RAG search."}
+        return {"results": [], "note": "No matter folder available for page search."}
     from pathlib import Path
+    from triconvey_agent.corpus.page_index import index_stats, search_pages
+
     try:
-        from triconvey_agent.corpus.rag import retrieve
-        results = retrieve(query, Path(run_dir), top_k=top_k)
-        return {"results": results, "count": len(results)}
+        results = search_pages(Path(run_dir), query, top_k=top_k, file=file)
+        stats = index_stats(Path(run_dir))
+        return {
+            "results": results,
+            "count": len(results),
+            "pages_searched": stats["pages"],
+            "documents_searched": stats["documents"],
+            "next_step": "Call read_page for the most relevant result before answering.",
+        }
     except Exception as exc:
         return {"results": [], "error": str(exc)}
+
+
+def _handle_read_page(file: str, page: Any, run_dir: Any) -> dict[str, Any]:
+    if not run_dir:
+        return {"error": "No matter folder available."}
+    from pathlib import Path
+    from triconvey_agent.corpus.page_index import read_page
+
+    try:
+        return read_page(Path(run_dir), file, int(page))
+    except (TypeError, ValueError):
+        return {"error": f"Invalid page number: {page!r}"}
+    except Exception as exc:
+        return {"error": str(exc)}
 
 
 def _tokenize(text: str) -> set[str]:

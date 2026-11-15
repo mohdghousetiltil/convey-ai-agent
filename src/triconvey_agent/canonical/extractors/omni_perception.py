@@ -308,13 +308,55 @@ _ADDENDA = {
 }
 
 
+_MAX_DOCUMENT_CHARS = 12_000
+
+
+def document_pages(doc: object) -> list[tuple[int, str]]:
+    """(page number, text) for each loaded page of a Document."""
+    return [
+        (page.page_number, page.text or "")
+        for page in (getattr(doc, "pages", None) or [])
+    ]
+
+
+def _relevant_text(
+    doc_type: str,
+    text: str,
+    pages: list[tuple[int, str]] | None,
+    embed_fn=None,
+) -> str:
+    """The pages most likely to hold the amounts, when the text is too long to send whole.
+
+    Short documents are sent unchanged. Long ones (bulk files, certificates with
+    attached budgets or bills) send only the best pages instead of the first
+    12,000 characters, so a rates table on page 9 is not cut off.
+    """
+    if len(text) <= _MAX_DOCUMENT_CHARS or not pages:
+        return text[:_MAX_DOCUMENT_CHARS]
+    from triconvey_agent.corpus.page_index import DOC_TYPE_QUERIES, format_pages, select_relevant_pages
+
+    selected = select_relevant_pages(
+        pages,
+        DOC_TYPE_QUERIES.get(doc_type, DOC_TYPE_QUERIES["council"]),
+        char_budget=_MAX_DOCUMENT_CHARS - 200,
+        embed_fn=embed_fn,
+    )
+    if not selected:
+        return text[:_MAX_DOCUMENT_CHARS]
+    _log.debug(
+        "omni_perception: sending pages %s of %d",
+        [number for number, _ in selected], len(pages),
+    )
+    return format_pages(selected, total_pages=len(pages))[:_MAX_DOCUMENT_CHARS]
+
+
 def _build_prompt(doc_type: str, text: str) -> str:
     addendum = _ADDENDA.get(doc_type, _COUNCIL_ADDENDUM)
     return (
         _BASE_PROMPT
         + addendum
         + "\n\nDOCUMENT TEXT:\n"
-        + text[:12_000]
+        + text[:_MAX_DOCUMENT_CHARS]
     )
 
 
@@ -458,13 +500,17 @@ def classify_table_with_omni(
     ai_client: "AIClient",
     doc_type: str = "council",
     image_data_url: str | None = None,
+    pages: list[tuple[int, str]] | None = None,
 ) -> list[OmniMoneyRow]:
     """Call the AI to classify the document's rate/charge table into typed rows.
 
     Parameters
     ----------
     text:
-        Parsed document text (truncated to 12 000 chars internally).
+        Parsed document text. Sent whole when it fits in 12,000 characters.
+    pages:
+        Optional (page number, text) pairs. When the text is too long, only
+        the most relevant pages are sent instead of the first 12,000 characters.
     ai_client:
         Any AIClient-compatible instance.
     doc_type:
@@ -476,7 +522,8 @@ def classify_table_with_omni(
     -------
     List of OmniMoneyRow — empty on any failure.
     """
-    prompt = _build_prompt(doc_type, text)
+    embed_fn = getattr(ai_client, "embed_texts", None)
+    prompt = _build_prompt(doc_type, _relevant_text(doc_type, text, pages, embed_fn))
 
     try:
         result = ai_client.complete(prompt, image_data_url=image_data_url)

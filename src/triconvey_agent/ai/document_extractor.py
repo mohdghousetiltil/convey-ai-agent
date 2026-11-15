@@ -24,6 +24,7 @@ import re
 from typing import Any
 
 from triconvey_agent.ai.client import AIClient
+from triconvey_agent.corpus.page_index import DOC_TYPE_QUERIES, SECTION32_PAGE_QUERY, document_excerpt
 from triconvey_agent.schemas.ai_extract import (
     AIDocumentExtract,
     AIRatesCertExtract,
@@ -270,12 +271,13 @@ def _verify_quotes(extract: AIDocumentExtract, raw_text: str) -> AIDocumentExtra
 # Per-document-type extractors
 # ---------------------------------------------------------------------------
 
-def _truncate(text: str) -> str:
-    return text[:_MAX_TEXT_CHARS]
+def _relevant_text(doc: Document, query: str) -> str:
+    """The document text, or its most relevant pages when it is too long."""
+    return document_excerpt(doc, query, _MAX_TEXT_CHARS)
 
 
 def _extract_vendor_form(doc: Document, client: AIClient) -> AIDocumentExtract:
-    text = _truncate(doc.raw_text or doc.normalized_text)
+    text = _relevant_text(doc, SECTION32_PAGE_QUERY)
     prompt = _VENDOR_FORM_PROMPT.format(text=text)
     response = client.complete(prompt)
     raw = _parse_json(response.raw_text)
@@ -312,7 +314,7 @@ def _extract_vendor_form(doc: Document, client: AIClient) -> AIDocumentExtract:
 
 
 def _extract_vic_title(doc: Document, client: AIClient) -> AIDocumentExtract:
-    text = _truncate(doc.raw_text or doc.normalized_text)
+    text = _relevant_text(doc, "register search statement volume folio plan lot registered proprietor encumbrances")
     prompt = _VIC_TITLE_PROMPT.format(text=text)
     response = client.complete(prompt)
     raw = _parse_json(response.raw_text)
@@ -333,7 +335,7 @@ def _extract_vic_title(doc: Document, client: AIClient) -> AIDocumentExtract:
 
 
 def _extract_rates_cert(doc: Document, client: AIClient) -> AIDocumentExtract:
-    text = _truncate(doc.raw_text or doc.normalized_text)
+    text = _relevant_text(doc, DOC_TYPE_QUERIES["council"])
     prompt = _RATES_CERT_PROMPT.format(text=text)
     response = client.complete(prompt)
     raw = _parse_json(response.raw_text)

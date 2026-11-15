@@ -17,6 +17,8 @@ from triconvey_agent.ai.openrouter_client import OpenRouterClient
 from triconvey_agent.backend.runtime import ensure_runtime_dirs, get_runtime_paths
 from triconvey_agent.backend.settings import load_local_settings
 from triconvey_agent.brain_f.corpus import build_document_corpus
+from triconvey_agent.app_meta import DEFAULT_CHAT_MODEL
+from triconvey_agent.corpus.page_index import PAGE_INDEX_FILENAME, build_page_index
 from triconvey_agent.brain_f.memory import build_document_memory, load_document_memory
 from triconvey_agent.canonical.brain_d import build_action_plan
 from triconvey_agent.canonical.facts.store import FactStoreImpl
@@ -893,6 +895,19 @@ def _infer_provider(model: str, preferred: str) -> str:
     return preferred
 
 
+def _uses_openrouter_chat(ai_provider: str) -> bool:
+    """True for the desktop app, which runs everything through OpenRouter."""
+    if not os.getenv("OPENROUTER_API_KEY"):
+        return False
+    if (ai_provider or "").strip().lower() == "openrouter":
+        return True
+    has_direct_key = any(
+        os.getenv(name)
+        for name in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "CLAUDE_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY")
+    )
+    return not has_direct_key
+
+
 def _normalize_brain_f_mode(mode: str) -> str:
     value = (mode or "standard").strip().lower()
     if value == "basic":
@@ -934,6 +949,29 @@ def ask_run_question(
     target_dir = Path(run_dir)
     normalized_mode = _normalize_brain_f_mode(mode)
     _ensure_brain_f_assets(target_dir, include_memory=normalized_mode in {"deep", "thorough"})
+
+    if _uses_openrouter_chat(ai_provider):
+        # One strong model reading the right pages beats several cheap models
+        # plus a summary step: better answers, fewer calls, one bill.
+        chat_model = os.getenv("CONVEY_CHAT_MODEL", "").strip() or DEFAULT_CHAT_MODEL
+        result = _ask_brain_f(
+            target_dir,
+            question=question,
+            history=history or [],
+            model=chat_model,
+            provider="openrouter",
+            mode=normalized_mode,
+            persist_chat=True,
+            session_id=session_id,
+            vector_memories=vector_memories,
+        )
+        result["agent_runs"] = [
+            {"provider": "openrouter", "model": chat_model, "role": "Assistant", "status": "completed"}
+        ]
+        result["summary_model"] = chat_model
+        result["summary_provider"] = "openrouter"
+        return result
+
     execution_plan = _build_ai_execution_plan(
         preferred_provider=ai_provider,
         ai_mode=ai_mode,
@@ -2118,6 +2156,8 @@ def _new_run_id() -> str:
 def _brain_f_assets_ready(target_dir: Path, *, include_memory: bool = False) -> bool:
     if not (target_dir / "document_corpus_manifest.json").exists():
         return False
+    if (target_dir / "uploads").exists() and not (target_dir / PAGE_INDEX_FILENAME).exists():
+        return False
     if include_memory and not (target_dir / "document_memory.json").exists():
         return False
     return True
@@ -2222,6 +2262,16 @@ def _build_brain_f_assets(target_dir: Path, *, deferred: bool, include_memory: b
             print(f"  [Brain F] {prefix} document corpus complete")
     except Exception as exc:
         print(f"  [WARN] {prefix} document corpus build failed: {exc}")
+
+    try:
+        print(f"  [Brain F] Building {prefix.lower()} page index...")
+        index = build_page_index(doc_paths, target_dir)
+        print(
+            f"  [Brain F] Page index ready: {len(index.get('pages') or [])} page(s), "
+            f"embeddings={'yes' if index.get('embedding_model') else 'no'}"
+        )
+    except Exception as exc:
+        print(f"  [WARN] {prefix} page index build failed: {exc}")
 
     if not include_memory:
         return

@@ -29,6 +29,7 @@ import re
 from typing import Any
 
 from triconvey_agent.ai.client import AIClient
+from triconvey_agent.corpus.page_index import SECTION32_PAGE_QUERY, document_excerpt
 from triconvey_agent.schemas.documents import Document
 
 # ---------------------------------------------------------------------------
@@ -169,10 +170,9 @@ def _build_document_blocks(docs: list[Document]) -> str:
         text = (doc.raw_text or doc.normalized_text or "").strip()
         if not text:
             continue
-        truncated = text[:_MAX_CHARS_PER_DOC]
-        if len(text) > _MAX_CHARS_PER_DOC:
-            truncated += f"\n[... truncated at {_MAX_CHARS_PER_DOC} chars ...]"
-        blocks.append(f"=== FILE: {doc.filename} ===\n{truncated}")
+        # Long documents send their most relevant pages, not just the first ones.
+        excerpt = document_excerpt(doc, SECTION32_PAGE_QUERY, _MAX_CHARS_PER_DOC)
+        blocks.append(f"=== FILE: {doc.filename} ===\n{excerpt}")
     return "\n\n".join(blocks)
 
 

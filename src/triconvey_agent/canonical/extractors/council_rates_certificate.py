@@ -50,6 +50,7 @@ from triconvey_agent.canonical.extractors.council_rates_row_classifier import (
 from triconvey_agent.canonical.extractors.omni_perception import (
     annual_from_omni_rows,
     classify_table_with_omni,
+    document_pages,
     should_call_omni,
     validate_omni_candidate,
     verify_extraction,
@@ -2778,6 +2779,7 @@ def _extract_annual_amount_v3(doc: Document, ai_client=None) -> list[Fact]:
             text=section or primary_text,
             ai_client=ai_client,
             doc_type="council",
+            pages=document_pages(doc),
         )
         omni_result = annual_from_omni_rows(omni_rows)
         _model_name = getattr(ai_client, "model", "unknown")

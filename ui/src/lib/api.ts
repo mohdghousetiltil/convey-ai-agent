@@ -122,7 +122,19 @@ export interface RecentRunPayload {
 export interface ChatCitation {
   file?: string | null;
   page?: number | null;
+  page_count?: number | null;
   quote?: string | null;
+}
+
+export interface PageRef {
+  file: string;
+  page: number;
+  page_count?: number | null;
+}
+
+export interface RunPagePayload extends PageRef {
+  text: string;
+  truncated?: boolean;
 }
 
 export interface ProposedPatch {
@@ -163,6 +175,13 @@ export interface ChatAnswerPayload {
   }>;
   summary_model?: string | null;
   summary_provider?: string | null;
+  /** Model that wrote the answer, e.g. "anthropic/claude-sonnet-5.5". */
+  model?: string | null;
+  /** Pages the assistant opened and read to answer. */
+  pages_read?: PageRef[];
+  /** Size of the page index it searched. */
+  pages_searched?: number;
+  documents_searched?: number;
 }
 
 export interface AutofillJobPayload {
@@ -460,6 +479,11 @@ export async function continueAutofillJob(jobId: string): Promise<AutofillJobPay
 
 export async function getAutofillActivity(jobId: string, cursor = 0): Promise<AutofillActivityPayload> {
   return apiRequest<AutofillActivityPayload>(`/autofill-jobs/${jobId}/activity?cursor=${cursor}`);
+}
+
+export async function getRunPage(runId: string, file: string, page: number): Promise<RunPagePayload> {
+  const query = `file=${encodeURIComponent(file)}&page=${encodeURIComponent(String(page))}`;
+  return apiRequest<RunPagePayload>(`/runs/${runId}/pages?${query}`);
 }
 
 export async function askRunQuestion(

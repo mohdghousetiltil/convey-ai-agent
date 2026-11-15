@@ -26,7 +26,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from triconvey_agent.app_meta import DEFAULT_OPENROUTER_MODEL
+from triconvey_agent.app_meta import CHAT_FALLBACK_MODEL, DEFAULT_OPENROUTER_MODEL
 from triconvey_agent.brain_f.memory import format_memory_for_prompt, load_document_memory
 from triconvey_agent.brain_f.prompts import CRITIC_PROMPT, build_system_prompt
 from triconvey_agent.brain_f.tools import TOOL_DEFINITIONS, dispatch_tool
@@ -35,7 +35,8 @@ from triconvey_agent.canonical.questions.loader import load_question_registry
 
 LOG = logging.getLogger(__name__)
 
-_MODE_MAX_ROUNDS = {"quick": 2, "standard": 4, "deep": 7, "thorough": 7}
+_MODE_MAX_ROUNDS = {"quick": 2, "standard": 5, "deep": 8, "thorough": 8}
+_MAX_ANSWER_TOKENS = 1500
 _HIGH_STAKES_RE = re.compile(r"\$[\d,]+\.\d{2}|liable|must\s+comply|illegal|penalty|encumbrance", re.IGNORECASE)
 
 
@@ -74,8 +75,8 @@ class BrainFAgent:
             from triconvey_agent.ai.multi_client import MultiModelClient
             self._client = MultiModelClient(provider="google", model=self._model)
         elif self._provider == "openrouter":
-            from triconvey_agent.ai.multi_client import MultiModelClient
-            self._client = MultiModelClient(provider="openrouter", model=self._model)
+            # OpenAI-compatible API, so the same tool-use loop works for any model.
+            self._client = _make_openrouter_client()
         else:
             # "openai" branch — fall back to OpenRouter-via-OpenAI if no key.
             if not os.getenv("OPENAI_API_KEY") and self._model.startswith(("gpt-", "o1", "o3", "o4", "chatgpt")):
@@ -103,6 +104,8 @@ class BrainFAgent:
         """
         pending_patches: list[dict[str, Any]] = []
         reasoning_steps: list[dict[str, Any]] = []
+        self._pages_read: list[dict[str, Any]] = []
+        self._page_search_stats: dict[str, int] = {}
         memory_block = format_memory_for_prompt(self._memory)
         specialist_block = _build_specialist_block(question)
 
@@ -153,9 +156,45 @@ class BrainFAgent:
         result["field_answers"] = []  # field suggestions disabled — AI derives from corpus, not draft answers
         result["reasoning_steps"] = reasoning_steps
         result["session_id"] = self._session_id  # Feature 4
+        result["model"] = self._model
+        result["pages_read"] = [
+            {"file": page["file"], "page": page["page"], "page_count": page.get("page_count")}
+            for page in self._pages_read
+        ]
+        result["pages_searched"] = self._page_search_stats.get("pages", 0)
+        result["documents_searched"] = self._page_search_stats.get("documents", 0)
+        if self._pages_read:
+            result["citations"] = _page_citations(self._pages_read, result["answer"], question)
         if self._persist_chat:
             _save_chat_state(self._run_dir, self._chat_state, question, result["answer"])
         return result
+
+    def _openrouter_extras(self) -> dict[str, Any]:
+        """Let OpenRouter switch to a backup model if the chat model is down."""
+        if self._provider != "openrouter":
+            return {}
+        backup = CHAT_FALLBACK_MODEL if self._model != CHAT_FALLBACK_MODEL else DEFAULT_OPENROUTER_MODEL
+        return {"extra_body": {"models": [self._model, backup]}}
+
+    def _note_page_tool(self, tool_name: str, result_json: str) -> None:
+        """Remember which pages the model searched and read, for citations and the UI."""
+        if tool_name not in {"search_pages", "search_rag", "read_page"}:
+            return
+        try:
+            payload = json.loads(result_json)
+        except (TypeError, ValueError):
+            return
+        if not isinstance(payload, dict) or payload.get("error"):
+            return
+        if tool_name == "read_page":
+            key = (payload.get("file"), payload.get("page"))
+            if key[0] and not any((p["file"], p["page"]) == key for p in self._pages_read):
+                self._pages_read.append(payload)
+        elif payload.get("pages_searched"):
+            self._page_search_stats = {
+                "pages": int(payload.get("pages_searched") or 0),
+                "documents": int(payload.get("documents_searched") or 0),
+            }
 
     # ------------------------------------------------------------------ #
     # Anthropic agentic loop                                               #
@@ -194,6 +233,7 @@ class BrainFAgent:
                     run_dir=self._run_dir, vector_memories=vector_memories,
                 )
                 reasoning_steps.append(_summarize_tool_step(block.name, block.input, result_json))
+                self._note_page_tool(block.name, result_json)
                 tool_results.append({
                     "type": "tool_result",
                     "tool_use_id": block.id,
@@ -235,10 +275,11 @@ class BrainFAgent:
         for _ in range(max_rounds):
             response = self._client.chat.completions.create(
                 model=self._model,
-                max_tokens=1024,
+                max_tokens=_MAX_ANSWER_TOKENS,
                 tools=openai_tools,
                 tool_choice="auto",
                 messages=messages,
+                **self._openrouter_extras(),
             )
             msg = response.choices[0].message
             if not msg.tool_calls:
@@ -258,11 +299,13 @@ class BrainFAgent:
                     run_dir=self._run_dir, vector_memories=vector_memories,
                 )
                 reasoning_steps.append(_summarize_tool_step(tc.function.name, tool_input, result_json))
+                self._note_page_tool(tc.function.name, result_json)
                 messages.append({"role": "tool", "tool_call_id": tc.id, "content": result_json})
         else:
             messages.append({"role": "user", "content": "Please give a final answer now."})
             response = self._client.chat.completions.create(
-                model=self._model, max_tokens=1024, messages=messages,
+                model=self._model, max_tokens=_MAX_ANSWER_TOKENS, messages=messages,
+                **self._openrouter_extras(),
             )
             msg = response.choices[0].message
 
@@ -313,6 +356,7 @@ class BrainFAgent:
                     run_dir=self._run_dir, vector_memories=vector_memories,
                 )
                 reasoning_steps.append(_summarize_tool_step(tc.name, tc.arguments, result_json))
+                self._note_page_tool(tc.name, result_json)
                 # Append tool result as a user message (Google doesn't have a native tool_result role)
                 messages.append({
                     "role": "user",
@@ -378,6 +422,19 @@ def _make_anthropic_client():
     if not api_key:
         raise ValueError("ANTHROPIC_API_KEY is not set. Add it in Settings.")
     return anthropic.Anthropic(api_key=api_key)
+
+
+def _make_openrouter_client():
+    from openai import OpenAI
+
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        raise ValueError("OPENROUTER_API_KEY is not set.")
+    return OpenAI(
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+        default_headers={"HTTP-Referer": "https://triconvey.com.au", "X-Title": "TriConvey"},
+    )
 
 
 def _make_openai_client():
@@ -535,6 +592,43 @@ def _extract_citations(corpus_chunks, answer_text, question_text=""):
                 "quote": str(chunk.get("text") or "")[:240],
             }
         )
+    return citations
+
+
+_AMOUNT_RE = re.compile(r"\$\s?[\d,]+(?:\.\d{2})?")
+
+
+def _amount_keys(text: str) -> set[str]:
+    return {re.sub(r"[\s$,]", "", match) for match in _AMOUNT_RE.findall(text or "")}
+
+
+def _page_citations(pages_read: list[dict[str, Any]], answer: str, question: str) -> list[dict[str, Any]]:
+    """One citation per page the model read, quoting the line that supports the answer."""
+    from triconvey_agent.corpus.page_index import _snippet
+
+    amounts = _amount_keys(answer)
+    citations = []
+    for page in pages_read:
+        text = str(page.get("text") or "")
+        quote = ""
+        if amounts:
+            # Prefer the line the answer rests on: most matching amounts, then a total.
+            best_score = 0
+            for line in text.splitlines():
+                matches = len(_amount_keys(line) & amounts)
+                if not matches:
+                    continue
+                score = matches * 2 + (1 if "total" in line.lower() else 0)
+                if score > best_score:
+                    best_score, quote = score, line.strip()
+        if not quote:
+            quote = _snippet(text, f"{question} {answer}", 240)
+        citations.append({
+            "file": page.get("file"),
+            "page": page.get("page"),
+            "page_count": page.get("page_count"),
+            "quote": quote[:300],
+        })
     return citations
 
 

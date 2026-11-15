@@ -1482,6 +1482,31 @@ async def save_answers(
     return load_run_payload(run_dir)
 
 
+@app.get("/api/runs/{run_id}/pages")
+async def read_run_page(
+    run_id: str,
+    file: str,
+    page: int,
+    ctx: AuthContext = Depends(require_auth),
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """Full text of one page of an uploaded document, for opening a citation."""
+    try:
+        run_uuid = _uuid.UUID(run_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+    run = await RunRepo.get(session, client_id=ctx.client.id, run_id=run_uuid, user_id=ctx.user.id)
+    if run is None:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
+
+    from triconvey_agent.corpus.page_index import read_page
+
+    result = await asyncio.to_thread(read_page, _resolve_run_dir(run_id), file, page)
+    if result.get("error"):
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+
 @app.post("/api/runs/{run_id}/chat")
 async def chat_about_run(
     run_id: str,
@@ -1532,7 +1557,10 @@ async def chat_about_run(
         except Exception as _mem_exc:
             LOG.debug("Vector memory retrieval skipped: %s", _mem_exc)
 
-        result = ask_run_question(
+        # Runs in a worker thread: answering can take a while (page search, model calls)
+        # and must not block other requests from the app.
+        result = await asyncio.to_thread(
+            ask_run_question,
             run_dir,
             question=body.question,
             model=model,

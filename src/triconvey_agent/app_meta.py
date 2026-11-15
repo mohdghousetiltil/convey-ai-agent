@@ -15,9 +15,15 @@ DEFAULT_UPDATE_REPOSITORY = "mohdghousetiltil/convey-ai-agent"
 DEFAULT_CLOUD_BACKEND_URL = "https://convey-ai-agent-production.up.railway.app"
 DEFAULT_CLOUD_SYNC_URL = f"{DEFAULT_CLOUD_BACKEND_URL}/api/sync"
 
-# AI models. OpenRouter is the default route, so these are the ids that matter most.
-# The app always runs on this model; there is no provider or model choice.
+# AI models. Everything runs through OpenRouter; there is no provider or model choice.
+# Document extraction: many calls per matter, so a low-cost model.
 DEFAULT_OPENROUTER_MODEL = "anthropic/claude-haiku-5.5"
+# Assistant chat: low cost, reliable tool use for searching and reading pages.
+# Chosen over Sonnet 5.5 (about 20x the price) and DeepSeek V4.1 Flash (cheaper,
+# but leaked internal field names and dropped figures in side-by-side tests).
+DEFAULT_CHAT_MODEL = "anthropic/claude-haiku-5.5"
+# Used by OpenRouter only if the chat model is unavailable.
+CHAT_FALLBACK_MODEL = "openai/gpt-5.6-luna"
 
 # One embedding model on both routes, so vectors stay comparable. 1536 dimensions
 # matches the vector(1536) column in the memories table.

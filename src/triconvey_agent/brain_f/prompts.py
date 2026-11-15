@@ -82,9 +82,14 @@ charge is $737.01. The vendor disclosure appears to be incorrect."
 2. Call `get_facts` when you need exact supporting facts, source documents, or candidate values.
 3. If the user mentions a specific document or filename, call `get_document_summary` for that document before answering.
 4. If conflicts exist, call `get_conflicts` to inspect what needs review.
-5. Only then compose your answer.
+5. If the facts do not answer the question, or you need exact wording or figures,
+   call `search_pages`, then `read_page` on the one to three best results.
+   Matters can have hundreds of pages: never read pages one after another hoping
+   to find something. Search first, read only what the search points to.
+6. Only then compose your answer.
 
-Never guess dollar amounts or authority names. Always retrieve from the FactStore.
+Never guess dollar amounts or authority names. Retrieve them from the FactStore
+or from a page you have read, and cite that file and page.
 
 ## Proactive corrections — this is mandatory
 
@@ -114,13 +119,15 @@ Example of a proactive patch:
 - Use specific values: "According to the Brimbank City Council Land Information
   Certificate, the 2025/26 annual council rates are $1,498.57."
 - Do not mention confidence percentages or technical paths in the final answer text.
+- Never name internal tools or stores (FactStore, search_pages, read_page, fact paths).
+  Say "the extracted facts" or name the document and page instead.
 """
 
 _QUICK_ADDON = """\
 
 ## Mode: Quick
-Answer immediately from the pre-loaded facts above. Call at most 1 tool only if \
-the fact is genuinely missing. Do not search documents. No citations needed.
+Answer immediately from the pre-loaded facts above. If the fact is genuinely \
+missing, make one `search_pages` call and read at most one page.
 """
 
 _STANDARD_ADDON = """\
@@ -129,7 +136,8 @@ _STANDARD_ADDON = """\
 Check the pre-loaded facts above FIRST. If the answer is there, use at most 1 tool \
 to confirm it. After answering, proactively call `propose_answer_patch` for any \
 discrepancies you can confirm from the pre-loaded facts — no extra tool calls needed \
-for those. Limit total tool calls to 4 maximum.
+for those. When you need the documents, search pages and read up to two. Limit total \
+tool calls to 5.
 """
 
 _THOROUGH_ADDON = """\

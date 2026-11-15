@@ -32,6 +32,7 @@ from triconvey_agent.canonical.extractors import paths as P
 from triconvey_agent.canonical.extractors.omni_perception import (
     annual_from_omni_rows,
     classify_table_with_omni,
+    document_pages,
     should_call_omni,
     validate_omni_candidate,
     write_debug_log as omni_write_debug_log,
@@ -1291,6 +1292,7 @@ def extract_water_authority_certificate_facts(
                 text=text,
                 ai_client=ai_client,
                 doc_type="water",
+                pages=document_pages(doc),
             )
             omni_result = annual_from_omni_rows(omni_rows)
             _model_name = getattr(ai_client, "model", "unknown")

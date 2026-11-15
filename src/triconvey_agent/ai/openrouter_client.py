@@ -1,8 +1,8 @@
 """OpenRouter AI client — wraps the OpenRouter chat-completions API.
 
-Default model: nvidia/nemotron-nano-4b-instruct (text) or the multimodal
-variant configured via OPENROUTER_MODEL.  Nemotron Omni supports text,
-image, audio and video and is positioned for document-intelligence workflows.
+Used for document extraction. The default model is
+app_meta.DEFAULT_OPENROUTER_MODEL, a low-cost model suited to high-volume
+table reading. The assistant chat uses app_meta.DEFAULT_CHAT_MODEL instead.
 
 Environment variables
 ---------------------
@@ -58,6 +58,12 @@ class OpenRouterClient:
             )
         self.model = model or os.getenv("OPENROUTER_MODEL", _DEFAULT_MODEL)
         self.timeout = timeout or int(os.getenv("OPENROUTER_TIMEOUT", "45"))
+
+    def embed_texts(self, texts: list[str]) -> list[list[float]] | None:
+        """Embeddings for page selection. None when unavailable."""
+        from triconvey_agent.ai.embeddings import embed_texts
+
+        return embed_texts(texts)
 
     # ------------------------------------------------------------------
     # Core method — satisfies AIClient Protocol

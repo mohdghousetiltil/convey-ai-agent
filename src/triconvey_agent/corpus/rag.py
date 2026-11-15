@@ -17,22 +17,16 @@ from __future__ import annotations
 import json
 import logging
 import math
-import os
 import re
 from pathlib import Path
 from typing import Any
 
-from triconvey_agent.ai.openai_client import openai_runtime_disabled
-from triconvey_agent.app_meta import (
-    EMBEDDING_DIMENSIONS,
-    OPENAI_EMBEDDING_MODEL,
-    OPENROUTER_EMBEDDING_MODEL,
-)
+from triconvey_agent.ai.embeddings import EMBEDDING_ID, embed_texts, embeddings_available
 
 LOG = logging.getLogger(__name__)
 
 # Stored in each index. Vectors from a different model cannot be compared.
-_INDEX_EMBEDDING_ID = f"{OPENAI_EMBEDDING_MODEL}@{EMBEDDING_DIMENSIONS}"
+_INDEX_EMBEDDING_ID = EMBEDDING_ID
 _CHUNK_SIZE = 400       # characters per chunk
 _CHUNK_OVERLAP = 80     # overlap between consecutive chunks
 _TOP_K_DEFAULT = 6
@@ -91,36 +85,12 @@ def _chunk_text(text: str, filename: str, page_hint: int = 0) -> list[dict[str, 
 # ---------------------------------------------------------------------------
 
 def _embeddings_available() -> bool:
-    has_openai = bool(os.environ.get("OPENAI_API_KEY")) and not openai_runtime_disabled()
-    return has_openai or bool(os.environ.get("OPENROUTER_API_KEY"))
+    return embeddings_available()
 
 
 def _embed_texts(texts: list[str]) -> list[list[float]] | None:
     """Embed texts through OpenAI, or OpenRouter without a key. Returns None on failure."""
-    if not _embeddings_available():
-        return None
-    try:
-        import openai
-        api_key = os.environ.get("OPENAI_API_KEY", "")
-        if api_key and not openai_runtime_disabled():
-            client = openai.OpenAI(api_key=api_key)
-            model = OPENAI_EMBEDDING_MODEL
-        else:
-            client = openai.OpenAI(
-                api_key=os.environ["OPENROUTER_API_KEY"],
-                base_url="https://openrouter.ai/api/v1",
-            )
-            model = OPENROUTER_EMBEDDING_MODEL
-        response = client.embeddings.create(
-            model=model,
-            input=texts,
-            dimensions=EMBEDDING_DIMENSIONS,
-            encoding_format="float",
-        )
-        return [item.embedding for item in response.data]
-    except Exception as exc:
-        LOG.warning("RAG embedding failed: %s — falling back to keyword search", exc)
-        return None
+    return embed_texts(texts)
 
 
 def _embed_single(text: str) -> list[float] | None:

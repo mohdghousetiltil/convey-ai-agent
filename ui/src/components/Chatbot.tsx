@@ -37,6 +37,7 @@ import {
   processNewChatDocument,
   uploadChatFiles,
 } from "../lib/api";
+import { AnswerMeta, PageSources, RichText } from "./chat/AnswerParts";
 
 type Mode = "quick" | "standard" | "thorough";
 
@@ -81,6 +82,10 @@ interface Message {
   agent_runs?: ChatAnswerPayload["agent_runs"];
   summary_model?: string | null;
   summary_provider?: string | null;
+  model?: string | null;
+  pages_read?: ChatAnswerPayload["pages_read"];
+  pages_searched?: number;
+  documents_searched?: number;
   /** If true this message is a re-review confirmation prompt */
   isReviewConfirm?: boolean;
 }
@@ -228,6 +233,13 @@ const MATTER_STAGES: AgentStage[] = [
   { label: "Composing answer",    icon: BrainCircuit,detail: "Synthesising findings" },
 ];
 
+const PAGE_STAGES: AgentStage[] = [
+  { label: "Checking extracted facts", icon: BrainCircuit, detail: "Starting from what was already found" },
+  { label: "Searching pages",          icon: FileText,     detail: "Finding the pages that answer this" },
+  { label: "Reading those pages",      icon: Wrench,       detail: "Only the relevant pages, not whole files" },
+  { label: "Writing the answer",       icon: Sparkles,     detail: "With the page for each figure" },
+];
+
 const DASHBOARD_STAGES: AgentStage[] = [
   { label: "Thinking",  icon: BrainCircuit, detail: "Processing your question" },
   { label: "Searching", icon: Wrench,       detail: "Looking up relevant context" },
@@ -256,14 +268,14 @@ function buildWelcomeMessage(userName?: string | null, chatContext?: ChatbotCont
   return {
     id: "welcome",
     role: "assistant",
-    text: `${greeting} I'm your AI agent for this matter. I've processed your files and I'm ready to cross-check facts, compare sources, or suggest corrections.\n\nYou can also attach new documents using the 📎 button — I'll extract the relevant information and update the matter fields automatically.\n\nHow can I help today?`,
+    text: `${greeting} Ask me anything about this matter's documents. I search every page, read only the pages that answer your question, and show you which pages I used.\n\nTo add a document, attach it or drop it here, and I'll suggest the changes it makes to the matter.`,
   };
 }
 
 const MODES: { id: Mode; label: string }[] = [
-  { id: "quick", label: "Basic" },
-  { id: "standard", label: "Normal" },
-  { id: "thorough", label: "Deep" },
+  { id: "quick", label: "Quick" },
+  { id: "standard", label: "Standard" },
+  { id: "thorough", label: "Thorough" },
 ];
 
 function buildConflictIntro(conflicts: ConflictPreview[]): string | null {
@@ -317,30 +329,6 @@ function shortReason(reason: string): string {
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
-
-function CitationCard({ citation }: { citation: NonNullable<ChatAnswerPayload["citations"]>[number] }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card text-[0.73rem] shadow-sm">
-      <button
-        onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center gap-1.5 px-2.5 py-2 text-left transition-colors hover:bg-accent"
-      >
-        <FileText className="h-3 w-3 shrink-0 text-primary/60" />
-        <span className="flex-1 truncate font-semibold text-foreground">
-          {citation.file || "Unknown file"}
-          {citation.page ? ` - p.${citation.page}` : ""}
-        </span>
-        {open ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />}
-      </button>
-      {open && citation.quote ? (
-        <p className="border-t border-border px-2.5 pb-2 pt-1.5 italic leading-relaxed text-muted-foreground">
-          "{citation.quote}"
-        </p>
-      ) : null}
-    </div>
-  );
-}
 
 function CorpusConfirmCard({
   entry,
@@ -675,8 +663,7 @@ function ThinkingIndicator({
 
   const stages: AgentStage[] = useMemo(() => {
     if (phase === "uploading") return UPLOAD_STAGES;
-    // For plain questions (no file upload), use simple stages regardless of context
-    if (phase === "thinking") return DASHBOARD_STAGES;
+    if (phase === "thinking") return chatContext === "dashboard" ? DASHBOARD_STAGES : PAGE_STAGES;
     return chatContext === "dashboard" ? DASHBOARD_STAGES : MATTER_STAGES;
   }, [phase, chatContext]);
 
@@ -730,6 +717,7 @@ function AttachmentChip({ name, onRemove }: { name: string; onRemove: () => void
 
 function MessageBubble({
   msg,
+  runId,
   onApplyPatch,
   onDismissPatch,
   onEdit,
@@ -738,6 +726,7 @@ function MessageBubble({
   suppressMotion,
 }: {
   msg: Message;
+  runId?: string;
   onApplyPatch: (msgId: string, questionId: string) => void;
   onDismissPatch: (msgId: string, questionId: string) => void;
   onEdit?: (msgId: string, text: string) => void;
@@ -746,7 +735,6 @@ function MessageBubble({
   suppressMotion?: boolean;
 }) {
   const isUser = msg.role === "user";
-  const [citationsOpen, setCitationsOpen] = useState(false);
 
   const content = (
     <>
@@ -785,7 +773,7 @@ function MessageBubble({
                 : "rounded-tl-sm border border-border/50 bg-card/90 backdrop-blur-sm text-foreground",
             ].join(" ")}
           >
-            <p className="whitespace-pre-wrap">{msg.text}</p>
+            {isUser ? <p className="whitespace-pre-wrap">{msg.text}</p> : <RichText text={msg.text} />}
           </div>
         </div>
 
@@ -809,47 +797,18 @@ function MessageBubble({
           </div>
         ) : null}
 
-        {!isUser && (msg.tool_calls_made || msg.critic_applied || msg.summary_model) ? (
-          <div className="flex flex-wrap items-center gap-1.5 px-1">
-            {msg.tool_calls_made ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[0.67rem] font-medium text-muted-foreground">
-                <Wrench className="h-2.5 w-2.5" />
-                {msg.tool_calls_made} tool call{msg.tool_calls_made !== 1 ? "s" : ""}
-              </span>
-            ) : null}
-            {msg.critic_applied ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[0.67rem] font-medium text-violet-600">
-                <ShieldCheck className="h-2.5 w-2.5" />
-                AI reviewed
-              </span>
-            ) : null}
-            {msg.summary_model ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[0.67rem] font-medium text-blue-700">
-                <Sparkles className="h-2.5 w-2.5" />
-                Finalised by {msg.summary_provider || "ai"} / {msg.summary_model}
-              </span>
-            ) : null}
-          </div>
+        {!isUser ? (
+          <AnswerMeta
+            pagesSearched={msg.pages_searched}
+            documentsSearched={msg.documents_searched}
+            pagesRead={msg.pages_read?.length ?? 0}
+            model={msg.model ?? msg.summary_model}
+            reviewed={msg.critic_applied}
+          />
         ) : null}
 
         {!isUser && msg.citations && msg.citations.length > 0 ? (
-          <div className="w-full space-y-1">
-            <button
-              onClick={() => setCitationsOpen((value) => !value)}
-              className="flex items-center gap-1.5 px-1 text-[0.7rem] font-semibold text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <FileText className="h-3 w-3" />
-              {msg.citations.length} source{msg.citations.length !== 1 ? "s" : ""}
-              {citationsOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            </button>
-            {citationsOpen ? (
-              <div className="space-y-1">
-                {msg.citations.map((citation, index) => (
-                  <CitationCard key={`${msg.id}-citation-${index}`} citation={citation} />
-                ))}
-              </div>
-            ) : null}
-          </div>
+          <PageSources runId={runId} sources={msg.citations} pagesRead={msg.pages_read} />
         ) : null}
 
         {!isUser && msg.proposed_patches && msg.proposed_patches.length > 0 ? (
@@ -1357,6 +1316,10 @@ export function Chatbot({
           agent_runs: response.agent_runs,
           summary_model: response.summary_model,
           summary_provider: response.summary_provider,
+          model: response.model,
+          pages_read: response.pages_read,
+          pages_searched: response.pages_searched,
+          documents_searched: response.documents_searched,
         },
       ]);
     } catch (error) {
@@ -1430,7 +1393,7 @@ export function Chatbot({
   const isBusy = assistantPaused || sending;
   const isDashboard = chatContext === "dashboard";
   const agentLabel = isDashboard ? "Assistant" : "Matter Agent";
-  const statusText = isBusy ? (isDashboard ? "thinking" : "multi-agent review") : "ready";
+  const statusText = isBusy ? (isDashboard ? "thinking" : "reading pages") : "ready";
   const panelWidth = expanded ? 660 : 500;
   const lastUserIndex = messages.reduce((last, message, index) => (message.role === "user" ? index : last), -1);
   const canSend = (input.trim().length > 0 || pendingFiles.length > 0) && !assistantPaused;
@@ -1448,6 +1411,7 @@ export function Chatbot({
       <MessageBubble
         key={message.id}
         msg={message}
+        runId={runId}
         onApplyPatch={handleApplyPatch}
         onDismissPatch={handleDismissPatch}
         onEdit={index === lastUserIndex ? handleEditMessage : undefined}
@@ -1462,6 +1426,7 @@ export function Chatbot({
         <MessageBubble
           key={message.id}
           msg={message}
+          runId={runId}
           onApplyPatch={handleApplyPatch}
           onDismissPatch={handleDismissPatch}
           onEdit={index === lastUserIndex ? handleEditMessage : undefined}
@@ -1744,7 +1709,7 @@ export function Chatbot({
               assistantPaused
                 ? "Assistant pauses while autofill is running"
                 : sending
-                ? "AI is reviewing… press stop to cancel"
+                ? "Reading pages… press stop to cancel"
                 : pendingFiles.length > 0
                 ? "Add a question or send to extract all fields…"
                 : chatContext === "matter"
@@ -1777,7 +1742,7 @@ export function Chatbot({
         </div>
         <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
           {chatContext === "matter"
-            ? "Every answer is AI-reviewed against the uploaded matter files. Verify important values before autofill."
+            ? "Answers show the pages they came from. Check important figures before autofill."
             : "AI assistant for workspace navigation and general queries."}
         </p>
       </div>
